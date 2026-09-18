@@ -5,26 +5,34 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#090909">
   <meta name="description" content="Carioca Ticket — tecnologia, segurança e experiência para eventos. Compre ingressos e conheça soluções para produtores.">
+  <meta property="og:title" content="Carioca Ticket | Ingressos e tecnologia para eventos">
+  <meta property="og:description" content="Ingressos digitais, PIX, cartão, confirmação automática e tecnologia para eventos.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cariocaticket.com.br/">
+  <meta property="og:image" content="https://cariocaticket.com.br/assets/carioca-ticket-logo.png">
   <title>Carioca Ticket | Ingressos e tecnologia para eventos</title>
+  <link rel="icon" type="image/png" href="/assets/carioca-ticket-simbolo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <header class="topbar">
     <div class="shell nav">
       <a class="brand" href="/" aria-label="Carioca Ticket">
-        <span class="brand-mark" aria-hidden="true">CT</span>
-        <span class="brand-copy"><strong>Carioca Ticket</strong><small>Ingressos & experiências</small></span>
+        <picture class="brand-logo">
+          <source media="(max-width:600px)" srcset="/assets/carioca-ticket-simbolo.png">
+          <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+        </picture>
       </a>
       <nav class="links" aria-label="Principal">
         <a href="#eventos">Eventos</a>
         <a href="#produtores">Para produtores</a>
         <a href="#seguranca">Segurança</a>
-        <a href="#ajuda">Ajuda</a>
+        <a href="/ajuda/">Ajuda</a>
       </nav>
-      <a class="nav-cta" href="#eventos">Comprar ingresso</a>
+      <a class="nav-cta" href="/roda-de-samba/">Comprar ingresso</a>
     </div>
   </header>
 
@@ -129,18 +137,22 @@
         <div>
           <span class="eyebrow">Atendimento</span>
           <h2>Precisa de ajuda?</h2>
-          <p>Fale com a equipe da Carioca Ticket pelo e-mail oficial.</p>
+          <p>Suporte para compradores e produtores em um só lugar.</p>
         </div>
-        <a class="btn btn-primary" href="mailto:contato@cariocaticket.com.br">contato@cariocaticket.com.br</a>
+        <a class="btn btn-primary" href="/ajuda/">Abrir Central de Ajuda</a>
       </div>
     </section>
   </main>
 
   <footer>
-    <div class="shell footer-grid">
-      <div><strong>Carioca Ticket</strong><p>Ingressos, tecnologia e experiências para eventos.</p></div>
-      <div><strong>Institucional</strong><a href="#produtores">Para produtores</a><a href="#seguranca">Segurança</a><a href="#ajuda">Ajuda</a></div>
-      <div><strong>Contato</strong><a href="mailto:contato@cariocaticket.com.br">contato@cariocaticket.com.br</a><span>cariocaticket.com.br</span></div>
+    <div class="shell footer-grid footer-grid-4">
+      <div class="footer-brand">
+        <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+        <p>Ingressos, tecnologia e experiências para eventos.</p>
+      </div>
+      <div><strong>Institucional</strong><a href="/sobre/">Sobre nós</a><a href="#produtores">Para produtores</a><a href="/ajuda/">Central de Ajuda</a></div>
+      <div><strong>Legal</strong><a href="/termos/">Termos de Uso</a><a href="/privacidade/">Política de Privacidade</a><a href="/cancelamento-reembolso/">Cancelamento e reembolso</a></div>
+      <div><strong>Contato</strong><a href="mailto:contato@cariocaticket.com.br">contato@cariocaticket.com.br</a><a href="https://instagram.com/cariocaticketbr" target="_blank" rel="noopener">@cariocaticketbr</a><span>cariocaticket.com.br</span></div>
     </div>
     <div class="shell footer-bottom">© 2026 Carioca Ticket. Todos os direitos reservados.</div>
   </footer>
