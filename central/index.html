@@ -36,7 +36,11 @@
   <script>
     const p=new URLSearchParams(location.search);p.delete('page');
    const q=p.toString();
-   const destino='https://script.google.com/macros/s/AKfycbxzpg1Rm876lmZygLqP-HEbHWc49ct0bicDKhOafywr9gHVG571uicgHJ3ZGWXsH2LZ/exec?page=app'+(q?'&'+q:'')+location.hash;
+   const handoffHash=location.hash;
+   const destino='https://script.google.com/macros/s/AKfycbxzpg1Rm876lmZygLqP-HEbHWc49ct0bicDKhOafywr9gHVG571uicgHJ3ZGWXsH2LZ/exec?page=app'+(q?'&'+q:'')+handoffHash;
+   if(handoffHash&&handoffHash.includes('ct_handoff=')){
+     history.replaceState(null,'',location.pathname+location.search);
+   }
     const frame=document.getElementById('app');
     const loading=document.getElementById('loading');
     const fallback=document.getElementById('fallback');
