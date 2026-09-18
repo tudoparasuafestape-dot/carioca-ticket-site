@@ -19,7 +19,7 @@
     .loader{width:40px;height:40px;margin:22px auto 0;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:#f1b640;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     iframe{display:block;width:100%;height:100%;border:0;background:#fff}
-    .fallback{position:fixed;right:14px;bottom:14px;z-index:4;text-decoration:none;font-size:12px;font-weight:700;color:#111;background:#f1b640;padding:10px 12px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    .fallback{display:none;position:fixed;right:14px;bottom:14px;z-index:4;text-decoration:none;font-size:12px;font-weight:700;color:#111;background:#f1b640;padding:10px 12px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25)}.fallback.show{display:inline-block}
   </style>
 </head>
 <body>
@@ -42,8 +42,17 @@
     const fallback=document.getElementById('fallback');
     frame.src=destino;
     fallback.href=destino;
-    frame.addEventListener('load',()=>loading.classList.add('hide'));
-    setTimeout(()=>loading.classList.add('hide'),5000);
+    let carregou=false;
+    frame.addEventListener('load',()=>{
+      carregou=true;
+      loading.classList.add('hide');
+    });
+    setTimeout(()=>{
+      if(!carregou){
+        loading.classList.add('hide');
+        fallback.classList.add('show');
+      }
+    },7000);
   </script>
 </body>
 </html>
