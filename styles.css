@@ -5,6 +5,7 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
+#eventos,#todos-eventos,#produtores,#seguranca,#ajuda{scroll-margin-top:96px}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;line-height:1.5}
 a{color:inherit}
 .shell{width:min(1160px,calc(100% - 36px));margin:auto}
@@ -156,6 +157,7 @@ footer{margin-top:44px;border-top:1px solid #1f1f1f;background:#080808}
   .footer-grid-4,.footer-grid-5{grid-template-columns:1fr 1fr}.info-grid{grid-template-columns:1fr}
 }
 @media(max-width:600px){
+  #eventos,#todos-eventos,#produtores,#seguranca,#ajuda{scroll-margin-top:78px}
   .shell{width:min(100% - 24px,1160px)}.nav{height:66px;gap:10px}.nav-cta{padding:9px 11px;font-size:11px}
   .brand{min-width:44px}.brand-logo{height:44px}.brand-logo img{width:44px;height:44px;object-fit:contain}
   h1{font-size:42px}.hero-copy>p{font-size:16px}.hero-actions{flex-direction:column}.btn{width:100%}
