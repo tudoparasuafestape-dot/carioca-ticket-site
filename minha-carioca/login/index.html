@@ -118,8 +118,7 @@
   'use strict';
 
   var app=document.getElementById('app');
-  var pending={};
-  var TOKEN_KEY='ct_minha_carioca_session_v3';
+  var TOKEN_KEY='ct_minha_carioca_session_v4';
   var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
   var requestOtpId='';
   var lastIdentifier='';
@@ -140,80 +139,74 @@
     return String(Date.now())+Math.random().toString(16).slice(2);
   }
 
-  function isTrustedPostOrigin(origin){
-    if(origin==='null')return true;
-    try{
-      var host=new URL(origin).hostname;
-      return origin==='https://script.google.com' ||
-        host==='script.google.com' ||
-        host.endsWith('.googleusercontent.com') ||
-        host==='script.googleusercontent.com';
-    }catch(e){
-      return false;
-    }
-  }
-
-  window.addEventListener('message',function(event){
-    if(!isTrustedPostOrigin(event.origin))return;
-    var data=event.data||{};
-    if(data.ctMinhaCariocaPost!==true||!data.id)return;
-
-    var item=pending[data.id];
-    if(!item)return;
-
-    delete pending[data.id];
-    clearTimeout(item.timer);
-
-    if(data.ok===true)item.resolve(data.resultado||{});
-    else item.reject(new Error(data.erro||'Não foi possível concluir a operação.'));
-  });
-
-  function addHidden(form,name,value){
-    var input=document.createElement('input');
-    input.type='hidden';
-    input.name=name;
-    input.value=String(value===undefined||value===null?'':value);
-    form.appendChild(input);
-  }
-
-  function callBridge(acao,payload){
-    var id=requestId();
-
+  function callJsonp(acao,payload){
     return new Promise(function(resolve,reject){
+      var id='ctmc_jsonp_'+requestId();
+      var script=document.createElement('script');
+      var finished=false;
+
+      function cleanup(){
+        if(finished)return;
+        finished=true;
+        try{delete window[id];}catch(e){window[id]=undefined;}
+        if(script&&script.parentNode)script.parentNode.removeChild(script);
+      }
+
       var timer=setTimeout(function(){
-        delete pending[id];
+        cleanup();
         reject(new Error('A operação demorou mais do que o esperado. Tente novamente.'));
       },30000);
 
-      pending[id]={resolve:resolve,reject:reject,timer:timer};
+      window[id]=function(envelope){
+        clearTimeout(timer);
+        cleanup();
 
-      var form=document.createElement('form');
-      form.method='POST';
-      form.action=APPS_SCRIPT_URL;
-      form.target='mc-post-frame';
-      form.style.display='none';
+        if(envelope&&envelope.ok===true){
+          resolve(envelope.resultado||{});
+          return;
+        }
 
-      addHidden(form,'ctMinhaCariocaAction',acao);
-      addHidden(form,'ctMinhaCariocaRequestId',id);
+        reject(new Error(
+          envelope&&envelope.erro
+            ? String(envelope.erro)
+            : 'Não foi possível concluir a operação.'
+        ));
+      };
+
+      var qs=new URLSearchParams();
+      qs.set('ctMinhaCariocaJsonpAction',acao);
+      qs.set('callback',id);
+      qs.set('_',String(Date.now()));
 
       Object.keys(payload||{}).forEach(function(key){
-        addHidden(form,key,payload[key]);
+        qs.set(key,String(payload[key]===undefined||payload[key]===null?'':payload[key]));
       });
 
-      document.body.appendChild(form);
-
-      try{
-        form.submit();
-      }catch(e){
+      script.async=true;
+      script.src=APPS_SCRIPT_URL+'?'+qs.toString();
+      script.onerror=function(){
         clearTimeout(timer);
-        delete pending[id];
-        form.remove();
-        reject(new Error('Não foi possível iniciar a conexão segura.'));
-        return;
-      }
+        cleanup();
+        reject(new Error('Não foi possível conectar ao serviço de acesso. Tente novamente.'));
+      };
 
-      setTimeout(function(){form.remove();},1000);
+      document.head.appendChild(script);
     });
+  }
+
+  function callBridge(acao,payload){
+    if(
+      acao==='solicitarCodigo' ||
+      acao==='validarCodigo' ||
+      acao==='consultarSessao' ||
+      acao==='logout'
+    ){
+      return callJsonp(acao,payload);
+    }
+
+    return Promise.reject(
+      new Error('O acesso por senha ainda está em homologação. Use o código por enquanto.')
+    );
   }
 
   function setMessage(node,text,ok){
@@ -280,7 +273,7 @@
 
     var login=el('button','primary','Entrar');login.type='button';
     var passHelper=el('p','helper');
-    passHelper.append(document.createTextNode('Ainda não criou senha ou esqueceu? '));
+    passHelper.append(document.createTextNode('O login por senha está em homologação. Por enquanto, use o código. '));
     var useCode=el('button','link-btn','Entre com código');useCode.type='button';
     passHelper.append(useCode);
     var passMsg=el('p','message');
@@ -424,7 +417,7 @@
     }
     app.append(list);
 
-    if(String(usuario.metodo||'')==='OTP'){
+    if(false && String(usuario.metodo||'')==='OTP'){
       var pc=el('div','password-card');
       pc.append(el('h3','', 'Quer entrar com senha da próxima vez?'));
       pc.append(el('p','', 'Como seu e-mail já foi confirmado pelo código, você pode criar ou redefinir uma senha agora. Isso é opcional.'));
