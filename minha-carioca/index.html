@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#090909">
+  <title>Minha Carioca | Carioca Ticket</title>
+  <link rel="icon" type="image/png" href="/assets/carioca-ticket-simbolo.png">
+  <style>
+    :root{--gold:#d5a52b;--gold2:#f0c85b;--text:#f7f2e8;--muted:#aaa59b}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at top,#1b160a,#080808 42%,#050505);color:var(--text);font-family:Inter,Arial,sans-serif}
+    main{width:min(520px,100%);text-align:center;padding:36px;border:1px solid #2b2924;border-radius:22px;background:#111;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+    img{display:block;max-width:220px;max-height:76px;object-fit:contain;margin:0 auto 22px}
+    .eyebrow{font-size:11px;font-weight:900;letter-spacing:.18em;color:var(--gold2);text-transform:uppercase}
+    h1{font-size:30px;margin:10px 0 10px}
+    p{color:var(--muted);line-height:1.6;margin:0}
+    .loader{width:30px;height:30px;border-radius:50%;border:3px solid #292929;border-top-color:var(--gold);animation:s .8s linear infinite;margin:24px auto}
+    @keyframes s{to{transform:rotate(360deg)}}
+    a{display:none;min-height:48px;align-items:center;justify-content:center;padding:0 18px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;text-decoration:none;font-weight:900}
+    a.show{display:inline-flex}
+  </style>
+</head>
+<body>
+  <main>
+    <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+    <div class="eyebrow">Área do cliente</div>
+    <h1>Minha Carioca</h1>
+    <p>Abrindo seu acesso seguro aos ingressos.</p>
+    <div class="loader" aria-hidden="true"></div>
+    <a id="fallback" href="#">Continuar</a>
+  </main>
+  <script>
+    (function(){
+      'use strict';
+
+      var BASE='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+      var entrada=new URLSearchParams(window.location.search);
+      var saida=new URLSearchParams();
+      saida.set('page','minha-carioca');
+
+      ['pedido','token','codigo','sig'].forEach(function(chave){
+        var valor=String(entrada.get(chave)||'').trim();
+        if(valor)saida.set(chave,valor);
+      });
+
+      var destino=BASE+'?'+saida.toString();
+      var fallback=document.getElementById('fallback');
+      fallback.href=destino;
+
+      window.location.replace(destino);
+
+      setTimeout(function(){
+        fallback.classList.add('show');
+      },1800);
+    }());
+  </script>
+</body>
+</html>
