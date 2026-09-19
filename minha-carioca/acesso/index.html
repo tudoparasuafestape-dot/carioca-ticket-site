@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="Minha Carioca — acesse com segurança seus ingressos da Carioca Ticket.">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Minha Carioca | Carioca Ticket</title>
+  <link rel="icon" type="image/png" href="/assets/carioca-ticket-simbolo.png">
+  <style>
+    :root{--gold:#d5a52b;--gold2:#f0c85b;--text:#f7f2e8;--muted:#aaa59b;--line:#2b2924}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,rgba(213,165,43,.12),transparent 28%),linear-gradient(180deg,#0a0a0a,#050505 70%);color:var(--text);font-family:Inter,Arial,sans-serif}
+    .wrap{width:min(720px,calc(100% - 28px));margin:auto;padding:34px 0 54px}
+    .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+    .top img{display:block;width:142px;max-height:54px;object-fit:contain;object-position:left}
+    .back{color:#d5d0c6;text-decoration:none;font-size:13px;font-weight:800}
+    .card{padding:30px;border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,#131313,#0d0d0d);box-shadow:0 24px 80px rgba(0,0,0,.38)}
+    .eyebrow{font-size:11px;font-weight:900;letter-spacing:.18em;color:var(--gold2);text-transform:uppercase}
+    h1{font-size:clamp(38px,8vw,58px);line-height:1.02;letter-spacing:-.045em;margin:12px 0 14px}
+    .lead{color:#c0bbb1;font-size:16px;line-height:1.7;margin:0 0 24px}
+    .notice{padding:18px;border:1px solid rgba(213,165,43,.24);border-radius:17px;background:rgba(213,165,43,.055);margin:22px 0}
+    .notice strong{display:block;margin-bottom:6px;font-size:15px}.notice p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+    .steps{display:grid;gap:10px;margin:22px 0}
+    .step{display:grid;grid-template-columns:42px 1fr;gap:13px;align-items:start;padding:15px;border:1px solid #24231f;border-radius:16px;background:#0b0b0b}
+    .num{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#121b24;color:var(--gold2);font-weight:900}
+    .step strong{display:block;font-size:14px;margin:2px 0 4px}.step p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
+    .divider{height:1px;background:#25231f;margin:26px 0}
+    label{display:block;font-size:13px;font-weight:800;margin-bottom:9px}
+    .paste{display:grid;grid-template-columns:1fr auto;gap:10px}
+    input{min-width:0;min-height:52px;border:1px solid #39362f;border-radius:13px;background:#090909;color:var(--text);padding:0 14px;font:inherit;outline:none}
+    input:focus{border-color:rgba(240,200,91,.7);box-shadow:0 0 0 3px rgba(213,165,43,.1)}
+    button{min-height:52px;border:1px solid var(--gold);border-radius:13px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;padding:0 20px;font:inherit;font-weight:900;cursor:pointer}
+    .feedback{min-height:20px;margin:9px 0 0;color:#e0b8a5;font-size:12px}
+    .future{margin-top:24px;padding:18px;border-radius:17px;background:#0d131a;border:1px solid #22303d}
+    .future strong{display:block;margin-bottom:6px;color:#eef4fa}.future p{margin:0;color:#a8b2bd;font-size:12px;line-height:1.6}
+    @media(max-width:560px){.wrap{padding-top:22px}.card{padding:22px}.paste{grid-template-columns:1fr}.paste button{width:100%}.top img{width:118px}.back{font-size:11px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <a href="/" aria-label="Voltar para a home"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a>
+      <a class="back" href="/">← Voltar aos eventos</a>
+    </div>
+
+    <main class="card">
+      <div class="eyebrow">Área do cliente</div>
+      <h1>Minha Carioca</h1>
+      <p class="lead">Seu ponto de acesso aos ingressos comprados pela Carioca Ticket.</p>
+
+      <div class="notice">
+        <strong>Entrou pelo menu do site?</strong>
+        <p>Por segurança, esta página não mostra compras apenas com nome, telefone ou CPF. Use um acesso seguro recebido após a confirmação da compra.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step"><span class="num">1</span><div><strong>Pelo e-mail da compra</strong><p>Abra o e-mail enviado após a confirmação do pagamento e toque em “Acessar meus ingressos”.</p></div></div>
+        <div class="step"><span class="num">2</span><div><strong>Pelo WhatsApp ou ingresso recebido</strong><p>Abra o link seguro recebido e toque em “Minha Carioca · meus ingressos”.</p></div></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <label for="secure-link">Já tem um link seguro? Cole aqui</label>
+      <div class="paste">
+        <input id="secure-link" type="url" inputmode="url" autocomplete="off" placeholder="Cole o link da Minha Carioca ou do ingresso">
+        <button id="open-secure" type="button">Abrir</button>
+      </div>
+      <p id="feedback" class="feedback" aria-live="polite"></p>
+
+      <div class="future">
+        <strong>Recuperação de acesso</strong>
+        <p>Em seguida, a Minha Carioca receberá recuperação por código enviado ao e-mail ou WhatsApp cadastrado. Assim o cliente poderá recuperar os ingressos sem pesquisa pública de dados pessoais.</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function(){
+      'use strict';
+
+      var input=document.getElementById('secure-link');
+      var button=document.getElementById('open-secure');
+      var feedback=document.getElementById('feedback');
+
+      function openPasted(){
+        var raw=String(input.value||'').trim();
+        feedback.textContent='';
+
+        if(!raw){
+          feedback.textContent='Cole um link seguro para continuar.';
+          return;
+        }
+
+        try{
+          var url=new URL(raw);
+          var params=url.searchParams;
+          var okPedido=String(params.get('pedido')||'').trim() && String(params.get('token')||'').trim();
+          var okCodigo=String(params.get('codigo')||'').trim() && String(params.get('sig')||'').trim();
+
+          if(okPedido||okCodigo){
+            var own=new URLSearchParams();
+            ['pedido','token','codigo','sig'].forEach(function(k){
+              var v=String(params.get(k)||'').trim();
+              if(v)own.set(k,v);
+            });
+            location.href='/minha-carioca/?'+own.toString();
+            return;
+          }
+
+          if(url.hostname==='cariocaticket.com.br'||url.hostname==='www.cariocaticket.com.br'||url.hostname==='script.google.com'){
+            location.href=raw;
+            return;
+          }
+
+          feedback.textContent='Esse link não parece ser um acesso da Carioca Ticket.';
+        }catch(e){
+          feedback.textContent='Cole o endereço completo do link recebido.';
+        }
+      }
+
+      button.addEventListener('click',openPasted);
+      input.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();openPasted();}});
+    }());
+  </script>
+</body>
+</html>
