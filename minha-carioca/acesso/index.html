@@ -86,10 +86,10 @@
 </head>
 <body>
   <iframe
-    id="mc-bridge"
+    id="mc-post-frame"
+    name="mc-post-frame"
     class="bridge"
     title="Conexão segura Carioca Ticket"
-    src="https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec?page=minha-carioca-bridge&v=182"
   ></iframe>
 
   <div class="wrap">
@@ -115,10 +115,9 @@
   'use strict';
 
   var app=document.getElementById('app');
-  var frame=document.getElementById('mc-bridge');
-  var bridgeReady=false;
   var pending={};
-  var TOKEN_KEY='ct_minha_carioca_session_v1';
+  var TOKEN_KEY='ct_minha_carioca_session_v2';
+  var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
   var requestOtpId='';
   var lastIdentifier='';
   var resendTimer=null;
@@ -138,22 +137,27 @@
     return String(Date.now())+Math.random().toString(16).slice(2);
   }
 
-  function isBridgeOrigin(origin){
-    return origin==='https://script.google.com' || /\.googleusercontent\.com$/.test(new URL(origin).hostname);
+  function isTrustedPostOrigin(origin){
+    if(origin==='null')return true;
+    try{
+      var host=new URL(origin).hostname;
+      return origin==='https://script.google.com' ||
+        host==='script.google.com' ||
+        host.endsWith('.googleusercontent.com') ||
+        host==='script.googleusercontent.com';
+    }catch(e){
+      return false;
+    }
   }
 
   window.addEventListener('message',function(event){
-    try{if(!isBridgeOrigin(event.origin))return;}catch(e){return;}
+    if(!isTrustedPostOrigin(event.origin))return;
     var data=event.data||{};
-    if(data.ctMinhaCariocaBridge!==true)return;
-
-    if(data.pronto===true){
-      bridgeReady=true;
-      return;
-    }
+    if(data.ctMinhaCariocaPost!==true||!data.id)return;
 
     var item=pending[data.id];
     if(!item)return;
+
     delete pending[data.id];
     clearTimeout(item.timer);
 
@@ -161,32 +165,51 @@
     else item.reject(new Error(data.erro||'Não foi possível concluir a operação.'));
   });
 
-  function waitBridge(){
-    return new Promise(function(resolve,reject){
-      if(bridgeReady){resolve();return;}
-      var started=Date.now();
-      var timer=setInterval(function(){
-        if(bridgeReady){clearInterval(timer);resolve();return;}
-        if(Date.now()-started>12000){clearInterval(timer);reject(new Error('Conexão segura indisponível. Tente novamente.'));}
-      },100);
-    });
+  function addHidden(form,name,value){
+    var input=document.createElement('input');
+    input.type='hidden';
+    input.name=name;
+    input.value=String(value===undefined||value===null?'':value);
+    form.appendChild(input);
   }
 
-  async function callBridge(acao,payload){
-    await waitBridge();
+  function callBridge(acao,payload){
     var id=requestId();
+
     return new Promise(function(resolve,reject){
       var timer=setTimeout(function(){
         delete pending[id];
-        reject(new Error('A operação demorou mais do que o esperado.'));
-      },20000);
+        reject(new Error('A operação demorou mais do que o esperado. Tente novamente.'));
+      },30000);
+
       pending[id]={resolve:resolve,reject:reject,timer:timer};
-      frame.contentWindow.postMessage({
-        ctMinhaCarioca:true,
-        id:id,
-        acao:acao,
-        payload:payload||{}
-      },'*');
+
+      var form=document.createElement('form');
+      form.method='POST';
+      form.action=APPS_SCRIPT_URL;
+      form.target='mc-post-frame';
+      form.style.display='none';
+
+      addHidden(form,'ctMinhaCariocaAction',acao);
+      addHidden(form,'ctMinhaCariocaRequestId',id);
+
+      Object.keys(payload||{}).forEach(function(key){
+        addHidden(form,key,payload[key]);
+      });
+
+      document.body.appendChild(form);
+
+      try{
+        form.submit();
+      }catch(e){
+        clearTimeout(timer);
+        delete pending[id];
+        form.remove();
+        reject(new Error('Não foi possível iniciar a conexão segura.'));
+        return;
+      }
+
+      setTimeout(function(){form.remove();},1000);
     });
   }
 
@@ -436,17 +459,23 @@
   }
 
   async function init(){
-    try{
-      await waitBridge();
-      var token=String(localStorage.getItem(TOKEN_KEY)||'').trim();
-      if(!token){showLogin('');return;}
-      var r=await callBridge('consultarSessao',{token:token});
-      if(r&&r.autenticado===true){renderAccount(r);return;}
-      localStorage.removeItem(TOKEN_KEY);
+    var token=String(localStorage.getItem(TOKEN_KEY)||'').trim();
+
+    if(!token){
       showLogin('');
-    }catch(e){
-      showLogin('Não foi possível validar uma sessão anterior. Você pode entrar novamente.');
+      return;
     }
+
+    try{
+      var r=await callBridge('consultarSessao',{token:token});
+      if(r&&r.autenticado===true){
+        renderAccount(r);
+        return;
+      }
+    }catch(e){}
+
+    localStorage.removeItem(TOKEN_KEY);
+    showLogin('');
   }
 
   init();
