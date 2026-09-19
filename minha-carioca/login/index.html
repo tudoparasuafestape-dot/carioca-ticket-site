@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="Minha Carioca — entre com segurança para acessar seus ingressos.">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Minha Carioca | Carioca Ticket</title>
+  <link rel="icon" type="image/png" href="/assets/carioca-ticket-simbolo.png">
+  <style>
+    :root{
+      --bg:#070707;--panel:#111;--panel2:#0b0b0b;--gold:#d5a52b;--gold2:#f0c85b;
+      --text:#f7f2e8;--muted:#aaa59b;--line:#2b2924;--green:#61d399;--red:#e5a18f
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:
+      radial-gradient(circle at 50% 0,rgba(213,165,43,.13),transparent 30%),
+      linear-gradient(180deg,#0a0a0a,#050505 72%);color:var(--text);font-family:Inter,Arial,sans-serif}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .wrap{width:min(760px,calc(100% - 28px));margin:auto;padding:28px 0 54px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
+    .top img{display:block;width:140px;max-height:54px;object-fit:contain;object-position:left}
+    .back{color:#d5d0c6;text-decoration:none;font-size:13px;font-weight:800}
+    .card{padding:30px;border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,#131313,#0d0d0d);box-shadow:0 24px 80px rgba(0,0,0,.4)}
+    .eyebrow{font-size:11px;font-weight:900;letter-spacing:.18em;color:var(--gold2);text-transform:uppercase}
+    h1{font-size:clamp(38px,8vw,58px);line-height:1.02;letter-spacing:-.045em;margin:12px 0 14px}
+    .lead{color:#c0bbb1;font-size:16px;line-height:1.7;margin:0 0 22px}
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border:1px solid #2b2924;border-radius:15px;background:#090909;margin:22px 0}
+    .tab{min-height:46px;border:0;border-radius:11px;background:transparent;color:#a9a49b;font-weight:800}
+    .tab.active{background:#181611;color:var(--gold2);box-shadow:inset 0 0 0 1px rgba(213,165,43,.28)}
+    .panel[hidden]{display:none!important}
+    label{display:block;margin:0 0 8px;font-size:13px;font-weight:800}
+    input{width:100%;min-height:54px;border:1px solid #39362f;border-radius:13px;background:#090909;color:var(--text);padding:0 15px;outline:none}
+    input::placeholder{color:#716d65}
+    input:focus{border-color:rgba(240,200,91,.75);box-shadow:0 0 0 3px rgba(213,165,43,.1)}
+    .field{margin-bottom:14px}
+    .password-wrap{position:relative}
+    .password-wrap input{padding-right:74px}
+    .show-pass{position:absolute;right:9px;top:8px;bottom:8px;border:0;border-radius:9px;background:#171717;color:#d8d2c6;font-size:11px;font-weight:800;padding:0 11px}
+    .primary{width:100%;min-height:54px;border:1px solid var(--gold);border-radius:13px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;font-weight:900}
+    .primary:disabled{opacity:.55;cursor:wait}
+    .secondary{width:100%;min-height:48px;border:1px solid #34312c;border-radius:13px;background:#111;color:var(--text);font-weight:800}
+    .helper{margin:10px 0 0;color:var(--muted);font-size:12px;line-height:1.6}
+    .helper a,.link-btn{color:var(--gold2);text-decoration:none;font-weight:800}
+    .link-btn{border:0;background:transparent;padding:0}
+    .message{min-height:22px;margin:11px 0 0;font-size:12px;line-height:1.55;color:var(--red)}
+    .message.ok{color:var(--green)}
+    .otp-box{margin-top:20px;padding-top:20px;border-top:1px solid #292720}
+    .otp-title{font-size:15px;font-weight:900;margin-bottom:5px}
+    .otp-code{text-align:center;font-size:28px;font-weight:900;letter-spacing:.3em;padding-left:.3em}
+    .resend{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:11px}
+    .resend button{border:0;background:transparent;color:var(--gold2);font-weight:800;padding:0}
+    .security{margin-top:22px;padding:17px;border:1px solid #22303d;border-radius:17px;background:#0d131a}
+    .security strong{display:block;margin-bottom:5px;font-size:13px}.security p{margin:0;color:#a8b2bd;font-size:12px;line-height:1.6}
+    .loading{display:grid;place-items:center;text-align:center;padding:54px 18px}
+    .spinner{width:34px;height:34px;border-radius:50%;border:3px solid #292929;border-top-color:var(--gold);animation:s .8s linear infinite;margin:18px auto}
+    @keyframes s{to{transform:rotate(360deg)}}
+    .account-head{display:flex;align-items:start;justify-content:space-between;gap:18px;margin-bottom:24px}
+    .account-head h1{font-size:36px;margin-bottom:7px}
+    .account-meta{color:var(--muted);font-size:12px}
+    .logout{border:1px solid #37342f;border-radius:11px;background:#101010;color:#ddd5c8;min-height:42px;padding:0 14px;font-weight:800}
+    .section-title{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:25px 0 14px}
+    .section-title h2{font-size:25px;margin:0}.section-title span{color:var(--muted);font-size:11px}
+    .purchases{display:grid;gap:12px}
+    .purchase{padding:18px;border:1px solid #292720;border-radius:18px;background:#0b0b0b}
+    .purchase-kicker{color:var(--gold2);font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+    .purchase h3{font-size:19px;margin:7px 0 8px}
+    .purchase p{margin:0 0 12px;color:var(--muted);font-size:12px;line-height:1.55}
+    .purchase-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #25231f;padding-top:13px}
+    .purchase-bottom small{color:var(--muted)}
+    .open-ticket{display:inline-flex;min-height:43px;align-items:center;justify-content:center;border-radius:11px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;text-decoration:none;font-size:12px;font-weight:900;padding:0 15px}
+    .empty{padding:24px;border:1px dashed #3c382f;border-radius:17px;text-align:center;color:var(--muted);font-size:13px}
+    .password-card{margin-top:22px;padding:18px;border:1px solid rgba(213,165,43,.2);border-radius:18px;background:rgba(213,165,43,.045)}
+    .password-card h3{margin:0 0 7px;font-size:17px}.password-card p{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.55}
+    .password-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .password-grid .primary{grid-column:1/-1}
+    .bridge{position:absolute;width:1px;height:1px;border:0;opacity:0;pointer-events:none}
+    @media(max-width:560px){
+      .wrap{padding-top:20px}.card{padding:22px}.top img{width:118px}.back{font-size:11px}
+      .account-head{display:grid}.account-head h1{font-size:32px}.logout{width:max-content}
+      .password-grid{grid-template-columns:1fr}.purchase-bottom{align-items:flex-end}
+    }
+  </style>
+</head>
+<body>
+  <iframe
+    id="mc-post-frame"
+    name="mc-post-frame"
+    class="bridge"
+    title="Conexão segura Carioca Ticket"
+  ></iframe>
+
+  <div class="wrap">
+    <div class="top">
+      <a href="/" aria-label="Voltar para a home"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a>
+      <a class="back" href="/">← Voltar aos eventos</a>
+    </div>
+
+    <main id="app" class="card">
+      <div class="loading">
+        <div>
+          <div class="eyebrow">Área do cliente</div>
+          <h1>Minha Carioca</h1>
+          <p class="lead">Preparando seu acesso seguro.</p>
+          <div class="spinner" aria-hidden="true"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+<script>
+(function(){
+  'use strict';
+
+  var app=document.getElementById('app');
+  var pending={};
+  var TOKEN_KEY='ct_minha_carioca_session_v3';
+  var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var requestOtpId='';
+  var lastIdentifier='';
+  var resendTimer=null;
+
+  function el(tag,className,text){
+    var node=document.createElement(tag);
+    if(className)node.className=className;
+    if(text!==undefined&&text!==null)node.textContent=String(text);
+    return node;
+  }
+
+  function requestId(){
+    if(window.crypto&&crypto.getRandomValues){
+      var bytes=new Uint32Array(4);crypto.getRandomValues(bytes);
+      return Array.from(bytes).map(function(v){return v.toString(16)}).join('');
+    }
+    return String(Date.now())+Math.random().toString(16).slice(2);
+  }
+
+  function isTrustedPostOrigin(origin){
+    if(origin==='null')return true;
+    try{
+      var host=new URL(origin).hostname;
+      return origin==='https://script.google.com' ||
+        host==='script.google.com' ||
+        host.endsWith('.googleusercontent.com') ||
+        host==='script.googleusercontent.com';
+    }catch(e){
+      return false;
+    }
+  }
+
+  window.addEventListener('message',function(event){
+    if(!isTrustedPostOrigin(event.origin))return;
+    var data=event.data||{};
+    if(data.ctMinhaCariocaPost!==true||!data.id)return;
+
+    var item=pending[data.id];
+    if(!item)return;
+
+    delete pending[data.id];
+    clearTimeout(item.timer);
+
+    if(data.ok===true)item.resolve(data.resultado||{});
+    else item.reject(new Error(data.erro||'Não foi possível concluir a operação.'));
+  });
+
+  function addHidden(form,name,value){
+    var input=document.createElement('input');
+    input.type='hidden';
+    input.name=name;
+    input.value=String(value===undefined||value===null?'':value);
+    form.appendChild(input);
+  }
+
+  function callBridge(acao,payload){
+    var id=requestId();
+
+    return new Promise(function(resolve,reject){
+      var timer=setTimeout(function(){
+        delete pending[id];
+        reject(new Error('A operação demorou mais do que o esperado. Tente novamente.'));
+      },30000);
+
+      pending[id]={resolve:resolve,reject:reject,timer:timer};
+
+      var form=document.createElement('form');
+      form.method='POST';
+      form.action=APPS_SCRIPT_URL;
+      form.target='mc-post-frame';
+      form.style.display='none';
+
+      addHidden(form,'ctMinhaCariocaAction',acao);
+      addHidden(form,'ctMinhaCariocaRequestId',id);
+
+      Object.keys(payload||{}).forEach(function(key){
+        addHidden(form,key,payload[key]);
+      });
+
+      document.body.appendChild(form);
+
+      try{
+        form.submit();
+      }catch(e){
+        clearTimeout(timer);
+        delete pending[id];
+        form.remove();
+        reject(new Error('Não foi possível iniciar a conexão segura.'));
+        return;
+      }
+
+      setTimeout(function(){form.remove();},1000);
+    });
+  }
+
+  function setMessage(node,text,ok){
+    node.textContent=text||'';
+    node.className='message'+(ok?' ok':'');
+  }
+
+  function showLogin(note){
+    app.innerHTML='';
+
+    var eyebrow=el('div','eyebrow','Área do cliente');
+    var h1=el('h1','', 'Minha Carioca');
+    var lead=el('p','lead','Entre para acessar seus ingressos e compras com segurança.');
+    app.append(eyebrow,h1,lead);
+
+    var tabs=el('div','tabs');
+    var tabCode=el('button','tab active','Entrar com código');
+    var tabPass=el('button','tab','Entrar com senha');
+    tabCode.type='button';tabPass.type='button';
+    tabs.append(tabCode,tabPass);
+    app.append(tabs);
+
+    var codePanel=el('section','panel');
+    var field=el('div','field');
+    var label=el('label','', 'E-mail ou WhatsApp');
+    label.htmlFor='identifier';
+    var input=document.createElement('input');
+    input.id='identifier';input.type='text';input.autocomplete='username';
+    input.placeholder='Seu e-mail ou WhatsApp cadastrado';
+    field.append(label,input);
+
+    var send=el('button','primary','Continuar');
+    send.type='button';
+    var helper=el('p','helper','Você pode informar o WhatsApp para localizar a compra. Nesta versão, o código é enviado ao e-mail vinculado ao pedido.');
+    var msg=el('p','message',note||'');
+    var otp=el('div','otp-box');otp.hidden=true;
+
+    var otpTitle=el('div','otp-title','Digite o código de 6 dígitos');
+    var otpHelp=el('p','helper','Confira o e-mail vinculado à sua compra. O código expira em 5 minutos.');
+    var codeInput=document.createElement('input');
+    codeInput.className='otp-code';codeInput.type='text';codeInput.inputMode='numeric';
+    codeInput.autocomplete='one-time-code';codeInput.maxLength=6;codeInput.placeholder='000000';
+    var verify=el('button','primary','Confirmar código');verify.type='button';verify.style.marginTop='12px';
+    var resend=el('div','resend');
+    var resendLabel=el('span','', 'Não recebeu?');
+    var resendBtn=el('button','', 'Enviar novamente');resendBtn.type='button';
+    resend.append(resendLabel,resendBtn);
+    otp.append(otpTitle,otpHelp,codeInput,verify,resend);
+
+    codePanel.append(field,send,helper,msg,otp);
+
+    var passPanel=el('section','panel');passPanel.hidden=true;
+    var pf1=el('div','field');
+    var pl1=el('label','', 'E-mail');pl1.htmlFor='login-email';
+    var pEmail=document.createElement('input');pEmail.id='login-email';pEmail.type='email';pEmail.autocomplete='username';pEmail.placeholder='seuemail@exemplo.com';
+    pf1.append(pl1,pEmail);
+
+    var pf2=el('div','field');
+    var pl2=el('label','', 'Senha');pl2.htmlFor='login-password';
+    var pWrap=el('div','password-wrap');
+    var pPassword=document.createElement('input');pPassword.id='login-password';pPassword.type='password';pPassword.autocomplete='current-password';pPassword.placeholder='Sua senha';
+    var show=el('button','show-pass','Mostrar');show.type='button';
+    pWrap.append(pPassword,show);pf2.append(pl2,pWrap);
+
+    var login=el('button','primary','Entrar');login.type='button';
+    var passHelper=el('p','helper');
+    passHelper.append(document.createTextNode('Ainda não criou senha ou esqueceu? '));
+    var useCode=el('button','link-btn','Entre com código');useCode.type='button';
+    passHelper.append(useCode);
+    var passMsg=el('p','message');
+    passPanel.append(pf1,pf2,login,passHelper,passMsg);
+
+    var security=el('div','security');
+    var secStrong=el('strong','', 'Seus ingressos continuam protegidos');
+    var secP=el('p','', 'Digitar um telefone ou e-mail nunca libera ingressos sozinho. O acesso só é aberto após a confirmação do código recebido ou de uma senha válida.');
+    security.append(secStrong,secP);
+
+    app.append(codePanel,passPanel,security);
+
+    function selectCode(){
+      tabCode.classList.add('active');tabPass.classList.remove('active');
+      codePanel.hidden=false;passPanel.hidden=true;setTimeout(function(){input.focus()},0);
+    }
+    function selectPass(){
+      tabPass.classList.add('active');tabCode.classList.remove('active');
+      passPanel.hidden=false;codePanel.hidden=true;setTimeout(function(){pEmail.focus()},0);
+    }
+    tabCode.addEventListener('click',selectCode);
+    tabPass.addEventListener('click',selectPass);
+    useCode.addEventListener('click',selectCode);
+
+    show.addEventListener('click',function(){
+      var visible=pPassword.type==='text';
+      pPassword.type=visible?'password':'text';
+      show.textContent=visible?'Mostrar':'Ocultar';
+    });
+
+    async function sendCode(){
+      var identifier=String(input.value||'').trim();
+      if(!identifier){setMessage(msg,'Informe seu e-mail ou WhatsApp.');input.focus();return;}
+      lastIdentifier=identifier;
+      send.disabled=true;send.textContent='Enviando…';setMessage(msg,'',false);
+      try{
+        var r=await callBridge('solicitarCodigo',{identificador:identifier});
+        requestOtpId=String(r.requestId||'');
+        otp.hidden=false;
+        setMessage(msg,r.mensagem||'Se os dados estiverem cadastrados, o código será enviado.',true);
+        codeInput.value='';codeInput.focus();
+        startResend(resendBtn);
+      }catch(e){
+        setMessage(msg,e.message||'Não foi possível enviar o código.');
+      }finally{
+        send.disabled=false;send.textContent='Continuar';
+      }
+    }
+
+    async function verifyCode(){
+      var code=String(codeInput.value||'').replace(/\D/g,'').slice(0,6);
+      if(!requestOtpId||code.length!==6){setMessage(msg,'Digite o código de 6 dígitos.');return;}
+      verify.disabled=true;verify.textContent='Validando…';setMessage(msg,'',false);
+      try{
+        var r=await callBridge('validarCodigo',{requestId:requestOtpId,codigo:code});
+        if(!r||r.autenticado!==true){setMessage(msg,(r&&r.mensagem)||'Código inválido ou expirado.');return;}
+        localStorage.setItem(TOKEN_KEY,String(r.token||''));
+        renderAccount(r);
+      }catch(e){
+        setMessage(msg,e.message||'Não foi possível validar o código.');
+      }finally{
+        verify.disabled=false;verify.textContent='Confirmar código';
+      }
+    }
+
+    send.addEventListener('click',sendCode);
+    input.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendCode();}});
+    verify.addEventListener('click',verifyCode);
+    codeInput.addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,6);});
+    codeInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();verifyCode();}});
+    resendBtn.addEventListener('click',function(){input.value=lastIdentifier||input.value;sendCode();});
+
+    login.addEventListener('click',async function(){
+      var email=String(pEmail.value||'').trim();
+      var senha=String(pPassword.value||'');
+      if(!email||!senha){setMessage(passMsg,'Informe e-mail e senha.');return;}
+      login.disabled=true;login.textContent='Entrando…';setMessage(passMsg,'',false);
+      try{
+        var r=await callBridge('loginSenha',{email:email,senha:senha});
+        if(!r||r.autenticado!==true){setMessage(passMsg,(r&&r.mensagem)||'E-mail ou senha inválidos.');return;}
+        localStorage.setItem(TOKEN_KEY,String(r.token||''));
+        renderAccount(r);
+      }catch(e){
+        setMessage(passMsg,e.message||'Não foi possível entrar.');
+      }finally{
+        login.disabled=false;login.textContent='Entrar';
+      }
+    });
+    pPassword.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();login.click();}});
+  }
+
+  function startResend(button){
+    if(resendTimer)clearInterval(resendTimer);
+    var n=45;button.disabled=true;button.textContent='Reenviar em '+n+'s';
+    resendTimer=setInterval(function(){
+      n--;
+      if(n<=0){clearInterval(resendTimer);resendTimer=null;button.disabled=false;button.textContent='Enviar novamente';}
+      else button.textContent='Reenviar em '+n+'s';
+    },1000);
+  }
+
+  function renderAccount(data){
+    app.innerHTML='';
+    var usuario=data.usuario||{};
+    var compras=Array.isArray(data.compras)?data.compras:[];
+
+    var head=el('div','account-head');
+    var left=el('div');
+    left.append(el('div','eyebrow','Minha Carioca'),el('h1','',usuario.nome?('Olá, '+String(usuario.nome).split(/\s+/)[0]):'Seus ingressos'));
+    var metas=[];
+    if(usuario.emailMascarado)metas.push(usuario.emailMascarado);
+    if(usuario.whatsappMascarado)metas.push(usuario.whatsappMascarado);
+    left.append(el('div','account-meta',metas.join(' · ')));
+    var logout=el('button','logout','Sair');logout.type='button';
+    head.append(left,logout);app.append(head);
+
+    var title=el('div','section-title');
+    title.append(el('h2','', 'Meus ingressos'),el('span','',compras.length+(compras.length===1?' compra encontrada':' compras encontradas')));
+    app.append(title);
+
+    var list=el('div','purchases');
+    if(!compras.length){
+      list.append(el('div','empty','Nenhuma compra concluída foi localizada para esta conta.'));
+    }else{
+      compras.forEach(function(item){
+        var card=el('article','purchase');
+        card.append(el('div','purchase-kicker','Ingresso Carioca Ticket'));
+        card.append(el('h3','',item.eventoNome||'Evento Carioca Ticket'));
+        var details=[];
+        if(item.data)details.push(item.data);
+        if(item.horario)details.push(item.horario);
+        if(item.local)details.push(item.local);
+        if(item.cidade)details.push(item.cidade+(item.uf?' - '+item.uf:''));
+        card.append(el('p','',details.join(' · ')));
+        var bottom=el('div','purchase-bottom');
+        bottom.append(el('small','', (item.quantidade||0)+(Number(item.quantidade)===1?' acesso':' acessos')));
+        var link=el('a','open-ticket','Abrir ingressos');
+        link.href=String(item.link||'#');
+        bottom.append(link);card.append(bottom);list.append(card);
+      });
+    }
+    app.append(list);
+
+    if(String(usuario.metodo||'')==='OTP'){
+      var pc=el('div','password-card');
+      pc.append(el('h3','', 'Quer entrar com senha da próxima vez?'));
+      pc.append(el('p','', 'Como seu e-mail já foi confirmado pelo código, você pode criar ou redefinir uma senha agora. Isso é opcional.'));
+      var grid=el('div','password-grid');
+      var p1=document.createElement('input');p1.type='password';p1.autocomplete='new-password';p1.placeholder='Nova senha';
+      var p2=document.createElement('input');p2.type='password';p2.autocomplete='new-password';p2.placeholder='Confirmar senha';
+      var save=el('button','primary','Criar / redefinir senha');save.type='button';
+      var msg=el('p','message');msg.style.gridColumn='1/-1';
+      grid.append(p1,p2,save,msg);pc.append(grid);app.append(pc);
+
+      save.addEventListener('click',async function(){
+        var a=String(p1.value||''),b=String(p2.value||'');
+        if(a.length<8){setMessage(msg,'Use pelo menos 8 caracteres, com letras e números.');return;}
+        if(a!==b){setMessage(msg,'As senhas não coincidem.');return;}
+        save.disabled=true;save.textContent='Salvando…';
+        try{
+          var r=await callBridge('criarSenha',{token:String(data.token||''),senha:a});
+          setMessage(msg,(r&&r.mensagem)||'Senha atualizada.',r&&r.sucesso===true);
+          if(r&&r.sucesso===true){p1.value='';p2.value='';}
+        }catch(e){setMessage(msg,e.message||'Não foi possível salvar a senha.');}
+        finally{save.disabled=false;save.textContent='Criar / redefinir senha';}
+      });
+    }
+
+    var sec=el('div','security');
+    sec.append(el('strong','', 'Sessão protegida'),el('p','', 'O acesso por código expira automaticamente. Sua sessão fica salva apenas neste navegador até expirar ou até você sair.'));
+    app.append(sec);
+
+    logout.addEventListener('click',async function(){
+      var token=String(localStorage.getItem(TOKEN_KEY)||'');
+      localStorage.removeItem(TOKEN_KEY);
+      try{await callBridge('logout',{token:token});}catch(e){}
+      showLogin('Sessão encerrada.');
+    });
+  }
+
+  async function init(){
+    var token=String(localStorage.getItem(TOKEN_KEY)||'').trim();
+
+    if(!token){
+      showLogin('');
+      return;
+    }
+
+    try{
+      var r=await callBridge('consultarSessao',{token:token});
+      if(r&&r.autenticado===true){
+        renderAccount(r);
+        return;
+      }
+    }catch(e){}
+
+    localStorage.removeItem(TOKEN_KEY);
+    showLogin('');
+  }
+
+  init();
+}());
+</script>
+</body>
+</html>
