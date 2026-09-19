@@ -150,7 +150,7 @@
   <script>
     (function () {
       const BASE_INGRESSO =
-        'https://script.google.com/macros/s/AKfycbxzpg1Rm876lmZygLqP-HEbHWc49ct0bicDKhOafywr9gHVG571uicgHJ3ZGWXsH2LZ/exec';
+        'https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 
       const parametros = new URLSearchParams(window.location.search);
       const codigo = String(parametros.get('codigo') || '').trim().toUpperCase();
@@ -177,7 +177,7 @@
         '?page=ingresso' +
         '&codigo=' + encodeURIComponent(codigo) +
         '&sig=' + encodeURIComponent(sig) +
-        '&pv=5';
+        '&pv=6';
 
       abrir.href = destino;
       abrir.style.display = 'inline-flex';
