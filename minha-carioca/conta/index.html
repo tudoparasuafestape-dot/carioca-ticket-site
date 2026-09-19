@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090909">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+<title>Minha Carioca | Carioca Ticket</title>
+<link rel="icon" type="image/png" href="/assets/carioca-ticket-simbolo.png">
+<style>
+:root{--g:#d5a52b;--g2:#f0c85b;--t:#f7f2e8;--m:#aaa59b;--l:#2b2924;--ok:#61d399;--err:#e5a18f}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,rgba(213,165,43,.13),transparent 30%),linear-gradient(180deg,#0a0a0a,#050505 72%);color:var(--t);font-family:Arial,sans-serif}
+.wrap{width:min(760px,calc(100% - 28px));margin:auto;padding:28px 0 54px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.top img{width:120px;max-height:54px;object-fit:contain}.back{color:#d5d0c6;text-decoration:none;font-size:13px;font-weight:800}
+.card{padding:28px;border:1px solid var(--l);border-radius:26px;background:linear-gradient(180deg,#131313,#0d0d0d);box-shadow:0 24px 80px rgba(0,0,0,.4)}.ey{font-size:11px;font-weight:900;letter-spacing:.18em;color:var(--g2);text-transform:uppercase}
+h1{font-size:clamp(38px,8vw,58px);line-height:1.02;letter-spacing:-.045em;margin:12px 0 14px}.lead{color:#c0bbb1;font-size:16px;line-height:1.7;margin:0 0 22px}
+label{display:block;margin:0 0 8px;font-size:13px;font-weight:800}input{width:100%;min-height:54px;border:1px solid #39362f;border-radius:13px;background:#090909;color:var(--t);padding:0 15px;outline:none;font-size:16px}input:focus{border-color:rgba(240,200,91,.75);box-shadow:0 0 0 3px rgba(213,165,43,.1)}
+.btn{width:100%;min-height:54px;border:1px solid var(--g);border-radius:13px;background:linear-gradient(135deg,var(--g),var(--g2));color:#111;font-weight:900;font-size:16px;margin-top:14px}.help{margin:12px 0 0;color:var(--m);font-size:12px;line-height:1.6}.msg{min-height:22px;margin:12px 0 0;color:var(--err);font-size:12px;line-height:1.55}.msg.ok{color:var(--ok)}
+.sec{margin-top:22px;padding:17px;border:1px solid #22303d;border-radius:17px;background:#0d131a}.sec strong{display:block;margin-bottom:5px}.sec p{margin:0;color:#a8b2bd;font-size:12px;line-height:1.6}
+.code{text-align:center;font-size:28px;font-weight:900;letter-spacing:.3em;padding-left:.3em}.list{display:grid;gap:12px}.item{padding:18px;border:1px solid #292720;border-radius:18px;background:#0b0b0b}.item h3{margin:7px 0 8px;font-size:19px}.item p{margin:0 0 12px;color:var(--m);font-size:12px;line-height:1.55}.row{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #25231f;padding-top:13px}.open{display:inline-flex;align-items:center;justify-content:center;min-height:43px;border-radius:11px;background:linear-gradient(135deg,var(--g),var(--g2));color:#111;text-decoration:none;font-size:12px;font-weight:900;padding:0 15px}.logout{border:1px solid #37342f;border-radius:11px;background:#101010;color:#ddd5c8;min-height:42px;padding:0 14px;font-weight:800}
+.head{display:flex;justify-content:space-between;gap:18px;align-items:start}.meta{color:var(--m);font-size:12px}.small{color:var(--m);font-size:11px}.empty{padding:24px;border:1px dashed #3c382f;border-radius:17px;text-align:center;color:var(--m);font-size:13px}
+@media(max-width:560px){.card{padding:22px}.back{font-size:11px}.head{display:grid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><a href="/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a><a class="back" href="/">← Voltar aos eventos</a></div>
+<main id="app" class="card"></main>
+</div>
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORE='ct_mc_account_v6',REQ='ct_mc_req_v6',ID='ct_mc_id_v6',app=document.getElementById('app');
+
+function e(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=String(text);return n}
+function post(action,data){var f=document.createElement('form');f.method='POST';f.action=APP;f.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);f.appendChild(i)}add('ctMinhaCariocaNav','1');add('ctMinhaCariocaAction',action);Object.keys(data||{}).forEach(function(k){add(k,data[k])});document.body.appendChild(f);f.submit()}
+function decode(raw){var s=String(raw||'').replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return JSON.parse(new TextDecoder('utf-8').decode(u))}
+function clearHash(){if(location.hash)history.replaceState(null,'',location.pathname+location.search)}
+function save(data){localStorage.setItem(STORE,JSON.stringify({exp:Date.now()+21600000,data:data}))}
+function load(){try{var x=JSON.parse(localStorage.getItem(STORE)||'null');if(!x||Date.now()>x.exp){localStorage.removeItem(STORE);return null}return x.data}catch(_){return null}}
+function base(title,lead){app.innerHTML='';app.append(e('div','ey','Área do cliente'),e('h1','',title),e('p','lead',lead))}
+function security(){var s=e('div','sec');s.append(e('strong','','Seus ingressos continuam protegidos'),e('p','','Informar telefone ou e-mail não libera ingressos. O acesso só acontece depois da confirmação do código recebido.'));app.append(s)}
+
+function login(msg){
+base('Minha Carioca','Entre para acessar seus ingressos e compras com segurança.');
+var l=e('label','','E-mail ou WhatsApp'),i=document.createElement('input'),b=e('button','btn','Continuar'),h=e('p','help','Você pode informar o WhatsApp para localizar a compra. O código será enviado ao e-mail vinculado ao pedido.'),m=e('p','msg',msg||'');
+i.placeholder='Seu e-mail ou WhatsApp cadastrado';i.value=sessionStorage.getItem(ID)||'';b.type='button';app.append(l,i,b,h,m);security();
+function go(){var v=String(i.value||'').trim();if(!v){m.textContent='Informe seu e-mail ou WhatsApp.';return}sessionStorage.setItem(ID,v);b.disabled=true;b.textContent='Enviando…';post('solicitarCodigo',{identificador:v})}
+b.onclick=go;i.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();go()}};setTimeout(function(){i.focus()},0)
+}
+
+function otp(req,msg){
+base('Digite o código','Enviamos um código de 6 dígitos ao e-mail vinculado à sua compra.');
+var l=e('label','','Código de acesso'),i=document.createElement('input'),b=e('button','btn','Confirmar código'),m=e('p','msg ok',msg||''),h=e('p','help','O código expira em 5 minutos. Para solicitar outro, volte aos eventos e entre novamente.');
+i.className='code';i.inputMode='numeric';i.autocomplete='one-time-code';i.maxLength=6;i.placeholder='000000';b.type='button';app.append(l,i,b,m,h);security();
+function go(){var v=String(i.value||'').replace(/\D/g,'').slice(0,6);if(v.length!==6){m.className='msg';m.textContent='Digite os 6 números do código.';return}b.disabled=true;b.textContent='Validando…';post('validarCodigo',{requestId:req,codigo:v})}
+b.onclick=go;i.oninput=function(){this.value=this.value.replace(/\D/g,'').slice(0,6)};i.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();go()}};setTimeout(function(){i.focus()},0)
+}
+
+function account(data,msg){
+app.innerHTML='';var u=data.usuario||{},arr=Array.isArray(data.compras)?data.compras:[];
+var head=e('div','head'),left=e('div');left.append(e('div','ey','Minha Carioca'),e('h1','',u.nome?('Olá, '+String(u.nome).split(/\s+/)[0]):'Seus ingressos'));
+var meta=[];if(u.emailMascarado)meta.push(u.emailMascarado);if(u.whatsappMascarado)meta.push(u.whatsappMascarado);left.append(e('div','meta',meta.join(' · ')));
+var out=e('button','logout','Sair');out.type='button';head.append(left,out);app.append(head);if(msg)app.append(e('p','msg ok',msg));
+app.append(e('h2','','Meus ingressos'));var list=e('div','list');
+if(!arr.length)list.append(e('div','empty','Nenhuma compra concluída foi localizada para esta conta.'));
+arr.forEach(function(x){var it=e('article','item');it.append(e('div','ey','Ingresso Carioca Ticket'),e('h3','',x.eventoNome||'Evento Carioca Ticket'));var d=[];if(x.data)d.push(x.data);if(x.horario)d.push(x.horario);if(x.local)d.push(x.local);if(x.cidade)d.push(x.cidade+(x.uf?' - '+x.uf:''));it.append(e('p','',d.join(' · ')));var row=e('div','row');row.append(e('span','small',(x.quantidade||0)+(Number(x.quantidade)===1?' acesso':' acessos')));var a=e('a','open','Abrir ingressos');a.href=String(x.link||'#');row.append(a);it.append(row);list.append(it)});app.append(list);security();
+out.onclick=function(){localStorage.removeItem(STORE);sessionStorage.clear();login('Sessão encerrada.')}
+}
+
+if(location.hash.indexOf('#ctmc=')===0){
+var env;try{env=decode(location.hash.slice(6))}catch(_){clearHash();login('Não foi possível concluir o retorno seguro.');return}clearHash();
+if(env.tipo==='solicitarCodigo'&&env.ok&&env.resultado&&env.resultado.requestId){var r=env.resultado;sessionStorage.setItem(REQ,r.requestId);otp(r.requestId,r.mensagem||'Confira seu e-mail.');return}
+if(env.tipo==='validarCodigo'){var v=env.resultado||{};if(env.ok&&v.autenticado){save(v);sessionStorage.removeItem(REQ);sessionStorage.removeItem(ID);account(v,'Acesso confirmado com segurança.');return}otp(sessionStorage.getItem(REQ)||'',v.mensagem||env.erro||'Código inválido ou expirado.');return}
+login(env.erro||'Não foi possível concluir o acesso.');return
+}
+var pending=sessionStorage.getItem(REQ)||'';if(pending){otp(pending,'Digite o código enviado ao e-mail vinculado.');return}
+var cached=load();if(cached){account(cached,'');return}
+login('');
+}());
+</script>
+</body>
+</html>
