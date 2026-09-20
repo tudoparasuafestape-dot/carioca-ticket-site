@@ -133,12 +133,62 @@
     button.action{width:100%;font-family:inherit;cursor:pointer}
     .action.full{grid-column:1/-1}
     @media(max-width:520px){.info,.actions{grid-template-columns:1fr}.action.full{grid-column:auto}}
+    @page{size:A4 portrait;margin:0}
     @media print{
-      body{display:block;padding:0;background:#fff;color:#111}
-      .card{width:100%;max-width:520px;margin:0 auto;border:0;box-shadow:none;background:#fff}
+      html,body{width:210mm;min-height:297mm}
+      body{
+        display:block;
+        padding:10mm 14mm;
+        background:#fff!important;
+        color:#111;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact
+      }
+      .card{
+        width:100%;
+        max-width:182mm;
+        margin:0 auto;
+        padding:0;
+        border:0;
+        box-shadow:none;
+        background:#fff!important
+      }
+      .logo{width:48mm;max-height:20mm;margin:0 auto 6mm}
       .actions,.rodape{display:none!important}
-      .ticket-view{color:#111}.info div{border-color:#ddd;background:#fff}.info strong{color:#111}
-      .security-note{border-color:#ccc;background:#fff;color:#333}
+      .ticket-view{color:#111}
+      .event-cover{
+        height:54mm;
+        margin:0 0 6mm;
+        border:1px solid #ddd;
+        border-radius:5mm;
+        overflow:hidden;
+        background:#fff!important
+      }
+      .event-cover img{
+        display:block!important;
+        visibility:visible!important;
+        opacity:1!important;
+        width:100%!important;
+        height:100%!important;
+        object-fit:cover!important;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact
+      }
+      .event-cover:after{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact
+      }
+      .event-cover strong{font-size:20pt}
+      .status{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact
+      }
+      .info{gap:3mm}
+      .info div{border-color:#ddd;background:#fff}
+      .info strong{color:#111}
+      .qr{width:66mm;margin:7mm auto 2mm;border:1px solid #ddd}
+      .code{font-size:14pt}
+      .security-note{margin-top:5mm;border-color:#ccc;background:#fff;color:#333}
     }
     .erro{
       display:none;
@@ -255,7 +305,9 @@
             '<a class="action" href="/">Ver eventos</a>'+
           '</div>';
 
-        var shareUrl=window.location.href;
+        var shareUrl=location.origin+location.pathname+
+          '?v=20260919-2332&codigo='+encodeURIComponent(codigo)+
+          '&sig='+encodeURIComponent(sig);
         var whatsapp=document.getElementById('share-whatsapp');
         if(whatsapp){
           whatsapp.href='https://wa.me/?text='+encodeURIComponent(
