@@ -200,7 +200,7 @@ async function mockMinhaCariocaSession(page, sessionResult) {
       contentType: 'text/html; charset=utf-8',
       body:
         '<!doctype html><html><body><script>' +
-        'window.top.postMessage(' + JSON.stringify(payload).replace(/</g, '\\u003c') + ', "https://cariocaticket.com.br");' +
+        'window.top.postMessage(' + JSON.stringify(payload).replace(/</g, '\\u003c') + ', "*");' +
         '<\/script></body></html>'
     });
   });
