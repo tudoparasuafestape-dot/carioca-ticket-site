@@ -154,3 +154,43 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 14
+
+  canario-real:
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    name: Canario real first-party ${{ matrix.viewport }}
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Validar canario real sem criar cobranca
+        env:
+          CT_BASE_URL: https://cariocaticket.com.br
+          CT_EXPECTED_HOST: cariocaticket.com.br
+          CT_BRANCH_MODE: '0'
+        run: |
+          if [ "${{ matrix.viewport }}" = "desktop" ]; then
+            npx playwright test tests/e2e/canary-real.spec.js --project=desktop-chromium
+          else
+            npx playwright test tests/e2e/canary-real.spec.js --project=mobile-chromium
+          fi
+      - name: Guardar evidencias
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canario-real-${{ matrix.viewport }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
