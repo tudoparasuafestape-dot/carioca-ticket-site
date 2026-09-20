@@ -34,7 +34,33 @@ var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzB
 var STORE='ct_mc_account_v6',REQ='ct_mc_req_v6',ID='ct_mc_id_v6',app=document.getElementById('app');
 
 function e(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=String(text);return n}
-function post(action,data){var f=document.createElement('form');f.method='POST';f.action=APP;f.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);f.appendChild(i)}add('ctMinhaCariocaNav','1');add('ctMinhaCariocaAction',action);Object.keys(data||{}).forEach(function(k){add(k,data[k])});document.body.appendChild(f);f.submit()}
+var pendingPosts={};
+function post(action,data){
+var id='MCWEB-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+var frameName='ctmc_post_'+id.replace(/[^A-Za-z0-9_]/g,'');
+var frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+var f=document.createElement('form');f.method='POST';f.action=APP;f.target=frameName;f.style.display='none';
+function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);f.appendChild(i)}
+add('ctMinhaCariocaAction',action);add('ctMinhaCariocaRequestId',id);Object.keys(data||{}).forEach(function(k){add(k,data[k])});
+document.body.append(frame,f);pendingPosts[id]={action:action,frame:frame,form:f};
+pendingPosts[id].timer=setTimeout(function(){var p=pendingPosts[id];if(!p)return;delete pendingPosts[id];try{p.form.remove();p.frame.remove()}catch(_){}
+if(action==='solicitarCodigo')login('O envio demorou mais que o esperado. Tente novamente.');
+else if(action==='validarCodigo')otp(sessionStorage.getItem(REQ)||'','A validação demorou mais que o esperado. Tente novamente.');
+},20000);
+f.submit()
+}
+window.addEventListener('message',function(ev){
+var p=ev.data;if(!p||p.ctMinhaCariocaPost!==true||!p.id||!pendingPosts[p.id])return;
+var ctx=pendingPosts[p.id];delete pendingPosts[p.id];clearTimeout(ctx.timer);try{ctx.form.remove();ctx.frame.remove()}catch(_){}
+if(ctx.action==='solicitarCodigo'){
+if(p.ok&&p.resultado&&p.resultado.requestId){var r=p.resultado;sessionStorage.setItem(REQ,r.requestId);otp(r.requestId,r.mensagem||'Confira seu e-mail.');return}
+login(p.erro||'Não foi possível enviar o código.');return
+}
+if(ctx.action==='validarCodigo'){
+var v=p.resultado||{};if(p.ok&&v.autenticado){save(v);sessionStorage.removeItem(REQ);sessionStorage.removeItem(ID);account(v,'Acesso confirmado com segurança.');return}
+otp(sessionStorage.getItem(REQ)||'',v.mensagem||p.erro||'Código inválido ou expirado.');return
+}
+});
 function decode(raw){var s=String(raw||'').replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return JSON.parse(new TextDecoder('utf-8').decode(u))}
 function clearHash(){if(location.hash)history.replaceState(null,'',location.pathname+location.search)}
 function save(data){localStorage.setItem(STORE,JSON.stringify({exp:Date.now()+21600000,data:data}))}
