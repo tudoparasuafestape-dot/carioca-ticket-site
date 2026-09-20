@@ -78,6 +78,32 @@ if (home) {
   }
 }
 
+const eventoPublico = read('evento/index.html');
+if (eventoPublico) {
+  if (!eventoPublico.includes("ctMinhaCariocaAction','publicRpc'")) {
+    fail('evento/index.html', 'evento oficial ainda nao usa ponte first-party');
+  }
+  if (!eventoPublico.includes('/checkout/')) {
+    fail('evento/index.html', 'evento oficial sem rota first-party /checkout/');
+  }
+  if (/id=["']app["'][^>]*iframe|<iframe[^>]+id=["']app["']/i.test(eventoPublico)) {
+    fail('evento/index.html', 'evento oficial ainda depende do iframe legado de aplicacao');
+  }
+}
+
+const checkoutPublico = read('checkout/index.html');
+if (checkoutPublico) {
+  if (!checkoutPublico.includes("ctMinhaCariocaAction','publicRpc'")) {
+    fail('checkout/index.html', 'checkout oficial ainda nao usa ponte first-party');
+  }
+  if (!checkoutPublico.includes('/evento/')) {
+    fail('checkout/index.html', 'checkout oficial sem retorno first-party /evento/');
+  }
+  if (/id=["']app["'][^>]*iframe|<iframe[^>]+id=["']app["']/i.test(checkoutPublico)) {
+    fail('checkout/index.html', 'checkout oficial ainda depende do iframe legado');
+  }
+}
+
 const ingresso = read('ingresso/index.html');
 if (ingresso && !/Voltar para Minha Carioca/i.test(ingresso)) {
   fail('ingresso/index.html', 'ingresso sem retorno para Minha Carioca');
