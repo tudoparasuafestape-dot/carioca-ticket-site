@@ -50,6 +50,7 @@ else if(action==='validarCodigo')otp(sessionStorage.getItem(REQ)||'','A validaç
 f.submit()
 }
 window.addEventListener('message',function(ev){
+if(ev.origin!=='https://script.google.com' && !/\.googleusercontent\.com$/.test(ev.origin||''))return;
 var p=ev.data;if(!p||p.ctMinhaCariocaPost!==true||!p.id||!pendingPosts[p.id])return;
 var ctx=pendingPosts[p.id];delete pendingPosts[p.id];clearTimeout(ctx.timer);try{ctx.form.remove();ctx.frame.remove()}catch(_){}
 if(ctx.action==='solicitarCodigo'){
@@ -57,14 +58,22 @@ if(p.ok&&p.resultado&&p.resultado.requestId){var r=p.resultado;sessionStorage.se
 login(p.erro||'Não foi possível enviar o código.');return
 }
 if(ctx.action==='validarCodigo'){
-var v=p.resultado||{};if(p.ok&&v.autenticado){save(v);sessionStorage.removeItem(REQ);sessionStorage.removeItem(ID);account(v,'Acesso confirmado com segurança.');return}
+var v=p.resultado||{};if(p.ok&&v.autenticado&&v.token){save(v);sessionStorage.removeItem(REQ);sessionStorage.removeItem(ID);account(v,'Acesso confirmado com segurança.');return}
 otp(sessionStorage.getItem(REQ)||'',v.mensagem||p.erro||'Código inválido ou expirado.');return
+}
+if(ctx.action==='consultarSessao'){
+var s=p.resultado||{};if(p.ok&&s.autenticado&&s.token){save(s);account(s,'');return}
+localStorage.removeItem(STORE);login('Sua sessão expirou. Entre novamente.');return
+}
+if(ctx.action==='logout'){
+localStorage.removeItem(STORE);sessionStorage.clear();login('Sessão encerrada.');return
 }
 });
 function decode(raw){var s=String(raw||'').replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return JSON.parse(new TextDecoder('utf-8').decode(u))}
 function clearHash(){if(location.hash)history.replaceState(null,'',location.pathname+location.search)}
-function save(data){localStorage.setItem(STORE,JSON.stringify({exp:Date.now()+21600000,data:data}))}
-function load(){try{var x=JSON.parse(localStorage.getItem(STORE)||'null');if(!x||Date.now()>x.exp){localStorage.removeItem(STORE);return null}return x.data}catch(_){return null}}
+function save(data){var token=String(data&&data.token||'').trim();if(!token){localStorage.removeItem(STORE);return}localStorage.setItem(STORE,JSON.stringify({exp:Date.now()+21600000,token:token}))}
+function load(){try{var x=JSON.parse(localStorage.getItem(STORE)||'null');if(!x||Date.now()>x.exp||!x.token){localStorage.removeItem(STORE);return null}return String(x.token)}catch(_){localStorage.removeItem(STORE);return null}}
+function restore(token){post('consultarSessao',{token:String(token||'')})}
 function base(title,lead){app.innerHTML='';app.append(e('div','ey','Área do cliente'),e('h1','',title),e('p','lead',lead))}
 function security(){var s=e('div','sec');s.append(e('strong','','Seus ingressos continuam protegidos'),e('p','','Informar telefone ou e-mail não libera ingressos. O acesso só acontece depois da confirmação do código recebido.'));app.append(s)}
 
@@ -119,17 +128,17 @@ linha.append(rotulo,a);it.append(linha);
 list.append(it);
 });
 app.append(list);security();
-out.onclick=function(){localStorage.removeItem(STORE);sessionStorage.clear();login('Sessão encerrada.')}
+out.onclick=function(){var token=String(data&&data.token||'').trim();if(token){post('logout',{token:token});return}localStorage.removeItem(STORE);sessionStorage.clear();login('Sessão encerrada.')}
 }
 
 if(location.hash.indexOf('#ctmc=')===0){
 var env;try{env=decode(location.hash.slice(6))}catch(_){clearHash();login('Não foi possível concluir o retorno seguro.');return}clearHash();
 if(env.tipo==='solicitarCodigo'&&env.ok&&env.resultado&&env.resultado.requestId){var r=env.resultado;sessionStorage.setItem(REQ,r.requestId);otp(r.requestId,r.mensagem||'Confira seu e-mail.');return}
-if(env.tipo==='validarCodigo'){var v=env.resultado||{};if(env.ok&&v.autenticado){save(v);sessionStorage.removeItem(REQ);sessionStorage.removeItem(ID);account(v,'Acesso confirmado com segurança.');return}otp(sessionStorage.getItem(REQ)||'',v.mensagem||env.erro||'Código inválido ou expirado.');return}
+if(env.tipo==='validarCodigo'){var v=env.resultado||{};if(env.ok&&v.autenticado&&v.token){sessionStorage.removeItem(REQ);sessionStorage.removeItem(ID);restore(v.token);return}otp(sessionStorage.getItem(REQ)||'',v.mensagem||env.erro||'Código inválido ou expirado.');return}
 login(env.erro||'Não foi possível concluir o acesso.');return
 }
 var pending=sessionStorage.getItem(REQ)||'';if(pending){otp(pending,'Digite o código enviado ao e-mail vinculado.');return}
-var cached=load();if(cached){account(cached,'');return}
+var cached=load();if(cached){restore(cached);return}
 login('');
 }());
 </script>

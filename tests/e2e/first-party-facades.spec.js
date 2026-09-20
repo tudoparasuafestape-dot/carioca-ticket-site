@@ -167,6 +167,45 @@ async function expectNoTechnicalVisibleLinks(page) {
   ).toEqual([]);
 }
 
+
+function minhaCariocaEnvelope(result) {
+  return {
+    ctMinhaCariocaPost: true,
+    id: result.id,
+    ok: result.ok,
+    resultado: result.resultado || null,
+    erro: result.erro || ''
+  };
+}
+
+async function mockMinhaCariocaSession(page, sessionResult) {
+  await page.route('https://script.google.com/**', async route => {
+    const request = route.request();
+    const params = new URLSearchParams(request.postData() || '');
+    const action = String(params.get('ctMinhaCariocaAction') || '');
+    if (action !== 'consultarSessao' && action !== 'logout') {
+      await route.fallback();
+      return;
+    }
+
+    const requestId = String(params.get('ctMinhaCariocaRequestId') || '');
+    const payload = minhaCariocaEnvelope({
+      id: requestId,
+      ok: true,
+      resultado: action === 'logout' ? { sucesso: true } : sessionResult
+    });
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/html; charset=utf-8',
+      body:
+        '<!doctype html><html><body><script>' +
+        'window.top.postMessage(' + JSON.stringify(payload).replace(/</g, '\\u003c') + ', "*");' +
+        '<\/script></body></html>'
+    });
+  });
+}
+
 test.describe('Fachadas first-party em homologacao', () => {
   test.skip(!BRANCH_MODE, 'Teste destinado ao codigo da branch antes da publicacao.');
 
@@ -326,6 +365,89 @@ test.describe('Fachadas first-party em homologacao', () => {
 
     expect(new URL(page.url()).pathname).toBe('/bar/');
     await expectNoTechnicalVisibleLinks(page);
+  });
+
+
+  test('Minha Carioca rejeita retorno ctmc forjado sem sessao valida', async ({ page }) => {
+    await mockMinhaCariocaSession(page, {
+      sucesso: true,
+      autenticado: false
+    });
+
+    const falso = {
+      tipo: 'validarCodigo',
+      ok: true,
+      resultado: {
+        sucesso: true,
+        autenticado: true,
+        token: 'TOKEN-FALSO-NAO-VALIDO',
+        usuario: { nome: 'Conta Falsa' },
+        compras: [{ eventoNome: 'EVENTO FORJADO' }]
+      },
+      erro: ''
+    };
+
+    const payload = Buffer.from(JSON.stringify(falso), 'utf8')
+      .toString('base64url');
+
+    await page.goto('/minha-carioca/conta/#ctmc=' + payload, {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.getByRole('heading', { name: /Minha Carioca/i })).toBeVisible({
+      timeout: 15000
+    });
+    await expect(page.getByPlaceholder(/Seu e-mail ou WhatsApp cadastrado/i)).toBeVisible();
+    await expect(page.locator('body')).not.toContainText('EVENTO FORJADO');
+    await expect(page.locator('body')).not.toContainText('Conta Falsa');
+  });
+
+  test('Minha Carioca restaura somente token e busca compras novamente no backend', async ({ page }) => {
+    await mockMinhaCariocaSession(page, {
+      sucesso: true,
+      autenticado: true,
+      token: 'TOKEN-SESSAO-E2E',
+      usuario: {
+        nome: 'Cliente Homologacao',
+        emailMascarado: 'c***e@example.invalid',
+        whatsappMascarado: '•••• 0000'
+      },
+      compras: [
+        {
+          pedidoId: 'PED-E2E',
+          eventoId: EVENT_ID,
+          eventoNome: 'Roda de Samba Estilo Carioca',
+          data: '11/10/2026',
+          horario: '15h às 22h',
+          local: 'Vevets Recepções',
+          quantidade: 1,
+          status: 'CONCLUIDO',
+          link: '/minha-carioca/?pedido=PED-E2E&token=CONSULTA-E2E'
+        }
+      ]
+    });
+
+    await page.goto('/minha-carioca/conta/', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      localStorage.setItem('ct_mc_account_v6', JSON.stringify({
+        exp: Date.now() + 3600000,
+        token: 'TOKEN-SESSAO-E2E'
+      }));
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+
+    await expect(page.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({
+      timeout: 15000
+    });
+
+    const cached = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('ct_mc_account_v6') || '{}')
+    );
+
+    expect(cached.token).toBe('TOKEN-SESSAO-E2E');
+    expect(cached.data).toBeUndefined();
+    expect(JSON.stringify(cached)).not.toContain('CONSULTA-E2E');
+    expect(JSON.stringify(cached)).not.toContain('PED-E2E');
   });
 
 });
