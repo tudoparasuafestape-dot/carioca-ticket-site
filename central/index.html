@@ -136,6 +136,12 @@
       <a id="mCRM" class="module" data-perm="CRM" href="#">
         <div class="icon">👥</div><div><strong>Público & Clientes</strong><span>Compradores, participantes, histórico e relacionamento do evento.</span></div>
       </a>
+      <a id="mFinanceiro" class="module" data-perm="FINANCEIRO" href="#">
+        <div class="icon">💰</div><div><strong>Financeiro</strong><span>Receita confirmada, pagamentos e evolução do evento.</span></div>
+      </a>
+      <a id="mRelatorios" class="module" data-perm="RELATORIOS" href="#">
+        <div class="icon">📈</div><div><strong>Relatórios</strong><span>Vendas, ingressos e check-in consolidados por evento.</span></div>
+      </a>
     </section>
   </main>
 
@@ -333,11 +339,21 @@ function updateModules(){
     ?'/crm/?evento='+encodeURIComponent(id)
     :'/crm/';
 
+  document.getElementById('mFinanceiro').href=id
+    ?'/financeiro/?evento='+encodeURIComponent(id)
+    :'#';
+
+  document.getElementById('mRelatorios').href=id
+    ?'/relatorios/?evento='+encodeURIComponent(id)
+    :'#';
+
   if(!id){
     document.getElementById('mCheckin').classList.add('disabled');
     document.getElementById('mVendas').classList.add('disabled');
     document.getElementById('mBar').classList.add('disabled');
     document.getElementById('mFornecedores').classList.add('disabled');
+    document.getElementById('mFinanceiro').classList.add('disabled');
+    document.getElementById('mRelatorios').classList.add('disabled');
   }
 }
 
