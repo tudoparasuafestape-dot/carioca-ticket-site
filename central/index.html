@@ -305,16 +305,18 @@ function updateModules(){
     ?'/consulta/?evento='+encodeURIComponent(id)
     :'/consulta/';
 
-  var scriptBase=APP;
   document.getElementById('mVendas').href=id
-    ?scriptBase+'?page=vendas&evento='+encodeURIComponent(id)
-    :scriptBase+'?page=vendas';
-  document.getElementById('mBar').href=id
-    ?scriptBase+'?page=bar&evento='+encodeURIComponent(id)
-    :scriptBase+'?page=bar';
+    ?'/vendas/?evento='+encodeURIComponent(id)
+    :'#';
+
+  /* Bar permanece bloqueado ate a interface autenticada estar publicada. */
+  document.getElementById('mBar').href='#';
+  document.getElementById('mBar').classList.add('disabled');
+  document.getElementById('mBar').setAttribute('aria-disabled','true');
 
   if(!id){
     document.getElementById('mCheckin').classList.add('disabled');
+    document.getElementById('mVendas').classList.add('disabled');
   }
 }
 
