@@ -1,0 +1,14 @@
+{
+  "name": "carioca-ticket-homologacao",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Suite de homologacao automatica e regressao da Carioca Ticket",
+  "scripts": {
+    "test:contracts": "node tests/contracts.mjs",
+    "test:e2e": "playwright test",
+    "homologar": "npm run test:contracts && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0"
+  }
+}

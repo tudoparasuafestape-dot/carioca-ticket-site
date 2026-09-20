@@ -1,0 +1,211 @@
+name: Homologacao automatica Carioca Ticket
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+      - audit-homologacao-automatica-20260920
+  schedule:
+    - cron: '15 7 * * *'
+
+concurrency:
+  group: homologacao-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contratos:
+    name: Contratos de regressao
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validar rotas e contratos protegidos
+        run: node tests/contracts.mjs
+
+  publico-producao:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    name: Publico homologado ${{ matrix.viewport }}
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Testar jornada publica publicada
+        env:
+          CT_BASE_URL: https://cariocaticket.com.br
+          CT_EXPECTED_HOST: cariocaticket.com.br
+          CT_BRANCH_MODE: '0'
+        run: |
+          if [ "${{ matrix.viewport }}" = "desktop" ]; then
+            npx playwright test tests/e2e/public-journey.spec.js --project=desktop-chromium
+          else
+            npx playwright test tests/e2e/public-journey.spec.js --project=mobile-chromium
+          fi
+      - name: Guardar evidencias
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publico-producao-${{ matrix.viewport }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  operacional-producao:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    name: Operacional publicado ${{ matrix.viewport }}
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Auditar entradas operacionais publicadas
+        env:
+          CT_BASE_URL: https://cariocaticket.com.br
+          CT_EXPECTED_HOST: cariocaticket.com.br
+        run: |
+          if [ "${{ matrix.viewport }}" = "desktop" ]; then
+            npx playwright test tests/e2e/operational-entry.spec.js --project=desktop-chromium
+          else
+            npx playwright test tests/e2e/operational-entry.spec.js --project=mobile-chromium
+          fi
+      - name: Guardar evidencias
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operacional-producao-${{ matrix.viewport }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  facadas-branch:
+    name: Facadas first-party branch ${{ matrix.viewport }}
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Subir codigo da branch localmente
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/ct-http.log 2>&1 &
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/ct-http.log
+          exit 1
+      - name: Testar facadas sem tocar producao
+        env:
+          CT_BASE_URL: http://127.0.0.1:4173
+          CT_EXPECTED_HOST: 127.0.0.1
+          CT_BRANCH_MODE: '1'
+        run: |
+          if [ "${{ matrix.viewport }}" = "desktop" ]; then
+            npx playwright test tests/e2e/first-party-facades.spec.js --project=desktop-chromium
+          else
+            npx playwright test tests/e2e/first-party-facades.spec.js --project=mobile-chromium
+          fi
+      - name: Guardar evidencias
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: facadas-branch-${{ matrix.viewport }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  canario-real:
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    name: Canario real first-party ${{ matrix.viewport }}
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Aguardar publicacao dos canarios no dominio
+        shell: bash
+        run: |
+          for i in {1..48}; do
+            BODY="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/evento-v2/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
+            if printf '%s' "$BODY" | grep -q 'checkout-v2'; then
+              echo "Canario publicado."
+              exit 0
+            fi
+            echo "Aguardando GitHub Pages propagar o canario... tentativa $i/48"
+            sleep 5
+          done
+          echo "::error::O canario ainda nao foi publicado no dominio oficial."
+          exit 1
+
+      - name: Validar canario real sem criar cobranca
+        env:
+          CT_BASE_URL: https://cariocaticket.com.br
+          CT_EXPECTED_HOST: cariocaticket.com.br
+          CT_BRANCH_MODE: '0'
+        run: |
+          if [ "${{ matrix.viewport }}" = "desktop" ]; then
+            npx playwright test tests/e2e/canary-real.spec.js --project=desktop-chromium
+          else
+            npx playwright test tests/e2e/canary-real.spec.js --project=mobile-chromium
+          fi
+      - name: Guardar evidencias
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canario-real-${{ matrix.viewport }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
