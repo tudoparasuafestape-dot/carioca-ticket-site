@@ -1,0 +1,77 @@
+name: Homologacao automatica Carioca Ticket
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+      - audit-homologacao-automatica-20260920
+  schedule:
+    - cron: '15 7 * * *'
+
+concurrency:
+  group: homologacao-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contratos:
+    name: Contratos de regressao
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validar rotas e contratos protegidos
+        run: node tests/contracts.mjs
+
+  e2e:
+    name: E2E ${{ matrix.viewport }}
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Executar homologacao no site oficial
+        env:
+          CT_BASE_URL: https://cariocaticket.com.br
+        run: |
+          if [ "${{ matrix.viewport }}" = "desktop" ]; then
+            npx playwright test --project=desktop-chromium
+          else
+            npx playwright test --project=mobile-chromium
+          fi
+
+      - name: Guardar evidencias em caso de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias-${{ matrix.viewport }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
