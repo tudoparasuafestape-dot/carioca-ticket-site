@@ -45,10 +45,48 @@ function fill(data){state.data=data;var e=data.evento||{};document.getElementByI
 var people=Array.isArray(data.comissionados)?data.comissionados:[],person=document.getElementById('person');person.innerHTML=people.length?people.map(function(x){return '<option value="'+esc(x.usuarioId)+'">'+esc(x.nome||x.email||x.usuarioId)+'</option>'}).join(''):'<option value="">Nenhum COMISSIONADO cadastrado</option>';person.disabled=!people.length;document.getElementById('saveButton').disabled=!people.length;
 var types=Array.isArray(data.tipos)?data.tipos:[],lots=Array.isArray(data.lotes)?data.lotes:[];document.getElementById('ticketType').innerHTML='<option value="">Todos os tipos</option>'+types.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.nome||x.id)+'</option>'}).join('');document.getElementById('batch').innerHTML='<option value="">Todos os lotes</option>'+lots.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.nome||x.id)+'</option>'}).join('');
 renderRules(Array.isArray(data.regras)?data.regras:[]);gate.classList.add('hidden');app.classList.remove('hidden')}
-function renderRules(rules){var area=document.getElementById('rules');if(!rules.length){area.innerHTML='<div class="empty">Nenhuma regra de comissão cadastrada para este evento.</div>';return}area.innerHTML=rules.map(function(r){var active=String(r.STATUS||'').toUpperCase()==='ATIVO',who=(state.data.comissionados||[]).find(function(x){return String(x.usuarioId)===String(r.USUARIO_COMISSIONADO_ID)}),scope=[];if(r.TIPO_INGRESSO_ID)scope.push('Tipo específico');if(r.LOTE_ID)scope.push('Lote específico');if(!scope.length)scope.push('Todo o evento');return '<article class="rule"><div class="rule-top"><div><strong>'+esc(who?who.nome:r.BENEFICIARIO_NOME||r.USUARIO_COMISSIONADO_ID)+'</strong><br><small>'+esc(typeLabel(String(r.TIPO_REGRA||'')))+' · '+esc(ruleValue(r))+'</small></div>'+(active?'<button class="danger" type="button" data-disable="'+esc(r.REGRA_ID)+'">Desativar</button>':'<span class="mini">INATIVA</span>')+'</div><div class="rule-meta"><span class="mini">'+esc(scope.join(' · '))+'</span>'+(r.PIX_TIPO?'<span class="mini">Pix '+esc(r.PIX_TIPO)+'</span>':'')+(r.PIX_CHAVE?'<span class="mini">Pix configurado</span>':'')+'</div></article>'}).join('');area.querySelectorAll('[data-disable]').forEach(function(btn){btn.addEventListener('click',function(){disableRule(btn.getAttribute('data-disable'))})})}
+function renderRules(rules){
+  var area=document.getElementById('rules');
+  if(!rules.length){
+    area.innerHTML='<div class="empty">Nenhuma regra de comissão cadastrada para este evento.</div>';
+    return;
+  }
+
+  area.innerHTML=rules.map(function(r){
+    var active=String(r.status||'').toUpperCase()==='ATIVO';
+    var who=(state.data.comissionados||[]).find(function(x){
+      return String(x.usuarioId||'')===String(r.usuarioComissionadoId||'');
+    });
+    var scope=[];
+    if(r.tipoIngressoId)scope.push('Tipo específico');
+    if(r.loteId)scope.push('Lote específico');
+    if(!scope.length)scope.push('Todo o evento');
+
+    return '<article class="rule">'+
+      '<div class="rule-top">'+
+        '<div><strong>'+esc(who?who.nome:(r.beneficiarioNome||r.usuarioComissionadoId||'Comissionado'))+'</strong><br>'+
+        '<small>'+esc(typeLabel(String(r.tipoRegra||'')))+' · '+esc(ruleValue({TIPO_REGRA:r.tipoRegra,VALOR_REGRA:r.valorRegra}))+'</small></div>'+
+        (active?'<button class="danger" type="button" data-disable="'+esc(r.regraId)+'">Desativar</button>':'<span class="mini">INATIVA</span>')+
+      '</div>'+
+      '<div class="rule-meta">'+
+        '<span class="mini">'+esc(scope.join(' · '))+'</span>'+
+        (r.pixTipo?'<span class="mini">Pix '+esc(r.pixTipo)+'</span>':'')+
+        (r.pixChave?'<span class="mini">Chave Pix configurada</span>':'')+
+      '</div>'+
+    '</article>';
+  }).join('');
+
+  area.querySelectorAll('[data-disable]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      disableRule(btn.getAttribute('data-disable'));
+    });
+  });
+}
+
+
 async function reload(){var s=session(),eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();if(!s||!s.token){deny('Entre no Portal do Produtor para acessar Comissões.');return}if(!eventId){deny('Selecione um evento na Central Mobile antes de abrir Comissões.');return}try{var data=await rpc('ctComissoesEventoCarregarPROD',[String(s.token),eventId]);if(!data||data.sucesso!==true||data.autorizado!==true)throw new Error('Sua conta não possui permissão COMISSOES para este evento.');fill(data)}catch(e){deny(e&&e.message?e.message:String(e))}}
-document.getElementById('ruleForm').addEventListener('submit',async function(ev){ev.preventDefault();var s=session(),eventId=String(new URLSearchParams(location.search).get('evento')||'').trim(),button=document.getElementById('saveButton');button.disabled=true;try{var data={usuarioComissionadoId:document.getElementById('person').value,tipoRegra:document.getElementById('ruleType').value,valorRegra:Number(document.getElementById('ruleValue').value||0),tipoIngressoId:document.getElementById('ticketType').value,loteId:document.getElementById('batch').value,beneficiarioNome:document.getElementById('beneficiaryName').value,cpfCnpj:document.getElementById('document').value,pixTipo:document.getElementById('pixType').value,pixChave:document.getElementById('pixKey').value,observacao:document.getElementById('note').value};var r=await rpc('ctComissoesEventoSalvarRegraPROD',[String(s.token),eventId,data]);if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar a regra.');message('Regra salva. As próximas vendas atribuídas ao comissionado seguirão esta configuração.','ok');await reload()}catch(e){message(e&&e.message?e.message:String(e),'err')}finally{button.disabled=false}});
-async function disableRule(id){var s=session(),eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();try{var r=await rpc('ctComissoesEventoDesativarRegraPROD',[String(s.token),eventId,id]);if(!r||r.sucesso!==true)throw new Error('Não foi possível desativar a regra.');message('Regra desativada.','ok');await reload()}catch(e){message(e&&e.message?e.message:String(e),'err')}}
+document.getElementById('ruleForm').addEventListener('submit',async function(ev){ev.preventDefault();if(!window.confirm('Confirma salvar esta regra de comissão?'))return;var s=session(),eventId=String(new URLSearchParams(location.search).get('evento')||'').trim(),button=document.getElementById('saveButton');button.disabled=true;try{var data={usuarioComissionadoId:document.getElementById('person').value,tipoRegra:document.getElementById('ruleType').value,valorRegra:Number(document.getElementById('ruleValue').value||0),tipoIngressoId:document.getElementById('ticketType').value,loteId:document.getElementById('batch').value,beneficiarioNome:document.getElementById('beneficiaryName').value,cpfCnpj:document.getElementById('document').value,pixTipo:document.getElementById('pixType').value,pixChave:document.getElementById('pixKey').value,observacao:document.getElementById('note').value};var r=await rpc('ctComissoesEventoSalvarRegraPROD',[String(s.token),eventId,data]);if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar a regra.');message('Regra salva. As próximas vendas atribuídas ao comissionado seguirão esta configuração.','ok');await reload()}catch(e){message(e&&e.message?e.message:String(e),'err')}finally{button.disabled=false}});
+async function disableRule(id){if(!window.confirm('Confirma desativar esta regra? O histórico já gerado será preservado.'))return;var s=session(),eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();try{var r=await rpc('ctComissoesEventoDesativarRegraPROD',[String(s.token),eventId,id]);if(!r||r.sucesso!==true)throw new Error('Não foi possível desativar a regra.');message('Regra desativada.','ok');await reload()}catch(e){message(e&&e.message?e.message:String(e),'err')}}
 reload();
 }());
 </script>
