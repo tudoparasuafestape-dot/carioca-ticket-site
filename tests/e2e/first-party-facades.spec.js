@@ -532,7 +532,8 @@ test.describe('Fachadas first-party em homologacao', () => {
     });
 
     await expect(page.getByText(/Minhas Vendas/i).first()).toBeVisible();
-    await expect(page.locator('#formularioVenda')).toHaveClass(/oculto|hidden/).catch(() => {});
+    await expect(page.locator('#conteudoPrincipal')).toHaveClass(/oculto/);
+    await expect(page.locator('#conteudoInicial')).toBeVisible();
     await expect(page.locator('body')).toContainText(/sessão|acesso|erro|não foi possível/i, {
       timeout: 15000
     });
