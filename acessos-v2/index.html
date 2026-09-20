@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080D12">
+  <title>Usuários e Permissões | Carioca Ticket</title>
+  <style>
+    :root{
+      --black:#080D12;
+      --black2:#101820;
+      --gold:#DFA324;
+      --gold2:#F6C94C;
+      --bg:#F4F5F7;
+      --card:#FFFFFF;
+      --border:#E5E7EB;
+      --muted:#667085;
+      --danger:#B42318;
+      --ok:#067647;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#171717}
+    body{padding-bottom:24px}
+    .topo{background:linear-gradient(145deg,#060A0E,var(--black2));color:#fff;padding:22px 18px 24px;border-radius:0 0 28px 28px;box-shadow:0 12px 30px rgba(0,0,0,.2)}
+    .wrap{width:min(100% - 28px,880px);margin:0 auto}
+    .brand{color:var(--gold2);font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+    h1{margin:7px 0 5px;font-size:28px;line-height:1.1}
+    .topo p{margin:0;color:#C7CBD0;font-size:13px}
+    .actions-top{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+    .btn-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border-radius:12px;text-decoration:none;font-weight:800;font-size:13px;border:1px solid rgba(255,255,255,.14);color:#fff;background:rgba(255,255,255,.06)}
+    main{padding-top:18px}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(16,24,40,.06)}
+    .panel + .panel{margin-top:14px}
+    .row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+    label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:#344054}
+    select,input{width:100%;min-height:46px;border:1px solid #D0D5DD;border-radius:12px;padding:0 12px;background:#fff;font-size:15px;font-weight:700}
+    input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(223,163,36,.10)}
+    .team-add{display:grid;grid-template-columns:minmax(220px,1.5fr) minmax(190px,1fr) auto;gap:10px;align-items:end;margin-top:12px}
+    .helper{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.45}
+    .status{font-size:12px;color:var(--muted)}
+    .user-list{display:grid;gap:12px;margin-top:14px}
+    .user-card{border:1px solid var(--border);border-radius:16px;padding:14px;background:#fff}
+    .user-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+    .user-name{font-size:16px;font-weight:900}
+    .user-meta{margin-top:3px;font-size:12px;color:var(--muted);line-height:1.45}
+    .badge{display:inline-flex;align-items:center;min-height:28px;padding:0 9px;border-radius:999px;font-size:11px;font-weight:900;background:#F2F4F7;color:#344054;white-space:nowrap}
+    .user-controls{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:end;margin-top:12px}
+    button{min-height:46px;border:0;border-radius:12px;padding:0 16px;font-size:14px;font-weight:900;cursor:pointer}
+    .primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111}
+    .primary:disabled{opacity:.45;cursor:not-allowed}
+    .danger{background:#fff;color:var(--danger);border:1px solid #FDA29B}
+    .danger:disabled{opacity:.45;cursor:not-allowed}
+    .message{display:none;margin-top:12px;padding:11px 12px;border-radius:12px;font-size:13px;font-weight:700}
+    .message.show{display:block}
+    .message.ok{background:#ECFDF3;color:var(--ok);border:1px solid #ABEFC6}
+    .message.err{background:#FEF3F2;color:var(--danger);border:1px solid #FECDCA}
+    .empty{padding:18px;text-align:center;color:var(--muted);font-size:13px}
+    .gate{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(145deg,#060A0E,#101820);z-index:50;padding:24px;color:#fff}
+    .gate.hidden{display:none}
+    .gate-card{width:min(100%,460px);padding:28px 22px;border:1px solid rgba(246,201,76,.25);border-radius:22px;background:rgba(16,24,32,.96);text-align:center}
+    .gate-card h2{margin:10px 0 8px;font-size:25px}
+    .gate-card p{margin:0;color:#C7CBD0;line-height:1.5}
+    .loader{width:42px;height:42px;border:4px solid rgba(255,255,255,.12);border-top-color:var(--gold2);border-radius:50%;margin:22px auto 0;animation:spin .8s linear infinite}
+    .ct-modal-backdrop{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(4,8,12,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;visibility:hidden;transition:opacity .18s ease,visibility .18s ease}
+    .ct-modal-backdrop.aberto{opacity:1;visibility:visible}
+    .ct-modal{width:min(100%,460px);overflow:hidden;border:1px solid rgba(246,201,76,.28);border-radius:22px;background:linear-gradient(155deg,#111820,#0A0F14);color:#fff;box-shadow:0 28px 80px rgba(0,0,0,.48);transform:translateY(8px) scale(.985);transition:transform .18s ease}
+    .ct-modal-backdrop.aberto .ct-modal{transform:translateY(0) scale(1)}
+    .ct-modal-head{display:flex;gap:14px;align-items:flex-start;padding:22px 22px 12px}
+    .ct-modal-icon{flex:0 0 46px;width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:rgba(223,163,36,.14);border:1px solid rgba(246,201,76,.28);color:var(--gold2);font-size:22px;font-weight:900}
+    .ct-modal.danger .ct-modal-icon{background:rgba(180,35,24,.14);border-color:rgba(253,162,155,.28);color:#FDA29B}
+    .ct-modal.success .ct-modal-icon{background:rgba(6,118,71,.16);border-color:rgba(171,239,198,.24);color:#75E0A7}
+    .ct-modal-copy{min-width:0;flex:1}
+    .ct-modal-brand{margin:1px 0 5px;color:var(--gold2);font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+    .ct-modal-title{margin:0;font-size:20px;line-height:1.2}
+    .ct-modal-text{margin:8px 0 0;color:#C7CBD0;font-size:13px;line-height:1.55}
+    .ct-modal-actions{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px 22px}
+    .ct-modal-actions button{min-width:118px}
+    .ct-modal-cancel{background:#1A232D;color:#fff;border:1px solid rgba(255,255,255,.12)}
+    .ct-modal-confirm{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111}
+    .ct-modal-confirm.danger{background:#B42318;color:#fff;border:1px solid #D92D20}
+    .ct-modal-close{flex:0 0 auto;width:34px;height:34px;min-height:34px;padding:0;border-radius:10px;background:transparent;color:#98A2B3;border:1px solid rgba(255,255,255,.08);font-size:18px}
+    body.ct-modal-open{overflow:hidden}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:620px){
+      .row,.team-add,.user-controls{grid-template-columns:1fr}
+      .user-head{flex-direction:column}
+      h1{font-size:24px}
+    }
+  </style>
+</head>
+<body>\n<script>
+(function(){
+  'use strict';
+  var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var pending={};
+
+  function cleanup(id){
+    var p=pending[id];
+    if(!p)return null;
+    delete pending[id];
+    clearTimeout(p.timer);
+    try{p.frame.remove();p.form.remove()}catch(_){}
+    return p;
+  }
+
+  function rpc(method,args,success,failure){
+    var id='CTACESSOS-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+    var frameName='ctacessos_'+id.replace(/[^A-Za-z0-9_]/g,'');
+    var frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+    var form=document.createElement('form');form.method='POST';form.action=APP;form.target=frameName;form.style.display='none';
+    function add(k,v){var input=document.createElement('input');input.type='hidden';input.name=k;input.value=String(v==null?'':v);form.appendChild(input)}
+    add('ctMinhaCariocaAction','portalRpc');
+    add('ctMinhaCariocaRequestId',id);
+    add('metodo',String(method||''));
+    add('argsJson',JSON.stringify(Array.isArray(args)?args:[]));
+    document.body.append(frame,form);
+    pending[id]={
+      frame:frame,form:form,
+      success:typeof success==='function'?success:function(){},
+      failure:typeof failure==='function'?failure:function(){},
+      timer:setTimeout(function(){var p=cleanup(id);if(p)p.failure(new Error('CT_ACESSOS_RPC_TIMEOUT'));},45000)
+    };
+    form.submit();
+  }
+
+  window.addEventListener('message',function(ev){
+    if(ev.origin!=='https://script.google.com' && !/\.googleusercontent\.com$/.test(ev.origin||''))return;
+    var payload=ev.data;
+    if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
+    var p=cleanup(payload.id);if(!p)return;
+    if(payload.ok===true)p.success(payload.resultado);
+    else p.failure(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+  });
+
+  function runner(success,failure){
+    return new Proxy({},{
+      get:function(_target,prop){
+        if(prop==='withSuccessHandler')return function(fn){return runner(fn,failure)};
+        if(prop==='withFailureHandler')return function(fn){return runner(success,fn)};
+        if(prop==='then')return undefined;
+        return function(){rpc(String(prop),Array.prototype.slice.call(arguments),success,failure)};
+      }
+    });
+  }
+
+  window.google=window.google||{};
+  window.google.script=window.google.script||{};
+  window.google.script.run=runner(null,null);
+  window.google.script.url={
+    getLocation:function(callback){
+      if(typeof callback==='function'){
+        callback({
+          hash:String(window.location.hash||'').replace(/^#/,''),
+          parameter:Object.fromEntries(new URLSearchParams(window.location.search)),
+          parameters:{}
+        });
+      }
+    }
+  };
+}());
+</script>
+  <section id="gate" class="gate">
+    <div class="gate-card">
+      <div class="brand">Carioca Ticket</div>
+      <h2>Validando acesso</h2>
+      <p id="gateText">Confirmando sua sessão e suas permissões de gestão.</p>
+      <div id="loader" class="loader"></div>
+      <div id="gateActions" style="display:none;margin-top:20px">
+        <a class="btn-link" href="https://cariocaticket.com.br/produtor-v2/" target="_top">Entrar no Portal do Produtor</a>
+      </div>
+    </div>
+  </section>
+
+  <header class="topo">
+    <div class="wrap">
+      <div class="brand">Carioca Ticket</div>
+      <h1>Usuários e Permissões</h1>
+      <p>Gerencie o perfil operacional das pessoas vinculadas ao seu produtor.</p>
+      <div class="actions-top">
+        <a class="btn-link" href="https://cariocaticket.com.br/central/" target="_top">Central Mobile</a>
+        <a class="btn-link" href="https://cariocaticket.com.br/produtor-v2/" target="_top">Portal do Produtor</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="row">
+        <div>
+          <label for="produtorSelect">Produtor</label>
+          <select id="produtorSelect" disabled>
+            <option>Carregando...</option>
+          </select>
+        </div>
+        <div class="status" id="resumo"></div>
+      </div>
+      <div id="mensagem" class="message"></div>
+    </section>
+
+    <section class="panel">
+      <strong>Adicionar usuário já cadastrado à equipe</strong>
+      <p class="helper">
+        A pessoa precisa ter uma conta Carioca Ticket criada com este e-mail.
+        Escolha explicitamente o perfil operacional antes de adicionar.
+      </p>
+
+      <div class="team-add">
+        <div>
+          <label for="novoUsuarioEmail">E-mail da conta</label>
+          <input
+            id="novoUsuarioEmail"
+            type="email"
+            autocomplete="off"
+            placeholder="usuario@exemplo.com"
+          >
+        </div>
+
+        <div>
+          <label for="novoUsuarioPerfil">Perfil operacional</label>
+          <select id="novoUsuarioPerfil" disabled>
+            <option>Selecione o produtor</option>
+          </select>
+        </div>
+
+        <button
+          id="adicionarUsuarioButton"
+          class="primary"
+          type="button"
+          disabled
+        >
+          Adicionar
+        </button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <strong>Usuários vinculados</strong>
+      <div id="lista" class="user-list">
+        <div class="empty">Carregando usuários...</div>
+      </div>
+    </section>
+  </main>
+
+  <div id="ctModalBackdrop" class="ct-modal-backdrop" aria-hidden="true">
+    <section id="ctModal" class="ct-modal" role="dialog" aria-modal="true"
+      aria-labelledby="ctModalTitle" aria-describedby="ctModalText" tabindex="-1">
+      <div class="ct-modal-head">
+        <div id="ctModalIcon" class="ct-modal-icon" aria-hidden="true">!</div>
+        <div class="ct-modal-copy">
+          <div class="ct-modal-brand">Carioca Ticket</div>
+          <h2 id="ctModalTitle" class="ct-modal-title">Confirmar ação</h2>
+          <p id="ctModalText" class="ct-modal-text"></p>
+        </div>
+        <button id="ctModalClose" class="ct-modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
+      <div class="ct-modal-actions">
+        <button id="ctModalCancel" class="ct-modal-cancel" type="button">Cancelar</button>
+        <button id="ctModalConfirm" class="ct-modal-confirm" type="button">Confirmar</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function(){
+      var SESSION_KEY = 'CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+      var token = '';
+      var dados = null;
+      var produtorAtual = '';
+
+      var el = {
+        gate: document.getElementById('gate'),
+        gateText: document.getElementById('gateText'),
+        loader: document.getElementById('loader'),
+        gateActions: document.getElementById('gateActions'),
+        produtorSelect: document.getElementById('produtorSelect'),
+        resumo: document.getElementById('resumo'),
+        mensagem: document.getElementById('mensagem'),
+        novoUsuarioEmail: document.getElementById('novoUsuarioEmail'),
+        novoUsuarioPerfil: document.getElementById('novoUsuarioPerfil'),
+        adicionarUsuarioButton: document.getElementById('adicionarUsuarioButton'),
+        lista: document.getElementById('lista'),
+        ctModalBackdrop: document.getElementById('ctModalBackdrop'),
+        ctModal: document.getElementById('ctModal'),
+        ctModalIcon: document.getElementById('ctModalIcon'),
+        ctModalTitle: document.getElementById('ctModalTitle'),
+        ctModalText: document.getElementById('ctModalText'),
+        ctModalClose: document.getElementById('ctModalClose'),
+        ctModalCancel: document.getElementById('ctModalCancel'),
+        ctModalConfirm: document.getElementById('ctModalConfirm')
+      };
+
+      var ctModalEstado = {
+        resolver:null,
+        focoAnterior:null,
+        permiteCancelar:true
+      };
+
+      function ctModalAbrir(opcoes){
+        opcoes = opcoes || {};
+        if(!el.ctModalBackdrop || !el.ctModal){
+          return Promise.resolve(false);
+        }
+
+        if(ctModalEstado.resolver){
+          ctModalFechar(false);
+        }
+
+        var tipo = String(opcoes.tipo || 'warning').trim().toLowerCase();
+        var perigo = tipo === 'danger';
+        var sucesso = tipo === 'success';
+
+        ctModalEstado.focoAnterior = document.activeElement;
+        ctModalEstado.permiteCancelar = opcoes.permiteCancelar !== false;
+
+        el.ctModal.className = 'ct-modal' + (perigo ? ' danger' : '') + (sucesso ? ' success' : '');
+        el.ctModalIcon.textContent = sucesso ? '✓' : '!';
+        el.ctModalTitle.textContent = String(opcoes.titulo || 'Confirmar ação');
+        el.ctModalText.textContent = String(opcoes.mensagem || '');
+        el.ctModalConfirm.textContent = String(opcoes.confirmarTexto || (sucesso ? 'Entendi' : 'Confirmar'));
+        el.ctModalConfirm.className = 'ct-modal-confirm' + (perigo ? ' danger' : '');
+        el.ctModalCancel.textContent = String(opcoes.cancelarTexto || 'Cancelar');
+        el.ctModalCancel.style.display = ctModalEstado.permiteCancelar ? '' : 'none';
+        el.ctModalClose.style.display = ctModalEstado.permiteCancelar ? '' : 'none';
+
+        el.ctModalBackdrop.classList.add('aberto');
+        el.ctModalBackdrop.setAttribute('aria-hidden','false');
+        document.body.classList.add('ct-modal-open');
+
+        setTimeout(function(){ el.ctModalConfirm.focus(); },30);
+
+        return new Promise(function(resolve){
+          ctModalEstado.resolver = resolve;
+        });
+      }
+
+      function ctModalFechar(resultado){
+        if(!el.ctModalBackdrop || !el.ctModalBackdrop.classList.contains('aberto')){
+          return;
+        }
+
+        el.ctModalBackdrop.classList.remove('aberto');
+        el.ctModalBackdrop.setAttribute('aria-hidden','true');
+        document.body.classList.remove('ct-modal-open');
+
+        var resolver = ctModalEstado.resolver;
+        ctModalEstado.resolver = null;
+
+        if(ctModalEstado.focoAnterior && typeof ctModalEstado.focoAnterior.focus === 'function'){
+          try{ ctModalEstado.focoAnterior.focus(); }catch(e){}
+        }
+
+        ctModalEstado.focoAnterior = null;
+
+        if(resolver){
+          resolver(resultado === true);
+        }
+      }
+
+      function ctModalConfirmar(opcoes){
+        opcoes = opcoes || {};
+        return ctModalAbrir({
+          tipo:opcoes.tipo || 'warning',
+          titulo:opcoes.titulo || 'Confirmar ação',
+          mensagem:opcoes.mensagem || '',
+          confirmarTexto:opcoes.confirmarTexto || 'Confirmar',
+          cancelarTexto:opcoes.cancelarTexto || 'Cancelar',
+          permiteCancelar:true
+        });
+      }
+
+      function ctModalSucesso(titulo,mensagemTexto){
+        return ctModalAbrir({
+          tipo:'success',
+          titulo:titulo || 'Concluído',
+          mensagem:mensagemTexto || '',
+          confirmarTexto:'Entendi',
+          permiteCancelar:false
+        });
+      }
+
+      el.ctModalConfirm.addEventListener('click',function(){ ctModalFechar(true); });
+      el.ctModalCancel.addEventListener('click',function(){ ctModalFechar(false); });
+      el.ctModalClose.addEventListener('click',function(){
+        if(ctModalEstado.permiteCancelar){ ctModalFechar(false); }
+      });
+      el.ctModalBackdrop.addEventListener('click',function(evento){
+        if(evento.target === el.ctModalBackdrop && ctModalEstado.permiteCancelar){
+          ctModalFechar(false);
+        }
+      });
+      document.addEventListener('keydown',function(evento){
+        if(evento.key === 'Escape' && el.ctModalBackdrop.classList.contains('aberto') && ctModalEstado.permiteCancelar){
+          evento.preventDefault();
+          ctModalFechar(false);
+        }
+      });
+
+
+      function iniciarGestaoAcessos(){
+        if(
+          typeof google !== 'undefined' &&
+          google.script &&
+          google.script.url &&
+          typeof google.script.url.getLocation === 'function'
+        ){
+          google.script.url.getLocation(function(localizacao){
+            var handoff =
+              extrairHandoffAcessos(
+                localizacao &&
+                localizacao.hash
+                  ? localizacao.hash
+                  : (
+                      window.location &&
+                      window.location.hash
+                        ? window.location.hash
+                        : ''
+                    )
+              );
+
+            if(handoff){
+              consumirHandoffAcessos(handoff);
+              return;
+            }
+
+            carregar();
+          });
+          return;
+        }
+
+        var handoffFallback =
+          extrairHandoffAcessos(
+            window.location &&
+            window.location.hash
+              ? window.location.hash
+              : ''
+          );
+
+        if(handoffFallback){
+          consumirHandoffAcessos(handoffFallback);
+          return;
+        }
+
+        carregar();
+      }
+
+
+      function extrairHandoffAcessos(hashRecebido){
+        var hash =
+          String(hashRecebido || '')
+            .replace(/^#/,'')
+            .trim();
+
+        if(!hash){
+          return '';
+        }
+
+        try{
+          var params = new URLSearchParams(hash);
+          return String(params.get('ct_handoff') || '').trim();
+        }catch(erro){
+          var partes = hash.split('&');
+
+          for(var i=0;i<partes.length;i++){
+            var par = partes[i].split('=');
+
+            if(
+              decodeURIComponent(par[0] || '') ===
+              'ct_handoff'
+            ){
+              return decodeURIComponent(
+                par.slice(1).join('=') || ''
+              ).trim();
+            }
+          }
+        }
+
+        return '';
+      }
+
+
+      function consumirHandoffAcessos(codigo){
+        if(
+          typeof google === 'undefined' ||
+          !google.script ||
+          !google.script.run
+        ){
+          negar('Não foi possível concluir a transferência segura da sessão.');
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function(resposta){
+            if(
+              !resposta ||
+              resposta.sucesso !== true ||
+              resposta.autenticado !== true ||
+              resposta.autorizado !== true ||
+              !resposta.token
+            ){
+              negar(
+                'O acesso seguro expirou ou já foi utilizado. Volte ao Portal do Produtor e abra Usuários novamente.'
+              );
+              return;
+            }
+
+            salvarSessaoAcessos(
+              resposta.token,
+              resposta.expiraEm || ''
+            );
+
+            limparFragmentoHandoffAcessos();
+
+            carregar();
+          })
+          .withFailureHandler(function(){
+            negar(
+              'Não foi possível validar a transferência segura da sessão. Volte ao Portal do Produtor e tente novamente.'
+            );
+          })
+          .ctCentralOperacionalConsumirHandoffPROD(
+            String(codigo || ''),
+            'ACESSOS'
+          );
+      }
+
+
+      function salvarSessaoAcessos(tokenRecebido,expiraEm){
+        var payload =
+          JSON.stringify({
+            token:String(tokenRecebido || ''),
+            expiraEm:String(expiraEm || '')
+          });
+
+        try{
+          sessionStorage.setItem(
+            SESSION_KEY,
+            payload
+          );
+        }catch(eSession){}
+
+        try{
+          localStorage.setItem(
+            SESSION_KEY,
+            payload
+          );
+        }catch(eLocal){}
+      }
+
+
+      function limparFragmentoHandoffAcessos(){
+        try{
+          if(
+            window.history &&
+            typeof window.history.replaceState === 'function'
+          ){
+            window.history.replaceState(
+              null,
+              document.title,
+              window.location.pathname +
+              window.location.search
+            );
+          }
+        }catch(e){}
+      }
+
+
+      function lerSessao(){
+        try{
+          var bruto = sessionStorage.getItem(SESSION_KEY);
+          if(!bruto){
+            bruto = localStorage.getItem(SESSION_KEY);
+          }
+          if(!bruto) return null;
+
+          try{
+            sessionStorage.setItem(SESSION_KEY, bruto);
+            localStorage.setItem(SESSION_KEY, bruto);
+          }catch(eStorage){}
+          var sessao = JSON.parse(bruto);
+          if(!sessao || !sessao.token) return null;
+          if(sessao.expiraEm){
+            var expira = new Date(sessao.expiraEm);
+            if(!isNaN(expira.getTime()) && expira.getTime() <= Date.now()){
+              sessionStorage.removeItem(SESSION_KEY);
+              try{ localStorage.removeItem(SESSION_KEY); }catch(eStorage){}
+              return null;
+            }
+          }
+          return sessao;
+        }catch(e){
+          return null;
+        }
+      }
+
+      function negar(texto){
+        el.gate.classList.remove('hidden');
+        el.gateText.textContent = texto || 'Acesso não autorizado.';
+        el.loader.style.display = 'none';
+        el.gateActions.style.display = 'block';
+      }
+
+      function liberar(){
+        el.gate.classList.add('hidden');
+      }
+
+      function mostrarMensagem(texto,tipo){
+        el.mensagem.textContent = texto || '';
+        el.mensagem.className = 'message show ' + (tipo === 'ok' ? 'ok' : 'err');
+      }
+
+      function limparMensagem(){
+        el.mensagem.className = 'message';
+        el.mensagem.textContent = '';
+      }
+
+      function carregar(){
+        var sessao = lerSessao();
+        if(!sessao){
+          negar('Entre no Portal do Produtor para gerenciar usuários e permissões.');
+          return;
+        }
+
+        token = String(sessao.token || '');
+
+        google.script.run
+          .withSuccessHandler(function(resposta){
+            if(!resposta || resposta.sucesso !== true || !Array.isArray(resposta.produtores) || !resposta.produtores.length){
+              negar('Sua conta não possui permissão para gerenciar acessos.');
+              return;
+            }
+
+            dados = resposta;
+
+            if(!el.adicionarUsuarioButton.dataset.bound){
+              el.adicionarUsuarioButton.dataset.bound = '1';
+              el.adicionarUsuarioButton.addEventListener(
+                'click',
+                adicionarUsuario
+              );
+            }
+
+            renderizarProdutores();
+            liberar();
+          })
+          .withFailureHandler(function(erro){
+            negar(
+              erro && erro.message
+                ? 'Não foi possível validar sua permissão para gestão de acessos.'
+                : 'Não foi possível validar sua permissão.'
+            );
+          })
+          .ctGestaoAcessosCarregarPROD(token);
+      }
+
+      function renderizarProdutores(){
+        el.produtorSelect.innerHTML = '';
+
+        dados.produtores.forEach(function(produtor){
+          var opt = document.createElement('option');
+          opt.value = produtor.id;
+          opt.textContent = produtor.nomeFantasia || produtor.id;
+          el.produtorSelect.appendChild(opt);
+        });
+
+        el.produtorSelect.disabled = false;
+
+        if(
+          produtorAtual &&
+          Array.from(el.produtorSelect.options).some(function(opt){
+            return String(opt.value) === String(produtorAtual);
+          })
+        ){
+          el.produtorSelect.value = produtorAtual;
+        }
+
+        produtorAtual = el.produtorSelect.value;
+
+        el.produtorSelect.onchange = function(){
+          produtorAtual = el.produtorSelect.value;
+          limparMensagem();
+          renderizarPerfilAdicionar();
+          renderizarUsuarios();
+        };
+
+        renderizarPerfilAdicionar();
+        renderizarUsuarios();
+      }
+
+      function produtorSelecionado(){
+        if(!dados) return null;
+        for(var i=0;i<dados.produtores.length;i++){
+          if(String(dados.produtores[i].id) === String(produtorAtual)){
+            return dados.produtores[i];
+          }
+        }
+        return null;
+      }
+
+      function renderizarPerfilAdicionar(){
+        var produtor = produtorSelecionado();
+        var perfis =
+          produtor &&
+          Array.isArray(produtor.perfisEditaveis)
+            ? produtor.perfisEditaveis
+            : [];
+
+        el.novoUsuarioPerfil.innerHTML = '';
+
+        var placeholder =
+          document.createElement('option');
+
+        placeholder.value = '';
+        placeholder.textContent =
+          perfis.length
+            ? 'Selecione o perfil'
+            : 'Nenhum perfil disponível';
+
+        placeholder.selected = true;
+        placeholder.disabled = perfis.length > 0;
+
+        el.novoUsuarioPerfil.appendChild(
+          placeholder
+        );
+
+        if(!perfis.length){
+          el.novoUsuarioPerfil.disabled = true;
+          el.adicionarUsuarioButton.disabled = true;
+          return;
+        }
+
+        perfis.forEach(function(perfil){
+          var opt = document.createElement('option');
+          opt.value = perfil;
+          opt.textContent = rotuloPerfil(perfil);
+          el.novoUsuarioPerfil.appendChild(opt);
+        });
+
+        el.novoUsuarioPerfil.disabled = false;
+        el.novoUsuarioPerfil.value = '';
+        el.adicionarUsuarioButton.disabled = true;
+
+        el.novoUsuarioPerfil.onchange = function(){
+          el.adicionarUsuarioButton.disabled =
+            !String(
+              el.novoUsuarioPerfil.value || ''
+            ).trim();
+        };
+      }
+
+      function rotuloPerfil(perfil){
+        var mapa = {
+          PRODUTOR_TITULAR:'Produtor titular',
+          ADMINISTRADOR:'Administrador',
+          FINANCEIRO:'Financeiro',
+          COMERCIAL_CONSULTOR:'Comercial / consultor',
+          COMISSIONADO:'Comissionado',
+          OPERACAO_PRODUCAO:'Operação / produção',
+          CHECKIN_PORTARIA:'Check-in / portaria',
+          BAR:'Carioca Bar',
+          SUPORTE:'Suporte',
+          CONSULTA:'Consulta'
+        };
+        return mapa[perfil] || perfil;
+      }
+
+      function renderizarUsuarios(){
+        var produtor = produtorSelecionado();
+        el.lista.innerHTML = '';
+
+        if(!produtor){
+          el.lista.innerHTML = '<div class="empty">Produtor não encontrado.</div>';
+          el.resumo.textContent = '';
+          return;
+        }
+
+        var usuarios = Array.isArray(produtor.usuarios) ? produtor.usuarios : [];
+        el.resumo.textContent = usuarios.length + (usuarios.length === 1 ? ' usuário' : ' usuários');
+
+        if(!usuarios.length){
+          el.lista.innerHTML = '<div class="empty">Nenhum usuário vinculado a este produtor.</div>';
+          return;
+        }
+
+        usuarios.forEach(function(usuario){
+          var card = document.createElement('article');
+          card.className = 'user-card';
+
+          var head = document.createElement('div');
+          head.className = 'user-head';
+
+          var info = document.createElement('div');
+          var nome = document.createElement('div');
+          nome.className = 'user-name';
+          nome.textContent = usuario.nome || usuario.email || usuario.usuarioId;
+
+          var meta = document.createElement('div');
+          meta.className = 'user-meta';
+          meta.textContent = [
+            usuario.email || '',
+            usuario.whatsapp || '',
+            'Status: ' + (usuario.statusVinculo || '—')
+          ].filter(Boolean).join(' · ');
+
+          info.appendChild(nome);
+          info.appendChild(meta);
+
+          var badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = rotuloPerfil(usuario.perfil || '');
+
+          head.appendChild(info);
+          head.appendChild(badge);
+          card.appendChild(head);
+
+          var controls = document.createElement('div');
+          controls.className = 'user-controls';
+
+          var field = document.createElement('div');
+          var label = document.createElement('label');
+          label.textContent = 'Perfil operacional';
+
+          var select = document.createElement('select');
+          select.disabled = usuario.editavel !== true;
+
+          (
+            Array.isArray(produtor.perfisEditaveis)
+              ? produtor.perfisEditaveis
+              : []
+          ).forEach(function(perfil){
+            var opt = document.createElement('option');
+            opt.value = perfil;
+            opt.textContent = rotuloPerfil(perfil);
+            if(perfil === usuario.perfil) opt.selected = true;
+            select.appendChild(opt);
+          });
+
+          if(usuario.perfil === 'PRODUTOR_TITULAR'){
+            select.innerHTML = '';
+            var titular = document.createElement('option');
+            titular.value = 'PRODUTOR_TITULAR';
+            titular.textContent = 'Produtor titular';
+            titular.selected = true;
+            select.appendChild(titular);
+          }
+
+          field.appendChild(label);
+          field.appendChild(select);
+
+          var btn = document.createElement('button');
+          btn.className = 'primary';
+          btn.textContent = usuario.editavel === true ? 'Salvar perfil' : 'Protegido';
+          btn.disabled = usuario.editavel !== true;
+
+          btn.addEventListener('click',function(){
+            salvarPerfil(produtor.id,usuario,select,btn,badge);
+          });
+
+          var btnRemover = document.createElement('button');
+          btnRemover.className = 'danger';
+          btnRemover.textContent = 'Remover';
+          btnRemover.disabled = usuario.editavel !== true;
+
+          btnRemover.addEventListener('click',function(){
+            removerUsuario(produtor.id,usuario,btnRemover);
+          });
+
+          controls.appendChild(field);
+          controls.appendChild(btn);
+          controls.appendChild(btnRemover);
+          card.appendChild(controls);
+          el.lista.appendChild(card);
+        });
+      }
+
+      function adicionarUsuario(){
+        limparMensagem();
+
+        var produtor = produtorSelecionado();
+        var email = String(el.novoUsuarioEmail.value || '').trim().toLowerCase();
+        var perfil = String(el.novoUsuarioPerfil.value || '').trim();
+
+        if(!produtor){
+          mostrarMensagem('Selecione um produtor.','err');
+          return;
+        }
+
+        if(!email){
+          mostrarMensagem('Informe o e-mail da conta que deseja adicionar.','err');
+          el.novoUsuarioEmail.focus();
+          return;
+        }
+
+        if(!perfil){
+          mostrarMensagem('Selecione o perfil operacional.','err');
+          return;
+        }
+
+        el.adicionarUsuarioButton.disabled = true;
+        var original = el.adicionarUsuarioButton.textContent;
+        el.adicionarUsuarioButton.textContent = 'Adicionando...';
+
+        google.script.run
+          .withSuccessHandler(function(resposta){
+            el.adicionarUsuarioButton.disabled = false;
+            el.adicionarUsuarioButton.textContent = original;
+
+            if(!resposta || resposta.sucesso !== true){
+              mostrarMensagem(
+                resposta && resposta.mensagem
+                  ? resposta.mensagem
+                  : 'Não foi possível adicionar o usuário.',
+                'err'
+              );
+              return;
+            }
+
+            el.novoUsuarioEmail.value = '';
+            mostrarMensagem(
+              resposta.mensagem || 'Usuário adicionado à equipe.',
+              'ok'
+            );
+            recarregarGestao();
+          })
+          .withFailureHandler(function(){
+            el.adicionarUsuarioButton.disabled = false;
+            el.adicionarUsuarioButton.textContent = original;
+            mostrarMensagem(
+              'Não foi possível adicionar o usuário agora.',
+              'err'
+            );
+          })
+          .ctGestaoAcessosAdicionarUsuarioPROD(
+            token,
+            produtor.id,
+            email,
+            perfil
+          );
+      }
+
+
+      async function removerUsuario(produtorId,usuario,btn){
+        limparMensagem();
+
+        var nomeUsuario =
+          String(
+            usuario.nome ||
+            usuario.email ||
+            'este usuário'
+          );
+
+        var confirmado =
+          await ctModalConfirmar({
+            tipo:'danger',
+            titulo:'Remover usuário da equipe?',
+            mensagem:
+              nomeUsuario +
+              ' perderá o acesso operacional a este produtor. A conta Carioca Ticket continuará existindo.',
+            confirmarTexto:'Remover acesso',
+            cancelarTexto:'Manter usuário'
+          });
+
+        if(!confirmado){
+          return;
+        }
+
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = 'Removendo...';
+
+        google.script.run
+          .withSuccessHandler(function(resposta){
+            btn.disabled = false;
+            btn.textContent = original;
+
+            if(!resposta || resposta.sucesso !== true){
+              mostrarMensagem(
+                resposta && resposta.mensagem
+                  ? resposta.mensagem
+                  : 'Não foi possível remover o usuário.',
+                'err'
+              );
+              return;
+            }
+
+            mostrarMensagem(
+              resposta.mensagem || 'Usuário removido da equipe.',
+              'ok'
+            );
+
+            ctModalSucesso(
+              'Acesso removido',
+              'O usuário foi removido da equipe deste produtor. A conta Carioca Ticket foi preservada.'
+            );
+
+            recarregarGestao();
+          })
+          .withFailureHandler(function(){
+            btn.disabled = false;
+            btn.textContent = original;
+            mostrarMensagem(
+              'Não foi possível remover o usuário agora.',
+              'err'
+            );
+          })
+          .ctGestaoAcessosRemoverUsuarioPROD(
+            token,
+            produtorId,
+            usuario.usuarioId
+          );
+      }
+
+      function recarregarGestao(){
+        google.script.run
+          .withSuccessHandler(function(resposta){
+            if(
+              !resposta ||
+              resposta.sucesso !== true ||
+              !Array.isArray(resposta.produtores)
+            ){
+              mostrarMensagem(
+                'A alteração foi concluída, mas não foi possível atualizar a lista agora.',
+                'err'
+              );
+              return;
+            }
+
+            dados = resposta;
+            renderizarProdutores();
+          })
+          .withFailureHandler(function(){
+            mostrarMensagem(
+              'A alteração foi concluída, mas não foi possível atualizar a lista agora.',
+              'err'
+            );
+          })
+          .ctGestaoAcessosCarregarPROD(token);
+      }
+
+
+      function salvarPerfil(produtorId,usuario,select,btn,badge){
+        limparMensagem();
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = 'Salvando...';
+
+        google.script.run
+          .withSuccessHandler(function(resposta){
+            btn.disabled = false;
+            btn.textContent = original;
+
+            if(!resposta || resposta.sucesso !== true){
+              mostrarMensagem('Não foi possível atualizar o perfil.','err');
+              return;
+            }
+
+            usuario.perfil = resposta.perfil;
+            badge.textContent = rotuloPerfil(resposta.perfil);
+            mostrarMensagem('Perfil atualizado com sucesso.','ok');
+          })
+          .withFailureHandler(function(erro){
+            btn.disabled = false;
+            btn.textContent = original;
+            mostrarMensagem(
+              erro && erro.message
+                ? 'Não foi possível atualizar o perfil.'
+                : 'Não foi possível atualizar o perfil.',
+              'err'
+            );
+          })
+          .ctGestaoAcessosAtualizarPerfilPROD(
+            token,
+            produtorId,
+            usuario.usuarioId,
+            select.value
+          );
+      }
+
+      iniciarGestaoAcessos();
+    })();
+  </script>
+</body>
+</html>
