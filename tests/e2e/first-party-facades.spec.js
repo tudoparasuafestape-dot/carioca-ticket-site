@@ -496,4 +496,33 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expectNoTechnicalVisibleLinks(page);
   });
 
+
+  test('Financeiro oficial exige sessao e evento autorizado', async ({ page }) => {
+    await page.goto('/financeiro/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.locator('#gate')).toBeVisible();
+    await expect(page.locator('#gateDenied')).toBeVisible();
+    await expect(page.locator('body')).toContainText(/Financeiro/i);
+    await expect(page.locator('body')).toContainText(/Portal do Produtor|Acesso restrito/i);
+    await expect(page.locator('body')).not.toContainText('\\n');
+    expect(new URL(page.url()).pathname).toBe('/financeiro/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
+  test('Relatorios oficial exige sessao e evento autorizado', async ({ page }) => {
+    await page.goto('/relatorios/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.locator('#gate')).toBeVisible();
+    await expect(page.locator('#gateDenied')).toBeVisible();
+    await expect(page.locator('body')).toContainText(/Relatórios/i);
+    await expect(page.locator('body')).toContainText(/Portal do Produtor|Acesso restrito/i);
+    await expect(page.locator('body')).not.toContainText('\\n');
+    expect(new URL(page.url()).pathname).toBe('/relatorios/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
 });
