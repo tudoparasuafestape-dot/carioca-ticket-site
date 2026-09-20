@@ -548,9 +548,9 @@ function comissoesFixture() {
         status: 'ATIVO',
         observacao: 'Regra homologacao',
         beneficiarioNome: 'Comissionado Homologacao',
-        cpfCnpj: '00000000000',
+        cpfCnpjInformado: true,
         pixTipo: 'CPF',
-        pixChave: '00000000000'
+        pixConfigurado: true
       }
     ],
     resumo: {
@@ -658,14 +658,26 @@ function comissionadoFixture() {
       ]
     },
     comissao: {
-      configurada: false,
-      calculada: false,
-      percentual: null,
-      valorFixo: null,
-      valorComissaoNumero: null,
-      valorComissao: '',
-      codigo: 'REGRA_COMISSAO_NAO_CONFIGURADA',
-      mensagem: 'A regra de comissão ainda não foi configurada pelo produtor.'
+      configurada: true,
+      calculada: true,
+      regraId: 'COMREG-E2E',
+      tipo: 'PERCENTUAL',
+      valorRegra: 5,
+      tipoIngressoId: '',
+      loteId: '',
+      beneficiario: {
+        nome: 'Comissionado Homologacao',
+        pixTipo: 'CPF',
+        pixConfigurado: true
+      },
+      mensagem: 'Regra de comissão ativa.',
+      resumo: {
+        lancamentos: 2,
+        aReceberNumero: 2.5,
+        aReceber: 'R$ 2,50',
+        pagoNumero: 1,
+        pago: 'R$ 1,00'
+      }
     }
   };
 }
@@ -1257,6 +1269,7 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#mAcessos')).toHaveAttribute('aria-disabled', 'true');
     await expect(page.locator('#mFinanceiro')).toHaveAttribute('aria-disabled', 'true');
     await expect(page.locator('#mRelatorios')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#mComissoes')).toHaveAttribute('aria-disabled', 'true');
     await expect(page.locator('#mConsulta')).toHaveAttribute('aria-disabled', 'false');
     await expectNoTechnicalVisibleLinks(page);
 
@@ -1270,9 +1283,10 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#resumoEventoVendas')).toHaveText('2');
     await expect(page.locator('#resumoEventoFaturamento')).toHaveText('R$ 50,00');
     await expect(page.locator('#listaMinhasVendas')).toContainText('Cliente Proprio Homologacao');
-    await expect(page.locator('#comissaoMensagem')).toContainText(
-      'regra de comissão ainda não foi configurada'
-    );
+    await expect(page.locator('#comissaoMensagem')).toContainText('Regra ativa: 5% sobre a venda.');
+    await expect(page.locator('#comissaoMensagem')).toContainText('A receber: R$ 2,50.');
+    await expect(page.locator('#comissaoMensagem')).toContainText('Pago: R$ 1,00.');
+    await expect(page.locator('#comissaoMensagem')).toContainText('Pix configurado (CPF).');
 
     const pagamentos = await page.locator('#formaPagamento option').allTextContents();
     expect(pagamentos.join('|').toUpperCase()).not.toContain('CORTESIA');
