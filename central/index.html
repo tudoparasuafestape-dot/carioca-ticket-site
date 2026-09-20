@@ -3,96 +3,333 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="robots" content="noindex,nofollow">
+  <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#080b10">
+  <meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
   <title>Central Mobile | Carioca Ticket</title>
+  <link rel="icon" type="image/png" href="/assets/carioca-ticket-simbolo.png">
   <style>
+    :root{
+      --bg:#07090c;--panel:#10151b;--panel2:#0b0f14;--line:#28303a;
+      --gold:#dfa324;--gold2:#f6c94c;--text:#f6f3ec;--muted:#9aa3ad;
+      --green:#4ade95;--red:#ff6b6b
+    }
     *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;background:#080b10}
-    body{
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:24px;
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:#fff
-    }
-    .card{
-      width:min(92vw,440px);
-      padding:28px 24px;
-      border:1px solid rgba(241,182,64,.35);
-      border-radius:22px;
-      background:linear-gradient(180deg,#11151b,#0b0e13);
-      text-align:center;
-      box-shadow:0 24px 70px rgba(0,0,0,.35)
-    }
-    .brand{
-      font-size:12px;
-      font-weight:800;
-      letter-spacing:.2em;
-      color:#f1b640;
-      text-transform:uppercase
-    }
-    h1{font-size:24px;margin:10px 0 8px}
-    p{margin:0;color:#b9c0ca;line-height:1.45}
-    .loader{
-      width:38px;
-      height:38px;
-      margin:22px auto 0;
-      border-radius:50%;
-      border:4px solid rgba(255,255,255,.12);
-      border-top-color:#f1b640;
-      animation:spin .8s linear infinite
-    }
+    html,body{margin:0;min-height:100%;background:
+      radial-gradient(circle at 80% 5%,rgba(223,163,36,.15),transparent 28%),
+      linear-gradient(180deg,#080b10,#050608 78%);color:var(--text);
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{min-height:100vh}
+    .shell{width:min(980px,calc(100% - 28px));margin:auto;padding:20px 0 52px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+    .logo{width:118px;max-height:54px;object-fit:contain}
+    .top-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+    .ghost,.logout{min-height:40px;padding:0 14px;border:1px solid #343a42;border-radius:12px;background:#11161c;color:#e7e4dc;text-decoration:none;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+    .logout{cursor:pointer}
+    .hero{padding:26px;border:1px solid rgba(246,201,76,.24);border-radius:26px;background:linear-gradient(145deg,#111820,#0a0e13);box-shadow:0 22px 70px rgba(0,0,0,.32)}
+    .ey{color:var(--gold2);font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
+    h1{margin:8px 0 7px;font-size:clamp(30px,7vw,46px);letter-spacing:-.04em}
+    .lead{margin:0;color:#bbc2ca;line-height:1.6}
+    .user{margin-top:15px;color:#d6d2ca;font-size:12px}
+    .selector{margin-top:18px;padding:18px;border:1px solid var(--line);border-radius:18px;background:#0b0f14}
+    label{display:block;margin-bottom:8px;font-size:11px;font-weight:900;color:#dad6ce;text-transform:uppercase;letter-spacing:.08em}
+    select{width:100%;min-height:52px;border:1px solid #3b3424;border-radius:14px;background:#090b0e;color:#fff;padding:0 14px;font-size:14px;font-weight:800;outline:none}
+    .event-info{display:none;margin-top:13px;gap:6px;color:#9fa7b0;font-size:12px;line-height:1.5}
+    .event-info.show{display:grid}
+    .section-title{margin:24px 2px 12px;font-size:20px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .module{min-height:122px;padding:17px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#11161c,#0a0e12);color:#fff;text-decoration:none;display:flex;gap:13px;align-items:flex-start;transition:.16s ease}
+    .module:hover{border-color:#67552a;transform:translateY(-1px)}
+    .module.primary{border-color:rgba(246,201,76,.5);background:linear-gradient(145deg,#1a160b,#12100c)}
+    .module.disabled{opacity:.38;pointer-events:none}
+    .icon{width:42px;height:42px;border-radius:13px;background:#0a0d11;border:1px solid #303741;display:grid;place-items:center;font-size:21px;flex:0 0 auto}
+    .primary .icon{border-color:#6a5421;background:#1a160d}
+    .module strong{display:block;font-size:15px;margin:1px 0 5px}
+    .module span{display:block;color:#9fa7b0;font-size:12px;line-height:1.45}
+    .badge{display:inline-flex!important;width:auto!important;margin-top:9px;padding:4px 7px;border-radius:999px;background:#13241a;color:#66dd99!important;font-size:9px!important;font-weight:900!important;text-transform:uppercase;letter-spacing:.06em}
+    .gate{min-height:72vh;display:grid;place-items:center}
+    .gate-card{width:min(100%,480px);padding:30px 24px;border:1px solid rgba(246,201,76,.26);border-radius:24px;background:rgba(16,24,32,.96);box-shadow:0 22px 60px rgba(0,0,0,.34);text-align:center}
+    .gate-card img{width:120px;max-height:56px;object-fit:contain;margin-bottom:14px}
+    .gate-card h2{font-size:30px;margin:8px 0 10px}
+    .gate-card p{margin:0;color:#c0c6cd;line-height:1.6}
+    .loader{width:42px;height:42px;margin:24px auto 0;border:4px solid rgba(255,255,255,.12);border-top-color:var(--gold2);border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-    a{
-      display:none;
-      margin-top:22px;
-      padding:14px 18px;
-      border-radius:14px;
-      background:linear-gradient(135deg,#dfa324,#f6c94c);
-      color:#111;
-      font-weight:900;
-      text-decoration:none
-    }
-    a.show{display:block}
+    .actions{display:grid;gap:10px;margin-top:22px}
+    .btn{min-height:50px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;text-decoration:none;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;font:inherit}
+    .btn.secondary{background:#161c23;border:1px solid #39414b;color:#fff}
+    .msg{margin-top:13px;color:#ffb0b0;font-size:12px;line-height:1.5}
+    .hidden{display:none!important}
+    @media(max-width:660px){.shell{width:min(100% - 20px,980px);padding-top:13px}.top{align-items:flex-start}.logo{width:104px}.grid{grid-template-columns:1fr}.hero{padding:20px}.top-actions .ghost{display:none}.module{min-height:106px}}
   </style>
 </head>
 <body>
-  <main class="card">
-    <div class="brand">Carioca Ticket</div>
-    <h1>Central Mobile</h1>
-    <p>Redirecionando para o acesso oficial…</p>
-    <div class="loader" aria-hidden="true"></div>
-    <a id="fallback" href="#">Abrir Central Mobile</a>
+  <div id="gate" class="gate">
+    <section class="gate-card">
+      <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+      <div class="ey">Central Mobile</div>
+      <div id="gateLoading">
+        <h2>Validando acesso</h2>
+        <p>Confirmando sua sessão e os eventos autorizados para o seu perfil.</p>
+        <div class="loader"></div>
+      </div>
+      <div id="gateDenied" class="hidden">
+        <h2>Acesso restrito</h2>
+        <p id="gateMessage">Entre no Portal do Produtor para acessar a Central Mobile.</p>
+        <div class="actions">
+          <a class="btn" href="/produtor/">Entrar no Portal do Produtor</a>
+          <button id="retry" class="btn secondary" type="button">Tentar novamente</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <main id="central" class="shell hidden">
+    <header class="top">
+      <a href="/"><img class="logo" src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a>
+      <div class="top-actions">
+        <a class="ghost" href="/produtor/">Portal do Produtor</a>
+        <button id="logout" class="logout" type="button">Sair</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="ey">Carioca Ticket</div>
+      <h1>Central Mobile</h1>
+      <p class="lead">Eventos, vendas e operação na palma da mão.</p>
+      <div id="user" class="user"></div>
+
+      <div class="selector">
+        <label for="eventSelect">Evento selecionado</label>
+        <select id="eventSelect">
+          <option value="">Selecione um evento</option>
+        </select>
+        <div id="eventInfo" class="event-info"></div>
+      </div>
+    </section>
+
+    <h2 class="section-title">O que você precisa fazer?</h2>
+    <section id="modules" class="grid">
+      <a id="mCheckin" class="module primary" data-perm="CHECKIN" href="#">
+        <div class="icon">📷</div><div><strong>Check-in</strong><span>Leia QR Codes e valide ingressos na portaria.</span><span class="badge">Domínio oficial</span></div>
+      </a>
+      <a id="mConsulta" class="module" data-perm="CONSULTA_INGRESSOS" href="#">
+        <div class="icon">🔎</div><div><strong>Consultar ingressos</strong><span>Localize participantes, códigos e ingressos emitidos.</span></div>
+      </a>
+      <a id="mPortal" class="module" data-perm="PORTAL_PRODUTOR" href="/produtor/">
+        <div class="icon">📊</div><div><strong>Portal do Produtor</strong><span>Acompanhe painel, ocupação e resultados do evento.</span></div>
+      </a>
+      <a id="mAcessos" class="module" data-perm="USUARIOS" href="/acessos/">
+        <div class="icon">👤</div><div><strong>Usuários e permissões</strong><span>Gerencie os acessos autorizados da sua equipe.</span></div>
+      </a>
+      <a id="mVendas" class="module" data-perm="VENDAS" href="#">
+        <div class="icon">🎫</div><div><strong>Nova venda / Gerar ingresso</strong><span>Central de vendas operacional.</span></div>
+      </a>
+      <a id="mBar" class="module" data-perm="BAR" href="#">
+        <div class="icon">🍺</div><div><strong>Carioca Bar</strong><span>Operação, estoque e fechamento do bar.</span></div>
+      </a>
+    </section>
   </main>
 
-  <script>
-    (function(){
-      'use strict';
+<script>
+(function(){
+'use strict';
 
-      var params=new URLSearchParams(window.location.search);
-      params.delete('page');
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var EVENT_KEY='CT_CENTRAL_EVENTO_OFICIAL_V1';
+var pending={};
+var state={token:'',context:null,event:null};
 
-      var extra=params.toString();
-      var destino="https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec?page=app"+
-        (extra?'&'+extra:'')+
-        (window.location.hash||'');
+var gate=document.getElementById('gate');
+var gateLoading=document.getElementById('gateLoading');
+var gateDenied=document.getElementById('gateDenied');
+var gateMessage=document.getElementById('gateMessage');
+var central=document.getElementById('central');
+var eventSelect=document.getElementById('eventSelect');
+var eventInfo=document.getElementById('eventInfo');
 
-      var fallback=document.getElementById('fallback');
-      fallback.href=destino;
+function post(action,data,done){
+  var id='CTCENTRAL-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+  var frameName='ctcentral_'+id.replace(/[^A-Za-z0-9_]/g,'');
+  var frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+  var form=document.createElement('form');form.method='POST';form.action=APP;form.target=frameName;form.style.display='none';
+  function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}
+  add('ctMinhaCariocaAction',action);add('ctMinhaCariocaRequestId',id);
+  Object.keys(data||{}).forEach(function(k){add(k,data[k])});
+  document.body.append(frame,form);
+  pending[id]={frame:frame,form:form,done:done};
+  pending[id].timer=setTimeout(function(){
+    var p=pending[id];if(!p)return;delete pending[id];
+    try{p.frame.remove();p.form.remove()}catch(_){}
+    done({ok:false,erro:'A validação demorou mais do que o esperado.'});
+  },25000);
+  form.submit();
+}
 
-      /*
-       * Rotas autenticadas nao usam iframe.
-       * Navegacao direta evita particionamento de storage,
-       * bloqueios de iframe e spinners presos entre origens.
-       */
-      window.location.replace(destino);
+window.addEventListener('message',function(ev){
+  var p=ev.data;
+  if(!p||p.ctMinhaCariocaPost!==true||!p.id||!pending[p.id])return;
+  var ctx=pending[p.id];delete pending[p.id];clearTimeout(ctx.timer);
+  try{ctx.frame.remove();ctx.form.remove()}catch(_){}
+  ctx.done(p);
+});
 
-      setTimeout(function(){
-        fallback.classList.add('show');
-      },1800);
-    })();
-  </script>
+function saveSession(token,expiraEm){
+  var payload=JSON.stringify({token:String(token||''),expiraEm:String(expiraEm||'')});
+  try{sessionStorage.setItem(STORAGE,payload)}catch(_){}
+  try{localStorage.setItem(STORAGE,payload)}catch(_){}
+}
+
+function readSession(){
+  try{
+    var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE);
+    if(!raw)return null;
+    var d=JSON.parse(raw);if(!d||!d.token)return null;
+    if(d.expiraEm){
+      var t=Date.parse(d.expiraEm);
+      if(!isNaN(t)&&t<=Date.now()){clearSession();return null}
+    }
+    return d;
+  }catch(_){return null}
+}
+
+function clearSession(){
+  try{sessionStorage.removeItem(STORAGE)}catch(_){}
+  try{localStorage.removeItem(STORAGE)}catch(_){}
+}
+
+function handoffFromHash(){
+  var h=String(location.hash||'').replace(/^#/,'');
+  if(!h)return '';
+  try{return String(new URLSearchParams(h).get('ct_handoff')||'').trim()}catch(_){return ''}
+}
+
+function deny(msg){
+  gate.classList.remove('hidden');central.classList.add('hidden');
+  gateLoading.classList.add('hidden');gateDenied.classList.remove('hidden');
+  gateMessage.textContent=msg||'Entre no Portal do Produtor para acessar a Central Mobile.';
+}
+
+function restore(token){
+  post('centralRestaurarSessao',{token:token},function(env){
+    var r=env&&env.resultado;
+    if(!env||env.ok!==true||!r||r.autenticado!==true||r.autorizado!==true){
+      clearSession();deny((r&&r.mensagem)||env&&env.erro||'Sua sessão não está autorizada para a Central Mobile.');return;
+    }
+    state.token=token;state.context=r;render(r);
+  });
+}
+
+function start(){
+  gateLoading.classList.remove('hidden');gateDenied.classList.add('hidden');
+  var handoff=handoffFromHash();
+  if(handoff){
+    history.replaceState(null,'',location.pathname+location.search);
+    post('centralConsumirHandoff',{handoff:handoff},function(env){
+      var r=env&&env.resultado;
+      if(!env||env.ok!==true||!r||r.autenticado!==true||r.autorizado!==true||!r.token){
+        deny('O acesso seguro expirou ou já foi utilizado. Volte ao Portal do Produtor e abra a Central novamente.');return;
+      }
+      state.token=String(r.token);saveSession(state.token,r.expiraEm||'');restore(state.token);
+    });
+    return;
+  }
+
+  var s=readSession();
+  if(!s||!s.token){deny('Entre no Portal do Produtor para acessar a Central Mobile.');return}
+  state.token=String(s.token);restore(state.token);
+}
+
+function render(r){
+  gate.classList.add('hidden');central.classList.remove('hidden');
+  var u=r.usuario||{};
+  document.getElementById('user').textContent=u.nome?('Olá, '+u.nome):'Sessão autenticada';
+
+  var eventos=Array.isArray(r.eventos)?r.eventos:[];
+  eventSelect.innerHTML='<option value="">Selecione um evento</option>';
+  eventos.forEach(function(ev){
+    var o=document.createElement('option');o.value=String(ev.id||'');o.textContent=String(ev.nome||ev.id||'Evento');
+    eventSelect.appendChild(o);
+  });
+
+  var wanted='';
+  try{wanted=localStorage.getItem(EVENT_KEY)||''}catch(_){}
+  if(wanted&&eventos.some(function(e){return String(e.id||'')===wanted}))eventSelect.value=wanted;
+  else if(eventos.length===1)eventSelect.value=String(eventos[0].id||'');
+
+  applyEvent();
+}
+
+function currentEvents(){
+  return state.context&&Array.isArray(state.context.eventos)?state.context.eventos:[];
+}
+
+function applyEvent(){
+  var id=String(eventSelect.value||'');
+  state.event=currentEvents().find(function(e){return String(e.id||'')===id})||null;
+  if(id){try{localStorage.setItem(EVENT_KEY,id)}catch(_){}}
+  else{try{localStorage.removeItem(EVENT_KEY)}catch(_){}}
+
+  if(state.event){
+    var ev=state.event;
+    var bits=[ev.data,ev.horario,ev.local,[ev.cidade,ev.uf].filter(Boolean).join(' - ')].filter(Boolean);
+    eventInfo.innerHTML=bits.map(function(x){return '<span>'+escapeHtml(x)+'</span>'}).join('');
+    eventInfo.classList.add('show');
+  }else{
+    eventInfo.innerHTML='';eventInfo.classList.remove('show');
+  }
+
+  updateModules();
+}
+
+function allowed(permissao){
+  if(!state.context)return false;
+  var mods=state.event&&Array.isArray(state.event.modulosPermitidos)
+    ?state.event.modulosPermitidos
+    :(Array.isArray(state.context.modulosPermitidosGerais)?state.context.modulosPermitidosGerais:[]);
+  return mods.indexOf(permissao)>=0;
+}
+
+function updateModules(){
+  document.querySelectorAll('[data-perm]').forEach(function(a){
+    var perm=String(a.getAttribute('data-perm')||'');
+    a.classList.toggle('disabled',!allowed(perm));
+    a.setAttribute('aria-disabled',allowed(perm)?'false':'true');
+  });
+
+  var ev=state.event,id=ev?String(ev.id||''):'',nome=ev?String(ev.nome||''):'';
+  document.getElementById('mCheckin').href=id
+    ?'/checkin/?v=2.1.7&evento='+encodeURIComponent(id)+'&eventoNome='+encodeURIComponent(nome)
+    :'#';
+  document.getElementById('mConsulta').href=id
+    ?'/consulta/?evento='+encodeURIComponent(id)
+    :'/consulta/';
+
+  var scriptBase=APP;
+  document.getElementById('mVendas').href=id
+    ?scriptBase+'?page=vendas&evento='+encodeURIComponent(id)
+    :scriptBase+'?page=vendas';
+  document.getElementById('mBar').href=id
+    ?scriptBase+'?page=bar&evento='+encodeURIComponent(id)
+    :scriptBase+'?page=bar';
+
+  if(!id){
+    document.getElementById('mCheckin').classList.add('disabled');
+  }
+}
+
+function escapeHtml(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+eventSelect.addEventListener('change',applyEvent);
+document.getElementById('retry').addEventListener('click',start);
+document.getElementById('logout').addEventListener('click',function(){
+  var token=state.token;clearSession();state.token='';state.context=null;state.event=null;
+  post('centralLogout',{token:token},function(){location.replace('/produtor/')});
+  setTimeout(function(){location.replace('/produtor/')},1200);
+});
+
+start();
+}());
+</script>
 </body>
 </html>
