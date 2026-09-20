@@ -67,7 +67,8 @@ function centralContext(token) {
           'PORTAL_PRODUTOR',
           'USUARIOS',
           'VENDAS',
-          'BAR'
+          'BAR',
+          'EVENTOS'
         ]
       }
     ],
@@ -77,7 +78,8 @@ function centralContext(token) {
       'PORTAL_PRODUTOR',
       'USUARIOS',
       'VENDAS',
-      'BAR'
+      'BAR',
+      'EVENTOS'
     ]
   };
 }
@@ -250,6 +252,44 @@ function barFixture() {
   };
 }
 
+
+function eventosFixture() {
+  return {
+    sucesso: true,
+    autenticado: true,
+    autorizado: true,
+    eventos: [
+      {
+        id: EVENT_ID,
+        nome: 'Roda de Samba Estilo Carioca',
+        data: '11/10/2026',
+        horario: '15h às 22h',
+        local: 'Vevets Recepções',
+        cidade: 'Jaboatão dos Guararapes',
+        uf: 'PE',
+        status: 'ATIVO',
+        ativo: true,
+        publicacao: {
+          publicado: true,
+          prontoPublicar: true,
+          checkoutUrl: '/checkout/?evento=' + EVENT_ID
+        }
+      }
+    ],
+    total: 1,
+    eventoAtivo: {
+      id: EVENT_ID,
+      nome: 'Roda de Samba Estilo Carioca',
+      data: '11/10/2026',
+      horario: '15h às 22h',
+      local: 'Vevets Recepções',
+      cidade: 'Jaboatão dos Guararapes',
+      uf: 'PE'
+    },
+    publicados: 1
+  };
+}
+
 async function installMock(page, state) {
   await page.route('https://script.google.com/**', async route => {
     const request = route.request();
@@ -341,6 +381,38 @@ async function installMock(page, state) {
             state.barMutationCalls += 1;
             throw new Error('Teste nao deve alterar o Carioca Bar.');
 
+          case 'ctEventosOperacionalListarSeguraPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            resultado = eventosFixture();
+            break;
+
+          case 'ctEventosOperacionalContextoCadastroSeguraPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            resultado = {
+              sucesso: true,
+              autenticado: true,
+              autorizado: true,
+              produtores: [
+                {
+                  produtorId: 'PROD-E2E',
+                  nomeFantasia: 'Produtor Homologacao'
+                }
+              ],
+              origensComerciais: [
+                { id: 'PRODUTOR', nome: 'Produtor / relacionamento existente' }
+              ],
+              statusInicial: 'RASCUNHO',
+              regras: {}
+            };
+            break;
+
+          case 'ctEventosOperacionalPublicarSeguraPROD':
+          case 'ctEventosOperacionalFecharSeguraPROD':
+          case 'ctEventosOperacionalAtualizarStatusSeguraPROD':
+          case 'ctEventosOperacionalCriarSeguraPROD':
+            state.eventMutationCalls += 1;
+            throw new Error('Teste nao deve alterar Eventos.');
+
           case 'logoutUsuarioCT2':
             resultado = { sucesso: true };
             break;
@@ -429,7 +501,8 @@ test.describe('Jornada operacional autenticada', () => {
     const state = {
       token: 'CT-E2E-TOKEN-NAO-REAL',
       transactionCalls: 0,
-      barMutationCalls: 0
+      barMutationCalls: 0,
+      eventMutationCalls: 0
     };
 
     await installMock(page, state);
@@ -521,6 +594,17 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
+    await page.goto('/eventos-v2/', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: /^Eventos$/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute('href', '/central/');
+    await expectNoTechnicalVisibleLinks(page);
+    expect(state.eventMutationCalls).toBe(0);
+
+    await page.getByRole('link', { name: /Central Mobile/i }).click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
     await page.locator('#logout').click();
     await expect(page).toHaveURL(/\/produtor\//, { timeout: 10000 });
     await expect(page.locator('#loginView')).toBeVisible({ timeout: 15000 });
@@ -535,5 +619,6 @@ test.describe('Jornada operacional autenticada', () => {
     expect(stored.session).toBeNull();
     expect(state.transactionCalls).toBe(0);
     expect(state.barMutationCalls).toBe(0);
+    expect(state.eventMutationCalls).toBe(0);
   });
 });
