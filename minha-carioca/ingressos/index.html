@@ -48,13 +48,13 @@ function ticketHref(raw){
 try{
   var u=new URL(String(raw||''),location.href);
   var c=String(u.searchParams.get('codigo')||'').trim(),s=String(u.searchParams.get('sig')||'').trim();
-  if(c&&s)return '/ingresso/?v=20260919-2207&codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s);
+  if(c&&s)return '/ingresso/?v=20260919-2217&codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s);
   var destino=String(u.searchParams.get('destino')||'').trim();
   if(destino){
     var d=new URL(destino);
     c=String(d.searchParams.get('codigo')||'').trim();
     s=String(d.searchParams.get('sig')||'').trim();
-    if(c&&s)return '/ingresso/?v=20260919-2207&codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s);
+    if(c&&s)return '/ingresso/?v=20260919-2217&codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s);
   }
 }catch(_){}
 return String(raw||'#')
