@@ -105,7 +105,15 @@ it.append(e('p','',d.join(' · ')));
 var resumo=e('div','row');resumo.append(e('strong','',g.total+(g.total===1?' ingresso':' ingressos')));resumo.append(e('span','small',g.itens.length+(g.itens.length===1?' compra confirmada':' compras confirmadas')));it.append(resumo);
 g.itens.forEach(function(pedido,idx){
 var linha=e('div','row'),rotulo=e('span','small','Ingresso '+(idx+1)+' · '+(Number(pedido.quantidade||0)||0)+(Number(pedido.quantidade)===1?' acesso':' acessos'));
-var a=e('a','open',Number(pedido.quantidade)===1?'Abrir ingresso':'Abrir ingressos');a.href=String(pedido.link||'#');
+var a=e('a','open',Number(pedido.quantidade)===1?'Abrir ingresso':'Abrir ingressos');
+try{
+  var pu=new URL(String(pedido.link||''),location.origin);
+  var pp=String(pu.searchParams.get('pedido')||pedido.pedidoId||'').trim();
+  var pt=String(pu.searchParams.get('token')||'').trim();
+  a.href='/minha-carioca/ingressos/?pedido='+encodeURIComponent(pp)+'&token='+encodeURIComponent(pt);
+}catch(_){
+  a.href=String(pedido.link||'#');
+}
 linha.append(rotulo,a);it.append(linha);
 });
 list.append(it);
