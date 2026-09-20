@@ -1085,6 +1085,25 @@ placeholder="(81) 99999-9999"
 >
 </div>
 <div class="field">
+<label for="registerReferralCode">
+Código de indicação
+</label>
+<input
+id="registerReferralCode"
+type="text"
+autocomplete="off"
+maxlength="40"
+placeholder="Opcional"
+>
+<div
+id="registerReferralHint"
+class="auth-note hidden"
+style="text-align:left;margin-top:7px;"
+>
+Cadastro iniciado por indicação de um Parceiro Carioca Ticket.
+</div>
+</div>
+<div class="field">
 <label for="registerPassword">
 Senha
 </label>
@@ -1834,6 +1853,8 @@ function iniciar(){
 'registerName',
 'registerEmail',
 'registerWhatsapp',
+'registerReferralCode',
+'registerReferralHint',
 'registerPassword',
 'registerPasswordConfirm',
 'registerWebsite',
@@ -1891,6 +1912,8 @@ registrarEventos();
 carregarMarcaOficial();
 
 carregarCapacidades();
+
+carregarIndicacaoComercialUrl();
 
 inicializarFirebaseSilencioso();
 
@@ -2004,6 +2027,70 @@ false
 }
 );
 }
+
+function carregarIndicacaoComercialUrl(){
+
+var codigo = '';
+
+try{
+
+codigo =
+String(
+new URL(
+window.location.href
+)
+.searchParams
+.get(
+'ref'
+) ||
+''
+)
+.trim()
+.toUpperCase()
+.replace(
+/[^A-Z0-9_-]/g,
+''
+)
+.substring(
+0,
+40
+);
+
+}
+catch(
+erro
+){
+
+codigo = '';
+}
+
+if(
+!el.registerReferralCode
+){
+
+return;
+}
+
+if(
+codigo
+){
+
+el.registerReferralCode.value =
+codigo;
+
+if(
+el.registerReferralHint
+){
+
+el.registerReferralHint
+.classList
+.remove(
+'hidden'
+);
+}
+}
+}
+
 
 function carregarCapacidades(){
 
@@ -2236,6 +2323,23 @@ el.registerWebsite.value ||
 ''
 );
 
+var codigoIndicacao =
+String(
+el.registerReferralCode &&
+el.registerReferralCode.value ||
+''
+)
+.trim()
+.toUpperCase()
+.replace(
+/[^A-Z0-9_-]/g,
+''
+)
+.substring(
+0,
+40
+);
+
 if(
 !nome ||
 !email ||
@@ -2317,6 +2421,9 @@ nome,
 
 whatsapp:
 whatsapp,
+
+codigoIndicacao:
+codigoIndicacao,
 
 website:
 website
