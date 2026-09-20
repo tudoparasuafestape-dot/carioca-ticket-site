@@ -18,9 +18,9 @@ test.describe('Canario real first-party', () => {
     await expectFirstParty(page, '/produtor-v2/');
 
     await expect(page.getByRole('heading', { name: /Acesse sua conta/i })).toBeVisible();
-    await expect(page.getByLabel(/^E-mail$/i)).toBeVisible();
-    await expect(page.getByLabel(/^Senha$/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /^Entrar$/i })).toBeEnabled({ timeout: 45000 });
+    await expect(page.locator('#email')).toBeVisible();
+    await expect(page.locator('#senha')).toBeVisible();
+    await expect(page.locator('#loginButton')).toBeEnabled({ timeout: 45000 });
   });
 
   test('Evento v2 carrega o evento real e aponta para Checkout v2', async ({ page }) => {
