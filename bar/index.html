@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <title>Carioca Bar | Carioca Ticket</title>
+  <link rel="icon" href="/assets/carioca-ticket-logo.png">
+  <style>
+    :root{
+      --bg:#070707;--panel:#111;--panel2:#171717;--line:#2a2a2a;--gold:#d9a62e;--gold2:#f2c451;
+      --text:#f7f2e8;--muted:#a9a39a;--ok:#75d69a;--danger:#ff8e8e;--warn:#f2c451;--shadow:0 18px 55px rgba(0,0,0,.35)
+    }
+    *{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:radial-gradient(circle at top right,rgba(217,166,46,.12),transparent 28rem),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+    a{color:inherit}.hidden{display:none!important}.shell{width:min(1180px,calc(100% - 28px));margin:0 auto;padding:18px 0 54px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 0 18px}.brand{display:flex;align-items:center;gap:12px;text-decoration:none}.brand img{width:56px;height:42px;object-fit:contain}.brand strong{font-size:15px}.brand span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+    .top-actions{display:flex;gap:9px;align-items:center}.btn,.ghost,button{font:inherit}.btn,.ghost,.logout{border-radius:12px;padding:10px 13px;border:1px solid var(--line);text-decoration:none;font-weight:800;font-size:12px;cursor:pointer}.ghost{background:#121212}.logout{background:transparent;color:var(--muted)}.btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#13100a;border-color:transparent}
+    .hero{border:1px solid #2d281d;background:linear-gradient(145deg,#16130d,#0f0f0f 60%);border-radius:24px;padding:24px;box-shadow:var(--shadow)}.ey{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--gold2);font-weight:900}.hero h1{font-size:clamp(29px,5vw,52px);margin:8px 0 7px;letter-spacing:-.04em}.hero p{margin:0;color:var(--muted);line-height:1.55}.event{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid #3c3320;background:#17140d;border-radius:999px;padding:7px 10px;font-size:11px;color:#e8d9b5}.status{font-weight:900}.status.open{color:var(--ok)}.status.closed{color:var(--danger)}
+    .grid-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:14px}.stat{border:1px solid var(--line);background:var(--panel);border-radius:17px;padding:15px}.stat span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.stat strong{display:block;font-size:22px;margin-top:7px}.stat small{display:block;color:var(--muted);margin-top:4px}
+    .section{margin-top:18px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:10px}.section-head h2{margin:0;font-size:18px}.section-head p{margin:3px 0 0;color:var(--muted);font-size:11px}.panel{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+    .actions-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.action{border:1px solid var(--line);background:var(--panel2);border-radius:14px;padding:13px;text-align:left;color:var(--text);cursor:pointer}.action strong{display:block;font-size:12px}.action span{display:block;font-size:10px;color:var(--muted);margin-top:5px;line-height:1.35}.action:hover{border-color:#5c4a20}
+    details.editor{border:1px solid var(--line);border-radius:16px;background:#0d0d0d;margin-top:10px;overflow:hidden}details.editor summary{cursor:pointer;padding:14px 15px;font-weight:900;font-size:12px;list-style:none}details.editor summary::-webkit-details-marker{display:none}.editor-body{border-top:1px solid var(--line);padding:14px}
+    .form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.field{display:flex;flex-direction:column;gap:6px}.field.wide{grid-column:span 2}.field.full{grid-column:1/-1}.field label{font-size:10px;color:var(--muted);font-weight:800}.field input,.field select,.field textarea{width:100%;background:#0b0b0b;border:1px solid #303030;color:var(--text);border-radius:11px;padding:11px;font:inherit;font-size:12px;outline:none}.field textarea{min-height:76px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:#70591f}.form-actions{display:flex;gap:8px;align-items:center;margin-top:12px}.danger{background:#281313;color:#ffc1c1;border-color:#5e2424}.secondary{background:#181818;color:var(--text);border-color:var(--line)}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:15px}.table{width:100%;border-collapse:collapse;min-width:760px}.table th,.table td{padding:11px 12px;border-bottom:1px solid #242424;text-align:left;font-size:11px;vertical-align:top}.table th{color:#cabf9d;background:#15130e;position:sticky;top:0}.table td{color:#ddd}.table tr:last-child td{border-bottom:0}.muted{color:var(--muted)}.empty{padding:26px;text-align:center;color:var(--muted);font-size:12px}.num{text-align:right!important;font-variant-numeric:tabular-nums}
+    .gate{min-height:100vh;display:grid;place-items:center;padding:22px}.gate-card{width:min(480px,100%);border:1px solid #332b1d;background:#111;border-radius:24px;padding:26px;text-align:center;box-shadow:var(--shadow)}.gate-card img{width:92px;height:62px;object-fit:contain}.gate-card h1{margin:14px 0 6px}.gate-card p{color:var(--muted);line-height:1.55;font-size:13px}.loader{width:30px;height:30px;border:3px solid #292929;border-top-color:var(--gold);border-radius:50%;margin:18px auto;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    .toast{position:fixed;z-index:50;left:50%;bottom:20px;transform:translateX(-50%) translateY(120px);opacity:0;transition:.25s;background:#171717;border:1px solid #333;color:var(--text);padding:12px 15px;border-radius:12px;box-shadow:var(--shadow);font-size:12px;max-width:min(620px,calc(100% - 30px))}.toast.show{transform:translateX(-50%) translateY(0);opacity:1}.toast.ok{border-color:#275b3a}.toast.err{border-color:#6b2929}
+    .blocking{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.68);display:none;place-items:center}.blocking.show{display:grid}.blocking-box{border:1px solid #44391f;background:#111;border-radius:18px;padding:20px;text-align:center;width:min(330px,90vw)}.blocking-box .loader{margin:0 auto 12px}
+    @media(max-width:900px){.grid-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.actions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){.shell{width:min(100% - 18px,1180px)}.top{align-items:flex-start}.top-actions{flex-direction:column;align-items:stretch}.hero{padding:19px}.grid-stats,.actions-grid,.form-grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.stat strong{font-size:20px}.brand span{display:none}}
+  </style>
+</head>
+<body>
+  <section id="gate" class="gate">
+    <div class="gate-card">
+      <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+      <div id="gateLoading">
+        <h1>Carioca Bar</h1>
+        <p>Validando sua sessão e a permissão deste evento.</p>
+        <div class="loader"></div>
+      </div>
+      <div id="gateDenied" class="hidden">
+        <h1>Acesso restrito</h1>
+        <p id="gateMessage">Entre pelo Portal do Produtor e selecione um evento autorizado para o Bar.</p>
+        <div class="form-actions" style="justify-content:center">
+          <a class="btn" href="/produtor/">Portal do Produtor</a>
+          <a class="ghost" href="/central/">Voltar à Central</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main id="app" class="shell hidden">
+    <header class="top">
+      <a class="brand" href="/central/">
+        <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+        <div><strong>Carioca Bar</strong><span>Operação segura por evento</span></div>
+      </a>
+      <div class="top-actions">
+        <a class="ghost" href="/central/">← Central Mobile</a>
+        <button id="refresh" class="ghost" type="button">Atualizar</button>
+        <button id="logout" class="logout" type="button">Sair</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="ey">Carioca Ticket · Bar</div>
+      <h1 id="eventName">Evento</h1>
+      <p>Estoque, movimentações, custos e fechamento com controle por evento e por permissão.</p>
+      <div id="eventMeta" class="event"></div>
+    </section>
+
+    <section class="grid-stats">
+      <article class="stat"><span>Produtos</span><strong id="sProdutos">0</strong><small>cadastrados</small></article>
+      <article class="stat"><span>Vendido</span><strong id="sQtd">0</strong><small>unidades calculadas</small></article>
+      <article class="stat"><span>Faturamento</span><strong id="sFat">R$ 0,00</strong><small>estimado</small></article>
+      <article class="stat"><span>Resultado</span><strong id="sResultado">R$ 0,00</strong><small>operacional estimado</small></article>
+      <article class="stat"><span>Estoque crítico</span><strong id="sCritico">0</strong><small>itens em atenção</small></article>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Operação</h2><p>Ações graváveis exigem confirmação e autorização BAR.</p></div></div>
+      <div class="panel">
+        <div class="actions-grid">
+          <button class="action" type="button" data-open="produtoEditor"><strong>＋ Produto</strong><span>Cadastrar ou atualizar item.</span></button>
+          <button class="action" type="button" data-open="movEditor"><strong>↕ Estoque</strong><span>Entrada, avaria, cortesia e contagem.</span></button>
+          <button class="action" type="button" data-open="vendaEditor"><strong>R$ Venda direta</strong><span>Drinks e comidas com venda direta.</span></button>
+          <button class="action" type="button" data-open="custoEditor"><strong>＋ Custo</strong><span>Registrar custo extra do Bar.</span></button>
+          <button class="action" type="button" data-open="fechamentoEditor"><strong>✓ Fechamento</strong><span>Conferir e fechar a operação.</span></button>
+        </div>
+
+        <details id="produtoEditor" class="editor">
+          <summary>Cadastrar produto</summary>
+          <div class="editor-body">
+            <form id="produtoForm">
+              <div class="form-grid">
+                <div class="field wide"><label>Produto</label><input name="produto" required maxlength="120"></div>
+                <div class="field"><label>Categoria</label><select name="categoria"><option>BEBIDA</option><option>DRINK</option><option>COMIDA - ESPAÇO</option><option>OUTROS</option></select></div>
+                <div class="field"><label>Unidade</label><input name="unidade" value="UN" maxlength="20"></div>
+                <div class="field"><label>Custo unitário</label><input name="custoUnitario" type="number" min="0" step="0.01" value="0"></div>
+                <div class="field"><label>Preço de venda</label><input name="precoVenda" type="number" min="0" step="0.01" value="0"></div>
+                <div class="field"><label>Estoque mínimo</label><input name="estoqueMinimo" type="number" min="0" step="1" value="0"></div>
+                <div class="field"><label>Status</label><select name="status"><option>ATIVO</option><option>INATIVO</option></select></div>
+                <div class="field full"><label>Observação</label><textarea name="observacao"></textarea></div>
+              </div>
+              <div class="form-actions"><button class="btn" type="submit">Salvar produto</button></div>
+            </form>
+          </div>
+        </details>
+
+        <details id="movEditor" class="editor">
+          <summary>Registrar movimentação de estoque</summary>
+          <div class="editor-body">
+            <form id="movForm">
+              <div class="form-grid">
+                <div class="field wide"><label>Produto</label><select name="produtoId" data-produtos required></select></div>
+                <div class="field"><label>Tipo</label><select name="tipo"><option>ESTOQUE_INICIAL</option><option>REPOSICAO</option><option>CORTESIA</option><option>AVARIA</option><option>AJUSTE_POSITIVO</option><option>AJUSTE_NEGATIVO</option><option>ESTOQUE_FINAL</option></select></div>
+                <div class="field"><label>Quantidade</label><input name="quantidade" type="number" min="0" step="1" required></div>
+                <div class="field full"><label>Observação</label><textarea name="observacao"></textarea></div>
+              </div>
+              <div class="form-actions"><button class="btn" type="submit">Registrar movimentação</button></div>
+            </form>
+          </div>
+        </details>
+
+        <details id="vendaEditor" class="editor">
+          <summary>Registrar venda direta</summary>
+          <div class="editor-body">
+            <form id="vendaForm">
+              <div class="form-grid">
+                <div class="field wide"><label>Produto</label><select name="produtoId" data-produtos required></select></div>
+                <div class="field"><label>Quantidade</label><input name="quantidade" type="number" min="1" step="1" required></div>
+                <div class="field full"><label>Observação</label><textarea name="observacao"></textarea></div>
+              </div>
+              <div class="form-actions"><button class="btn" type="submit">Registrar venda direta</button></div>
+            </form>
+          </div>
+        </details>
+
+        <details id="custoEditor" class="editor">
+          <summary>Registrar custo extra</summary>
+          <div class="editor-body">
+            <form id="custoForm">
+              <div class="form-grid">
+                <div class="field wide"><label>Descrição</label><input name="descricao" required maxlength="160"></div>
+                <div class="field"><label>Categoria</label><input name="categoria" value="OUTROS" maxlength="60"></div>
+                <div class="field"><label>Valor</label><input name="valor" type="number" min="0.01" step="0.01" required></div>
+                <div class="field full"><label>Observação</label><textarea name="observacao"></textarea></div>
+              </div>
+              <div class="form-actions"><button class="btn" type="submit">Registrar custo</button></div>
+            </form>
+          </div>
+        </details>
+
+        <details id="fechamentoEditor" class="editor">
+          <summary>Fechar ou reabrir Bar</summary>
+          <div class="editor-body">
+            <div id="closeBlock">
+              <form id="closeForm">
+                <div class="form-grid">
+                  <div class="field wide"><label>Responsável</label><input name="responsavel" required maxlength="120"></div>
+                  <div class="field"><label>Dinheiro</label><input name="dinheiro" type="number" min="0" step="0.01" value="0"></div>
+                  <div class="field"><label>Pix</label><input name="pix" type="number" min="0" step="0.01" value="0"></div>
+                  <div class="field"><label>Débito</label><input name="debito" type="number" min="0" step="0.01" value="0"></div>
+                  <div class="field"><label>Crédito</label><input name="credito" type="number" min="0" step="0.01" value="0"></div>
+                  <div class="field"><label>Outros</label><input name="outros" type="number" min="0" step="0.01" value="0"></div>
+                  <div class="field full"><label>Observação</label><textarea name="observacao"></textarea></div>
+                </div>
+                <div class="form-actions"><button class="btn" type="submit">Confirmar fechamento</button></div>
+              </form>
+            </div>
+            <div id="reopenBlock" class="hidden">
+              <form id="reopenForm">
+                <div class="form-grid">
+                  <div class="field wide"><label>Responsável</label><input name="responsavel" required maxlength="120"></div>
+                  <div class="field wide"><label>Motivo da reabertura</label><input name="motivo" required maxlength="220"></div>
+                </div>
+                <div class="form-actions"><button class="btn danger" type="submit">Reabrir operação</button></div>
+              </form>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Produtos e posição</h2><p>Leitura consolidada do evento selecionado.</p></div></div>
+      <div class="panel" style="padding:0"><div id="productsWrap"></div></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Movimentações recentes</h2><p>Histórico operacional do Bar.</p></div></div>
+      <div class="panel" style="padding:0"><div id="movesWrap"></div></div>
+    </section>
+  </main>
+
+  <div id="blocking" class="blocking"><div class="blocking-box"><div class="loader"></div><strong id="blockingText">Processando...</strong></div></div>
+  <div id="toast" class="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var pending={};
+var state={token:'',eventoId:'',data:null};
+var gate=document.getElementById('gate'),gateLoading=document.getElementById('gateLoading'),gateDenied=document.getElementById('gateDenied'),gateMessage=document.getElementById('gateMessage'),app=document.getElementById('app');
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function money(v){var n=Number(v||0);return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE);if(!raw)return null;var d=JSON.parse(raw);if(!d||!d.token)return null;if(d.expiraEm){var t=Date.parse(d.expiraEm);if(!isNaN(t)&&t<=Date.now())return null}return d}catch(_){return null}}
+function clearSession(){try{sessionStorage.removeItem(STORAGE)}catch(_){}try{localStorage.removeItem(STORAGE)}catch(_){}}
+function eventFromUrl(){var p=new URLSearchParams(location.search);return String(p.get('evento')||p.get('eventoId')||'').trim()}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){
+  return new Promise(function(resolve,reject){
+    if(!state.token){reject(new Error('Sua sessão não está disponível.'));return}
+    var id='CTBAR-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+    var frameName='ctbar_'+id.replace(/[^A-Za-z0-9_]/g,'');
+    var frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+    var form=document.createElement('form');form.method='POST';form.action=APP;form.target=frameName;form.style.display='none';
+    function add(k,v){var input=document.createElement('input');input.type='hidden';input.name=k;input.value=String(v==null?'':v);form.appendChild(input)}
+    add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));
+    document.body.append(frame,form);
+    pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},45000)};
+    form.submit();
+  });
+}
+window.addEventListener('message',function(ev){
+  if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;
+  var payload=ev.data;if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
+  var p=cleanup(payload.id);if(!p)return;
+  if(payload.ok===true)p.resolve(payload.resultado);else p.reject(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+});
+function deny(msg){gate.classList.remove('hidden');app.classList.add('hidden');gateLoading.classList.add('hidden');gateDenied.classList.remove('hidden');gateMessage.textContent=msg||'Acesso não autorizado ao Carioca Bar.'}
+function busy(on,text){document.getElementById('blocking').classList.toggle('show',!!on);if(text)document.getElementById('blockingText').textContent=text}
+var toastTimer=null;function toast(msg,type){var el=document.getElementById('toast');el.textContent=String(msg||'');el.className='toast show '+(type||'');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.className='toast'},3800)}
+async function load(){
+  try{
+    busy(true,'Carregando Carioca Bar...');
+    var r=await rpc('ctCariocaBarCarregarSeguraPROD',[state.token,state.eventoId]);
+    if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error((r&&r.mensagem)||'Acesso não autorizado ao Carioca Bar.');
+    state.data=r;render(r);gate.classList.add('hidden');app.classList.remove('hidden');
+  }catch(e){deny(e&&e.message?e.message:String(e))}
+  finally{busy(false)}
+}
+function render(r){
+  var ev=r.evento||{},res=r.resumo||{},tot=res.totais||{},items=Array.isArray(res.itens)?res.itens:[],products=Array.isArray(r.produtos)?r.produtos:[],moves=Array.isArray(r.movimentacoes)?r.movimentacoes:[];
+  document.getElementById('eventName').textContent=String(ev.nome||state.eventoId);
+  var meta=[ev.data,ev.horario,ev.local].filter(Boolean).map(function(x){return '<span class="chip">'+esc(x)+'</span>'});
+  var closed=!!(res.fechamento&&res.fechamento.operacaoFechada);meta.push('<span class="chip status '+(closed?'closed':'open')+'">'+(closed?'Operação fechada':'Operação aberta')+'</span>');
+  document.getElementById('eventMeta').innerHTML=meta.join('');
+  document.getElementById('sProdutos').textContent=String(Number(tot.produtos||products.length||0));
+  document.getElementById('sQtd').textContent=String(Number(tot.quantidadeVendida||0));
+  document.getElementById('sFat').textContent=money(tot.faturamento);
+  document.getElementById('sResultado').textContent=money(tot.resultadoOperacional);
+  document.getElementById('sCritico').textContent=String(items.filter(function(x){return x&&x.estoqueCritico===true}).length);
+  document.getElementById('closeBlock').classList.toggle('hidden',closed);
+  document.getElementById('reopenBlock').classList.toggle('hidden',!closed);
+  fillProducts(products);renderProducts(items,products);renderMoves(moves);
+}
+function fillProducts(products){
+  document.querySelectorAll('[data-produtos]').forEach(function(sel){var current=sel.value;sel.innerHTML='<option value="">Selecione</option>'+products.filter(function(p){return String(p.status||'ATIVO').toUpperCase()==='ATIVO'}).map(function(p){return '<option value="'+esc(p.produtoId)+'">'+esc(p.produto)+'</option>'}).join('');if(current)sel.value=current});
+}
+function renderProducts(items,products){
+  var map={};items.forEach(function(x){map[String(x.produtoId||'')]=x});
+  if(!products.length){document.getElementById('productsWrap').innerHTML='<div class="empty">Nenhum produto cadastrado para este evento.</div>';return}
+  var rows=products.map(function(p){var x=map[String(p.produtoId||'')]||{};return '<tr><td><strong>'+esc(p.produto)+'</strong><br><span class="muted">'+esc(p.categoria||'')+'</span></td><td>'+esc(p.unidade||'')+'</td><td class="num">'+money(p.custoUnitario)+'</td><td class="num">'+money(p.precoVenda)+'</td><td class="num">'+Number(x.estoqueInicial||0)+'</td><td class="num">'+Number(x.reposicoes||0)+'</td><td class="num">'+Number(x.estoqueFinalContado||0)+'</td><td class="num">'+Number(x.quantidadeVendida||0)+'</td><td class="num">'+money(x.faturamento)+'</td><td>'+(x.estoqueCritico===true?'<span style="color:var(--warn);font-weight:900">Atenção</span>':'OK')+'</td></tr>'}).join('');
+  document.getElementById('productsWrap').innerHTML='<div class="table-wrap" style="border:0"><table class="table"><thead><tr><th>Produto</th><th>Un.</th><th class="num">Custo</th><th class="num">Venda</th><th class="num">Inicial</th><th class="num">Reposição</th><th class="num">Final</th><th class="num">Vendido</th><th class="num">Faturamento</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+function renderMoves(moves){
+  if(!moves.length){document.getElementById('movesWrap').innerHTML='<div class="empty">Nenhuma movimentação registrada para este evento.</div>';return}
+  var rows=moves.slice().reverse().slice(0,100).map(function(m){return '<tr><td>'+esc(m.criadoEm||m.dataHora||'')+'</td><td><strong>'+esc(m.produto||m.produtoNome||m.produtoId||'')+'</strong></td><td>'+esc(m.tipo||'')+'</td><td class="num">'+Number(m.quantidade||0)+'</td><td>'+esc(m.responsavel||'')+'</td><td>'+esc(m.observacao||'')+'</td><td>'+esc(m.status||'ATIVO')+'</td></tr>'}).join('');
+  document.getElementById('movesWrap').innerHTML='<div class="table-wrap" style="border:0"><table class="table"><thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th class="num">Qtd.</th><th>Responsável</th><th>Observação</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+function formObject(form){var o={};new FormData(form).forEach(function(v,k){o[k]=v});return o}
+async function mutate(method,args,message,confirmText){
+  if(confirmText&&!window.confirm(confirmText))return;
+  try{busy(true,'Salvando operação...');var r=await rpc(method,args);if(!r||r.sucesso!==true)throw new Error((r&&r.mensagem)||'Operação não concluída.');toast(message||'Operação concluída.','ok');await load()}catch(e){toast(e&&e.message?e.message:String(e),'err')}finally{busy(false)}
+}
+document.querySelectorAll('[data-open]').forEach(function(b){b.addEventListener('click',function(){var d=document.getElementById(b.getAttribute('data-open'));d.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})})});
+document.getElementById('produtoForm').addEventListener('submit',function(e){e.preventDefault();var d=formObject(e.currentTarget);['custoUnitario','precoVenda','estoqueMinimo'].forEach(function(k){d[k]=Number(d[k]||0)});mutate('ctCariocaBarSalvarProdutoSeguraPROD',[state.token,state.eventoId,d],'Produto salvo.','Confirma o cadastro deste produto no Bar?')});
+document.getElementById('movForm').addEventListener('submit',function(e){e.preventDefault();var d=formObject(e.currentTarget);d.quantidade=Number(d.quantidade||0);mutate('ctCariocaBarRegistrarMovimentacaoSeguraPROD',[state.token,state.eventoId,d],'Movimentação registrada.','Confirma esta movimentação de estoque?')});
+document.getElementById('vendaForm').addEventListener('submit',function(e){e.preventDefault();var d=formObject(e.currentTarget);d.quantidade=Number(d.quantidade||0);mutate('ctCariocaBarRegistrarVendaDiretaSeguraPROD',[state.token,state.eventoId,d],'Venda direta registrada.','Confirma esta venda direta no Bar?')});
+document.getElementById('custoForm').addEventListener('submit',function(e){e.preventDefault();var d=formObject(e.currentTarget);d.valor=Number(d.valor||0);mutate('ctCariocaBarRegistrarCustoSeguraPROD',[state.token,state.eventoId,d],'Custo registrado.','Confirma este custo no Bar?')});
+document.getElementById('closeForm').addEventListener('submit',function(e){e.preventDefault();var d=formObject(e.currentTarget);var financeiro={dinheiro:Number(d.dinheiro||0),pix:Number(d.pix||0),debito:Number(d.debito||0),credito:Number(d.credito||0),outros:Number(d.outros||0)};mutate('ctCariocaBarFecharSeguraPROD',[state.token,state.eventoId,d.responsavel,d.observacao,financeiro],'Bar fechado com sucesso.','ATENÇÃO: confirma o fechamento do Bar deste evento? Após fechar, alterações ficam bloqueadas até uma reabertura auditável.')});
+document.getElementById('reopenForm').addEventListener('submit',function(e){e.preventDefault();var d=formObject(e.currentTarget);mutate('ctCariocaBarReabrirSeguraPROD',[state.token,state.eventoId,d.responsavel,d.motivo],'Bar reaberto.','Confirma a reabertura auditável do Bar?')});
+document.getElementById('refresh').addEventListener('click',load);
+document.getElementById('logout').addEventListener('click',async function(){var token=state.token;clearSession();state.token='';try{await rpc('logoutUsuarioCT2',[token])}catch(_){}location.replace('/produtor/')});
+function start(){
+  var session=readSession();state.eventoId=eventFromUrl();
+  if(!session||!session.token){deny('Entre no Portal do Produtor para acessar o Carioca Bar.');return}
+  if(!state.eventoId){deny('Selecione um evento na Central Mobile antes de abrir o Carioca Bar.');return}
+  state.token=String(session.token);load();
+}
+start();
+}());
+</script>
+</body>
+</html>
