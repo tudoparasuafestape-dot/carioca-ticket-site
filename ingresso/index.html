@@ -114,6 +114,22 @@
       font-size:14px;
       font-weight:900;
     }
+    .ticket-view{display:none;text-align:left}.ticket-view.show{display:block}
+    .event-cover{height:170px;margin:-8px -2px 20px;position:relative;overflow:hidden;border-radius:18px;background:#090909}
+    .event-cover img{width:100%;height:100%;object-fit:cover;display:block}
+    .event-cover:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent,rgba(0,0,0,.72))}
+    .event-cover strong{position:absolute;z-index:2;left:16px;right:16px;bottom:15px;color:#fff;font-size:21px;line-height:1.15}
+    .status{display:inline-flex;padding:7px 10px;border-radius:999px;background:#10251a;color:#68dfa0;font-size:11px;font-weight:900;margin-bottom:14px}
+    .info{display:grid;grid-template-columns:1fr 1fr;gap:9px}.info div{padding:12px;border:1px solid #292720;border-radius:13px;background:#0b0b0b}
+    .info small{display:block;color:#817c73;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+    .info strong{display:block;color:var(--text);font-size:12px;line-height:1.4}
+    .qr{width:min(270px,82%);aspect-ratio:1;margin:22px auto 8px;padding:12px;border-radius:18px;background:#fff;display:block;object-fit:contain}
+    .code{text-align:center;color:var(--gold2);font-size:15px;font-weight:900;letter-spacing:.08em;word-break:break-all}
+    .security-note{margin-top:18px;padding:14px;border:1px solid #213343;border-radius:14px;background:#0c141c;color:#aeb9c4;font-size:11px;line-height:1.55;text-align:left}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+    .action{min-height:48px;display:flex;align-items:center;justify-content:center;border-radius:13px;text-decoration:none;font-size:12px;font-weight:900;border:1px solid #37342f;color:#ddd5c8;background:#111}
+    .action.primary{border-color:var(--gold);background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111}
+    @media(max-width:520px){.info,.actions{grid-template-columns:1fr}}
     .erro{
       display:none;
       margin-top:22px;
@@ -143,48 +159,99 @@
 
     <a id="abrir" class="btn" href="#" rel="nofollow">Abrir ingresso</a>
     <div id="erro" class="erro"></div>
+    <section id="ticket-view" class="ticket-view"></section>
 
     <div class="rodape">Carioca Ticket · acesso seguro ao ingresso digital</div>
   </main>
 
   <script>
     (function () {
-      const BASE_INGRESSO =
-        'https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+      'use strict';
 
-      const parametros = new URLSearchParams(window.location.search);
-      const codigo = String(parametros.get('codigo') || '').trim().toUpperCase();
-      const sig = String(parametros.get('sig') || '').trim();
+      var BASE='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+      var parametros=new URLSearchParams(window.location.search);
+      var codigo=String(parametros.get('codigo')||'').trim().toUpperCase();
+      var sig=String(parametros.get('sig')||'').trim();
 
-      const codigoValido = /^[A-Z0-9][A-Z0-9-]{5,79}$/.test(codigo);
-      const assinaturaValida = /^[A-Za-z0-9_-]{16,128}$/.test(sig);
+      var spinner=document.getElementById('spinner');
+      var abrir=document.getElementById('abrir');
+      var erro=document.getElementById('erro');
+      var mensagem=document.getElementById('mensagem');
+      var view=document.getElementById('ticket-view');
+      var pending={};
 
-      const spinner = document.getElementById('spinner');
-      const abrir = document.getElementById('abrir');
-      const erro = document.getElementById('erro');
-      const mensagem = document.getElementById('mensagem');
+      function esc(v){
+        return String(v||'')
+          .replace(/&/g,'&amp;')
+          .replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;')
+          .replace(/'/g,'&#039;');
+      }
 
-      if (!codigoValido || !assinaturaValida) {
-        spinner.style.display = 'none';
-        mensagem.textContent = 'Não foi possível abrir este ingresso.';
-        erro.textContent = 'O link está incompleto ou inválido. Solicite novamente o ingresso oficial.';
-        erro.style.display = 'block';
+      function postSecure(data,done){
+        var id='ING-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+        var frameName='ing_'+id.replace(/[^A-Za-z0-9_]/g,'');
+        var frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+        var form=document.createElement('form');form.method='POST';form.action=BASE;form.target=frameName;form.style.display='none';
+        function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}
+        add('ctMinhaCariocaAction','consultarIngressoSeguro');add('ctMinhaCariocaRequestId',id);
+        Object.keys(data||{}).forEach(function(k){add(k,data[k])});
+        document.body.append(frame,form);pending[id]={frame:frame,form:form,done:done};
+        pending[id].timer=setTimeout(function(){
+          var p=pending[id];if(!p)return;delete pending[id];try{p.form.remove();p.frame.remove()}catch(_){}
+          done({ok:false,erro:'A consulta demorou mais que o esperado.'});
+        },20000);
+        form.submit();
+      }
+
+      window.addEventListener('message',function(ev){
+        var p=ev.data;if(!p||p.ctMinhaCariocaPost!==true||!p.id||!pending[p.id])return;
+        var ctx=pending[p.id];delete pending[p.id];clearTimeout(ctx.timer);try{ctx.form.remove();ctx.frame.remove()}catch(_){}
+        ctx.done(p);
+      });
+
+      function fail(msg){
+        spinner.style.display='none';mensagem.textContent='Não foi possível abrir este ingresso.';
+        erro.textContent=msg||'O link está incompleto, inválido ou expirado.';erro.style.display='block';
+      }
+
+      function render(res){
+        var t=res.ingresso||{},e=res.evento||{},v=res.visual||{};
+        var capa=String(v.capaUrl||v.posterUrl||'');
+        var qr=String(t.qrUrl||'');
+        spinner.style.display='none';abrir.style.display='none';erro.style.display='none';
+        document.querySelector('.eyebrow').style.display='none';
+        document.querySelector('h1').style.display='none';
+        mensagem.style.display='none';
+        var cover=capa?'<div class="event-cover"><img src="'+esc(capa)+'" alt=""><strong>'+esc(e.nome||'Evento Carioca Ticket')+'</strong></div>':'';
+        view.classList.add('show');
+        view.innerHTML=cover+
+          '<span class="status">● '+esc(t.status||'Ingresso válido')+'</span>'+
+          '<div class="info">'+
+            '<div><small>Participante</small><strong>'+esc(t.nome||'—')+'</strong></div>'+
+            '<div><small>Ingresso</small><strong>'+esc([t.tipo,t.lote].filter(Boolean).join(' · ')||'—')+'</strong></div>'+
+            '<div><small>Data</small><strong>'+esc([e.data,e.horario].filter(Boolean).join(' · ')||'—')+'</strong></div>'+
+            '<div><small>Local</small><strong>'+esc([e.local,e.cidade,e.uf].filter(Boolean).join(' · ')||'—')+'</strong></div>'+
+          '</div>'+
+          (qr?'<img class="qr" src="'+esc(qr)+'" alt="QR Code do ingresso">':'')+
+          '<div class="code">'+esc(t.codigo||codigo)+'</div>'+
+          '<div class="security-note">Este ingresso é individual e permite somente uma entrada. Não compartilhe o QR Code com terceiros.</div>'+
+          '<div class="actions"><a class="action primary" href="/minha-carioca/conta/">Voltar para Minha Carioca</a><a class="action" href="/">Ver eventos</a></div>';
+      }
+
+      var codigoValido=/^[A-Z0-9][A-Z0-9-]{5,79}$/.test(codigo);
+      var assinaturaValida=/^[A-Za-z0-9_-]{16,128}$/.test(sig);
+
+      if(!codigoValido||!assinaturaValida){
+        fail('O link está incompleto ou inválido. Solicite novamente o ingresso oficial.');
         return;
       }
 
-      const destino =
-        BASE_INGRESSO +
-        '?page=ingresso' +
-        '&codigo=' + encodeURIComponent(codigo) +
-        '&sig=' + encodeURIComponent(sig) +
-        '&pv=6';
-
-      abrir.href = destino;
-      abrir.style.display = 'inline-flex';
-
-      window.setTimeout(function () {
-        window.location.replace(destino);
-      }, 350);
+      postSecure({codigo:codigo,sig:sig},function(env){
+        if(env&&env.ok&&env.resultado&&env.resultado.sucesso===true){render(env.resultado);return}
+        fail((env&&env.resultado&&env.resultado.mensagem)||env&&env.erro||'Não foi possível validar este ingresso.');
+      });
     }());
   </script>
 </body>
