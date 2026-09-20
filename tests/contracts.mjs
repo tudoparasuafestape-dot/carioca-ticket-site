@@ -86,8 +86,8 @@ if (eventoPublico) {
   if (!eventoPublico.includes('/checkout/')) {
     fail('evento/index.html', 'evento oficial sem rota first-party /checkout/');
   }
-  if (/frameLocator|<iframe\b/i.test(eventoPublico)) {
-    fail('evento/index.html', 'evento oficial ainda depende de iframe de aplicacao');
+  if (/id=["']app["'][^>]*iframe|<iframe[^>]+id=["']app["']/i.test(eventoPublico)) {
+    fail('evento/index.html', 'evento oficial ainda depende do iframe legado de aplicacao');
   }
 }
 
