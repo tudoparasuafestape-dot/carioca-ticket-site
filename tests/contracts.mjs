@@ -11,6 +11,8 @@ const protectedFiles = [
   'checkin/index.html',
   'consulta/index.html',
   'produtor/index.html',
+  'produtor-v2/index.html',
+  'acessos-v2/index.html',
   'minha-carioca/index.html',
   'minha-carioca/conta/index.html',
   'minha-carioca/ingressos/index.html',
