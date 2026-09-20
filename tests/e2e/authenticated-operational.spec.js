@@ -70,7 +70,9 @@ function centralContext(token) {
           'BAR',
           'EVENTOS',
           'FORNECEDORES',
-          'CRM'
+          'CRM',
+          'FINANCEIRO',
+          'RELATORIOS'
         ]
       }
     ],
@@ -83,7 +85,9 @@ function centralContext(token) {
       'BAR',
       'EVENTOS',
       'FORNECEDORES',
-      'CRM'
+      'CRM',
+      'FINANCEIRO',
+      'RELATORIOS'
     ]
   };
 }
@@ -423,6 +427,82 @@ function crmSearchFixture() {
   };
 }
 
+
+function financeiroFixture() {
+  return {
+    sucesso: true,
+    autenticado: true,
+    autorizado: true,
+    modulo: 'FINANCEIRO',
+    evento: {
+      id: EVENT_ID,
+      nome: 'Roda de Samba Estilo Carioca',
+      data: '11/10/2026',
+      horario: '15h às 22h',
+      local: 'Vevets Recepções',
+      cidade: 'Jaboatão dos Guararapes',
+      uf: 'PE',
+      capacidade: 400
+    },
+    produtorId: 'PROD-E2E',
+    resumo: {
+      totalRegistros: 5,
+      vendasConfirmadas: 3,
+      acessosConfirmados: 4,
+      vendasPendentes: 1,
+      vendasCanceladas: 1,
+      vendasEstornadas: 0,
+      receitaNumero: 90,
+      receita: 'R$ 90,00',
+      ticketMedioNumero: 30,
+      ticketMedio: 'R$ 30,00',
+      pagamentos: [
+        { chave: 'PIX', quantidade: 2, valorNumero: 65, valor: 'R$ 65,00' },
+        { chave: 'DINHEIRO', quantidade: 1, valorNumero: 25, valor: 'R$ 25,00' }
+      ],
+      tipos: [
+        { chave: 'INDIVIDUAL', quantidade: 2, valorNumero: 50, valor: 'R$ 50,00' },
+        { chave: 'CASADINHA', quantidade: 1, valorNumero: 40, valor: 'R$ 40,00' }
+      ],
+      origens: [
+        { chave: 'CENTRAL DE VENDAS', quantidade: 3, valorNumero: 90, valor: 'R$ 90,00' }
+      ],
+      lotes: [],
+      evolucao: [
+        { data: '20/09/2026', timestamp: 1, vendas: 3, acessos: 4, receitaNumero: 90, receita: 'R$ 90,00' }
+      ]
+    },
+    somenteLeitura: true,
+    versaoModulo: '1.0.0',
+    atualizadoEm: '20/09/2026 09:15:00'
+  };
+}
+
+function relatoriosFixture() {
+  const f = financeiroFixture();
+  return {
+    sucesso: true,
+    autenticado: true,
+    autorizado: true,
+    modulo: 'RELATORIOS',
+    evento: f.evento,
+    produtorId: f.produtorId,
+    vendas: f.resumo,
+    ingressos: {
+      total: 4,
+      ativos: 4,
+      validos: 2,
+      pendentes: 0,
+      presentes: 2,
+      cancelados: 0,
+      taxaCheckin: 50
+    },
+    somenteLeitura: true,
+    versaoModulo: '1.0.0',
+    atualizadoEm: '20/09/2026 09:15:00'
+  };
+}
+
 async function installMock(page, state) {
   await page.route('https://script.google.com/**', async route => {
     const request = route.request();
@@ -574,6 +654,18 @@ async function installMock(page, state) {
             expect(String(args[1] || '')).toBe('PROD-E2E');
             expect(String(args[2] || '')).toBe(EVENT_ID);
             resultado = crmSearchFixture();
+            break;
+
+          case 'ctFinanceiroEventoCarregarPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = financeiroFixture();
+            break;
+
+          case 'ctRelatoriosEventoCarregarPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = relatoriosFixture();
             break;
 
           case 'logoutUsuarioCT2':
@@ -732,6 +824,16 @@ test.describe('Jornada operacional autenticada', () => {
       new RegExp('/crm/\\?evento=' + EVENT_ID)
     );
     await expect(page.locator('#mCRM')).toHaveAttribute('aria-disabled', 'false');
+    await expect(page.locator('#mFinanceiro')).toHaveAttribute(
+      'href',
+      new RegExp('/financeiro/\\?evento=' + EVENT_ID)
+    );
+    await expect(page.locator('#mFinanceiro')).toHaveAttribute('aria-disabled', 'false');
+    await expect(page.locator('#mRelatorios')).toHaveAttribute(
+      'href',
+      new RegExp('/relatorios/\\?evento=' + EVENT_ID)
+    );
+    await expect(page.locator('#mRelatorios')).toHaveAttribute('aria-disabled', 'false');
 
     await expect(page.locator('#mCheckin')).toHaveAttribute('href', /\/checkin\//);
     await expect(page.locator('#mConsulta')).toHaveAttribute('href', /\/consulta\//);
@@ -809,6 +911,31 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#drawerBody')).toContainText('CT-E2E');
 
     await page.getByRole('button', { name: '✕' }).click();
+    await page.getByRole('link', { name: /Central Mobile/i }).click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
+    await page.locator('#mFinanceiro').click();
+    await expect(page).toHaveURL(/\/financeiro\/\?evento=/);
+    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#revenue')).toHaveText('R$ 90,00');
+    await expect(page.locator('#sales')).toHaveText('3');
+    await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute('href', '/central/');
+    await expectNoTechnicalVisibleLinks(page);
+
+    await page.getByRole('link', { name: /Central Mobile/i }).click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
+    await page.locator('#mRelatorios').click();
+    await expect(page).toHaveURL(/\/relatorios\/\?evento=/);
+    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#tickets')).toHaveText('4');
+    await expect(page.locator('#present')).toHaveText('2');
+    await expect(page.locator('#checkRate')).toContainText('50');
+    await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute('href', '/central/');
+    await expectNoTechnicalVisibleLinks(page);
+
     await page.getByRole('link', { name: /Central Mobile/i }).click();
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
