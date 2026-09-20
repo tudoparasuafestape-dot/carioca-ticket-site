@@ -287,4 +287,29 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expect(page.locator('#payButton')).toBeVisible();
   });
 
+
+  test('Portal do Produtor oficial renderiza login first-party', async ({ page }) => {
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+
+    await expect(page.getByRole('heading', { name: /Acesse sua conta/i })).toBeVisible();
+    await expect(page.locator('#email')).toBeVisible();
+    await expect(page.locator('#senha')).toBeVisible();
+    await expect(page.locator('#loginButton')).toBeEnabled({ timeout: 15000 });
+    await expect(page.locator('body')).not.toContainText('\\n');
+
+    expect(new URL(page.url()).pathname).toBe('/produtor/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
+  test('Usuarios e Permissoes oficial permanece first-party', async ({ page }) => {
+    await page.goto('/acessos/', { waitUntil: 'domcontentloaded' });
+
+    await expect(page.locator('body')).toContainText(/Carioca Ticket/i);
+    await expect(page.locator('body')).toContainText(/Usuários|Permissões|Acessos/i);
+    await expect(page.locator('body')).not.toContainText('\\n');
+
+    expect(new URL(page.url()).pathname).toBe('/acessos/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
 });
