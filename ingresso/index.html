@@ -129,7 +129,17 @@
     .actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
     .action{min-height:48px;display:flex;align-items:center;justify-content:center;border-radius:13px;text-decoration:none;font-size:12px;font-weight:900;border:1px solid #37342f;color:#ddd5c8;background:#111}
     .action.primary{border-color:var(--gold);background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111}
-    @media(max-width:520px){.info,.actions{grid-template-columns:1fr}}
+    .action.whatsapp{border-color:#1f7a46;background:#128c4a;color:#fff}
+    button.action{width:100%;font-family:inherit;cursor:pointer}
+    .action.full{grid-column:1/-1}
+    @media(max-width:520px){.info,.actions{grid-template-columns:1fr}.action.full{grid-column:auto}}
+    @media print{
+      body{display:block;padding:0;background:#fff;color:#111}
+      .card{width:100%;max-width:520px;margin:0 auto;border:0;box-shadow:none;background:#fff}
+      .actions,.rodape{display:none!important}
+      .ticket-view{color:#111}.info div{border-color:#ddd;background:#fff}.info strong{color:#111}
+      .security-note{border-color:#ccc;background:#fff;color:#333}
+    }
     .erro{
       display:none;
       margin-top:22px;
@@ -237,7 +247,43 @@
           (qr?'<img class="qr" src="'+esc(qr)+'" alt="QR Code do ingresso">':'')+
           '<div class="code">'+esc(t.codigo||codigo)+'</div>'+
           '<div class="security-note">Este ingresso é individual e permite somente uma entrada. Não compartilhe o QR Code com terceiros.</div>'+
-          '<div class="actions"><a class="action primary" href="/minha-carioca/conta/">Voltar para Minha Carioca</a><a class="action" href="/">Ver eventos</a></div>';
+          '<div class="actions">'+
+            '<a id="share-whatsapp" class="action whatsapp full" href="#" target="_blank" rel="noopener">📲 Compartilhar pelo WhatsApp</a>'+
+            '<button id="share-ticket" class="action" type="button">🔗 Compartilhar ingresso</button>'+
+            '<button id="save-pdf" class="action" type="button">📄 Salvar em PDF</button>'+
+            '<a class="action primary" href="/minha-carioca/conta/?v=20260919-2215">Voltar para Minha Carioca</a>'+
+            '<a class="action" href="/">Ver eventos</a>'+
+          '</div>';
+
+        var shareUrl=window.location.href;
+        var whatsapp=document.getElementById('share-whatsapp');
+        if(whatsapp){
+          whatsapp.href='https://wa.me/?text='+encodeURIComponent(
+            'Meu ingresso Carioca Ticket — '+(e.nome||'Evento')+'\n'+shareUrl
+          );
+        }
+
+        var shareButton=document.getElementById('share-ticket');
+        if(shareButton){
+          shareButton.addEventListener('click',async function(){
+            var dados={title:'Ingresso Carioca Ticket',text:'Meu ingresso para '+(e.nome||'o evento'),url:shareUrl};
+            if(navigator.share){
+              try{await navigator.share(dados);return}catch(err){if(err&&err.name==='AbortError')return}
+            }
+            try{
+              await navigator.clipboard.writeText(shareUrl);
+              shareButton.textContent='✓ Link copiado';
+              setTimeout(function(){shareButton.textContent='🔗 Compartilhar ingresso'},2200);
+            }catch(_){
+              window.prompt('Copie o link do ingresso:',shareUrl);
+            }
+          });
+        }
+
+        var pdfButton=document.getElementById('save-pdf');
+        if(pdfButton){
+          pdfButton.addEventListener('click',function(){window.print()});
+        }
       }
 
       var codigoValido=/^[A-Z0-9][A-Z0-9-]{5,79}$/.test(codigo);
