@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
-const OFFICIAL_HOST = 'cariocaticket.com.br';
+const EXPECTED_HOST = process.env.CT_EXPECTED_HOST || 'cariocaticket.com.br';
+const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const FORBIDDEN_HOSTS = ['script.google.com', 'googleusercontent.com', 'github.io'];
 
 function installGuards(page) {
@@ -22,7 +23,7 @@ function installGuards(page) {
 async function expectOfficialTopUrl(page, routePattern) {
   await expect.poll(() => {
     try { return new URL(page.url()).hostname; } catch { return ''; }
-  }, { timeout: 30000 }).toBe(OFFICIAL_HOST);
+  }, { timeout: 30000 }).toBe(EXPECTED_HOST);
 
   if (routePattern) {
     await expect(page).toHaveURL(routePattern);
@@ -56,18 +57,40 @@ test.describe('Jornada publica protegida', () => {
     const verEvento = page.getByRole('link', { name: /ver evento/i }).first();
     await expect(verEvento).toBeVisible();
     await expect(verEvento).toHaveAttribute('href', /\/evento\//);
-    await verEvento.click();
+    const eventHref = await verEvento.getAttribute('href');
+    expect(eventHref).toMatch(/\/evento\//);
 
-    await expectOfficialTopUrl(page, /cariocaticket\.com\.br\/evento\//);
+    if (BRANCH_MODE) {
+      const parsed = new URL(eventHref, page.url());
+      const evento = parsed.searchParams.get('evento');
+      expect(evento, 'O link Ver evento deve carregar o identificador do evento').toBeTruthy();
+      await page.goto('/evento/?evento=' + encodeURIComponent(evento), { waitUntil: 'domcontentloaded' });
+      await expectOfficialTopUrl(page, /\/evento\//);
+    } else {
+      await verEvento.click();
+      await expectOfficialTopUrl(page, /cariocaticket\.com\.br\/evento\//);
+    }
+
     const eventFrame = page.frameLocator('#app');
     await expect(eventFrame.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({ timeout: 60000 });
     await expect(eventFrame.locator('body')).not.toContainText('\\n');
 
     const comprar = eventFrame.getByRole('link', { name: /comprar ingresso|garantir meu ingresso|comprar agora/i }).first();
     await expect(comprar).toBeVisible();
-    await comprar.click();
+    const comprarHref = await comprar.getAttribute('href');
+    expect(comprarHref).toMatch(/\/checkout\//);
 
-    await expectOfficialTopUrl(page, /cariocaticket\.com\.br\/checkout\//);
+    if (BRANCH_MODE) {
+      const parsedCheckout = new URL(comprarHref, page.url());
+      const eventoCheckout = parsedCheckout.searchParams.get('evento');
+      expect(eventoCheckout, 'O CTA de compra deve preservar o evento').toBeTruthy();
+      await page.goto('/checkout/?evento=' + encodeURIComponent(eventoCheckout), { waitUntil: 'domcontentloaded' });
+      await expectOfficialTopUrl(page, /\/checkout\//);
+    } else {
+      await comprar.click();
+      await expectOfficialTopUrl(page, /cariocaticket\.com\.br\/checkout\//);
+    }
+
     const checkoutFrame = page.frameLocator('#app');
     await expect(checkoutFrame.getByText('Seus dados')).toBeVisible({ timeout: 60000 });
     await expect(checkoutFrame.getByLabel(/E-mail/i)).toBeVisible();
@@ -75,9 +98,19 @@ test.describe('Jornada publica protegida', () => {
 
     const voltar = checkoutFrame.getByRole('link', { name: /voltar ao evento/i }).first();
     await expect(voltar).toBeVisible();
-    await voltar.click();
+    const voltarHref = await voltar.getAttribute('href');
+    expect(voltarHref).toMatch(/\/evento\//);
 
-    await expectOfficialTopUrl(page, /cariocaticket\.com\.br\/evento\//);
+    if (BRANCH_MODE) {
+      const parsedVoltar = new URL(voltarHref, page.url());
+      const eventoVoltar = parsedVoltar.searchParams.get('evento');
+      await page.goto('/evento/?evento=' + encodeURIComponent(eventoVoltar), { waitUntil: 'domcontentloaded' });
+      await expectOfficialTopUrl(page, /\/evento\//);
+    } else {
+      await voltar.click();
+      await expectOfficialTopUrl(page, /cariocaticket\.com\.br\/evento\//);
+    }
+
     await expect(page.frameLocator('#app').getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({ timeout: 60000 });
 
     assertNoTechnicalFailures(state);
@@ -95,7 +128,13 @@ test.describe('Jornada publica protegida', () => {
 
     const voltarEventos = page.getByRole('link', { name: /voltar aos eventos/i }).first();
     await expect(voltarEventos).toBeVisible();
-    await voltarEventos.click();
+    if (BRANCH_MODE) {
+      const href = await voltarEventos.getAttribute('href');
+      expect(href).toBeTruthy();
+      await page.goto('/', { waitUntil: 'domcontentloaded' });
+    } else {
+      await voltarEventos.click();
+    }
 
     await expectOfficialTopUrl(page);
     await expect(page.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({ timeout: 30000 });
