@@ -3,57 +3,164 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="robots" content="noindex,nofollow">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
   <meta name="theme-color" content="#080b10">
   <title>Check-in Carioca | Carioca Ticket</title>
   <style>
-    *{box-sizing:border-box}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b10}
-    body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    #loading{position:fixed;inset:0;z-index:3;display:grid;place-items:center;background:#080b10;color:#fff;transition:opacity .2s ease}
-    #loading.hide{opacity:0;pointer-events:none}
-    .card{width:min(90vw,440px);padding:28px 24px;border:1px solid rgba(241,182,64,.35);border-radius:22px;background:linear-gradient(180deg,#11151b,#0b0e13);text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.35)}
-    .brand{font-size:12px;font-weight:800;letter-spacing:.2em;color:#f1b640;text-transform:uppercase}
-    h1{font-size:24px;margin:10px 0 8px}
-    p{margin:0;color:#b9c0ca;line-height:1.45}
-    .loader{width:40px;height:40px;margin:22px auto 0;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:#f1b640;animation:spin .8s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    iframe{display:block;width:100%;height:100%;border:0;background:#fff}
-    .fallback{display:none;position:fixed;right:14px;bottom:14px;z-index:4;text-decoration:none;font-size:12px;font-weight:700;color:#111;background:#f1b640;padding:10px 12px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25)}.fallback.show{display:inline-block}
+    :root{--bg:#07090c;--panel:#10151b;--line:#29313b;--gold:#dfa324;--gold2:#f6c94c;--text:#f6f3ec;--muted:#a8b0ba;--ok:#55c789;--bad:#ff7777;--warn:#f3c96b}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 80% 0,rgba(223,163,36,.13),transparent 30%),linear-gradient(180deg,#080b10,#050608);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{min-height:100vh}.shell{width:min(100% - 24px,760px);margin:auto;padding:16px 0 42px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.brand{color:var(--gold2);font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.back{min-height:40px;padding:0 13px;border:1px solid #343c46;border-radius:12px;color:#fff;text-decoration:none;display:inline-flex;align-items:center;font-size:12px;font-weight:800;background:#11171e}
+    .hero,.card{border:1px solid var(--line);border-radius:22px;background:linear-gradient(155deg,#111820,#0a0f14);box-shadow:0 20px 60px rgba(0,0,0,.28)}.hero{padding:22px}.hero h1{margin:7px 0 5px;font-size:clamp(28px,7vw,42px);letter-spacing:-.04em}.hero p{margin:0;color:var(--muted);line-height:1.5}.event{margin-top:12px;color:#d9d5cd;font-size:13px}.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:14px}.card{padding:18px}.card h2{margin:0 0 12px;font-size:17px}.reader{min-height:320px;border:1px dashed #3e4854;border-radius:17px;background:#080c10;overflow:hidden;display:grid;place-items:center}.reader small{color:var(--muted);padding:20px;text-align:center}
+    .actions{display:grid;gap:9px;margin-top:12px}.btn{min-height:48px;border:0;border-radius:14px;font-weight:900;font-size:14px;cursor:pointer}.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111}.secondary{background:#161d25;border:1px solid #38434f;color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}.field{margin-top:10px}.field label{display:block;margin-bottom:7px;color:#c8cdd3;font-size:12px;font-weight:800}.field input{width:100%;min-height:50px;border:1px solid #39434e;border-radius:13px;background:#080b0f;color:#fff;padding:0 13px;font-size:16px;outline:none}.field input:focus{border-color:var(--gold)}
+    .result{display:none;margin-top:14px;padding:16px;border-radius:17px;border:1px solid var(--line);background:#0c1117}.result.show{display:block}.result.ok{border-color:rgba(85,199,137,.4)}.result.warn{border-color:rgba(243,201,107,.4)}.result.bad{border-color:rgba(255,119,119,.4)}.result h3{margin:0 0 7px}.result p{margin:0;color:#c4cad1;line-height:1.5}.result .meta{margin-top:10px;color:#fff;font-size:13px;line-height:1.55}.status{margin-top:10px;color:var(--muted);font-size:12px}.gate{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:#080b10;padding:24px}.gate.hide{display:none}.gate-box{width:min(100%,430px);padding:27px 22px;border:1px solid rgba(246,201,76,.28);border-radius:22px;background:#101820;text-align:center}.loader{width:40px;height:40px;margin:20px auto 0;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:var(--gold2);animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:720px){.grid{grid-template-columns:1fr}.reader{min-height:270px}.shell{width:min(100% - 18px,760px);padding-top:10px}}
   </style>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-  <div id="loading">
-    <div class="card">
-      <div class="brand">Carioca Ticket</div>
-      <h1>Check-in Carioca</h1>
-      <p>Carregando acesso oficial…</p>
-      <div class="loader" aria-hidden="true"></div>
-    </div>
-  </div>
-  <iframe id="app" title="Check-in Carioca" allow="camera *; microphone *; fullscreen *; clipboard-read *; clipboard-write *" allowfullscreen></iframe>
-  <a id="fallback" class="fallback" href="/central/">Voltar à Central Mobile</a>
-  <script>
-    const p=new URLSearchParams(location.search);
-   if(!p.has('v'))p.set('v','2.1.7');
-   const q=p.toString();
-   const destino='https://tudoparasuafestape-dot.github.io/carioca-ticket-checkin/'+(q?'?'+q:'')+location.hash;
-    const frame=document.getElementById('app');
-    const loading=document.getElementById('loading');
-    const fallback=document.getElementById('fallback');
-    frame.src=destino;
-    fallback.href="/central/";
-    let carregou=false;
-    frame.addEventListener('load',()=>{
-      carregou=true;
-      loading.classList.add('hide');
-    });
-    setTimeout(()=>{
-      if(!carregou){
-        loading.classList.add('hide');
-        fallback.classList.add('show');
+  <div id="gate" class="gate"><div class="gate-box"><div class="brand">Carioca Ticket</div><h2>Validando acesso</h2><p>Confirmando sua sessão e a permissão de Check-in deste evento.</p><div class="loader"></div></div></div>
+  <main class="shell">
+    <header class="top"><div class="brand">Carioca Ticket · Operação</div><a id="back" class="back" href="/central/">← Voltar à Central</a></header>
+    <section class="hero"><div class="brand">Check-in Carioca</div><h1>Portaria</h1><p>Leia o QR Code ou digite o código do ingresso.</p><div id="event" class="event">Carregando evento…</div></section>
+    <section class="grid">
+      <article class="card">
+        <h2>📷 Leitor de QR Code</h2>
+        <div id="reader" class="reader"><small id="cameraHint">Inicie a câmera quando estiver na portaria.</small></div>
+        <div class="actions">
+          <button id="startCamera" class="btn primary" type="button">Iniciar câmera</button>
+          <button id="stopCamera" class="btn secondary" type="button" disabled>Parar câmera</button>
+        </div>
+      </article>
+      <article class="card">
+        <h2>⌨️ Código manual</h2>
+        <div class="field"><label for="code">Código do ingresso</label><input id="code" type="text" inputmode="text" autocomplete="off" placeholder="CT-2026…"></div>
+        <div class="actions"><button id="validate" class="btn primary" type="button">Validar ingresso</button></div>
+        <div id="status" class="status">Nenhuma validação realizada.</div>
+        <div id="result" class="result"><h3 id="resultTitle"></h3><p id="resultMessage"></p><div id="resultMeta" class="meta"></div></div>
+      </article>
+    </section>
+  </main>
+<script>
+(function(){
+'use strict';
+
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var PREFIX='CT_VALIDAR_SEM_ENTRADA:';
+var pending={};
+var qr=null;
+var camera=false;
+var busy=false;
+
+function session(){
+  try{
+    var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE);
+    if(!raw)return null;
+    var d=JSON.parse(raw);
+    if(!d||!d.token)return null;
+    if(d.expiraEm){var t=Date.parse(d.expiraEm);if(!isNaN(t)&&t<=Date.now())return null}
+    return d;
+  }catch(_){return null}
+}
+var sess=session();
+var token=sess&&sess.token?String(sess.token):'';
+var params=new URLSearchParams(location.search);
+var eventId=String(params.get('evento')||params.get('eventoId')||'').trim();
+
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args,ok,fail){
+  if(!token){fail(new Error('Sessão ausente.'));return}
+  var id='CTCHECKIN-'+(crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));
+  var fn='ctcheckin_'+id.replace(/[^A-Za-z0-9_]/g,'');
+  var frame=document.createElement('iframe');frame.name=fn;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+  var form=document.createElement('form');form.method='POST';form.action=APP;form.target=fn;form.style.display='none';
+  function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}
+  add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));
+  document.body.append(frame,form);
+  pending[id]={frame:frame,form:form,ok:ok,fail:fail,timer:setTimeout(function(){var p=cleanup(id);if(p)p.fail(new Error('Tempo esgotado na comunicação.'))},30000)};
+  form.submit();
+}
+window.addEventListener('message',function(ev){
+  if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;
+  var d=ev.data;if(!d||d.ctMinhaCariocaPost!==true||!d.id||!pending[d.id])return;
+  var p=cleanup(d.id);if(!p)return;
+  if(d.ok===true)p.ok(d.resultado);else p.fail(new Error(String(d.erro||'Falha na operação.')));
+});
+
+function extractCode(value){
+  var t=String(value||'').trim().toUpperCase();
+  var m=t.match(/CT-\d{8}-\d+/);
+  if(m)return m[0];
+  return t.indexOf('CT-')===0?t:'';
+}
+function show(r){
+  var box=document.getElementById('result');
+  var type=String(r&&r.tipo||'').toLowerCase();
+  box.className='result show '+(type==='sucesso'?'ok':type==='aviso'?'warn':'bad');
+  document.getElementById('resultTitle').textContent=(r&&r.titulo)||(type==='sucesso'?'Entrada liberada':type==='aviso'?'Atenção':'Entrada recusada');
+  document.getElementById('resultMessage').textContent=(r&&r.mensagem)||'Operação concluída.';
+  var meta=[];
+  if(r&&r.nome)meta.push('Participante: '+r.nome);
+  if(r&&r.tipoIngresso)meta.push('Ingresso: '+r.tipoIngresso);
+  if(r&&r.codigo)meta.push('Código: '+r.codigo);
+  if(r&&r.horario)meta.push('Horário: '+r.horario);
+  document.getElementById('resultMeta').textContent=meta.join(' · ');
+  document.getElementById('status').textContent='Última validação concluída.';
+}
+function fail(e){show({tipo:'erro',titulo:'Falha',mensagem:e&&e.message?e.message:'Não foi possível concluir.'})}
+
+function secureCheck(code,registerEntry){
+  if(busy)return;
+  busy=true;
+  document.getElementById('validate').disabled=true;
+  document.getElementById('status').textContent=registerEntry?'Confirmando entrada…':'Validando ingresso…';
+  rpc('ctCheckinExecutarSeguroPROD',[token,eventId,(registerEntry?'':PREFIX)+code],function(r){
+    busy=false;document.getElementById('validate').disabled=false;
+    show(r||{});
+    if(!registerEntry&&r&&r.sucesso===true&&r.podeConfirmarEntrada===true){
+      if(window.confirm('INGRESSO VÁLIDO\n\nA entrada ainda não foi registrada. Deseja CONFIRMAR A ENTRADA agora?')){
+        secureCheck(code,true);
       }
-    },7000);
-  </script>
+    }
+  },function(e){busy=false;document.getElementById('validate').disabled=false;fail(e)});
+}
+function validateValue(value){
+  var code=extractCode(value);
+  if(!code){show({tipo:'erro',titulo:'Código inválido',mensagem:'Informe ou leia um código de ingresso válido.'});return}
+  document.getElementById('code').value=code;
+  secureCheck(code,false);
+}
+
+document.getElementById('validate').addEventListener('click',function(){validateValue(document.getElementById('code').value)});
+document.getElementById('code').addEventListener('keydown',function(e){if(e.key==='Enter')validateValue(e.currentTarget.value)});
+
+document.getElementById('startCamera').addEventListener('click',async function(){
+  if(camera||busy)return;
+  try{
+    if(typeof Html5Qrcode==='undefined')throw new Error('Leitor de câmera indisponível.');
+    qr=new Html5Qrcode('reader');
+    var cameras=await Html5Qrcode.getCameras();
+    if(!cameras||!cameras.length)throw new Error('Nenhuma câmera encontrada.');
+    var chosen=cameras.find(function(c){return /back|rear|traseira|environment/i.test(c.label||'')})||cameras[cameras.length-1];
+    await qr.start(chosen.id,{fps:12,qrbox:{width:250,height:250}},function(text){if(!busy)validateValue(text)},function(){});
+    camera=true;document.getElementById('startCamera').disabled=true;document.getElementById('stopCamera').disabled=false;
+  }catch(e){fail(e)}
+});
+document.getElementById('stopCamera').addEventListener('click',async function(){
+  try{if(qr&&camera)await qr.stop()}catch(_){}
+  camera=false;qr=null;document.getElementById('startCamera').disabled=false;document.getElementById('stopCamera').disabled=true;
+});
+
+if(!token||!eventId){location.replace('/produtor/');return}
+document.getElementById('back').href='/central/?evento='+encodeURIComponent(eventId);
+rpc('ctCheckinContextoSeguroPROD',[token,eventId],function(r){
+  if(!r||r.sucesso!==true||r.autorizado!==true){location.replace('/central/');return}
+  var e=r.evento||{};
+  document.getElementById('event').textContent=[e.nome,e.data,e.horario,e.local].filter(Boolean).join(' · ')||eventId;
+  document.getElementById('gate').classList.add('hide');
+},function(){location.replace('/central/')});
+}());
+</script>
 </body>
 </html>
