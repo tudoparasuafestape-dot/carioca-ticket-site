@@ -152,7 +152,7 @@ async function mockAppsScriptRpc(page) {
       contentType: 'text/html; charset=utf-8',
       body:
         '<!doctype html><html><head><meta charset="utf-8"></head><body>' +
-        '<script>window.top.postMessage(' + payload + ', "*");<\\/script>' +
+        '<script>window.top.postMessage(' + payload + ', "*");</script>' +
         '</body></html>'
     });
   });
