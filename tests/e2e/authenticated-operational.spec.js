@@ -68,7 +68,8 @@ function centralContext(token) {
           'USUARIOS',
           'VENDAS',
           'BAR',
-          'EVENTOS'
+          'EVENTOS',
+          'FORNECEDORES'
         ]
       }
     ],
@@ -79,7 +80,8 @@ function centralContext(token) {
       'USUARIOS',
       'VENDAS',
       'BAR',
-      'EVENTOS'
+      'EVENTOS',
+      'FORNECEDORES'
     ]
   };
 }
@@ -290,6 +292,68 @@ function eventosFixture() {
   };
 }
 
+
+function fornecedoresContextFixture() {
+  return {
+    sucesso: true,
+    produtores: [
+      {
+        id: 'PROD-E2E',
+        nomeFantasia: 'Produtor Homologacao',
+        perfil: 'ADMINISTRADOR',
+        eventos: [
+          {
+            id: EVENT_ID,
+            nome: 'Roda de Samba Estilo Carioca',
+            data: '11/10/2026',
+            status: 'ATIVO'
+          }
+        ]
+      }
+    ],
+    statusPagamento: ['PENDENTE', 'PARCIAL', 'PAGO', 'CANCELADO'],
+    versaoModulo: '1.0.0'
+  };
+}
+
+function fornecedoresListFixture() {
+  return {
+    sucesso: true,
+    produtorId: 'PROD-E2E',
+    eventoId: EVENT_ID,
+    total: 1,
+    statusPagamento: ['PENDENTE', 'PARCIAL', 'PAGO', 'CANCELADO'],
+    vinculos: [
+      {
+        vinculoId: 'FVE-E2E',
+        fornecedorId: 'FOR-E2E',
+        produtorId: 'PROD-E2E',
+        eventoId: EVENT_ID,
+        servico: 'Seguranca',
+        valorContratado: 450,
+        statusPagamento: 'PENDENTE',
+        status: 'ATIVO',
+        fornecedor: {
+          fornecedorId: 'FOR-E2E',
+          nomeRazao: 'Fornecedor Homologacao',
+          nomeFantasia: 'Fornecedor Homologacao',
+          categoria: 'Seguranca',
+          responsavel: 'Responsavel Homologacao',
+          email: 'fornecedor@example.invalid',
+          whatsapp: '81999990000',
+          status: 'ATIVO'
+        },
+        evento: {
+          id: EVENT_ID,
+          nome: 'Roda de Samba Estilo Carioca',
+          data: '11/10/2026',
+          status: 'ATIVO'
+        }
+      }
+    ]
+  };
+}
+
 async function installMock(page, state) {
   await page.route('https://script.google.com/**', async route => {
     const request = route.request();
@@ -413,6 +477,24 @@ async function installMock(page, state) {
             state.eventMutationCalls += 1;
             throw new Error('Teste nao deve alterar Eventos.');
 
+          case 'ctFornecedoresGestaoCarregarPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            resultado = fornecedoresContextFixture();
+            break;
+
+          case 'ctFornecedoresGestaoListarPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe('PROD-E2E');
+            expect(String(args[2] || '')).toBe(EVENT_ID);
+            resultado = fornecedoresListFixture();
+            break;
+
+          case 'ctFornecedoresGestaoCadastrarEVincularPROD':
+          case 'ctFornecedoresGestaoAtualizarPagamentoPROD':
+          case 'ctFornecedoresGestaoRemoverVinculoPROD':
+            state.supplierMutationCalls += 1;
+            throw new Error('Teste nao deve alterar Fornecedores.');
+
           case 'logoutUsuarioCT2':
             resultado = { sucesso: true };
             break;
@@ -502,7 +584,8 @@ test.describe('Jornada operacional autenticada', () => {
       token: 'CT-E2E-TOKEN-NAO-REAL',
       transactionCalls: 0,
       barMutationCalls: 0,
-      eventMutationCalls: 0
+      eventMutationCalls: 0,
+      supplierMutationCalls: 0
     };
 
     await installMock(page, state);
@@ -556,6 +639,14 @@ test.describe('Jornada operacional autenticada', () => {
     );
     await expect(bar).toHaveAttribute('aria-disabled', 'false');
 
+    await expect(page.locator('#mEventos')).toHaveAttribute('href', '/eventos-v2/');
+    await expect(page.locator('#mEventos')).toHaveAttribute('aria-disabled', 'false');
+    await expect(page.locator('#mFornecedores')).toHaveAttribute(
+      'href',
+      new RegExp('/fornecedores/\\?evento=' + EVENT_ID)
+    );
+    await expect(page.locator('#mFornecedores')).toHaveAttribute('aria-disabled', 'false');
+
     await expect(page.locator('#mCheckin')).toHaveAttribute('href', /\/checkin\//);
     await expect(page.locator('#mConsulta')).toHaveAttribute('href', /\/consulta\//);
     await expectNoTechnicalVisibleLinks(page);
@@ -600,6 +691,20 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute('href', '/central/');
     await expectNoTechnicalVisibleLinks(page);
     expect(state.eventMutationCalls).toBe(0);
+    expect(state.supplierMutationCalls).toBe(0);
+
+    await page.getByRole('link', { name: /Central Mobile/i }).click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
+    await page.locator('#mFornecedores').click();
+    await expect(page).toHaveURL(/\/fornecedores\/\?evento=/);
+    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Fornecedor Homologacao').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#sTotal')).toHaveText('1');
+    await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute('href', '/central/');
+    await expectNoTechnicalVisibleLinks(page);
+    expect(state.supplierMutationCalls).toBe(0);
 
     await page.getByRole('link', { name: /Central Mobile/i }).click();
     await expect(page).toHaveURL(/\/central\//);

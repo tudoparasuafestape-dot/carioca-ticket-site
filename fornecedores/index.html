@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Fornecedores | Carioca Ticket</title>
+  <link rel="icon" href="/assets/carioca-ticket-logo.png">
+  <style>
+    :root{--bg:#080808;--panel:#111;--panel2:#171717;--line:#2b2b2b;--gold:#d9a62e;--gold2:#f2c451;--text:#f7f2e8;--muted:#aaa39a;--ok:#79d89b;--danger:#ff9999;--shadow:0 18px 50px rgba(0,0,0,.35)}
+    *{box-sizing:border-box}html{background:var(--bg)}body{margin:0;min-height:100vh;background:radial-gradient(circle at top right,rgba(217,166,46,.12),transparent 30rem),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .hidden{display:none!important}.shell{width:min(1120px,calc(100% - 28px));margin:auto;padding:18px 0 54px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit}.brand img{width:60px;height:44px;object-fit:contain}.brand strong{font-size:15px}.brand span{display:block;font-size:11px;color:var(--muted);margin-top:2px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn,.ghost,button{font:inherit}.btn,.ghost{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 13px;border-radius:11px;text-decoration:none;font-size:12px;font-weight:900;cursor:pointer}.btn{border:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#15110a}.ghost{border:1px solid var(--line);background:#151515;color:var(--text)}
+    .hero{border:1px solid #362e1d;background:linear-gradient(145deg,#17140e,#101010 65%);border-radius:23px;padding:22px;box-shadow:var(--shadow)}.ey{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold2);font-weight:900}.hero h1{font-size:clamp(28px,5vw,48px);margin:7px 0 6px;letter-spacing:-.04em}.hero p{margin:0;color:var(--muted);line-height:1.55}.selectors{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:17px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:10px;color:var(--muted);font-weight:800}.field input,.field select,.field textarea{width:100%;border:1px solid #333;border-radius:11px;background:#0b0b0b;color:var(--text);padding:11px;font:inherit;font-size:12px;outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#70591f}.field textarea{min-height:72px;resize:vertical}
+    .section{margin-top:17px}.head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:9px}.head h2{margin:0;font-size:18px}.head p{margin:3px 0 0;color:var(--muted);font-size:11px}.panel{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:15px;box-shadow:var(--shadow)}
+    details{border:1px solid var(--line);border-radius:15px;background:#0e0e0e;overflow:hidden}summary{padding:14px;font-weight:900;font-size:12px;cursor:pointer;list-style:none}summary::-webkit-details-marker{display:none}.form-body{padding:14px;border-top:1px solid var(--line)}.form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.wide{grid-column:span 2}.full{grid-column:1/-1}.form-actions{display:flex;gap:8px;margin-top:12px}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:14px}.stat{border:1px solid var(--line);border-radius:15px;background:#121212;padding:14px}.stat span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}.stat strong{display:block;font-size:21px;margin-top:6px}
+    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{border:1px solid var(--line);border-radius:16px;background:var(--panel2);padding:15px}.card-top{display:flex;justify-content:space-between;gap:10px}.card h3{margin:0;font-size:15px}.card .meta{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}.tag{align-self:flex-start;border:1px solid #473a1d;border-radius:999px;padding:5px 8px;font-size:9px;color:#e9d69e;font-weight:900}.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.kv div{border:1px solid #272727;border-radius:10px;padding:9px}.kv span{display:block;font-size:9px;color:var(--muted);text-transform:uppercase}.kv strong{display:block;font-size:11px;margin-top:4px}.card-actions{display:flex;gap:7px;margin-top:12px;align-items:end}.card-actions .field{flex:1}.danger{border:1px solid #662b2b;background:#251313;color:#ffcaca;min-height:40px;border-radius:10px;padding:0 10px;font-weight:900;cursor:pointer}.save{border:1px solid #4a3a16;background:#211a0c;color:#f2cd68;min-height:40px;border-radius:10px;padding:0 10px;font-weight:900;cursor:pointer}
+    .empty{padding:28px;text-align:center;color:var(--muted);font-size:12px}.gate{min-height:100vh;display:grid;place-items:center;padding:20px}.gate-card{width:min(480px,100%);border:1px solid #332b1d;background:#111;border-radius:23px;padding:25px;text-align:center;box-shadow:var(--shadow)}.gate-card img{width:90px;height:60px;object-fit:contain}.gate-card h1{margin:13px 0 6px}.gate-card p{color:var(--muted);font-size:13px;line-height:1.55}.loader{width:29px;height:29px;border:3px solid #292929;border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:17px auto}@keyframes spin{to{transform:rotate(360deg)}}
+    .toast{position:fixed;z-index:40;left:50%;bottom:18px;transform:translateX(-50%) translateY(120px);opacity:0;transition:.25s;border:1px solid #333;background:#171717;padding:12px 15px;border-radius:11px;box-shadow:var(--shadow);font-size:12px;max-width:min(620px,calc(100% - 30px))}.toast.show{transform:translateX(-50%) translateY(0);opacity:1}.toast.ok{border-color:#275a39}.toast.err{border-color:#6b2929}.block{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.66);display:none;place-items:center}.block.show{display:grid}.block-box{width:min(320px,90vw);border:1px solid #41371f;background:#111;border-radius:17px;padding:19px;text-align:center}
+    @media(max-width:800px){.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.cards{grid-template-columns:1fr}}
+    @media(max-width:560px){.shell{width:min(100% - 18px,1120px)}.top{align-items:flex-start}.selectors,.form-grid{grid-template-columns:1fr}.wide{grid-column:auto}.hero{padding:18px}.actions{flex-direction:column}.stats{grid-template-columns:1fr 1fr}.card-actions{flex-direction:column;align-items:stretch}}
+  </style>
+</head>
+<body>
+  <section id="gate" class="gate">
+    <div class="gate-card">
+      <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+      <div id="gateLoading"><h1>Fornecedores</h1><p>Validando sua sessão e os eventos autorizados.</p><div class="loader"></div></div>
+      <div id="gateDenied" class="hidden"><h1>Acesso restrito</h1><p id="gateMessage">Este módulo é exclusivo para produtor ou administrador com permissão de Fornecedores.</p><div class="actions" style="justify-content:center;margin-top:14px"><a class="btn" href="/produtor/">Portal do Produtor</a><a class="ghost" href="/central/">Central Mobile</a></div></div>
+    </div>
+  </section>
+
+  <main id="app" class="shell hidden">
+    <header class="top">
+      <a class="brand" href="/central/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Fornecedores</strong><span>Gestão interna · produtor/evento</span></div></a>
+      <div class="actions"><a class="ghost" href="/central/">← Central Mobile</a><button id="refresh" class="ghost" type="button">Atualizar</button></div>
+    </header>
+
+    <section class="hero">
+      <div class="ey">Carioca Ticket · Gestão interna</div>
+      <h1>Fornecedores</h1>
+      <p>Cadastre prestadores, vincule ao evento e acompanhe o status de pagamento. Fornecedor externo não recebe acesso à Central Mobile.</p>
+      <div class="selectors">
+        <div class="field"><label>Produtor</label><select id="producerSelect"></select></div>
+        <div class="field"><label>Evento</label><select id="eventSelect"></select></div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <article class="stat"><span>Vínculos</span><strong id="sTotal">0</strong></article>
+      <article class="stat"><span>Pendentes</span><strong id="sPending">0</strong></article>
+      <article class="stat"><span>Pagos</span><strong id="sPaid">0</strong></article>
+      <article class="stat"><span>Valor contratado</span><strong id="sValue">R$ 0,00</strong></article>
+    </section>
+
+    <section class="section">
+      <div class="head"><div><h2>Cadastro e vínculo</h2><p>O cadastro só é gravado após confirmação.</p></div></div>
+      <div class="panel">
+        <details id="newSupplier">
+          <summary>＋ Cadastrar ou vincular fornecedor</summary>
+          <div class="form-body">
+            <form id="supplierForm">
+              <div class="form-grid">
+                <div class="field wide"><label>Nome / razão social *</label><input name="nomeRazao" maxlength="180" required></div>
+                <div class="field wide"><label>Nome fantasia</label><input name="nomeFantasia" maxlength="180"></div>
+                <div class="field"><label>CPF/CNPJ</label><input name="cpfCnpj" inputmode="numeric" maxlength="18"></div>
+                <div class="field"><label>Categoria</label><input name="categoria" maxlength="120" placeholder="Ex.: Segurança"></div>
+                <div class="field"><label>Responsável</label><input name="responsavel" maxlength="160"></div>
+                <div class="field"><label>WhatsApp</label><input name="whatsapp" inputmode="tel" maxlength="20"></div>
+                <div class="field wide"><label>E-mail</label><input name="email" type="email" maxlength="180"></div>
+                <div class="field wide"><label>Serviço contratado *</label><input name="servico" maxlength="180" required></div>
+                <div class="field"><label>Valor contratado</label><input name="valorContratado" type="number" min="0" step="0.01" value="0"></div>
+                <div class="field"><label>Status do pagamento</label><select name="statusPagamento" id="newStatus"><option>PENDENTE</option><option>PARCIAL</option><option>PAGO</option><option>CANCELADO</option></select></div>
+                <div class="field full"><label>Observações</label><textarea name="observacoes" maxlength="500"></textarea></div>
+              </div>
+              <div class="form-actions"><button class="btn" type="submit">Salvar fornecedor</button></div>
+            </form>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="head"><div><h2>Fornecedores do evento</h2><p id="listCaption">Selecione um evento.</p></div></div>
+      <div class="panel"><div id="list" class="cards"></div></div>
+    </section>
+  </main>
+
+  <div id="block" class="block"><div class="block-box"><div class="loader"></div><strong id="blockText">Carregando...</strong></div></div>
+  <div id="toast" class="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var pending={};
+var state={token:'',context:null,produtorId:'',eventoId:'',statusPagamento:['PENDENTE','PARCIAL','PAGO','CANCELADO'],vinculos:[]};
+var gate=document.getElementById('gate'),gateLoading=document.getElementById('gateLoading'),gateDenied=document.getElementById('gateDenied'),gateMessage=document.getElementById('gateMessage'),app=document.getElementById('app');
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE);if(!raw)return null;var d=JSON.parse(raw);if(!d||!d.token)return null;if(d.expiraEm){var t=Date.parse(d.expiraEm);if(!isNaN(t)&&t<=Date.now())return null}return d}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){
+  return new Promise(function(resolve,reject){
+    var id='CTFOR-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+    var frameName='ctfor_'+id.replace(/[^A-Za-z0-9_]/g,'');
+    var frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+    var form=document.createElement('form');form.method='POST';form.action=APP;form.target=frameName;form.style.display='none';
+    function add(k,v){var input=document.createElement('input');input.type='hidden';input.name=k;input.value=String(v==null?'':v);form.appendChild(input)}
+    add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));
+    document.body.append(frame,form);
+    pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},45000)};
+    form.submit();
+  });
+}
+window.addEventListener('message',function(ev){
+  if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;
+  var payload=ev.data;if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
+  var p=cleanup(payload.id);if(!p)return;if(payload.ok===true)p.resolve(payload.resultado);else p.reject(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+});
+function deny(msg){gate.classList.remove('hidden');app.classList.add('hidden');gateLoading.classList.add('hidden');gateDenied.classList.remove('hidden');gateMessage.textContent=msg||'Acesso restrito.'}
+function busy(on,text){document.getElementById('block').classList.toggle('show',!!on);if(text)document.getElementById('blockText').textContent=text}
+var toastTimer=null;function toast(msg,type){var el=document.getElementById('toast');el.textContent=String(msg||'');el.className='toast show '+(type||'');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.className='toast'},3500)}
+function requestedEvent(){return String(new URLSearchParams(location.search).get('evento')||'').trim()}
+function formObject(form){var o={};new FormData(form).forEach(function(v,k){o[k]=v});return o}
+function currentProducer(){var p=(state.context&&state.context.produtores||[]).find(function(x){return String(x.id||'')===state.produtorId});return p||null}
+function findProducerForEvent(eventoId){var ps=state.context&&Array.isArray(state.context.produtores)?state.context.produtores:[];for(var i=0;i<ps.length;i++){if((ps[i].eventos||[]).some(function(e){return String(e.id||'')===eventoId}))return ps[i]}return null}
+function renderSelectors(){
+  var ps=state.context&&Array.isArray(state.context.produtores)?state.context.produtores:[];
+  var psel=document.getElementById('producerSelect'),esel=document.getElementById('eventSelect');
+  psel.innerHTML=ps.map(function(p){return '<option value="'+esc(p.id)+'">'+esc(p.nomeFantasia||p.id)+'</option>'}).join('');
+  if(!state.produtorId&&ps.length)state.produtorId=String(ps[0].id||'');
+  psel.value=state.produtorId;
+  var p=currentProducer(),events=p&&Array.isArray(p.eventos)?p.eventos:[];
+  esel.innerHTML='<option value="">Selecione</option>'+events.map(function(e){return '<option value="'+esc(e.id)+'">'+esc(e.nome||e.id)+'</option>'}).join('');
+  if(state.eventoId&&!events.some(function(e){return String(e.id||'')===state.eventoId}))state.eventoId='';
+  if(!state.eventoId&&events.length===1)state.eventoId=String(events[0].id||'');
+  esel.value=state.eventoId;
+}
+async function init(){
+  var s=readSession();if(!s||!s.token){deny('Entre no Portal do Produtor para acessar a gestão de fornecedores.');return}
+  state.token=String(s.token);
+  try{
+    busy(true,'Validando fornecedores...');
+    var r=await rpc('ctFornecedoresGestaoCarregarPROD',[state.token]);
+    if(!r||r.sucesso!==true||!Array.isArray(r.produtores)||!r.produtores.length)throw new Error('Sua conta não possui permissão para gerenciar fornecedores.');
+    state.context=r;state.statusPagamento=Array.isArray(r.statusPagamento)&&r.statusPagamento.length?r.statusPagamento:state.statusPagamento;
+    var wanted=requestedEvent();var p=wanted?findProducerForEvent(wanted):null;
+    if(p){state.produtorId=String(p.id||'');state.eventoId=wanted}else{state.produtorId=String(r.produtores[0].id||'');var evs=r.produtores[0].eventos||[];state.eventoId=evs.length===1?String(evs[0].id||''):''}
+    renderSelectors();gate.classList.add('hidden');app.classList.remove('hidden');await loadList();
+  }catch(e){deny(e&&e.message?e.message:String(e))}
+  finally{busy(false)}
+}
+async function loadList(){
+  if(!state.produtorId||!state.eventoId){state.vinculos=[];renderList();return}
+  try{
+    busy(true,'Carregando fornecedores...');
+    var r=await rpc('ctFornecedoresGestaoListarPROD',[state.token,state.produtorId,state.eventoId]);
+    if(!r||r.sucesso!==true)throw new Error((r&&r.mensagem)||'Não foi possível carregar os fornecedores.');
+    state.vinculos=Array.isArray(r.vinculos)?r.vinculos:[];if(Array.isArray(r.statusPagamento))state.statusPagamento=r.statusPagamento;renderList();
+  }catch(e){toast(e&&e.message?e.message:String(e),'err')}
+  finally{busy(false)}
+}
+function renderList(){
+  var list=document.getElementById('list'),items=state.vinculos||[];
+  document.getElementById('sTotal').textContent=String(items.length);
+  document.getElementById('sPending').textContent=String(items.filter(function(x){return x.statusPagamento==='PENDENTE'||x.statusPagamento==='PARCIAL'}).length);
+  document.getElementById('sPaid').textContent=String(items.filter(function(x){return x.statusPagamento==='PAGO'}).length);
+  document.getElementById('sValue').textContent=money(items.reduce(function(a,x){return a+Number(x.valorContratado||0)},0));
+  var p=currentProducer(),ev=p&&(p.eventos||[]).find(function(e){return String(e.id||'')===state.eventoId});
+  document.getElementById('listCaption').textContent=ev?(ev.nome+' · '+(ev.data||'')):'Selecione um evento.';
+  if(!state.produtorId||!state.eventoId){list.innerHTML='<div class="empty">Selecione produtor e evento para carregar os vínculos.</div>';return}
+  if(!items.length){list.innerHTML='<div class="empty">Nenhum fornecedor vinculado a este evento.</div>';return}
+  list.innerHTML=items.map(function(item){
+    var f=item.fornecedor||{},name=f.nomeFantasia||f.nomeRazao||item.fornecedorId||'Fornecedor';
+    var opts=state.statusPagamento.map(function(s){return '<option value="'+esc(s)+'"'+(s===item.statusPagamento?' selected':'')+'>'+esc(s)+'</option>'}).join('');
+    var contacts=[f.responsavel,f.whatsapp,f.email].filter(Boolean).join(' · ');
+    return '<article class="card" data-id="'+esc(item.vinculoId)+'"><div class="card-top"><div><h3>'+esc(name)+'</h3><div class="meta">'+esc(contacts||f.categoria||'Sem contato informado')+'</div></div><span class="tag">'+esc(item.statusPagamento||'PENDENTE')+'</span></div><div class="kv"><div><span>Serviço</span><strong>'+esc(item.servico||'—')+'</strong></div><div><span>Valor</span><strong>'+money(item.valorContratado)+'</strong></div></div><div class="card-actions"><div class="field"><label>Status de pagamento</label><select class="status-select">'+opts+'</select></div><button type="button" class="save" data-save="'+esc(item.vinculoId)+'">Salvar status</button><button type="button" class="danger" data-remove="'+esc(item.vinculoId)+'">Remover vínculo</button></div></article>';
+  }).join('');
+}
+async function mutate(method,args,confirmText,okText){
+  if(confirmText&&!window.confirm(confirmText))return;
+  try{busy(true,'Salvando...');var r=await rpc(method,args);if(!r||r.sucesso!==true)throw new Error((r&&r.mensagem)||'Operação não concluída.');toast(r.mensagem||okText||'Operação concluída.','ok');await loadList();return r}catch(e){toast(e&&e.message?e.message:String(e),'err');return null}finally{busy(false)}
+}
+document.getElementById('producerSelect').addEventListener('change',function(){state.produtorId=this.value;state.eventoId='';renderSelectors();loadList()});
+document.getElementById('eventSelect').addEventListener('change',function(){state.eventoId=this.value;var q=state.eventoId?'?evento='+encodeURIComponent(state.eventoId):'';history.replaceState(null,'','/fornecedores/'+q);loadList()});
+document.getElementById('refresh').addEventListener('click',loadList);
+document.getElementById('supplierForm').addEventListener('submit',async function(e){
+  e.preventDefault();if(!state.produtorId||!state.eventoId){toast('Selecione um evento antes de cadastrar.','err');return}
+  var d=formObject(e.currentTarget);d.produtorId=state.produtorId;d.eventoId=state.eventoId;d.valorContratado=Number(d.valorContratado||0);d.cpfCnpj=String(d.cpfCnpj||'').replace(/\D/g,'');d.whatsapp=String(d.whatsapp||'').replace(/\D/g,'');
+  var r=await mutate('ctFornecedoresGestaoCadastrarEVincularPROD',[state.token,d],'Confirma o cadastro/vínculo deste fornecedor ao evento?','Fornecedor salvo.');
+  if(r){e.currentTarget.reset();document.getElementById('newStatus').value='PENDENTE';document.getElementById('newSupplier').open=false}
+});
+document.getElementById('list').addEventListener('click',function(e){
+  var save=e.target.closest('[data-save]'),remove=e.target.closest('[data-remove]');
+  if(save){var id=save.getAttribute('data-save'),card=save.closest('[data-id]'),status=card.querySelector('.status-select').value;mutate('ctFornecedoresGestaoAtualizarPagamentoPROD',[state.token,id,status],'Confirma a alteração do status de pagamento?','Status atualizado.')}
+  if(remove){var rid=remove.getAttribute('data-remove');mutate('ctFornecedoresGestaoRemoverVinculoPROD',[state.token,rid],'Confirma remover este fornecedor apenas deste evento?','Vínculo removido.')}
+});
+init();
+}());
+</script>
+</body>
+</html>
