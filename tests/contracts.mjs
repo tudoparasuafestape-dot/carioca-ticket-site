@@ -66,6 +66,10 @@ for (const file of protectedFiles) {
   if (html.includes('</label>\\n') || html.includes('required>\\n')) {
     fail(file, 'escape literal \\n visivel em formulario');
   }
+
+  if (/<body[^>]*>\\\\n/i.test(html)) {
+    fail(file, 'escape literal apos <body> fica visivel para o usuario');
+  }
 }
 
 const home = read('index.html');
