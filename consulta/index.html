@@ -1218,7 +1218,7 @@ document.addEventListener('DOMContentLoaded',function(){
             );
 
             campoEvento.disabled = true;
-            campoTodosEventos.checked = true;
+            campoTodosEventos.checked = false;
             botaoBuscar.disabled = false;
 
             document
@@ -1228,7 +1228,7 @@ document.addEventListener('DOMContentLoaded',function(){
               .textContent =
                 erro && erro.message
                   ? erro.message
-                  : 'Pesquisa global disponível.';
+                  : 'Consulta restrita ao evento autorizado.';
           }
         )
         .obterDadosEventosMobile();
@@ -1289,7 +1289,7 @@ document.addEventListener('DOMContentLoaded',function(){
       );
 
       if (!eventosDisponiveis.length) {
-        campoTodosEventos.checked = true;
+        campoTodosEventos.checked = false;
         campoEvento.disabled = true;
         botaoBuscar.disabled = false;
         atualizarEscopoConsulta();
@@ -1318,8 +1318,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
     function atualizarEscopoConsulta() {
       var todos =
-        campoTodosEventos.checked ===
-        true;
+        false;
 
       campoEvento.disabled =
         todos ||
@@ -1349,7 +1348,7 @@ document.addEventListener('DOMContentLoaded',function(){
         )
         .textContent =
           todos
-            ? 'Escopo atual: todos os eventos.'
+            ? 'Escopo restrito ao evento autorizado.'
             : (
                 eventoId
                   ? 'Escopo atual: ' +
