@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090909">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+<title>Meus ingressos | Carioca Ticket</title>
+<link rel="icon" type="image/png" href="/assets/carioca-ticket-simbolo.png">
+<style>
+:root{--g:#d5a52b;--g2:#f0c85b;--t:#f7f2e8;--m:#aaa59b;--l:#2b2924;--ok:#61d399}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,rgba(213,165,43,.13),transparent 30%),linear-gradient(180deg,#0a0a0a,#050505 72%);color:var(--t);font-family:Arial,sans-serif}
+.wrap{width:min(760px,calc(100% - 28px));margin:auto;padding:28px 0 54px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.top img{width:120px;max-height:54px;object-fit:contain}.back{color:#d5d0c6;text-decoration:none;font-size:13px;font-weight:800}
+.card{padding:28px;border:1px solid var(--l);border-radius:26px;background:linear-gradient(180deg,#131313,#0d0d0d);box-shadow:0 24px 80px rgba(0,0,0,.4)}.ey{font-size:11px;font-weight:900;letter-spacing:.18em;color:var(--g2);text-transform:uppercase}
+h1{font-size:clamp(38px,8vw,58px);line-height:1.02;letter-spacing:-.045em;margin:12px 0 14px}.lead{color:#c0bbb1;font-size:16px;line-height:1.7;margin:0 0 22px}
+.loader{text-align:center;padding:30px 10px}.spinner{width:38px;height:38px;border-radius:50%;border:4px solid #292929;border-top-color:var(--g);animation:s .8s linear infinite;margin:20px auto}@keyframes s{to{transform:rotate(360deg)}}
+.purchase{overflow:hidden;border:1px solid #2b2924;border-radius:22px;background:#0b0b0b;margin-top:18px}.cover{height:200px;position:relative;overflow:hidden;background:linear-gradient(145deg,#171717,#090909)}.cover img{width:100%;height:100%;object-fit:cover}.cover:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent,rgba(0,0,0,.78))}.cover-text{position:absolute;z-index:2;left:18px;right:18px;bottom:16px}.cover-text small{display:block;color:var(--g2);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.cover-text strong{display:block;margin-top:5px;font-size:26px;line-height:1.15}
+.body{padding:20px}.status-line{display:flex;justify-content:space-between;gap:12px;align-items:center}.status{display:inline-flex;padding:7px 10px;border-radius:999px;background:#112219;color:var(--ok);font-size:11px;font-weight:900}.order{font-size:10px;color:#777;word-break:break-all;text-align:right}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}.box{padding:12px;border:1px solid #26231e;border-radius:14px;background:#111}.box small{display:block;color:#888;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}.box strong{font-size:13px;line-height:1.4}
+.tickets{display:grid;gap:9px;margin-top:15px}.ticket{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border-radius:14px;background:#121a22;color:#fff;text-decoration:none;font-size:12px;font-weight:900}.ticket b{color:var(--g2);font-size:18px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}.action{display:flex;align-items:center;justify-content:center;min-height:46px;border-radius:13px;text-decoration:none;font-size:12px;font-weight:900;border:1px solid #38342d;color:#ddd5c8;background:#111}.action.primary{border-color:var(--g);background:linear-gradient(135deg,var(--g),var(--g2));color:#111}.error{padding:18px;border:1px solid #4b2929;border-radius:16px;background:#211313;color:#ffd2d2;line-height:1.55}
+@media(max-width:560px){.card{padding:22px}.meta,.actions{grid-template-columns:1fr}.cover{height:155px}.top img{width:105px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><a href="/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a><a class="back" href="/minha-carioca/conta/">← Minha Carioca</a></div>
+<main class="card" id="app"><div class="loader"><div class="ey">Acesso seguro</div><h1>Abrindo seus ingressos</h1><p class="lead">Validando a credencial da sua compra.</p><div class="spinner"></div></div></main>
+</div>
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var app=document.getElementById('app'),q=new URLSearchParams(location.search),pending={};
+function esc(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function post(action,data,done){
+var id='MCP-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),fn='mcp_'+id.replace(/[^A-Za-z0-9_]/g,'');
+var fr=document.createElement('iframe');fr.name=fn;fr.style.display='none';
+var f=document.createElement('form');f.method='POST';f.action=APP;f.target=fn;f.style.display='none';
+function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);f.appendChild(i)}
+add('ctMinhaCariocaAction',action);add('ctMinhaCariocaRequestId',id);Object.keys(data||{}).forEach(function(k){add(k,data[k])});
+document.body.append(fr,f);pending[id]={fr:fr,f:f,done:done};pending[id].timer=setTimeout(function(){var p=pending[id];if(!p)return;delete pending[id];try{p.fr.remove();p.f.remove()}catch(_){}done({ok:false,erro:'A consulta demorou mais que o esperado.'})},20000);f.submit()
+}
+window.addEventListener('message',function(ev){var p=ev.data;if(!p||p.ctMinhaCariocaPost!==true||!p.id||!pending[p.id])return;var x=pending[p.id];delete pending[p.id];clearTimeout(x.timer);try{x.fr.remove();x.f.remove()}catch(_){}x.done(p)});
+function ticketHref(raw){try{var u=new URL(String(raw||''),location.href),c=String(u.searchParams.get('codigo')||'').trim(),s=String(u.searchParams.get('sig')||'').trim();if(c&&s)return '/ingresso/?codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s)}catch(_){}return String(raw||'#')}
+function fail(m){app.innerHTML='<div class="error">'+esc(m||'Não foi possível abrir esta compra.')+'</div><div class="actions"><a class="action primary" href="/minha-carioca/conta/">Voltar para Minha Carioca</a></div>'}
+function render(r){
+var p=r.pedido||{},e=r.evento||{},v=r.visual||{},a=Array.isArray(r.ingressos)?r.ingressos:[],capa=String(v.capaUrl||v.posterUrl||'');
+var cover='<div class="cover">'+(capa?'<img src="'+esc(capa)+'" alt="">':'')+'<div class="cover-text"><small>Carioca Ticket</small><strong>'+esc(e.nome||'Evento Carioca Ticket')+'</strong></div></div>';
+var t=a.map(function(x,i){return '<a class="ticket" href="'+esc(ticketHref(x.link))+'"><span>🎟️ Abrir ingresso '+(i+1)+(x.nome?' — '+esc(x.nome):'')+'</span><b>→</b></a>'}).join('');
+app.innerHTML='<div class="ey">Minha Carioca</div><h1>Seus ingressos</h1><p class="lead">Compra confirmada e protegida pela Carioca Ticket.</p><article class="purchase">'+cover+'<div class="body"><div class="status-line"><span class="status">● Compra concluída</span><span class="order">'+esc(p.pedidoId||'')+'</span></div><div class="meta"><div class="box"><small>Data</small><strong>'+esc([e.data,e.horario].filter(Boolean).join(' · ')||'—')+'</strong></div><div class="box"><small>Ingresso</small><strong>'+esc([p.tipoNome,p.loteNome].filter(Boolean).join(' · ')||'—')+'</strong></div><div class="box"><small>Valor</small><strong>'+money(p.valorTotal||0)+'</strong></div><div class="box"><small>Local</small><strong>'+esc([e.local,e.cidade,e.uf].filter(Boolean).join(' · ')||'—')+'</strong></div></div>'+(t?'<div class="tickets">'+t+'</div>':'')+'<div class="actions"><a class="action primary" href="/minha-carioca/conta/">Voltar para Minha Carioca</a><a class="action" href="/">Ver eventos</a></div></div></article>'
+}
+var pedido=String(q.get('pedido')||'').trim(),token=String(q.get('token')||'').trim();
+if(!pedido||!token){fail('O link seguro está incompleto.');return}
+post('consultarPedidoSeguro',{pedido:pedido,token:token},function(env){if(env&&env.ok&&env.resultado&&env.resultado.sucesso===true&&env.resultado.autorizado!==false&&env.resultado.pedido){render(env.resultado);return}fail(env&&env.erro||'Não foi possível validar esta compra.')});
+}());
+</script>
+</body>
+</html>
