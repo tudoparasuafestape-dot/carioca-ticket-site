@@ -242,4 +242,49 @@ test.describe('Fachadas first-party em homologacao', () => {
     // O teste termina antes do clique de pagamento: nenhuma cobranca e criada.
     await expect(page.locator('#payButton')).toBeVisible();
   });
+
+  test('Evento oficial candidato carrega sem iframe e aponta para Checkout oficial', async ({ page }) => {
+    await page.goto('/evento/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.getByRole('heading', { name: 'Roda de Samba Estilo Carioca' })).toBeVisible({
+      timeout: 15000
+    });
+
+    const comprar = page.getByRole('link', {
+      name: /Comprar ingresso|Garantir meu ingresso|Comprar agora/i
+    }).first();
+
+    await expect(comprar).toBeVisible();
+    await expect(comprar).toHaveAttribute('href', /\/checkout\/\?evento=/);
+    await expect(page.locator('iframe#app')).toHaveCount(0);
+
+    expect(new URL(page.url()).pathname).toBe('/evento/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
+  test('Checkout oficial candidato carrega catalogo sem criar cobranca', async ({ page }) => {
+    await page.goto('/checkout/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.getByRole('heading', { name: 'Roda de Samba Estilo Carioca' })).toBeVisible({
+      timeout: 15000
+    });
+    await expect(page.getByText('Seus dados')).toBeVisible();
+    await expect(page.getByLabel(/E-mail/i)).toBeVisible();
+
+    await page.locator('#typeSelect').selectOption('TIPO-IND');
+    await page.locator('#lotSelect').selectOption('LOTE-1');
+
+    await expect(page.locator('#summaryPrice')).toHaveText(/R\$\s*25,00/);
+    await expect(page.locator('#eventBack')).toHaveAttribute('href', /\/evento\/\?evento=/);
+    await expect(page.locator('iframe#app')).toHaveCount(0);
+
+    expect(new URL(page.url()).pathname).toBe('/checkout/');
+    await expectNoTechnicalVisibleLinks(page);
+    await expect(page.locator('#payButton')).toBeVisible();
+  });
+
 });
