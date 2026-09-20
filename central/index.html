@@ -145,6 +145,9 @@
       <a id="mRelatorios" class="module" data-perm="RELATORIOS" href="#">
         <div class="icon">📈</div><div><strong>Relatórios</strong><span>Vendas, ingressos e check-in consolidados por evento.</span></div>
       </a>
+      <a id="mComissoes" class="module" data-perm="COMISSOES" href="#">
+        <div class="icon">🤝</div><div><strong>Comissões</strong><span>Configure regras para promotores, influenciadores e comissionados do evento.</span></div>
+      </a>
     </section>
   </main>
 
@@ -354,6 +357,10 @@ function updateModules(){
     ?'/relatorios/?evento='+encodeURIComponent(id)
     :'#';
 
+  document.getElementById('mComissoes').href=id
+    ?'/comissoes/?evento='+encodeURIComponent(id)
+    :'#';
+
   if(!id){
     document.getElementById('mCheckin').classList.add('disabled');
     document.getElementById('mVendas').classList.add('disabled');
@@ -362,6 +369,7 @@ function updateModules(){
     document.getElementById('mFornecedores').classList.add('disabled');
     document.getElementById('mFinanceiro').classList.add('disabled');
     document.getElementById('mRelatorios').classList.add('disabled');
+    document.getElementById('mComissoes').classList.add('disabled');
   }
 }
 
