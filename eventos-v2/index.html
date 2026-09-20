@@ -8,7 +8,9 @@
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >\n<meta name="robots" content="noindex,nofollow,noarchive">\n<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+  >
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
 
   <title>Eventos | Carioca Ticket</title>
 
@@ -768,36 +770,157 @@
 <script>
 (function(){
   'use strict';
+
   var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
   var pending={};
-  function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+
+  function readSession(){
+    try{
+      var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE);
+      if(!raw)return null;
+      var data=JSON.parse(raw);
+      if(!data||!data.token)return null;
+      if(data.expiraEm){
+        var exp=Date.parse(data.expiraEm);
+        if(!isNaN(exp)&&exp<=Date.now())return null;
+      }
+      return data;
+    }catch(_){return null}
+  }
+
+  var session=readSession();
+  var token=session&&session.token?String(session.token):'';
+  window.__CT_EVENTOS_SESSAO_OK__=!!token;
+
+  function cleanup(id){
+    var p=pending[id];
+    if(!p)return null;
+    delete pending[id];
+    clearTimeout(p.timer);
+    try{p.frame.remove();p.form.remove()}catch(_){}
+    return p;
+  }
+
+  function secureCall(method,args){
+    args=Array.isArray(args)?args:[];
+
+    if(!token){
+      throw new Error('Acesso restrito. Entre no Portal do Produtor para gerenciar eventos.');
+    }
+
+    switch(String(method||'')){
+      case 'ctEventosPublicacaoListagemRapidaPROD':
+        return {method:'ctEventosOperacionalListarSeguraPROD',args:[token]};
+
+      case 'ctEventosPublicacaoPublicarPROD':
+        return {method:'ctEventosOperacionalPublicarSeguraPROD',args:[token,String(args[0]||'')]};
+
+      case 'ctEventosPublicacaoFecharPROD':
+        return {method:'ctEventosOperacionalFecharSeguraPROD',args:[token,String(args[0]||'')]};
+
+      case 'atualizarStatusEvento':
+        return {method:'ctEventosOperacionalAtualizarStatusSeguraPROD',args:[token,String(args[0]||''),String(args[1]||'')]};
+
+      case 'ctEventosCadastroSeguroContextoPROD':
+        return {method:'ctEventosOperacionalContextoCadastroSeguraPROD',args:[token]};
+
+      case 'ctEventosCadastroSeguroCriarPROD':
+        return {method:'ctEventosOperacionalCriarSeguraPROD',args:[token,args[0]||{}]};
+
+      default:
+        throw new Error('CT_EVENTOS_RPC_METODO_NAO_AUTORIZADO');
+    }
+  }
+
   function rpc(method,args,success,failure){
+    var chamada;
+    try{
+      chamada=secureCall(method,args);
+    }catch(err){
+      setTimeout(function(){
+        (typeof failure==='function'?failure:function(){})(err);
+      },0);
+      return;
+    }
+
     var id='CTEVENTOS-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
     var frameName='cteventos_'+id.replace(/[^A-Za-z0-9_]/g,'');
-    var frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';frame.setAttribute('aria-hidden','true');
-    var form=document.createElement('form');form.method='POST';form.action=APP;form.target=frameName;form.style.display='none';
-    function add(k,v){var input=document.createElement('input');input.type='hidden';input.name=k;input.value=String(v==null?'':v);form.appendChild(input)}
-    add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',String(method||''));add('argsJson',JSON.stringify(Array.isArray(args)?args:[]));
+    var frame=document.createElement('iframe');
+    frame.name=frameName;
+    frame.style.display='none';
+    frame.setAttribute('aria-hidden','true');
+
+    var form=document.createElement('form');
+    form.method='POST';
+    form.action=APP;
+    form.target=frameName;
+    form.style.display='none';
+
+    function add(k,v){
+      var input=document.createElement('input');
+      input.type='hidden';
+      input.name=k;
+      input.value=String(v==null?'':v);
+      form.appendChild(input);
+    }
+
+    add('ctMinhaCariocaAction','portalRpc');
+    add('ctMinhaCariocaRequestId',id);
+    add('metodo',chamada.method);
+    add('argsJson',JSON.stringify(chamada.args));
+
     document.body.append(frame,form);
-    pending[id]={frame:frame,form:form,success:typeof success==='function'?success:function(){},failure:typeof failure==='function'?failure:function(){},timer:setTimeout(function(){var p=cleanup(id);if(p)p.failure(new Error('CT_EVENTOS_RPC_TIMEOUT'));},45000)};
+
+    pending[id]={
+      frame:frame,
+      form:form,
+      success:typeof success==='function'?success:function(){},
+      failure:typeof failure==='function'?failure:function(){},
+      timer:setTimeout(function(){
+        var p=cleanup(id);
+        if(p)p.failure(new Error('CT_EVENTOS_RPC_TIMEOUT'));
+      },45000)
+    };
+
     form.submit();
   }
+
   window.addEventListener('message',function(ev){
     if(ev.origin!=='https://script.google.com' && !/\.googleusercontent\.com$/.test(ev.origin||''))return;
-    var payload=ev.data;if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
-    var p=cleanup(payload.id);if(!p)return;
-    if(payload.ok===true)p.success(payload.resultado);else p.failure(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+    var payload=ev.data;
+    if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
+    var p=cleanup(payload.id);
+    if(!p)return;
+    if(payload.ok===true)p.success(payload.resultado);
+    else p.failure(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
   });
-  function runner(success,failure){return new Proxy({},{
-    get:function(_t,prop){
-      if(prop==='withSuccessHandler')return function(fn){return runner(fn,failure)};
-      if(prop==='withFailureHandler')return function(fn){return runner(success,fn)};
-      if(prop==='then')return undefined;
-      return function(){rpc(String(prop),Array.prototype.slice.call(arguments),success,failure)};
+
+  function runner(success,failure){
+    return new Proxy({},{
+      get:function(_t,prop){
+        if(prop==='withSuccessHandler')return function(fn){return runner(fn,failure)};
+        if(prop==='withFailureHandler')return function(fn){return runner(success,fn)};
+        if(prop==='then')return undefined;
+        return function(){rpc(String(prop),Array.prototype.slice.call(arguments),success,failure)};
+      }
+    });
+  }
+
+  window.google=window.google||{};
+  window.google.script=window.google.script||{};
+  window.google.script.run=runner(null,null);
+  window.google.script.url={
+    getLocation:function(callback){
+      if(typeof callback==='function'){
+        callback({
+          hash:String(location.hash||'').replace(/^#/,''),
+          parameter:Object.fromEntries(new URLSearchParams(location.search)),
+          parameters:{}
+        });
+      }
     }
-  })}
-  window.google=window.google||{};window.google.script=window.google.script||{};window.google.script.run=runner(null,null);
-  window.google.script.url={getLocation:function(callback){if(typeof callback==='function')callback({hash:String(location.hash||'').replace(/^#/,''),parameter:Object.fromEntries(new URLSearchParams(location.search)),parameters:{}})}};
+  };
 }());
 </script>
 
@@ -825,6 +948,13 @@
 
 
         <div class="topo-acoes">
+
+          <a
+            href="/central/"
+            style="display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 12px;border:1px solid #d8d8d8;border-radius:10px;background:#fff;color:#333;text-decoration:none;font-size:12px;font-weight:bold;"
+          >
+            ← Central Mobile
+          </a>
 
           <button
             id="botaoAtualizar"
