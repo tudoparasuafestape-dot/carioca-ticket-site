@@ -309,14 +309,14 @@ function updateModules(){
     ?'/vendas/?evento='+encodeURIComponent(id)
     :'#';
 
-  /* Bar permanece bloqueado ate a interface autenticada estar publicada. */
-  document.getElementById('mBar').href='#';
-  document.getElementById('mBar').classList.add('disabled');
-  document.getElementById('mBar').setAttribute('aria-disabled','true');
+  document.getElementById('mBar').href=id
+    ?'/bar/?evento='+encodeURIComponent(id)
+    :'#';
 
   if(!id){
     document.getElementById('mCheckin').classList.add('disabled');
     document.getElementById('mVendas').classList.add('disabled');
+    document.getElementById('mBar').classList.add('disabled');
   }
 }
 
