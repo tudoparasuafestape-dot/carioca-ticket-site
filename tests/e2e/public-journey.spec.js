@@ -1,7 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
 const EXPECTED_HOST = process.env.CT_EXPECTED_HOST || 'cariocaticket.com.br';
-const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const FORBIDDEN_HOSTS = ['script.google.com', 'googleusercontent.com', 'github.io'];
 
 function installGuards(page) {
@@ -59,61 +58,38 @@ test.describe('Jornada publica protegida', () => {
     const verEvento = page.getByRole('link', { name: /^ver evento$/i }).first();
     await expect(verEvento).toBeVisible();
     await expect(verEvento).toHaveAttribute('href', /\/evento\//);
-    const eventHref = await verEvento.getAttribute('href');
-    expect(eventHref).toMatch(/\/evento\//);
+    await verEvento.click();
 
-    if (BRANCH_MODE) {
-      const parsed = new URL(eventHref, page.url());
-      const evento = parsed.searchParams.get('evento');
-      expect(evento, 'O link Ver evento deve carregar o identificador do evento').toBeTruthy();
-      await page.goto('/evento/?evento=' + encodeURIComponent(evento), { waitUntil: 'domcontentloaded' });
-      await expectOfficialTopUrl(page, /\/evento\//);
-    } else {
-      await verEvento.click();
-      await expectOfficialTopUrl(page, /^\/evento\/$/);
-    }
+    await expectOfficialTopUrl(page, /^\/evento\/$/);
+    await expect(page.getByRole('heading', { name: 'Roda de Samba Estilo Carioca' })).toBeVisible({
+      timeout: 60000
+    });
+    await expect(page.locator('body')).not.toContainText('\\n');
+    await expectNoForbiddenVisibleLinks(page);
 
-    const eventFrame = page.frameLocator('#app');
-    await expect(eventFrame.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({ timeout: 60000 });
-    await expect(eventFrame.locator('body')).not.toContainText('\\n');
+    const comprar = page.getByRole('link', {
+      name: /comprar ingresso|garantir meu ingresso|comprar agora/i
+    }).first();
 
-    const comprar = eventFrame.getByRole('link', { name: /comprar ingresso|garantir meu ingresso|comprar agora/i }).first();
     await expect(comprar).toBeVisible();
-    const comprarHref = await comprar.getAttribute('href');
-    expect(comprarHref).toMatch(/\/checkout\//);
+    await expect(comprar).toHaveAttribute('href', /\/checkout\/\?evento=/);
+    await comprar.click();
 
-    if (BRANCH_MODE) {
-      const parsedCheckout = new URL(comprarHref, page.url());
-      const eventoCheckout = parsedCheckout.searchParams.get('evento');
-      expect(eventoCheckout, 'O CTA de compra deve preservar o evento').toBeTruthy();
-      await page.goto('/checkout/?evento=' + encodeURIComponent(eventoCheckout), { waitUntil: 'domcontentloaded' });
-      await expectOfficialTopUrl(page, /\/checkout\//);
-    } else {
-      await comprar.click();
-      await expectOfficialTopUrl(page, /^\/checkout\/$/);
-    }
+    await expectOfficialTopUrl(page, /^\/checkout\/$/);
+    await expect(page.getByText('Seus dados')).toBeVisible({ timeout: 60000 });
+    await expect(page.getByLabel(/E-mail/i)).toBeVisible();
+    await expect(page.locator('body')).not.toContainText('\\n');
+    await expectNoForbiddenVisibleLinks(page);
 
-    const checkoutFrame = page.frameLocator('#app');
-    await expect(checkoutFrame.getByText('Seus dados')).toBeVisible({ timeout: 60000 });
-    await expect(checkoutFrame.getByLabel(/E-mail/i)).toBeVisible();
-    await expect(checkoutFrame.locator('body')).not.toContainText('\\n');
-
-    const voltar = checkoutFrame.getByRole('link', { name: /voltar ao evento/i }).first();
+    const voltar = page.getByRole('link', { name: /voltar ao evento/i }).first();
     await expect(voltar).toBeVisible();
-    const voltarHref = await voltar.getAttribute('href');
-    expect(voltarHref).toMatch(/\/evento\//);
+    await expect(voltar).toHaveAttribute('href', /\/evento\/\?evento=/);
+    await voltar.click();
 
-    if (BRANCH_MODE) {
-      const parsedVoltar = new URL(voltarHref, page.url());
-      const eventoVoltar = parsedVoltar.searchParams.get('evento');
-      await page.goto('/evento/?evento=' + encodeURIComponent(eventoVoltar), { waitUntil: 'domcontentloaded' });
-      await expectOfficialTopUrl(page, /\/evento\//);
-    } else {
-      await voltar.click();
-      await expectOfficialTopUrl(page, /^\/evento\/$/);
-    }
-
-    await expect(page.frameLocator('#app').getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({ timeout: 60000 });
+    await expectOfficialTopUrl(page, /^\/evento\/$/);
+    await expect(page.getByRole('heading', { name: 'Roda de Samba Estilo Carioca' })).toBeVisible({
+      timeout: 60000
+    });
 
     assertNoTechnicalFailures(state);
   });
@@ -130,15 +106,9 @@ test.describe('Jornada publica protegida', () => {
 
     const voltarEventos = page.getByRole('link', { name: /voltar aos eventos/i }).first();
     await expect(voltarEventos).toBeVisible();
-    if (BRANCH_MODE) {
-      const href = await voltarEventos.getAttribute('href');
-      expect(href).toBeTruthy();
-      await page.goto('/', { waitUntil: 'domcontentloaded' });
-    } else {
-      await voltarEventos.click();
-    }
+    await voltarEventos.click();
 
-    await expectOfficialTopUrl(page);
+    await expectOfficialTopUrl(page, /^\/$/);
     await expect(page.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({ timeout: 30000 });
 
     assertNoTechnicalFailures(state);
