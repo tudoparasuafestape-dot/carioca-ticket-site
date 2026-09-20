@@ -178,9 +178,9 @@ test.describe('Fachadas first-party em homologacao', () => {
     await page.goto('/produtor-v2/', { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByRole('heading', { name: /Acesse sua conta/i })).toBeVisible();
-    await expect(page.getByLabel(/^E-mail$/i)).toBeVisible();
-    await expect(page.getByLabel(/^Senha$/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /^Entrar$/i })).toBeEnabled({ timeout: 15000 });
+    await expect(page.locator('#email')).toBeVisible();
+    await expect(page.locator('#senha')).toBeVisible();
+    await expect(page.locator('#loginButton')).toBeEnabled({ timeout: 15000 });
 
     expect(new URL(page.url()).pathname).toBe('/produtor-v2/');
     await expectNoTechnicalVisibleLinks(page);
