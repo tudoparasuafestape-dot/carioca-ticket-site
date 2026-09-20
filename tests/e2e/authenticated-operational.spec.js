@@ -509,7 +509,7 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#eventName')).toHaveText('Roda de Samba Estilo Carioca');
     await expect(page.locator('#sProdutos')).toHaveText('1');
-    await expect(page.getByText('Produto Homologacao').first()).toBeVisible();
+    await expect(page.locator('#productsWrap')).toContainText('Produto Homologacao');
     await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute(
       'href',
       '/central/'
