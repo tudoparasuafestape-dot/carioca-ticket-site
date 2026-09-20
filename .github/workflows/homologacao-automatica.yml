@@ -32,8 +32,8 @@ jobs:
       - name: Validar rotas e contratos protegidos
         run: node tests/contracts.mjs
 
-  e2e:
-    name: E2E ${{ matrix.viewport }}
+  branch-e2e:
+    name: Branch E2E ${{ matrix.viewport }}
     needs: contratos
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -56,9 +56,22 @@ jobs:
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
 
-      - name: Executar homologacao no site oficial
+      - name: Subir branch localmente
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/ct-http.log 2>&1 &
+          echo $! > /tmp/ct-http.pid
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/ct-http.log
+          exit 1
+
+      - name: Homologar codigo da branch
         env:
-          CT_BASE_URL: https://cariocaticket.com.br
+          CT_BASE_URL: http://127.0.0.1:4173
+          CT_EXPECTED_HOST: 127.0.0.1
+          CT_BRANCH_MODE: '1'
         run: |
           if [ "${{ matrix.viewport }}" = "desktop" ]; then
             npx playwright test --project=desktop-chromium
@@ -66,11 +79,57 @@ jobs:
             npx playwright test --project=mobile-chromium
           fi
 
-      - name: Guardar evidencias em caso de falha
+      - name: Guardar evidencias da branch
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: evidencias-${{ matrix.viewport }}
+          name: branch-evidencias-${{ matrix.viewport }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  producao-e2e:
+    name: Producao E2E ${{ matrix.viewport }}
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Homologar site publicado
+        env:
+          CT_BASE_URL: https://cariocaticket.com.br
+          CT_EXPECTED_HOST: cariocaticket.com.br
+          CT_BRANCH_MODE: '0'
+        run: |
+          if [ "${{ matrix.viewport }}" = "desktop" ]; then
+            npx playwright test --project=desktop-chromium
+          else
+            npx playwright test --project=mobile-chromium
+          fi
+
+      - name: Guardar evidencias de producao
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: producao-evidencias-${{ matrix.viewport }}
           path: |
             playwright-report/
             test-results/
