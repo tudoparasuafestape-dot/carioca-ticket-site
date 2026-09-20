@@ -312,4 +312,20 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expectNoTechnicalVisibleLinks(page);
   });
 
+
+  test('Carioca Bar oficial exige sessao sem sair do dominio first-party', async ({ page }) => {
+    await page.goto('/bar/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.locator('#gate')).toBeVisible();
+    await expect(page.locator('#gateDenied')).toBeVisible();
+    await expect(page.locator('body')).toContainText(/Carioca Bar/i);
+    await expect(page.locator('body')).toContainText(/Portal do Produtor/i);
+    await expect(page.locator('body')).not.toContainText('\\n');
+
+    expect(new URL(page.url()).pathname).toBe('/bar/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
 });
