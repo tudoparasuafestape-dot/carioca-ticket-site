@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >\n<meta name="robots" content="noindex,nofollow,noarchive">\n<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+
+  <title>Eventos | Carioca Ticket</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --preto: #111111;
+      --dourado: #d4af37;
+      --verde: #0b7a2a;
+      --verde-claro: #e1f5e7;
+      --azul: #1a73e8;
+      --azul-claro: #e8f0fe;
+      --amarelo: #8a6500;
+      --amarelo-claro: #fff4ce;
+      --vermelho: #b00020;
+      --vermelho-claro: #fde2e6;
+      --cinza: #666666;
+      --cinza-claro: #f4f4f4;
+      --borda: #e5e5e5;
+      --branco: #ffffff;
+      --texto: #222222;
+      --sombra:
+        0 3px 12px
+        rgba(
+          0,
+          0,
+          0,
+          0.08
+        );
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+
+      color: var(--texto);
+      background: var(--cinza-claro);
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.55;
+    }
+
+    .oculto {
+      display: none !important;
+    }
+
+    .app {
+      width: 100%;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .topo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 16px;
+
+      padding: 22px;
+      margin-bottom: 12px;
+
+      border-radius: 18px;
+
+      color: var(--branco);
+
+      background:
+        radial-gradient(
+          circle at top right,
+          #3a3a3a 0%,
+          #111111 52%,
+          #050505 100%
+        );
+
+      box-shadow:
+        0 10px 28px
+        rgba(
+          0,
+          0,
+          0,
+          0.18
+        );
+    }
+
+    .marca {
+      margin: 0;
+
+      color: var(--dourado);
+
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.1px;
+    }
+
+    .topo h1 {
+      margin: 6px 0 0;
+
+      font-size:
+        clamp(
+          27px,
+          5vw,
+          40px
+        );
+
+      line-height: 1.05;
+    }
+
+    .subtitulo {
+      margin: 8px 0 0;
+
+      color: #cccccc;
+
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .topo-acoes {
+      display: flex;
+      gap: 8px;
+    }
+
+    .botao-icone {
+      width: 48px;
+      height: 48px;
+
+      border: none;
+      border-radius: 12px;
+
+      color: var(--branco);
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          0.13
+        );
+
+      font-size: 20px;
+    }
+
+    .estado {
+      padding: 28px 16px;
+      margin-bottom: 12px;
+
+      border-radius: 15px;
+
+      background: var(--branco);
+
+      box-shadow: var(--sombra);
+
+      color: var(--cinza);
+
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .estado-erro {
+      color: #8b0018;
+      background: var(--vermelho-claro);
+    }
+
+    .evento-ativo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 16px;
+
+      padding: 18px;
+      margin-bottom: 12px;
+
+      border-radius: 15px;
+
+      color: #07571e;
+      background: var(--verde-claro);
+
+      box-shadow: var(--sombra);
+    }
+
+    .evento-ativo small {
+      display: block;
+
+      margin-bottom: 5px;
+
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .evento-ativo h2 {
+      margin: 0;
+
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .evento-ativo p {
+      margin: 7px 0 0;
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .badge-ativo {
+      flex: 0 0 auto;
+
+      padding: 8px 12px;
+
+      border-radius: 999px;
+
+      color: var(--branco);
+      background: var(--verde);
+
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .barra-acoes {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      padding: 15px;
+      margin-bottom: 12px;
+
+      border-radius: 15px;
+
+      background: var(--branco);
+
+      box-shadow: var(--sombra);
+    }
+
+    .resumo-lista {
+      color: var(--cinza);
+
+      font-size: 12px;
+    }
+
+    .botao {
+      min-height: 46px;
+
+      padding: 11px 16px;
+
+      border: none;
+      border-radius: 10px;
+
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .botao-principal {
+      color: var(--branco);
+      background: var(--preto);
+    }
+
+    .botao-dourado {
+      color: var(--preto);
+      background: var(--dourado);
+    }
+
+    .botao-verde {
+      color: var(--branco);
+      background: var(--verde);
+    }
+
+    .botao-vermelho {
+      color: var(--branco);
+      background: var(--vermelho);
+    }
+
+    .botao-secundario {
+      color: var(--texto);
+      background: #eeeeee;
+    }
+
+    .grade-eventos {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(
+            0,
+            1fr
+          )
+        );
+
+      gap: 12px;
+    }
+
+    .evento-card {
+      position: relative;
+
+      padding: 18px;
+
+      border-radius: 15px;
+
+      background: var(--branco);
+
+      box-shadow: var(--sombra);
+
+      overflow: hidden;
+    }
+
+    .evento-card.ativo {
+      border:
+        2px solid
+        var(--verde);
+    }
+
+    .evento-card.ativo::before {
+      content: "ATIVO";
+
+      position: absolute;
+      top: 12px;
+      right: -30px;
+
+      width: 110px;
+
+      padding: 5px 0;
+
+      color: var(--branco);
+      background: var(--verde);
+
+      font-size: 9px;
+      font-weight: bold;
+      letter-spacing: 0.8px;
+      text-align: center;
+
+      transform:
+        rotate(
+          42deg
+        );
+    }
+
+    .evento-cabecalho {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      margin-bottom: 13px;
+    }
+
+    .evento-cabecalho h3 {
+      margin: 0;
+
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+
+      padding: 6px 9px;
+
+      border-radius: 999px;
+
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .badge-rascunho {
+      color: var(--amarelo);
+      background: var(--amarelo-claro);
+    }
+
+    .badge-status-ativo {
+      color: #07571e;
+      background: var(--verde-claro);
+    }
+
+    .badge-encerrado {
+      color: #174ea6;
+      background: var(--azul-claro);
+    }
+
+    .badge-cancelado {
+      color: #8b0018;
+      background: var(--vermelho-claro);
+    }
+
+    .evento-info {
+      display: grid;
+
+      gap: 8px;
+
+      margin-bottom: 15px;
+    }
+
+    .evento-info-item {
+      display: grid;
+
+      grid-template-columns:
+        95px
+        minmax(
+          0,
+          1fr
+        );
+
+      gap: 8px;
+
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .evento-info-item strong {
+      color: var(--cinza);
+    }
+
+    .evento-id {
+      padding: 9px;
+      margin-bottom: 14px;
+
+      border-radius: 8px;
+
+      color: var(--cinza);
+      background: #f7f7f7;
+
+      font-family:
+        Consolas,
+        monospace;
+
+      font-size: 10px;
+
+      overflow-wrap: anywhere;
+    }
+
+    .evento-acoes {
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 7px;
+    }
+
+    .evento-acoes .botao {
+      flex:
+        1 1
+        135px;
+
+      min-height: 42px;
+
+      padding: 9px 11px;
+
+      font-size: 11px;
+    }
+
+    .sem-eventos {
+      grid-column: 1 / -1;
+
+      padding: 35px 16px;
+
+      border-radius: 15px;
+
+      color: var(--cinza);
+      background: var(--branco);
+
+      box-shadow: var(--sombra);
+
+      text-align: center;
+    }
+
+    dialog {
+      width:
+        min(
+          94vw,
+          680px
+        );
+
+      max-height: 92vh;
+
+      padding: 0;
+
+      border: none;
+      border-radius: 17px;
+
+      background: transparent;
+
+      box-shadow:
+        0 15px 40px
+        rgba(
+          0,
+          0,
+          0,
+          0.25
+        );
+    }
+
+    dialog::backdrop {
+      background:
+        rgba(
+          0,
+          0,
+          0,
+          0.65
+        );
+
+      backdrop-filter:
+        blur(
+          3px
+        );
+    }
+
+    .modal {
+      max-height: 92vh;
+
+      overflow-y: auto;
+
+      border-radius: 17px;
+
+      background: var(--branco);
+    }
+
+    .modal-topo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      padding: 19px;
+
+      color: var(--branco);
+      background: var(--preto);
+    }
+
+    .modal-topo h2 {
+      margin: 4px 0 0;
+
+      font-size: 23px;
+    }
+
+    .modal-marca {
+      margin: 0;
+
+      color: var(--dourado);
+
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .modal-fechar {
+      width: 42px;
+      height: 42px;
+
+      border: none;
+      border-radius: 10px;
+
+      color: var(--branco);
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          0.13
+        );
+
+      font-size: 17px;
+    }
+
+    .modal-corpo {
+      padding: 20px;
+    }
+
+    .grade-formulario {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(
+            0,
+            1fr
+          )
+        );
+
+      gap: 13px;
+    }
+
+    .campo-grupo {
+      min-width: 0;
+    }
+
+    .campo-grupo.largo {
+      grid-column: 1 / -1;
+    }
+
+    .campo-label {
+      display: block;
+
+      margin-bottom: 6px;
+
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .campo {
+      width: 100%;
+      min-height: 48px;
+
+      padding: 11px;
+
+      border:
+        1px solid
+        #cccccc;
+
+      border-radius: 9px;
+
+      color: var(--texto);
+      background: var(--branco);
+
+      font-size: 13px;
+
+      outline: none;
+    }
+
+    .campo:focus {
+      border-color: var(--dourado);
+
+      box-shadow:
+        0 0 0 3px
+        rgba(
+          212,
+          175,
+          55,
+          0.16
+        );
+    }
+
+    .modal-acoes {
+      display: flex;
+      justify-content: flex-end;
+
+      gap: 9px;
+
+      margin-top: 18px;
+    }
+
+    .mensagem {
+      min-height: 22px;
+
+      margin:
+        13px
+        0
+        0;
+
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1.45;
+    }
+
+    .mensagem-sucesso {
+      color: var(--verde);
+    }
+
+    .mensagem-erro {
+      color: var(--vermelho);
+    }
+
+    @media (
+      max-width:
+      850px
+    ) {
+      .grade-eventos {
+        grid-template-columns:
+          1fr;
+      }
+    }
+
+    @media (
+      max-width:
+      620px
+    ) {
+      .topo {
+        align-items:
+          flex-start;
+      }
+
+      .topo-acoes {
+        flex-direction:
+          column;
+      }
+
+      .evento-ativo,
+      .barra-acoes {
+        align-items:
+          flex-start;
+
+        flex-direction:
+          column;
+      }
+
+      .grade-formulario {
+        grid-template-columns:
+          1fr;
+      }
+
+      .campo-grupo.largo {
+        grid-column:
+          auto;
+      }
+
+      .modal-acoes {
+        flex-direction:
+          column;
+      }
+
+      .modal-acoes .botao {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>\n<script>
+(function(){
+  'use strict';
+  var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var pending={};
+  function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+  function rpc(method,args,success,failure){
+    var id='CTEVENTOS-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+    var frameName='cteventos_'+id.replace(/[^A-Za-z0-9_]/g,'');
+    var frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+    var form=document.createElement('form');form.method='POST';form.action=APP;form.target=frameName;form.style.display='none';
+    function add(k,v){var input=document.createElement('input');input.type='hidden';input.name=k;input.value=String(v==null?'':v);form.appendChild(input)}
+    add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',String(method||''));add('argsJson',JSON.stringify(Array.isArray(args)?args:[]));
+    document.body.append(frame,form);
+    pending[id]={frame:frame,form:form,success:typeof success==='function'?success:function(){},failure:typeof failure==='function'?failure:function(){},timer:setTimeout(function(){var p=cleanup(id);if(p)p.failure(new Error('CT_EVENTOS_RPC_TIMEOUT'));},45000)};
+    form.submit();
+  }
+  window.addEventListener('message',function(ev){
+    if(ev.origin!=='https://script.google.com' && !/\.googleusercontent\.com$/.test(ev.origin||''))return;
+    var payload=ev.data;if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
+    var p=cleanup(payload.id);if(!p)return;
+    if(payload.ok===true)p.success(payload.resultado);else p.failure(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+  });
+  function runner(success,failure){return new Proxy({},{
+    get:function(_t,prop){
+      if(prop==='withSuccessHandler')return function(fn){return runner(fn,failure)};
+      if(prop==='withFailureHandler')return function(fn){return runner(success,fn)};
+      if(prop==='then')return undefined;
+      return function(){rpc(String(prop),Array.prototype.slice.call(arguments),success,failure)};
+    }
+  })}
+  window.google=window.google||{};window.google.script=window.google.script||{};window.google.script.run=runner(null,null);
+  window.google.script.url={getLocation:function(callback){if(typeof callback==='function')callback({hash:String(location.hash||'').replace(/^#/,''),parameter:Object.fromEntries(new URLSearchParams(location.search)),parameters:{}})}};
+}());
+</script>
+
+  <main class="app">
+
+    <div class="container">
+
+      <header class="topo">
+
+        <div>
+
+          <p class="marca">
+            🎟 CARIOCA TICKET
+          </p>
+
+          <h1>
+            Eventos
+          </h1>
+
+          <p class="subtitulo">
+            Cadastre, configure e publique vários eventos ao mesmo tempo
+          </p>
+
+        </div>
+
+
+        <div class="topo-acoes">
+
+          <button
+            id="botaoAtualizar"
+            class="botao-icone"
+            type="button"
+            title="Atualizar eventos"
+          >
+            🔄
+          </button>
+
+          <button
+            id="botaoNovoEventoTopo"
+            class="botao-icone"
+            type="button"
+            title="Criar novo evento"
+          >
+            ＋
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <section
+        id="estadoCarregando"
+        class="estado"
+      >
+        Carregando eventos...
+      </section>
+
+
+      <section
+        id="estadoErro"
+        class="estado estado-erro oculto"
+      >
+      </section>
+
+
+      <div
+        id="conteudo"
+        class="oculto"
+      >
+
+        <section
+          id="areaEventoAtivo"
+          class="evento-ativo oculto"
+        >
+
+          <div>
+
+            <small>
+              Evento selecionado para gestão
+            </small>
+
+            <h2 id="eventoAtivoNome">
+              —
+            </h2>
+
+            <p id="eventoAtivoDetalhes">
+              —
+            </p>
+
+          </div>
+
+          <span class="badge-ativo">
+            Em gestão
+          </span>
+
+        </section>
+
+
+        <section class="barra-acoes">
+
+          <div
+            id="resumoLista"
+            class="resumo-lista"
+          >
+            Nenhum evento cadastrado
+          </div>
+
+          <button
+            id="botaoNovoEvento"
+            class="botao botao-dourado"
+            type="button"
+          >
+            ＋ Novo evento
+          </button>
+
+        </section>
+
+
+        <section
+          id="listaEventos"
+          class="grade-eventos"
+        >
+        </section>
+
+      </div>
+
+
+      <footer
+        style="
+          padding: 14px 5px 5px;
+          color: #777777;
+          font-size: 11px;
+          text-align: center;
+        "
+      >
+        Carioca Ticket — Sistema Multi-eventos
+      </footer>
+
+    </div>
+
+  </main>
+
+
+  <dialog id="modalNovoEvento">
+
+    <form
+      method="dialog"
+      class="modal"
+    >
+
+      <header class="modal-topo">
+
+        <div>
+
+          <p class="modal-marca">
+            CARIOCA TICKET
+          </p>
+
+          <h2>
+            Novo evento
+          </h2>
+
+        </div>
+
+        <button
+          class="modal-fechar"
+          value="cancel"
+          type="submit"
+        >
+          ✕
+        </button>
+
+      </header>
+
+
+      <div class="modal-corpo">
+
+        <div
+          style="
+            margin-bottom:16px;
+            padding:14px 16px;
+            border-radius:14px;
+            background:#fff9e8;
+            border:1px solid #e7c35e;
+            color:#5d4810;
+            font-size:12px;
+            line-height:1.55;
+          "
+        >
+          <strong>Cadastro seguro.</strong>
+          Todo evento novo nasce como <strong>RASCUNHO</strong>.
+          Publicar vendas será uma etapa separada, condicionada a produtor,
+          ingressos/lotes, risco e financeiro.
+        </div>
+
+        <div class="grade-formulario">
+
+          <div class="campo-grupo largo">
+
+            <label
+              class="campo-label"
+              for="campoProdutorId"
+            >
+              Produtor responsável *
+            </label>
+
+            <select
+              id="campoProdutorId"
+              class="campo"
+            >
+              <option value="">
+                Carregando produtores...
+              </option>
+            </select>
+
+          </div>
+
+
+          <div class="campo-grupo largo">
+
+            <label
+              class="campo-label"
+              for="campoOrigemComercial"
+            >
+              Origem comercial *
+            </label>
+
+            <select
+              id="campoOrigemComercial"
+              class="campo"
+            >
+              <option value="PRODUTOR">
+                Produtor / relacionamento existente
+              </option>
+              <option value="DIRETO_CT">
+                Direto pela Carioca Ticket
+              </option>
+              <option value="COMISSIONADO">
+                Indicação de comissionado
+              </option>
+            </select>
+
+          </div>
+
+
+          <div
+            id="grupoComissionado"
+            class="campo-grupo largo"
+            style="display:none"
+          >
+
+            <label
+              class="campo-label"
+              for="campoComissionadoReferencia"
+            >
+              Referência do comissionado / indicação *
+            </label>
+
+            <input
+              id="campoComissionadoReferencia"
+              class="campo"
+              type="text"
+              placeholder="Código, nome ou referência provisória da indicação"
+              autocomplete="off"
+            >
+
+            <small
+              style="
+                display:block;
+                margin-top:6px;
+                color:#777;
+                line-height:1.45;
+              "
+            >
+              A publicação ficará pendente até a indicação ser formalizada
+              no módulo Comercial &amp; Comissionados.
+            </small>
+
+          </div>
+
+
+          <div class="campo-grupo largo">
+
+            <label
+              class="campo-label"
+              for="campoNome"
+            >
+              Nome do evento *
+            </label>
+
+            <input
+              id="campoNome"
+              class="campo"
+              type="text"
+              placeholder="Ex.: Roda de Samba Estilo Carioca"
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          <div class="campo-grupo">
+
+            <label
+              class="campo-label"
+              for="campoData"
+            >
+              Data *
+            </label>
+
+            <input
+              id="campoData"
+              class="campo"
+              type="date"
+            >
+
+          </div>
+
+
+          <div class="campo-grupo">
+
+            <label
+              class="campo-label"
+              for="campoHorarioInicio"
+            >
+              Início
+            </label>
+
+            <input
+              id="campoHorarioInicio"
+              class="campo"
+              type="time"
+            >
+
+          </div>
+
+
+          <div class="campo-grupo">
+
+            <label
+              class="campo-label"
+              for="campoHorarioFim"
+            >
+              Término
+            </label>
+
+            <input
+              id="campoHorarioFim"
+              class="campo"
+              type="time"
+            >
+
+          </div>
+
+
+          <div class="campo-grupo">
+
+            <label class="campo-label">
+              Status inicial
+            </label>
+
+            <input
+              class="campo"
+              type="text"
+              value="RASCUNHO"
+              disabled
+            >
+
+          </div>
+
+
+          <div class="campo-grupo largo">
+
+            <label
+              class="campo-label"
+              for="campoLocal"
+            >
+              Local *
+            </label>
+
+            <input
+              id="campoLocal"
+              class="campo"
+              type="text"
+              placeholder="Ex.: Vevets Recepções"
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          <div class="campo-grupo largo">
+
+            <label
+              class="campo-label"
+              for="campoEndereco"
+            >
+              Endereço
+            </label>
+
+            <input
+              id="campoEndereco"
+              class="campo"
+              type="text"
+              placeholder="Rua, número e bairro"
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          <div class="campo-grupo">
+
+            <label
+              class="campo-label"
+              for="campoCidade"
+            >
+              Cidade
+            </label>
+
+            <input
+              id="campoCidade"
+              class="campo"
+              type="text"
+              placeholder="Jaboatão dos Guararapes"
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          <div class="campo-grupo">
+
+            <label
+              class="campo-label"
+              for="campoUf"
+            >
+              UF
+            </label>
+
+            <input
+              id="campoUf"
+              class="campo"
+              type="text"
+              maxlength="2"
+              placeholder="PE"
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          <div class="campo-grupo">
+
+            <label
+              class="campo-label"
+              for="campoCapacidade"
+            >
+              Capacidade
+            </label>
+
+            <input
+              id="campoCapacidade"
+              class="campo"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="300"
+            >
+
+          </div>
+
+        </div>
+
+
+        <div class="modal-acoes">
+
+          <button
+            class="botao botao-secundario"
+            value="cancel"
+            type="submit"
+          >
+            Cancelar
+          </button>
+
+          <button
+            id="botaoSalvarEvento"
+            class="botao botao-principal"
+            type="button"
+          >
+            Salvar rascunho seguro
+          </button>
+
+        </div>
+
+
+        <p
+          id="mensagemCadastro"
+          class="mensagem"
+        >
+        </p>
+
+      </div>
+
+    </form>
+
+  </dialog>
+
+
+  <script>
+    let eventosCarregados = [];
+    let contextoCadastroSeguro = null;
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      function() {
+        registrarEventosDaTela();
+        carregarEventos();
+      }
+    );
+
+
+    function registrarEventosDaTela() {
+      document
+        .getElementById(
+          'botaoAtualizar'
+        )
+        .addEventListener(
+          'click',
+          carregarEventos
+        );
+
+      document
+        .getElementById(
+          'botaoNovoEvento'
+        )
+        .addEventListener(
+          'click',
+          abrirModalNovoEvento
+        );
+
+      document
+        .getElementById(
+          'botaoNovoEventoTopo'
+        )
+        .addEventListener(
+          'click',
+          abrirModalNovoEvento
+        );
+
+      document
+        .getElementById(
+          'botaoSalvarEvento'
+        )
+        .addEventListener(
+          'click',
+          salvarNovoEvento
+        );
+
+      document
+        .getElementById(
+          'campoUf'
+        )
+        .addEventListener(
+          'input',
+          function() {
+            this.value =
+              this.value
+                .toUpperCase()
+                .replace(
+                  /[^A-Z]/g,
+                  ''
+                )
+                .substring(
+                  0,
+                  2
+                );
+          }
+        );
+
+      document
+        .getElementById(
+          'campoOrigemComercial'
+        )
+        .addEventListener(
+          'change',
+          atualizarVisibilidadeComissionado
+        );
+    }
+
+
+    function carregarEventos() {
+      alterarCarregamento(
+        true
+      );
+
+      google.script.run
+        .withSuccessHandler(
+          function(resposta) {
+            preencherTelaEventos(
+              resposta
+            );
+
+            alterarCarregamento(
+              false
+            );
+          }
+        )
+        .withFailureHandler(
+          function(erro) {
+            mostrarErro(
+              erro.message ||
+              'Não foi possível carregar os eventos.'
+            );
+
+            alterarCarregamento(
+              false
+            );
+          }
+        )
+        .ctEventosPublicacaoListagemRapidaPROD();
+    }
+
+
+    function preencherTelaEventos(
+      resposta
+    ) {
+      eventosCarregados =
+        resposta.eventos || [];
+
+      preencherEventoAtivo(
+        resposta.eventoAtivo ||
+        null
+      );
+
+      preencherListaEventos(
+        eventosCarregados
+      );
+
+      const totalEventos =
+        Number(
+          resposta.total || 0
+        );
+
+      const publicados =
+        Number(
+          resposta.publicados || 0
+        );
+
+      definirTexto(
+        'resumoLista',
+        (
+          totalEventos === 1
+            ? '1 evento cadastrado'
+            : totalEventos +
+              ' eventos cadastrados'
+        ) +
+        ' • ' +
+        publicados +
+        (
+          publicados === 1
+            ? ' com vendas publicadas'
+            : ' com vendas publicadas'
+        )
+      );
+
+      document
+        .getElementById(
+          'conteudo'
+        )
+        .classList
+        .remove(
+          'oculto'
+        );
+
+      document
+        .getElementById(
+          'estadoErro'
+        )
+        .classList
+        .add(
+          'oculto'
+        );
+    }
+
+
+    function preencherEventoAtivo(
+      evento
+    ) {
+      const area =
+        document.getElementById(
+          'areaEventoAtivo'
+        );
+
+      if (!evento) {
+        area.classList.add(
+          'oculto'
+        );
+
+        return;
+      }
+
+      area.classList.remove(
+        'oculto'
+      );
+
+      definirTexto(
+        'eventoAtivoNome',
+        evento.nome ||
+        'Evento selecionado'
+      );
+
+      const detalhes = [
+        evento.data || '',
+        evento.horario || '',
+        evento.local || '',
+        evento.cidade || '',
+        evento.uf || ''
+      ]
+        .filter(
+          Boolean
+        )
+        .join(
+          ' • '
+        );
+
+      definirTexto(
+        'eventoAtivoDetalhes',
+        detalhes ||
+        'Informações não disponíveis'
+      );
+    }
+
+
+    function preencherListaEventos(
+      eventos
+    ) {
+      const area =
+        document.getElementById(
+          'listaEventos'
+        );
+
+      if (!eventos.length) {
+        area.innerHTML =
+          '<div class="sem-eventos">' +
+            '<h3>Nenhum evento cadastrado</h3>' +
+            '<p>Use o botão “Novo evento” para começar.</p>' +
+          '</div>';
+
+        return;
+      }
+
+      area.innerHTML =
+        eventos
+          .map(
+            criarCardEvento
+          )
+          .join('');
+    }
+
+
+    function criarCardEvento(
+      evento
+    ) {
+      const classeAtivo =
+        evento.ativo
+          ? ' ativo'
+          : '';
+
+      const classeStatus =
+        obterClasseStatus(
+          evento.status
+        );
+
+      const botaoAtivar =
+        evento.ativo
+          ? (
+              '<button ' +
+                'class="botao botao-verde" ' +
+                'type="button" ' +
+                'disabled' +
+              '>' +
+                'Selecionado para gestão' +
+              '</button>'
+            )
+          : (
+              '<button ' +
+                'class="botao botao-verde" ' +
+                'type="button" ' +
+                'onclick="ativarEvento(\'' +
+                  escaparAtributo(
+                    evento.id
+                  ) +
+                '\')"' +
+              '>' +
+                'Selecionar para gestão' +
+              '</button>'
+            );
+
+      const publicacao =
+        evento.publicacao ||
+        {};
+
+      const publicado =
+        publicacao.publicado ===
+        true;
+
+      const prontoPublicar =
+        publicacao.prontoPublicar ===
+        true;
+
+      const checkoutUrl =
+        String(
+          publicacao.checkoutUrl ||
+          ''
+        );
+
+      const botaoPublicacao =
+        publicado
+          ? (
+              '<button ' +
+                'class="botao botao-vermelho" ' +
+                'type="button" ' +
+                'onclick="fecharVendasEvento(\'' +
+                  escaparAtributo(
+                    evento.id
+                  ) +
+                '\')"' +
+              '>' +
+                'Fechar vendas' +
+              '</button>'
+            )
+          : (
+              '<button ' +
+                'class="botao botao-dourado" ' +
+                'type="button" ' +
+                'onclick="publicarEvento(\'' +
+                  escaparAtributo(
+                    evento.id
+                  ) +
+                '\')"' +
+                (
+                  prontoPublicar
+                    ? ''
+                    : ' title="Há pendências antes da publicação"'
+                ) +
+              '>' +
+                'Verificar e publicar vendas' +
+              '</button>'
+            );
+
+      const botoesCheckout =
+        publicado &&
+        checkoutUrl
+          ? (
+              '<button ' +
+                'class="botao botao-principal" ' +
+                'type="button" ' +
+                'onclick="abrirCheckoutEvento(\'' +
+                  escaparAtributo(
+                    checkoutUrl
+                  ) +
+                '\')"' +
+              '>' +
+                'Abrir checkout' +
+              '</button>' +
+
+              '<button ' +
+                'class="botao botao-secundario" ' +
+                'type="button" ' +
+                'onclick="copiarLinkCheckout(\'' +
+                  escaparAtributo(
+                    checkoutUrl
+                  ) +
+                '\')"' +
+              '>' +
+                'Copiar link' +
+              '</button>'
+            )
+          : '';
+
+      const botoesStatus =
+        criarBotoesStatus(
+          evento
+        );
+
+      const localCompleto = [
+        evento.local || '',
+        evento.cidade || '',
+        evento.uf || ''
+      ]
+        .filter(
+          Boolean
+        )
+        .join(
+          ' — '
+        );
+
+      return (
+        '<article class="evento-card' +
+          classeAtivo +
+        '">' +
+
+          '<div class="evento-cabecalho">' +
+
+            '<h3>' +
+              escaparHtml(
+                evento.nome ||
+                'Evento sem nome'
+              ) +
+            '</h3>' +
+
+            '<span class="badge ' +
+              classeStatus +
+            '">' +
+              escaparHtml(
+                evento.status ||
+                'RASCUNHO'
+              ) +
+            '</span>' +
+
+          '</div>' +
+
+          '<div class="evento-info">' +
+
+            '<div class="evento-info-item">' +
+              '<strong>Data</strong>' +
+              '<span>' +
+                escaparHtml(
+                  evento.data ||
+                  'Não informada'
+                ) +
+              '</span>' +
+            '</div>' +
+
+            '<div class="evento-info-item">' +
+              '<strong>Horário</strong>' +
+              '<span>' +
+                escaparHtml(
+                  evento.horario ||
+                  'Não informado'
+                ) +
+              '</span>' +
+            '</div>' +
+
+            '<div class="evento-info-item">' +
+              '<strong>Local</strong>' +
+              '<span>' +
+                escaparHtml(
+                  localCompleto ||
+                  'Não informado'
+                ) +
+              '</span>' +
+            '</div>' +
+
+            '<div class="evento-info-item">' +
+              '<strong>Capacidade</strong>' +
+              '<span>' +
+                Number(
+                  evento.capacidade || 0
+                ) +
+              '</span>' +
+            '</div>' +
+
+            '<div class="evento-info-item">' +
+              '<strong>Atualizado</strong>' +
+              '<span>' +
+                escaparHtml(
+                  evento.atualizadoEm ||
+                  '—'
+                ) +
+              '</span>' +
+            '</div>' +
+
+            '<div class="evento-info-item">' +
+              '<strong>Vendas online</strong>' +
+              '<span>' +
+                (
+                  publicado
+                    ? 'PUBLICADAS'
+                    : (
+                        prontoPublicar
+                          ? 'PRONTO PARA PUBLICAR'
+                          : 'COM PENDÊNCIAS'
+                      )
+                ) +
+              '</span>' +
+            '</div>' +
+
+          '</div>' +
+
+          '<div class="evento-id">' +
+            escaparHtml(
+              evento.id ||
+              ''
+            ) +
+          '</div>' +
+
+          '<div class="evento-acoes">' +
+            botaoAtivar +
+            botaoPublicacao +
+            botoesCheckout +
+            botoesStatus +
+          '</div>' +
+
+        '</article>'
+      );
+    }
+
+
+    function criarBotoesStatus(
+      evento
+    ) {
+      if (
+        evento.status ===
+        'CANCELADO'
+      ) {
+        return (
+          '<button ' +
+            'class="botao botao-secundario" ' +
+            'type="button" ' +
+            'onclick="alterarStatus(\'' +
+              escaparAtributo(
+                evento.id
+              ) +
+            '\', \'RASCUNHO\')"' +
+          '>' +
+            'Reabrir como rascunho' +
+          '</button>'
+        );
+      }
+
+      if (
+        evento.status ===
+        'ENCERRADO'
+      ) {
+        return (
+          '<button ' +
+            'class="botao botao-secundario" ' +
+            'type="button" ' +
+            'onclick="alterarStatus(\'' +
+              escaparAtributo(
+                evento.id
+              ) +
+            '\', \'RASCUNHO\')"' +
+          '>' +
+            'Reabrir como rascunho' +
+          '</button>'
+        );
+      }
+
+      return (
+        '<button ' +
+          'class="botao botao-secundario" ' +
+          'type="button" ' +
+          'onclick="alterarStatus(\'' +
+            escaparAtributo(
+              evento.id
+            ) +
+          '\', \'ENCERRADO\')"' +
+        '>' +
+          'Encerrar' +
+        '</button>' +
+
+        '<button ' +
+          'class="botao botao-vermelho" ' +
+          'type="button" ' +
+          'onclick="alterarStatus(\'' +
+            escaparAtributo(
+              evento.id
+            ) +
+          '\', \'CANCELADO\')"' +
+        '>' +
+          'Cancelar' +
+        '</button>'
+      );
+    }
+
+
+    function ativarEvento(
+      eventoId
+    ) {
+      if (
+        !confirm(
+          'Deseja selecionar este evento para gestão? Isso não altera a publicação dos outros eventos.'
+        )
+      ) {
+        return;
+      }
+
+      alterarCarregamento(
+        true
+      );
+
+      google.script.run
+        .withSuccessHandler(
+          function(resposta) {
+            alterarCarregamento(
+              false
+            );
+
+            alert(
+              resposta.mensagem ||
+              'Evento selecionado para gestão.'
+            );
+
+            carregarEventos();
+          }
+        )
+        .withFailureHandler(
+          function(erro) {
+            alterarCarregamento(
+              false
+            );
+
+            mostrarErro(
+              erro.message ||
+              'Não foi possível selecionar o evento para gestão.'
+            );
+          }
+        )
+        .selecionarEventoAtivo(
+          eventoId
+        );
+    }
+
+
+    function publicarEvento(
+      eventoId
+    ) {
+      if (
+        !confirm(
+          'Deseja publicar as vendas online deste evento? Outros eventos já publicados continuarão vendendo normalmente.'
+        )
+      ) {
+        return;
+      }
+
+      alterarCarregamento(
+        true
+      );
+
+      google.script.run
+        .withSuccessHandler(
+          function(resposta) {
+            alterarCarregamento(
+              false
+            );
+
+            if (
+              !resposta ||
+              resposta.sucesso !==
+                true
+            ) {
+              const pendencias =
+                resposta &&
+                Array.isArray(
+                  resposta.pendencias
+                )
+                  ? resposta.pendencias
+                  : (
+                      resposta &&
+                      resposta.publicacao &&
+                      Array.isArray(
+                        resposta.publicacao.pendencias
+                      )
+                        ? resposta.publicacao.pendencias
+                        : []
+                    );
+
+              alert(
+                (
+                  resposta &&
+                  resposta.mensagem
+                    ? resposta.mensagem
+                    : 'O evento ainda não está pronto para publicação.'
+                ) +
+                (
+                  pendencias.length
+                    ? '\n\n• ' +
+                      pendencias.join(
+                        '\n• '
+                      )
+                    : ''
+                )
+              );
+
+              carregarEventos();
+              return;
+            }
+
+            alert(
+              resposta.mensagem ||
+              'Vendas publicadas com sucesso.'
+            );
+
+            carregarEventos();
+          }
+        )
+        .withFailureHandler(
+          function(erro) {
+            alterarCarregamento(
+              false
+            );
+
+            mostrarErro(
+              erro.message ||
+              'Não foi possível publicar as vendas.'
+            );
+          }
+        )
+        .ctEventosPublicacaoPublicarPROD(
+          eventoId
+        );
+    }
+
+
+    function fecharVendasEvento(
+      eventoId
+    ) {
+      if (
+        !confirm(
+          'Deseja fechar as vendas online somente deste evento? Os demais eventos publicados continuarão ativos.'
+        )
+      ) {
+        return;
+      }
+
+      alterarCarregamento(
+        true
+      );
+
+      google.script.run
+        .withSuccessHandler(
+          function(resposta) {
+            alterarCarregamento(
+              false
+            );
+
+            alert(
+              resposta.mensagem ||
+              'Vendas online fechadas.'
+            );
+
+            carregarEventos();
+          }
+        )
+        .withFailureHandler(
+          function(erro) {
+            alterarCarregamento(
+              false
+            );
+
+            mostrarErro(
+              erro.message ||
+              'Não foi possível fechar as vendas deste evento.'
+            );
+          }
+        )
+        .ctEventosPublicacaoFecharPROD(
+          eventoId
+        );
+    }
+
+
+    function abrirCheckoutEvento(
+      url
+    ) {
+      const destino =
+        String(
+          url || ''
+        ).trim();
+
+      if (!destino) {
+        return;
+      }
+
+      window.open(
+        destino,
+        '_blank',
+        'noopener'
+      );
+    }
+
+
+    function copiarLinkCheckout(
+      url
+    ) {
+      const destino =
+        String(
+          url || ''
+        ).trim();
+
+      if (!destino) {
+        return;
+      }
+
+      if (
+        navigator.clipboard &&
+        navigator.clipboard.writeText
+      ) {
+        navigator.clipboard
+          .writeText(
+            destino
+          )
+          .then(
+            function() {
+              alert(
+                'Link do checkout copiado.'
+              );
+            }
+          )
+          .catch(
+            function() {
+              prompt(
+                'Copie o link do checkout:',
+                destino
+              );
+            }
+          );
+
+        return;
+      }
+
+      prompt(
+        'Copie o link do checkout:',
+        destino
+      );
+    }
+
+
+    function alterarStatus(
+      eventoId,
+      novoStatus
+    ) {
+      const mensagem =
+        novoStatus === 'CANCELADO'
+          ? 'Deseja cancelar este evento?'
+          : (
+              novoStatus === 'ENCERRADO'
+                ? 'Deseja encerrar este evento?'
+                : 'Deseja alterar o status deste evento?'
+            );
+
+      if (
+        !confirm(
+          mensagem
+        )
+      ) {
+        return;
+      }
+
+      alterarCarregamento(
+        true
+      );
+
+      google.script.run
+        .withSuccessHandler(
+          function(resposta) {
+            alterarCarregamento(
+              false
+            );
+
+            alert(
+              resposta.mensagem ||
+              'Status atualizado.'
+            );
+
+            carregarEventos();
+          }
+        )
+        .withFailureHandler(
+          function(erro) {
+            alterarCarregamento(
+              false
+            );
+
+            mostrarErro(
+              erro.message ||
+              'Não foi possível atualizar o status.'
+            );
+          }
+        )
+        .atualizarStatusEvento(
+          eventoId,
+          novoStatus
+        );
+    }
+
+
+    function abrirModalNovoEvento() {
+      limparFormularioEvento();
+
+      const modal =
+        document.getElementById(
+          'modalNovoEvento'
+        );
+
+      modal.showModal();
+
+      carregarContextoCadastroSeguro();
+
+      setTimeout(
+        function() {
+          document
+            .getElementById(
+              'campoNome'
+            )
+            .focus();
+        },
+        100
+      );
+    }
+
+
+    function carregarContextoCadastroSeguro() {
+
+      const seletor =
+        document.getElementById(
+          'campoProdutorId'
+        );
+
+      seletor.innerHTML =
+        '<option value="">Carregando produtores...</option>';
+
+      seletor.disabled =
+        true;
+
+      google.script.run
+        .withSuccessHandler(
+          function(resposta) {
+
+            contextoCadastroSeguro =
+              resposta ||
+              null;
+
+            const produtores =
+              resposta &&
+              Array.isArray(
+                resposta.produtores
+              )
+                ? resposta.produtores
+                : [];
+
+            seletor.innerHTML =
+              '<option value="">Selecione o produtor responsável</option>' +
+              produtores
+                .map(
+                  function(produtor) {
+                    return (
+                      '<option value="' +
+                        escaparHtml(
+                          produtor.produtorId
+                        ) +
+                      '">' +
+                        escaparHtml(
+                          produtor.nomeFantasia ||
+                          produtor.produtorId
+                        ) +
+                      '</option>'
+                    );
+                  }
+                )
+                .join('');
+
+            seletor.disabled =
+              false;
+
+            if (
+              produtores.length ===
+              1
+            ) {
+              seletor.value =
+                produtores[0]
+                  .produtorId;
+            }
+          }
+        )
+        .withFailureHandler(
+          function(erro) {
+
+            seletor.innerHTML =
+              '<option value="">Não foi possível carregar produtores</option>';
+
+            mostrarMensagemCadastro(
+              erro &&
+              erro.message
+                ? erro.message
+                : 'Não foi possível carregar os produtores.',
+              false
+            );
+          }
+        )
+        .ctEventosCadastroSeguroContextoPROD();
+    }
+
+
+    function atualizarVisibilidadeComissionado() {
+
+      const origem =
+        obterValor(
+          'campoOrigemComercial'
+        );
+
+      const grupo =
+        document.getElementById(
+          'grupoComissionado'
+        );
+
+      grupo.style.display =
+        origem ===
+          'COMISSIONADO'
+          ? ''
+          : 'none';
+
+      if (
+        origem !==
+        'COMISSIONADO'
+      ) {
+        document
+          .getElementById(
+            'campoComissionadoReferencia'
+          )
+          .value =
+            '';
+      }
+    }
+
+
+    function salvarNovoEvento() {
+      const dados = {
+        nome:
+          obterValor(
+            'campoNome'
+          ),
+
+        data:
+          obterValor(
+            'campoData'
+          ),
+
+        horarioInicio:
+          obterValor(
+            'campoHorarioInicio'
+          ),
+
+        horarioFim:
+          obterValor(
+            'campoHorarioFim'
+          ),
+
+        local:
+          obterValor(
+            'campoLocal'
+          ),
+
+        endereco:
+          obterValor(
+            'campoEndereco'
+          ),
+
+        cidade:
+          obterValor(
+            'campoCidade'
+          ),
+
+        uf:
+          obterValor(
+            'campoUf'
+          ),
+
+        capacidade:
+          Number(
+            obterValor(
+              'campoCapacidade'
+            ) || 0
+          ),
+
+        produtorId:
+          obterValor(
+            'campoProdutorId'
+          ),
+
+        origemComercial:
+          obterValor(
+            'campoOrigemComercial'
+          ) ||
+          'PRODUTOR',
+
+        comissionadoReferencia:
+          obterValor(
+            'campoComissionadoReferencia'
+          )
+      };
+
+      if (!dados.produtorId) {
+        mostrarMensagemCadastro(
+          'Selecione o produtor responsável.',
+          false
+        );
+        return;
+      }
+
+      if (!dados.nome) {
+        mostrarMensagemCadastro(
+          'Informe o nome do evento.',
+          false
+        );
+        return;
+      }
+
+      if (!dados.data) {
+        mostrarMensagemCadastro(
+          'Informe a data do evento.',
+          false
+        );
+        return;
+      }
+
+      if (!dados.local) {
+        mostrarMensagemCadastro(
+          'Informe o local do evento.',
+          false
+        );
+        return;
+      }
+
+      if (
+        dados.origemComercial ===
+          'COMISSIONADO' &&
+        !dados.comissionadoReferencia
+      ) {
+        mostrarMensagemCadastro(
+          'Informe a referência do comissionado/indicação.',
+          false
+        );
+        return;
+      }
+
+      const botao =
+        document.getElementById(
+          'botaoSalvarEvento'
+        );
+
+      botao.disabled =
+        true;
+
+      botao.innerText =
+        'Salvando rascunho...';
+
+      mostrarMensagemCadastro(
+        'Aguarde. Vinculando produtor e criando governança do evento...',
+        true
+      );
+
+      google.script.run
+        .withSuccessHandler(
+          function(resposta) {
+
+            botao.disabled =
+              false;
+
+            botao.innerText =
+              'Salvar rascunho seguro';
+
+            mostrarMensagemCadastro(
+              resposta.mensagem ||
+              'Evento cadastrado como rascunho.',
+              true
+            );
+
+            setTimeout(
+              function() {
+                document
+                  .getElementById(
+                    'modalNovoEvento'
+                  )
+                  .close();
+
+                carregarEventos();
+              },
+              1000
+            );
+          }
+        )
+        .withFailureHandler(
+          function(erro) {
+
+            botao.disabled =
+              false;
+
+            botao.innerText =
+              'Salvar rascunho seguro';
+
+            mostrarMensagemCadastro(
+              erro &&
+              erro.message
+                ? erro.message
+                : 'Não foi possível cadastrar o evento.',
+              false
+            );
+          }
+        )
+        .ctEventosCadastroSeguroCriarPROD(
+          dados
+        );
+    }
+
+
+    function limparFormularioEvento() {
+      [
+        'campoNome',
+        'campoData',
+        'campoHorarioInicio',
+        'campoHorarioFim',
+        'campoLocal',
+        'campoEndereco',
+        'campoCidade',
+        'campoUf',
+        'campoCapacidade',
+        'campoComissionadoReferencia'
+      ].forEach(
+        function(id) {
+          document
+            .getElementById(
+              id
+            )
+            .value =
+              '';
+        }
+      );
+
+      document
+        .getElementById(
+          'campoProdutorId'
+        )
+        .innerHTML =
+          '<option value="">Carregando produtores...</option>';
+
+      document
+        .getElementById(
+          'campoOrigemComercial'
+        )
+        .value =
+          'PRODUTOR';
+
+      atualizarVisibilidadeComissionado();
+
+      const mensagem =
+        document.getElementById(
+          'mensagemCadastro'
+        );
+
+      mensagem.innerText =
+        '';
+
+      mensagem.className =
+        'mensagem';
+    }
+
+
+    function converterDataFormulario(
+      valor
+    ) {
+      const texto =
+        String(
+          valor || ''
+        ).trim();
+
+      const encontrado =
+        texto.match(
+          /^(\d{4})-(\d{2})-(\d{2})$/
+        );
+
+      if (
+        !encontrado
+      ) {
+        return texto;
+      }
+
+      return (
+        encontrado[3] +
+        '/' +
+        encontrado[2] +
+        '/' +
+        encontrado[1]
+      );
+    }
+
+
+    function obterClasseStatus(
+      status
+    ) {
+      const texto =
+        String(
+          status || ''
+        ).toUpperCase();
+
+      if (
+        texto === 'ATIVO'
+      ) {
+        return 'badge-status-ativo';
+      }
+
+      if (
+        texto === 'ENCERRADO'
+      ) {
+        return 'badge-encerrado';
+      }
+
+      if (
+        texto === 'CANCELADO'
+      ) {
+        return 'badge-cancelado';
+      }
+
+      return 'badge-rascunho';
+    }
+
+
+    function mostrarMensagemCadastro(
+      mensagem,
+      sucesso
+    ) {
+      const area =
+        document.getElementById(
+          'mensagemCadastro'
+        );
+
+      area.innerText =
+        (
+          sucesso
+            ? '✅ '
+            : '❌ '
+        ) +
+        mensagem;
+
+      area.className =
+        'mensagem ' +
+        (
+          sucesso
+            ? 'mensagem-sucesso'
+            : 'mensagem-erro'
+        );
+    }
+
+
+    function mostrarErro(
+      mensagem
+    ) {
+      const area =
+        document.getElementById(
+          'estadoErro'
+        );
+
+      area.innerText =
+        '❌ ' +
+        mensagem;
+
+      area.classList.remove(
+        'oculto'
+      );
+    }
+
+
+    function alterarCarregamento(
+      ativo
+    ) {
+      const area =
+        document.getElementById(
+          'estadoCarregando'
+        );
+
+      document
+        .getElementById(
+          'botaoAtualizar'
+        )
+        .disabled =
+          ativo;
+
+      if (
+        ativo
+      ) {
+        area.classList.remove(
+          'oculto'
+        );
+      } else {
+        area.classList.add(
+          'oculto'
+        );
+      }
+    }
+
+
+    function obterValor(
+      id
+    ) {
+      return String(
+        document
+          .getElementById(
+            id
+          )
+          .value || ''
+      ).trim();
+    }
+
+
+    function definirTexto(
+      id,
+      valor
+    ) {
+      document
+        .getElementById(
+          id
+        )
+        .innerText =
+          valor === null ||
+          typeof valor ===
+            'undefined'
+            ? ''
+            : valor;
+    }
+
+
+    function escaparAtributo(
+      texto
+    ) {
+      return String(
+        texto || ''
+      )
+        .replace(
+          /\\/g,
+          '\\\\'
+        )
+        .replace(
+          /'/g,
+          "\\'"
+        );
+    }
+
+
+    function escaparHtml(
+      texto
+    ) {
+      return String(
+        texto || ''
+      )
+        .replace(
+          /&/g,
+          '&amp;'
+        )
+        .replace(
+          /</g,
+          '&lt;'
+        )
+        .replace(
+          />/g,
+          '&gt;'
+        )
+        .replace(
+          /"/g,
+          '&quot;'
+        )
+        .replace(
+          /'/g,
+          '&#039;'
+        );
+    }
+  </script>
+
+</body>
+</html>
