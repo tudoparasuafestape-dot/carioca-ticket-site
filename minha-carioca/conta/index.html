@@ -110,7 +110,7 @@ try{
   var pu=new URL(String(pedido.link||''),location.origin);
   var pp=String(pu.searchParams.get('pedido')||pedido.pedidoId||'').trim();
   var pt=String(pu.searchParams.get('token')||'').trim();
-  a.href='/minha-carioca/ingressos/?pedido='+encodeURIComponent(pp)+'&token='+encodeURIComponent(pt);
+  a.href='/minha-carioca/ingressos/?v=20260919-2158&pedido='+encodeURIComponent(pp)+'&token='+encodeURIComponent(pt);
 }catch(_){
   a.href=String(pedido.link||'#');
 }
