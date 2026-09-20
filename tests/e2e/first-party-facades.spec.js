@@ -450,4 +450,18 @@ test.describe('Fachadas first-party em homologacao', () => {
     expect(JSON.stringify(cached)).not.toContain('PED-E2E');
   });
 
+
+  test('Eventos v2 bloqueia acesso sem sessao do produtor', async ({ page }) => {
+    await page.goto('/eventos-v2/', { waitUntil: 'domcontentloaded' });
+
+    await expect(page.getByRole('heading', { name: /^Eventos$/i })).toBeVisible();
+    await expect(page.locator('#estadoErro')).toContainText(/Acesso restrito|Portal do Produtor/i, {
+      timeout: 15000
+    });
+    await expect(page.locator('#conteudo')).toHaveClass(/oculto/);
+    await expect(page.locator('body')).not.toContainText('\\n');
+    expect(new URL(page.url()).pathname).toBe('/eventos-v2/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
 });
