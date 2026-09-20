@@ -480,4 +480,20 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expectNoTechnicalVisibleLinks(page);
   });
 
+
+  test('CRM oficial exige sessao e permissao', async ({ page }) => {
+    await page.goto('/crm/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.locator('#gate')).toBeVisible();
+    await expect(page.locator('#gateDenied')).toBeVisible();
+    await expect(page.locator('body')).toContainText(/Público & Clientes|CRM/i);
+    await expect(page.locator('body')).toContainText(/Portal do Produtor|Acesso restrito/i);
+    await expect(page.locator('body')).not.toContainText('\\n');
+
+    expect(new URL(page.url()).pathname).toBe('/crm/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
 });

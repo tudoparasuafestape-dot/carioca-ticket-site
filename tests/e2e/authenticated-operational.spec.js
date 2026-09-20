@@ -69,7 +69,8 @@ function centralContext(token) {
           'VENDAS',
           'BAR',
           'EVENTOS',
-          'FORNECEDORES'
+          'FORNECEDORES',
+          'CRM'
         ]
       }
     ],
@@ -81,7 +82,8 @@ function centralContext(token) {
       'VENDAS',
       'BAR',
       'EVENTOS',
-      'FORNECEDORES'
+      'FORNECEDORES',
+      'CRM'
     ]
   };
 }
@@ -354,6 +356,73 @@ function fornecedoresListFixture() {
   };
 }
 
+
+function crmContextFixture() {
+  return {
+    sucesso: true,
+    produtores: [
+      {
+        id: 'PROD-E2E',
+        nomeFantasia: 'Produtor Homologacao',
+        perfil: 'ADMINISTRADOR',
+        eventos: [
+          {
+            id: EVENT_ID,
+            nome: 'Roda de Samba Estilo Carioca',
+            data: '11/10/2026',
+            status: 'ATIVO'
+          }
+        ]
+      }
+    ],
+    higieneNomes: null,
+    versaoModulo: '1.0.0'
+  };
+}
+
+function crmSearchFixture() {
+  return {
+    sucesso: true,
+    produtorId: 'PROD-E2E',
+    eventoId: EVENT_ID,
+    termo: '',
+    total: 1,
+    clientes: [
+      {
+        clienteId: 'CLI-E2E',
+        nome: 'Cliente Homologacao',
+        whatsapp: '81999990001',
+        email: 'cliente@example.invalid',
+        cidade: 'Jaboatao dos Guararapes',
+        uf: 'PE',
+        status: 'ATIVO',
+        totalEventos: 1,
+        totalIngressos: 2,
+        totalCompras: 1,
+        totalAcompanhamentos: 1,
+        valorTotalNumero: 50,
+        valorTotal: 'R$ 50,00',
+        totalRelacoes: 2,
+        ultimaMovimentacao: '20/09/2026 09:00:00',
+        relacoes: [
+          {
+            relacaoId: 'REL-E2E',
+            eventoId: EVENT_ID,
+            eventoNome: 'Roda de Samba Estilo Carioca',
+            vendaId: 'VENDA-E2E',
+            ingressoId: 'ING-E2E',
+            codigoIngresso: 'CT-E2E',
+            papel: 'COMPRADOR',
+            valorAtribuido: 'R$ 50,00',
+            status: 'ATIVA'
+          }
+        ]
+      }
+    ],
+    versaoModulo: '1.0.0'
+  };
+}
+
 async function installMock(page, state) {
   await page.route('https://script.google.com/**', async route => {
     const request = route.request();
@@ -494,6 +563,18 @@ async function installMock(page, state) {
           case 'ctFornecedoresGestaoRemoverVinculoPROD':
             state.supplierMutationCalls += 1;
             throw new Error('Teste nao deve alterar Fornecedores.');
+
+          case 'ctPublicoClientesCarregarPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            resultado = crmContextFixture();
+            break;
+
+          case 'ctPublicoClientesBuscarPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe('PROD-E2E');
+            expect(String(args[2] || '')).toBe(EVENT_ID);
+            resultado = crmSearchFixture();
+            break;
 
           case 'logoutUsuarioCT2':
             resultado = { sucesso: true };
@@ -646,6 +727,11 @@ test.describe('Jornada operacional autenticada', () => {
       new RegExp('/fornecedores/\\?evento=' + EVENT_ID)
     );
     await expect(page.locator('#mFornecedores')).toHaveAttribute('aria-disabled', 'false');
+    await expect(page.locator('#mCRM')).toHaveAttribute(
+      'href',
+      new RegExp('/crm/\\?evento=' + EVENT_ID)
+    );
+    await expect(page.locator('#mCRM')).toHaveAttribute('aria-disabled', 'false');
 
     await expect(page.locator('#mCheckin')).toHaveAttribute('href', /\/checkin\//);
     await expect(page.locator('#mConsulta')).toHaveAttribute('href', /\/consulta\//);
@@ -706,6 +792,23 @@ test.describe('Jornada operacional autenticada', () => {
     await expectNoTechnicalVisibleLinks(page);
     expect(state.supplierMutationCalls).toBe(0);
 
+    await page.getByRole('link', { name: /Central Mobile/i }).click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
+    await page.locator('#mCRM').click();
+    await expect(page).toHaveURL(/\/crm\/\?evento=/);
+    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Cliente Homologacao').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#count')).toContainText('1 cliente');
+    await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute('href', '/central/');
+    await expectNoTechnicalVisibleLinks(page);
+
+    await page.getByRole('button', { name: /Ver ficha/i }).click();
+    await expect(page.locator('#drawerBack')).toHaveClass(/show/);
+    await expect(page.locator('#drawerBody')).toContainText('CT-E2E');
+
+    await page.getByRole('button', { name: '✕' }).click();
     await page.getByRole('link', { name: /Central Mobile/i }).click();
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
