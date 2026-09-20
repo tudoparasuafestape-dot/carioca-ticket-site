@@ -18,7 +18,7 @@ async function assertNoForbiddenVisibleLinks(page) {
 }
 
 test.describe('Entradas operacionais sem sessao', () => {
-  for (const route of ['/central/', '/produtor/', '/checkin/', '/consulta/', '/vendas/', '/bar/', '/eventos-v2/', '/fornecedores/', '/crm/']) {
+  for (const route of ['/central/', '/produtor/', '/checkin/', '/consulta/', '/vendas/', '/bar/', '/eventos-v2/', '/fornecedores/', '/crm/', '/financeiro/', '/relatorios/']) {
     test(`${route} permanece no dominio oficial e nao quebra sem sessao`, async ({ page }) => {
       const errors = [];
       page.on('response', response => {
