@@ -91,7 +91,26 @@ var meta=[];if(u.emailMascarado)meta.push(u.emailMascarado);if(u.whatsappMascara
 var out=e('button','logout','Sair');out.type='button';head.append(left,out);app.append(head);if(msg)app.append(e('p','msg ok',msg));
 app.append(e('h2','','Meus ingressos'));var list=e('div','list');
 if(!arr.length)list.append(e('div','empty','Nenhuma compra concluída foi localizada para esta conta.'));
-arr.forEach(function(x){var it=e('article','item');it.append(e('div','ey','Ingresso Carioca Ticket'),e('h3','',x.eventoNome||'Evento Carioca Ticket'));var d=[];if(x.data)d.push(x.data);if(x.horario)d.push(x.horario);if(x.local)d.push(x.local);if(x.cidade)d.push(x.cidade+(x.uf?' - '+x.uf:''));it.append(e('p','',d.join(' · ')));var row=e('div','row');row.append(e('span','small',(x.quantidade||0)+(Number(x.quantidade)===1?' acesso':' acessos')));var a=e('a','open','Abrir ingressos');a.href=String(x.link||'#');row.append(a);it.append(row);list.append(it)});app.append(list);security();
+var grupos={};
+arr.forEach(function(x){
+var chave=String(x.eventoId||'')||[x.eventoNome||'',x.data||'',x.local||''].join('|');
+if(!grupos[chave])grupos[chave]={evento:x,itens:[],total:0};
+grupos[chave].itens.push(x);grupos[chave].total+=Number(x.quantidade||0);
+});
+Object.keys(grupos).forEach(function(chave){
+var g=grupos[chave],x=g.evento||{},it=e('article','item');
+it.append(e('div','ey','Ingresso Carioca Ticket'),e('h3','',x.eventoNome||'Evento Carioca Ticket'));
+var d=[];if(x.data)d.push(x.data);if(x.horario)d.push(x.horario);if(x.local)d.push(x.local);if(x.cidade)d.push(x.cidade+(x.uf?' - '+x.uf:''));
+it.append(e('p','',d.join(' · ')));
+var resumo=e('div','row');resumo.append(e('strong','',g.total+(g.total===1?' ingresso':' ingressos')));resumo.append(e('span','small',g.itens.length+(g.itens.length===1?' compra confirmada':' compras confirmadas')));it.append(resumo);
+g.itens.forEach(function(pedido,idx){
+var linha=e('div','row'),rotulo=e('span','small','Ingresso '+(idx+1)+' · '+(Number(pedido.quantidade||0)||0)+(Number(pedido.quantidade)===1?' acesso':' acessos'));
+var a=e('a','open',Number(pedido.quantidade)===1?'Abrir ingresso':'Abrir ingressos');a.href=String(pedido.link||'#');
+linha.append(rotulo,a);it.append(linha);
+});
+list.append(it);
+});
+app.append(list);security();
 out.onclick=function(){localStorage.removeItem(STORE);sessionStorage.clear();login('Sessão encerrada.')}
 }
 
