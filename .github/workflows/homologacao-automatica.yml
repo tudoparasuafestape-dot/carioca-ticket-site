@@ -21,19 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Baixar codigo
-        uses: actions/checkout@v4
-
-      - name: Configurar Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Validar rotas e contratos protegidos
         run: node tests/contracts.mjs
 
-  branch-e2e:
-    name: Branch E2E ${{ matrix.viewport }}
+  publico-producao:
+    name: Publico homologado ${{ matrix.viewport }}
     needs: contratos
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -41,95 +37,117 @@ jobs:
       fail-fast: false
       matrix:
         viewport: [desktop, mobile]
-
     steps:
-      - name: Baixar codigo
-        uses: actions/checkout@v4
-
-      - name: Configurar Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Instalar Playwright
         run: |
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
-
-      - name: Subir branch localmente
-        run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/ct-http.log 2>&1 &
-          echo $! > /tmp/ct-http.pid
-          for i in {1..20}; do
-            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
-            sleep 1
-          done
-          cat /tmp/ct-http.log
-          exit 1
-
-      - name: Homologar codigo da branch
-        env:
-          CT_BASE_URL: http://127.0.0.1:4173
-          CT_EXPECTED_HOST: 127.0.0.1
-          CT_BRANCH_MODE: '1'
-        run: |
-          if [ "${{ matrix.viewport }}" = "desktop" ]; then
-            npx playwright test --project=desktop-chromium
-          else
-            npx playwright test --project=mobile-chromium
-          fi
-
-      - name: Guardar evidencias da branch
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: branch-evidencias-${{ matrix.viewport }}
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 14
-
-  producao-e2e:
-    name: Producao E2E ${{ matrix.viewport }}
-    needs: contratos
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        viewport: [desktop, mobile]
-
-    steps:
-      - name: Baixar codigo
-        uses: actions/checkout@v4
-
-      - name: Configurar Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Instalar Playwright
-        run: |
-          npm install --no-audit --no-fund
-          npx playwright install --with-deps chromium
-
-      - name: Homologar site publicado
+      - name: Testar jornada publica publicada
         env:
           CT_BASE_URL: https://cariocaticket.com.br
           CT_EXPECTED_HOST: cariocaticket.com.br
           CT_BRANCH_MODE: '0'
         run: |
           if [ "${{ matrix.viewport }}" = "desktop" ]; then
-            npx playwright test --project=desktop-chromium
+            npx playwright test tests/e2e/public-journey.spec.js --project=desktop-chromium
           else
-            npx playwright test --project=mobile-chromium
+            npx playwright test tests/e2e/public-journey.spec.js --project=mobile-chromium
           fi
-
-      - name: Guardar evidencias de producao
+      - name: Guardar evidencias
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: producao-evidencias-${{ matrix.viewport }}
+          name: publico-producao-${{ matrix.viewport }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  operacional-producao:
+    name: Operacional publicado ${{ matrix.viewport }}
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Auditar entradas operacionais publicadas
+        env:
+          CT_BASE_URL: https://cariocaticket.com.br
+          CT_EXPECTED_HOST: cariocaticket.com.br
+        run: |
+          if [ "${{ matrix.viewport }}" = "desktop" ]; then
+            npx playwright test tests/e2e/operational-entry.spec.js --project=desktop-chromium
+          else
+            npx playwright test tests/e2e/operational-entry.spec.js --project=mobile-chromium
+          fi
+      - name: Guardar evidencias
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operacional-producao-${{ matrix.viewport }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  facadas-branch:
+    name: Facadas first-party branch ${{ matrix.viewport }}
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Subir codigo da branch localmente
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/ct-http.log 2>&1 &
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/ct-http.log
+          exit 1
+      - name: Testar facadas sem tocar producao
+        env:
+          CT_BASE_URL: http://127.0.0.1:4173
+          CT_EXPECTED_HOST: 127.0.0.1
+          CT_BRANCH_MODE: '1'
+        run: |
+          if [ "${{ matrix.viewport }}" = "desktop" ]; then
+            npx playwright test tests/e2e/first-party-facades.spec.js --project=desktop-chromium
+          else
+            npx playwright test tests/e2e/first-party-facades.spec.js --project=mobile-chromium
+          fi
+      - name: Guardar evidencias
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: facadas-branch-${{ matrix.viewport }}
           path: |
             playwright-report/
             test-results/
