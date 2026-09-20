@@ -1014,6 +1014,27 @@ async function expectNoTechnicalVisibleLinks(page) {
 test.describe('Jornada operacional autenticada', () => {
   test.skip(!BRANCH_MODE, 'Executa localmente na branch sem usar credenciais reais.');
 
+  test('Cadastro do produtor preserva codigo de indicacao sem criar conta', async ({ page }) => {
+    const state = {
+      token: 'CT-E2E-TOKEN-NAO-REAL',
+      transactionCalls: 0,
+      barMutationCalls: 0,
+      eventMutationCalls: 0,
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0
+    };
+
+    await installMock(page, state);
+    await page.goto('/produtor/?ref=PARCEIROE2E', { waitUntil: 'domcontentloaded' });
+
+    await expect(page.locator('#showRegisterButton')).toBeVisible({ timeout: 15000 });
+    await page.locator('#showRegisterButton').click();
+    await expect(page.locator('#registerAuthView')).toBeVisible();
+    await expect(page.locator('#registerReferralCode')).toHaveValue('PARCEIROE2E');
+    await expect(page.locator('#registerReferralHint')).toBeVisible();
+    await expect(page.locator('#registerReferralHint')).toContainText('Parceiro Carioca Ticket');
+  });
+
   test('Portal -> Central -> Vendas -> Bar -> voltar -> logout sem transacao', async ({ page }) => {
     const state = {
       token: 'CT-E2E-TOKEN-NAO-REAL',
