@@ -284,7 +284,7 @@ document.getElementById('custoForm').addEventListener('submit',function(e){e.pre
 document.getElementById('closeForm').addEventListener('submit',function(e){e.preventDefault();var d=formObject(e.currentTarget);var financeiro={dinheiro:Number(d.dinheiro||0),pix:Number(d.pix||0),debito:Number(d.debito||0),credito:Number(d.credito||0),outros:Number(d.outros||0)};mutate('ctCariocaBarFecharSeguraPROD',[state.token,state.eventoId,d.responsavel,d.observacao,financeiro],'Bar fechado com sucesso.','ATENÇÃO: confirma o fechamento do Bar deste evento? Após fechar, alterações ficam bloqueadas até uma reabertura auditável.')});
 document.getElementById('reopenForm').addEventListener('submit',function(e){e.preventDefault();var d=formObject(e.currentTarget);mutate('ctCariocaBarReabrirSeguraPROD',[state.token,state.eventoId,d.responsavel,d.motivo],'Bar reaberto.','Confirma a reabertura auditável do Bar?')});
 document.getElementById('refresh').addEventListener('click',load);
-document.getElementById('logout').addEventListener('click',async function(){var token=state.token;clearSession();state.token='';try{await rpc('logoutUsuarioCT2',[token])}catch(_){}location.replace('/produtor/')});
+document.getElementById('logout').addEventListener('click',async function(){var token=state.token;try{await rpc('logoutUsuarioCT2',[token])}catch(_){}clearSession();state.token='';location.replace('/produtor/')});
 function start(){
   var session=readSession();state.eventoId=eventFromUrl();
   if(!session||!session.token){deny('Entre no Portal do Produtor para acessar o Carioca Bar.');return}
