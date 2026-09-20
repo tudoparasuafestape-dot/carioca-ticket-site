@@ -1330,8 +1330,11 @@
     =========================================================
     */
     function inicializarCentralVendasPorUrl() {
-      if(window.__CT_VENDAS_SESSAO_OK__!==true){
-        window.location.replace('/produtor/');
+      if(window.__CT_COMISSIONADO_SESSAO_OK__!==true){
+        mostrarCarregamento(false);
+        mostrarErroInicial(
+          'Acesso restrito. Entre no Portal do Produtor para acessar suas vendas.'
+        );
         return;
       }
       if (
