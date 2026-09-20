@@ -1,11 +1,11 @@
 const { test, expect } = require('@playwright/test');
 
-const OFFICIAL_HOST = 'cariocaticket.com.br';
+const EXPECTED_HOST = process.env.CT_EXPECTED_HOST || 'cariocaticket.com.br';
 const FORBIDDEN_HOSTS = ['script.google.com', 'googleusercontent.com', 'github.io'];
 
 async function assertOfficial(page) {
   const host = new URL(page.url()).hostname;
-  expect(host).toBe(OFFICIAL_HOST);
+  expect(host).toBe(EXPECTED_HOST);
   for (const forbidden of FORBIDDEN_HOSTS) {
     expect(page.url()).not.toContain(forbidden);
   }
