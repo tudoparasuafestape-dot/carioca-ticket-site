@@ -32,7 +32,7 @@
     </div>
   </div>
   <iframe id="app" title="Consultar ingressos" ></iframe>
-  <a id="fallback" class="fallback" href="#" target="_blank" rel="noopener">Abrir diretamente</a>
+  <a id="fallback" class="fallback" href="/central/">Voltar à Central Mobile</a>
   <script>
     const p=new URLSearchParams(location.search);p.delete('page');
    const q=p.toString();
@@ -41,7 +41,7 @@
     const loading=document.getElementById('loading');
     const fallback=document.getElementById('fallback');
     frame.src=destino;
-    fallback.href=destino;
+    fallback.href="/central/";
     let carregou=false;
     frame.addEventListener('load',()=>{
       carregou=true;
