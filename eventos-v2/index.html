@@ -806,7 +806,7 @@
     args=Array.isArray(args)?args:[];
 
     if(!token){
-      throw new Error('CT_EVENTOS_SESSAO_AUSENTE');
+      throw new Error('Acesso restrito. Entre no Portal do Produtor para gerenciar eventos.');
     }
 
     switch(String(method||'')){
@@ -948,6 +948,13 @@
 
 
         <div class="topo-acoes">
+
+          <a
+            href="/central/"
+            style="display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 12px;border:1px solid #d8d8d8;border-radius:10px;background:#fff;color:#333;text-decoration:none;font-size:12px;font-weight:bold;"
+          >
+            ← Central Mobile
+          </a>
 
           <button
             id="botaoAtualizar"
