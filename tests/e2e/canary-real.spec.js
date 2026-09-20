@@ -56,9 +56,10 @@ test.describe('Canario real first-party', () => {
     await expect(page.getByText(/^PIX$/)).toBeVisible();
 
     const typeSelect = page.locator('#typeSelect');
-    await expect(typeSelect.locator('option')).toHaveCount(3, { timeout: 30000 }).catch(async () => {
-      await expect(typeSelect.locator('option')).not.toHaveCount(1);
-    });
+    await expect.poll(
+      () => typeSelect.locator('option').count(),
+      { timeout: 30000 }
+    ).toBeGreaterThan(1);
 
     // Nao clicamos em pagar. Este canario somente valida leitura/catalogo.
     await expect(page.locator('#payButton')).toBeVisible();
