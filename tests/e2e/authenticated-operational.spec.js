@@ -172,6 +172,84 @@ function vendasFixture() {
   };
 }
 
+
+function barFixture() {
+  return {
+    sucesso: true,
+    autenticado: true,
+    autorizado: true,
+    versao: '1.6.0',
+    evento: {
+      id: EVENT_ID,
+      nome: 'Roda de Samba Estilo Carioca',
+      data: '11/10/2026',
+      horario: '15h às 22h',
+      local: 'Vevets Recepções'
+    },
+    produtos: [
+      {
+        produtoId: 'PRD-E2E',
+        eventoId: EVENT_ID,
+        categoria: 'BEBIDA',
+        produto: 'Produto Homologacao',
+        unidade: 'UN',
+        custoUnitario: 5,
+        precoVenda: 10,
+        estoqueMinimo: 5,
+        status: 'ATIVO',
+        observacao: ''
+      }
+    ],
+    resumo: {
+      sucesso: true,
+      evento: {
+        id: EVENT_ID,
+        nome: 'Roda de Samba Estilo Carioca',
+        data: '11/10/2026',
+        horario: '15h às 22h',
+        local: 'Vevets Recepções'
+      },
+      itens: [
+        {
+          produtoId: 'PRD-E2E',
+          produto: 'Produto Homologacao',
+          categoria: 'BEBIDA',
+          estoqueInicial: 20,
+          reposicoes: 0,
+          estoqueFinalContado: 15,
+          quantidadeVendida: 5,
+          faturamento: 50,
+          estoqueCritico: false
+        }
+      ],
+      totais: {
+        produtos: 1,
+        quantidadeVendida: 5,
+        faturamento: 50,
+        resultadoOperacional: 25
+      },
+      fechamento: {
+        pronto: true,
+        produtosPendentes: 0,
+        operacaoFechada: false
+      }
+    },
+    movimentacoes: [
+      {
+        movimentoId: 'MOV-E2E',
+        produtoId: 'PRD-E2E',
+        produto: 'Produto Homologacao',
+        tipo: 'ESTOQUE_INICIAL',
+        quantidade: 20,
+        responsavel: 'Operador Homologacao',
+        observacao: '',
+        status: 'ATIVO',
+        criadoEm: '20/09/2026 08:00:00'
+      }
+    ]
+  };
+}
+
 async function installMock(page, state) {
   await page.route('https://script.google.com/**', async route => {
     const request = route.request();
@@ -245,6 +323,23 @@ async function installMock(page, state) {
           case 'ctCentralVendasConfirmarSeguraPROD':
             state.transactionCalls += 1;
             throw new Error('Teste nao deve confirmar venda.');
+
+          case 'ctCariocaBarCarregarSeguraPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = barFixture();
+            break;
+
+          case 'ctCariocaBarSalvarProdutoSeguraPROD':
+          case 'ctCariocaBarRegistrarMovimentacaoSeguraPROD':
+          case 'ctCariocaBarRegistrarVendaDiretaSeguraPROD':
+          case 'ctCariocaBarRegistrarCustoSeguraPROD':
+          case 'ctCariocaBarFecharSeguraPROD':
+          case 'ctCariocaBarReabrirSeguraPROD':
+          case 'ctCariocaBarEstornarMovimentacaoSeguraPROD':
+          case 'ctCariocaBarCorrigirMovimentacaoSeguraPROD':
+            state.barMutationCalls += 1;
+            throw new Error('Teste nao deve alterar o Carioca Bar.');
 
           case 'logoutUsuarioCT2':
             resultado = { sucesso: true };
@@ -330,10 +425,11 @@ async function expectNoTechnicalVisibleLinks(page) {
 test.describe('Jornada operacional autenticada', () => {
   test.skip(!BRANCH_MODE, 'Executa localmente na branch sem usar credenciais reais.');
 
-  test('Portal -> Central -> Vendas -> voltar -> logout sem transacao', async ({ page }) => {
+  test('Portal -> Central -> Vendas -> Bar -> voltar -> logout sem transacao', async ({ page }) => {
     const state = {
       token: 'CT-E2E-TOKEN-NAO-REAL',
-      transactionCalls: 0
+      transactionCalls: 0,
+      barMutationCalls: 0
     };
 
     await installMock(page, state);
@@ -381,9 +477,11 @@ test.describe('Jornada operacional autenticada', () => {
     );
     await expect(vendas).toHaveAttribute('aria-disabled', 'false');
 
-    await expect(bar).toHaveAttribute('href', '#');
-    await expect(bar).toHaveAttribute('aria-disabled', 'true');
-    await expect(bar).toHaveClass(/disabled/);
+    await expect(bar).toHaveAttribute(
+      'href',
+      new RegExp('/bar/\\?evento=' + EVENT_ID)
+    );
+    await expect(bar).toHaveAttribute('aria-disabled', 'false');
 
     await expect(page.locator('#mCheckin')).toHaveAttribute('href', /\/checkin\//);
     await expect(page.locator('#mConsulta')).toHaveAttribute('href', /\/consulta\//);
@@ -406,6 +504,23 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
+    await page.locator('#mBar').click();
+    await expect(page).toHaveURL(/\/bar\/\?evento=/);
+    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#eventName')).toHaveText('Roda de Samba Estilo Carioca');
+    await expect(page.locator('#sProdutos')).toHaveText('1');
+    await expect(page.getByText('Produto Homologacao').first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute(
+      'href',
+      '/central/'
+    );
+    await expectNoTechnicalVisibleLinks(page);
+    expect(state.barMutationCalls).toBe(0);
+
+    await page.getByRole('link', { name: /Central Mobile/i }).click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
     await page.locator('#logout').click();
     await expect(page).toHaveURL(/\/produtor\//, { timeout: 10000 });
     await expect(page.locator('#loginView')).toBeVisible({ timeout: 15000 });
@@ -419,5 +534,6 @@ test.describe('Jornada operacional autenticada', () => {
     expect(stored.local).toBeNull();
     expect(stored.session).toBeNull();
     expect(state.transactionCalls).toBe(0);
+    expect(state.barMutationCalls).toBe(0);
   });
 });
