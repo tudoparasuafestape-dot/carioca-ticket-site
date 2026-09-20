@@ -1654,29 +1654,79 @@
       }
 
       if (
-        comissao &&
-        comissao.configurada === true &&
-        comissao.calculada === true
+        !comissao ||
+        comissao.configurada !== true
       ) {
         el.textContent =
-          comissao.valorComissao
-            ? (
-                'Comissão calculada: ' +
-                comissao.valorComissao
-              )
-            : 'Regra de comissão configurada.';
+          (
+            comissao &&
+            comissao.mensagem
+          )
+            ? comissao.mensagem
+            : 'O produtor ainda não configurou uma regra de comissão para este evento.';
         return;
       }
 
-      el.textContent =
-        (
-          comissao &&
-          comissao.mensagem
-        )
-          ? comissao.mensagem
-          : 'A regra de comissão ainda não foi configurada pelo produtor.';
-    }
+      var tipo =
+        String(
+          comissao.tipo ||
+          ''
+        ).toUpperCase();
 
+      var valor =
+        Number(
+          comissao.valorRegra ||
+          0
+        );
+
+      var regra =
+        tipo === 'PERCENTUAL'
+          ? valor.toLocaleString('pt-BR') + '% sobre a venda'
+          : (
+              tipo === 'FIXO_POR_VENDA'
+                ? valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + ' por venda'
+                : (
+                    tipo === 'FIXO_POR_ACESSO'
+                      ? valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + ' por acesso'
+                      : 'Regra configurada'
+                  )
+            );
+
+      var resumo =
+        comissao.resumo ||
+        {};
+
+      var beneficiario =
+        comissao.beneficiario ||
+        {};
+
+      var partes = [
+        'Regra ativa: ' + regra + '.',
+        'A receber: ' + (resumo.aReceber || 'R$ 0,00') + '.',
+        'Pago: ' + (resumo.pago || 'R$ 0,00') + '.'
+      ];
+
+      if (
+        beneficiario.pixConfigurado === true
+      ) {
+        partes.push(
+          'Pix configurado' +
+          (
+            beneficiario.pixTipo
+              ? ' (' + beneficiario.pixTipo + ')'
+              : ''
+          ) +
+          '.'
+        );
+      } else {
+        partes.push(
+          'Pix ainda não configurado.'
+        );
+      }
+
+      el.textContent =
+        partes.join(' ');
+    }
 
     function preencherMinhasVendas(resumo) {
       var area =
