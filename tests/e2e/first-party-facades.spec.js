@@ -340,6 +340,22 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expectNoTechnicalVisibleLinks(page);
   });
 
+  test('Portal do Produtor preserva codigo de indicacao do Parceiro CT', async ({ page }) => {
+    await page.goto('/produtor/?ref=PARCEIROTESTE', { waitUntil: 'domcontentloaded' });
+
+    await expect(page.locator('#registerReferralCode')).toHaveValue('PARCEIROTESTE');
+    await expect(page.locator('#registerReferralHint')).not.toHaveClass(/hidden/);
+
+    await page.locator('#showRegisterButton').click();
+    await expect(page.getByRole('heading', { name: /Crie sua conta/i })).toBeVisible();
+    await expect(page.locator('#registerReferralCode')).toHaveValue('PARCEIROTESTE');
+    await expect(page.locator('body')).not.toContainText('\\n');
+
+    expect(new URL(page.url()).pathname).toBe('/produtor/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
+
   test('Usuarios e Permissoes oficial permanece first-party', async ({ page }) => {
     await page.goto('/acessos/', { waitUntil: 'domcontentloaded' });
 
