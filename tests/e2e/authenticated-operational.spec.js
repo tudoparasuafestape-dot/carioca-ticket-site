@@ -246,6 +246,85 @@ async function installMock(page, state) {
             state.transactionCalls += 1;
             throw new Error('Teste nao deve confirmar venda.');
 
+          case 'ctCheckinContextoSeguroPROD':
+            state.checkinContextCalls += 1;
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = {
+              sucesso: true,
+              autenticado: true,
+              autorizado: true,
+              evento: {
+                id: EVENT_ID,
+                nome: 'Roda de Samba Estilo Carioca',
+                data: '11/10/2026',
+                horario: '15h às 22h',
+                local: 'Vevets Recepções',
+                cidade: 'Jaboatão dos Guararapes',
+                uf: 'PE'
+              }
+            };
+            break;
+
+          case 'ctCheckinExecutarSeguroPROD': {
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            const codigo = String(args[2] || '');
+            if (codigo.startsWith('CT_VALIDAR_SEM_ENTRADA:')) {
+              state.checkinValidationCalls += 1;
+              resultado = {
+                sucesso: true,
+                tipo: 'sucesso',
+                titulo: 'Ingresso válido',
+                mensagem: 'Validação concluída sem registrar entrada.',
+                codigo: codigo.replace('CT_VALIDAR_SEM_ENTRADA:', ''),
+                nome: 'Participante Homologacao',
+                tipoIngresso: 'Individual',
+                podeConfirmarEntrada: true
+              };
+            } else {
+              state.checkinEntryCalls += 1;
+              throw new Error('Teste nao deve registrar entrada.');
+            }
+            break;
+          }
+
+          case 'ctConsultaContextoSeguroPROD':
+            state.consultaContextCalls += 1;
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = {
+              sucesso: true,
+              autenticado: true,
+              autorizado: true,
+              evento: {
+                id: EVENT_ID,
+                nome: 'Roda de Samba Estilo Carioca',
+                data: '11/10/2026',
+                horario: '15h às 22h',
+                local: 'Vevets Recepções',
+                cidade: 'Jaboatão dos Guararapes',
+                uf: 'PE'
+              }
+            };
+            break;
+
+          case 'ctConsultaIngressosSeguraPROD':
+            state.consultaCalls += 1;
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = {
+              sucesso: true,
+              total: 0,
+              ingressos: [],
+              mensagem: 'Nenhum ingresso encontrado.',
+              filtroEvento: {
+                eventoId: EVENT_ID,
+                eventoNome: 'Roda de Samba Estilo Carioca'
+              }
+            };
+            break;
+
           case 'logoutUsuarioCT2':
             resultado = { sucesso: true };
             break;
@@ -330,10 +409,15 @@ async function expectNoTechnicalVisibleLinks(page) {
 test.describe('Jornada operacional autenticada', () => {
   test.skip(!BRANCH_MODE, 'Executa localmente na branch sem usar credenciais reais.');
 
-  test('Portal -> Central -> Vendas -> voltar -> logout sem transacao', async ({ page }) => {
+  test('Portal -> Central -> Check-in -> Consulta -> Vendas -> logout sem mutacoes', async ({ page }) => {
     const state = {
       token: 'CT-E2E-TOKEN-NAO-REAL',
-      transactionCalls: 0
+      transactionCalls: 0,
+      checkinContextCalls: 0,
+      checkinValidationCalls: 0,
+      checkinEntryCalls: 0,
+      consultaContextCalls: 0,
+      consultaCalls: 0
     };
 
     await installMock(page, state);
@@ -385,11 +469,50 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(bar).toHaveAttribute('aria-disabled', 'true');
     await expect(bar).toHaveClass(/disabled/);
 
-    await expect(page.locator('#mCheckin')).toHaveAttribute('href', /\/checkin\//);
-    await expect(page.locator('#mConsulta')).toHaveAttribute('href', /\/consulta\//);
+    const checkin = page.locator('#mCheckin');
+    const consulta = page.locator('#mConsulta');
+
+    await expect(checkin).toHaveAttribute('href', /\/checkin\//);
+    await expect(consulta).toHaveAttribute('href', /\/consulta\//);
     await expectNoTechnicalVisibleLinks(page);
 
-    await vendas.click();
+    page.on('dialog', async dialog => {
+      await dialog.dismiss();
+    });
+
+    await checkin.click();
+    await expect(page).toHaveURL(/\/checkin\/\?/);
+    await expect(page.locator('#gate')).toHaveClass(/hide/, { timeout: 15000 });
+    await expect(page.locator('#event')).toContainText('Roda de Samba Estilo Carioca');
+    await expectNoTechnicalVisibleLinks(page);
+
+    await page.locator('#code').fill('CT-20260920-1');
+    await page.locator('#validate').click();
+    await expect(page.locator('#result')).toHaveClass(/show/, { timeout: 15000 });
+    await expect(page.locator('#resultTitle')).toContainText(/Ingresso válido/i);
+    await expect.poll(() => state.checkinValidationCalls).toBe(1);
+    expect(state.checkinEntryCalls).toBe(0);
+
+    await page.locator('#back').click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
+    await page.locator('#mConsulta').click();
+    await expect(page).toHaveURL(/\/consulta\/\?evento=/);
+    await expect(page.locator('#campoEvento')).toHaveValue(EVENT_ID, { timeout: 15000 });
+    await expect(page.locator('#campoTodosEventos')).toBeDisabled();
+    await expectNoTechnicalVisibleLinks(page);
+
+    await page.locator('#campoBusca').fill('Teste');
+    await page.locator('#botaoBuscar').click();
+    await expect(page.locator('#estadoErro')).toContainText(/Nenhum ingresso encontrado/i, { timeout: 15000 });
+    await expect.poll(() => state.consultaCalls).toBe(1);
+
+    await page.locator('#linkVoltar').click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
+    await page.locator('#mVendas').click();
     await expect(page).toHaveURL(/\/vendas\/\?evento=/);
     await expect(
       page.getByText('Roda de Samba Estilo Carioca').first()
@@ -419,5 +542,10 @@ test.describe('Jornada operacional autenticada', () => {
     expect(stored.local).toBeNull();
     expect(stored.session).toBeNull();
     expect(state.transactionCalls).toBe(0);
+    expect(state.checkinContextCalls).toBeGreaterThan(0);
+    expect(state.checkinValidationCalls).toBe(1);
+    expect(state.checkinEntryCalls).toBe(0);
+    expect(state.consultaContextCalls).toBeGreaterThan(0);
+    expect(state.consultaCalls).toBe(1);
   });
 });
