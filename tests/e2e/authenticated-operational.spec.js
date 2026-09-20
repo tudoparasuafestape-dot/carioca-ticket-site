@@ -72,7 +72,8 @@ function centralContext(token) {
           'FORNECEDORES',
           'CRM',
           'FINANCEIRO',
-          'RELATORIOS'
+          'RELATORIOS',
+          'COMISSOES'
         ]
       }
     ],
@@ -87,7 +88,8 @@ function centralContext(token) {
       'FORNECEDORES',
       'CRM',
       'FINANCEIRO',
-      'RELATORIOS'
+      'RELATORIOS',
+      'COMISSOES'
     ]
   };
 }
@@ -504,6 +506,72 @@ function relatoriosFixture() {
 }
 
 
+function comissoesFixture() {
+  return {
+    sucesso: true,
+    autenticado: true,
+    autorizado: true,
+    eventoId: EVENT_ID,
+    evento: {
+      id: EVENT_ID,
+      nome: 'Roda de Samba Estilo Carioca',
+      data: '11/10/2026',
+      horario: '15h às 22h',
+      local: 'Vevets Recepções',
+      cidade: 'Jaboatão dos Guararapes',
+      uf: 'PE'
+    },
+    produtorId: 'PROD-E2E',
+    comissionados: [
+      {
+        usuarioId: 'USR-COM-E2E',
+        nome: 'Comissionado Homologacao',
+        email: 'comissionado@example.invalid',
+        whatsapp: '81999990002',
+        perfil: 'COMISSIONADO'
+      }
+    ],
+    tipos: [
+      { id: 'TIPO-IND', nome: 'Individual' }
+    ],
+    lotes: [
+      { id: 'LOTE-1', nome: 'Pré-venda', tipoId: 'TIPO-IND' }
+    ],
+    regras: [
+      {
+        regraId: 'COMREG-E2E',
+        usuarioComissionadoId: 'USR-COM-E2E',
+        tipoRegra: 'PERCENTUAL',
+        valorRegra: 5,
+        tipoIngressoId: '',
+        loteId: '',
+        status: 'ATIVO',
+        observacao: 'Regra homologacao',
+        beneficiarioNome: 'Comissionado Homologacao',
+        cpfCnpj: '00000000000',
+        pixTipo: 'CPF',
+        pixChave: '00000000000'
+      }
+    ],
+    resumo: {
+      regras: 1,
+      lancamentos: 2,
+      totalAReceberNumero: 2.5,
+      totalAReceber: 'R$ 2,50'
+    },
+    tiposRegra: [
+      { id: 'PERCENTUAL', nome: 'Percentual sobre o valor da venda' },
+      { id: 'FIXO_POR_VENDA', nome: 'Valor fixo por venda' },
+      { id: 'FIXO_POR_ACESSO', nome: 'Valor fixo por acesso/ingresso' }
+    ],
+    pagamentoAutomatico: {
+      habilitado: false,
+      motivo: 'PAGAMENTO_AUTOMATICO_AINDA_NAO_HOMOLOGADO'
+    },
+    versaoModulo: '1.0.0'
+  };
+}
+
 function centralContextComissionado(token) {
   return {
     sucesso: true,
@@ -767,6 +835,17 @@ async function installMock(page, state) {
             resultado = relatoriosFixture();
             break;
 
+          case 'ctComissoesEventoCarregarPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = comissoesFixture();
+            break;
+
+          case 'ctComissoesEventoSalvarRegraPROD':
+          case 'ctComissoesEventoDesativarRegraPROD':
+            state.commissionMutationCalls += 1;
+            throw new Error('Teste nao deve alterar regras de comissao.');
+
           case 'logoutUsuarioCT2':
             resultado = { sucesso: true };
             break;
@@ -929,7 +1008,8 @@ test.describe('Jornada operacional autenticada', () => {
       transactionCalls: 0,
       barMutationCalls: 0,
       eventMutationCalls: 0,
-      supplierMutationCalls: 0
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0
     };
 
     await installMock(page, state);
@@ -1005,6 +1085,11 @@ test.describe('Jornada operacional autenticada', () => {
       new RegExp('/relatorios/\\?evento=' + EVENT_ID)
     );
     await expect(page.locator('#mRelatorios')).toHaveAttribute('aria-disabled', 'false');
+    await expect(page.locator('#mComissoes')).toHaveAttribute(
+      'href',
+      new RegExp('/comissoes/\\?evento=' + EVENT_ID)
+    );
+    await expect(page.locator('#mComissoes')).toHaveAttribute('aria-disabled', 'false');
 
     await expect(page.locator('#mCheckin')).toHaveAttribute('href', /\/checkin\//);
     await expect(page.locator('#mConsulta')).toHaveAttribute('href', /\/consulta\//);
@@ -1111,6 +1196,24 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
+    await page.locator('#mComissoes').click();
+    await expect(page).toHaveURL(/\/comissoes\/\?evento=/);
+    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#eventName')).toHaveText('Roda de Samba Estilo Carioca');
+    await expect(page.locator('#rulesCount')).toHaveText('1');
+    await expect(page.locator('#entriesCount')).toHaveText('2');
+    await expect(page.locator('#amountDue')).toHaveText('R$ 2,50');
+    await expect(page.locator('#rules')).toContainText('Comissionado Homologacao');
+    await expect(page.locator('#rules')).toContainText('5%');
+    await expect(page.locator('#rules')).toContainText('Chave Pix configurada');
+    await expect(page.locator('body')).toContainText(/pagamento automático ainda permanece desativado/i);
+    await expectNoTechnicalVisibleLinks(page);
+    expect(state.commissionMutationCalls).toBe(0);
+
+    await page.getByRole('link', { name: /Central Mobile/i }).click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
     await page.locator('#logout').click();
     await expect(page).toHaveURL(/\/produtor\//, { timeout: 10000 });
     await expect(page.locator('#loginView')).toBeVisible({ timeout: 15000 });
@@ -1126,6 +1229,8 @@ test.describe('Jornada operacional autenticada', () => {
     expect(state.transactionCalls).toBe(0);
     expect(state.barMutationCalls).toBe(0);
     expect(state.eventMutationCalls).toBe(0);
+    expect(state.supplierMutationCalls).toBe(0);
+    expect(state.commissionMutationCalls).toBe(0);
   });
 
   test('Comissionado -> Central -> Minhas Vendas sem acesso às vendas gerais', async ({ page }) => {
