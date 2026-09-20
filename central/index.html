@@ -127,6 +127,12 @@
       <a id="mBar" class="module" data-perm="BAR" href="#">
         <div class="icon">🍺</div><div><strong>Carioca Bar</strong><span>Operação, estoque e fechamento do bar.</span></div>
       </a>
+      <a id="mEventos" class="module" data-perm="EVENTOS" href="/eventos-v2/">
+        <div class="icon">📅</div><div><strong>Eventos</strong><span>Gerencie eventos autorizados, publicação e status.</span></div>
+      </a>
+      <a id="mFornecedores" class="module" data-perm="FORNECEDORES" href="#">
+        <div class="icon">🤝</div><div><strong>Fornecedores</strong><span>Prestadores, serviços, valores e pagamentos do evento.</span></div>
+      </a>
     </section>
   </main>
 
@@ -167,6 +173,7 @@ function post(action,data,done){
 }
 
 window.addEventListener('message',function(ev){
+  if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;
   var p=ev.data;
   if(!p||p.ctMinhaCariocaPost!==true||!p.id||!pending[p.id])return;
   var ctx=pending[p.id];delete pending[p.id];clearTimeout(ctx.timer);
@@ -313,10 +320,17 @@ function updateModules(){
     ?'/bar/?evento='+encodeURIComponent(id)
     :'#';
 
+  document.getElementById('mEventos').href='/eventos-v2/';
+
+  document.getElementById('mFornecedores').href=id
+    ?'/fornecedores/?evento='+encodeURIComponent(id)
+    :'#';
+
   if(!id){
     document.getElementById('mCheckin').classList.add('disabled');
     document.getElementById('mVendas').classList.add('disabled');
     document.getElementById('mBar').classList.add('disabled');
+    document.getElementById('mFornecedores').classList.add('disabled');
   }
 }
 
