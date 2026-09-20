@@ -357,7 +357,17 @@ test.describe('Jornada operacional autenticada', () => {
     );
     await expectNoTechnicalVisibleLinks(page);
 
-    await centralLink.click();
+    /*
+     * O Portal usa a URL absoluta oficial por seguranca. Na homologacao da
+     * branch preservamos path/hash do handoff, mas mantemos a navegacao no
+     * servidor local para testar exatamente o codigo candidato.
+     */
+    const centralHref = await centralLink.getAttribute('href');
+    const centralUrl = new URL(centralHref);
+    await page.goto(
+      centralUrl.pathname + centralUrl.search + centralUrl.hash,
+      { waitUntil: 'domcontentloaded' }
+    );
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#eventSelect')).toHaveValue(EVENT_ID);
