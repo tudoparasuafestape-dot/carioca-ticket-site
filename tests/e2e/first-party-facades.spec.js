@@ -525,4 +525,21 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expectNoTechnicalVisibleLinks(page);
   });
 
+
+  test('Minhas Vendas do comissionado exige sessao', async ({ page }) => {
+    await page.goto('/comissionado/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.getByText(/Minhas Vendas/i).first()).toBeVisible();
+    await expect(page.locator('#conteudoPrincipal')).toHaveClass(/oculto/);
+    await expect(page.locator('#conteudoInicial')).toBeVisible();
+    await expect(page.locator('body')).toContainText(/sessão|acesso|erro|não foi possível/i, {
+      timeout: 15000
+    });
+    await expect(page.locator('body')).not.toContainText('\\n');
+    expect(new URL(page.url()).pathname).toBe('/comissionado/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
 });

@@ -124,6 +124,9 @@
       <a id="mVendas" class="module" data-perm="VENDAS" href="#">
         <div class="icon">🎫</div><div><strong>Central de Vendas</strong><span>Central de vendas operacional.</span></div>
       </a>
+      <a id="mComissionado" class="module" data-perm="VENDAS_PROPRIAS" href="#">
+        <div class="icon">💼</div><div><strong>Minhas Vendas</strong><span>Registre vendas próprias e acompanhe somente seus resultados.</span></div>
+      </a>
       <a id="mBar" class="module" data-perm="BAR" href="#">
         <div class="icon">🍺</div><div><strong>Carioca Bar</strong><span>Operação, estoque e fechamento do bar.</span></div>
       </a>
@@ -325,6 +328,10 @@ function updateModules(){
     ?'/vendas/?evento='+encodeURIComponent(id)
     :'#';
 
+  document.getElementById('mComissionado').href=id
+    ?'/comissionado/?evento='+encodeURIComponent(id)
+    :'#';
+
   document.getElementById('mBar').href=id
     ?'/bar/?evento='+encodeURIComponent(id)
     :'#';
@@ -350,6 +357,7 @@ function updateModules(){
   if(!id){
     document.getElementById('mCheckin').classList.add('disabled');
     document.getElementById('mVendas').classList.add('disabled');
+    document.getElementById('mComissionado').classList.add('disabled');
     document.getElementById('mBar').classList.add('disabled');
     document.getElementById('mFornecedores').classList.add('disabled');
     document.getElementById('mFinanceiro').classList.add('disabled');

@@ -503,6 +503,105 @@ function relatoriosFixture() {
   };
 }
 
+
+function centralContextComissionado(token) {
+  return {
+    sucesso: true,
+    autenticado: true,
+    autorizado: true,
+    token,
+    usuario: {
+      id: 'USR-COM-E2E',
+      nome: 'Comissionado Homologacao'
+    },
+    eventos: [
+      {
+        id: EVENT_ID,
+        nome: 'Roda de Samba Estilo Carioca',
+        data: '11/10/2026',
+        horario: '15h às 22h',
+        local: 'Vevets Recepções',
+        cidade: 'Jaboatão dos Guararapes',
+        uf: 'PE',
+        produtorId: 'PROD-E2E',
+        perfil: 'COMISSIONADO',
+        modulosPermitidos: [
+          'CONSULTA_INGRESSOS',
+          'VENDAS_PROPRIAS',
+          'COMISSOES_PROPRIAS'
+        ]
+      }
+    ],
+    modulosPermitidosGerais: [
+      'CONSULTA_INGRESSOS',
+      'VENDAS_PROPRIAS',
+      'COMISSOES_PROPRIAS'
+    ]
+  };
+}
+
+function comissionadoFixture() {
+  const base = vendasFixture();
+  return {
+    ...base,
+    modulo: 'VENDAS_PROPRIAS',
+    formasPagamento: ['PIX', 'DINHEIRO', 'CARTÃO', 'TRANSFERÊNCIA', 'OUTRO'],
+    vendedor: {
+      usuarioId: 'USR-COM-E2E',
+      nome: 'Comissionado Homologacao',
+      perfil: 'COMISSIONADO'
+    },
+    resumoHoje: {
+      quantidade: 1,
+      faturamento: 'R$ 25,00',
+      pagos: 1,
+      cortesias: 0
+    },
+    resumoEvento: {
+      vendas: 2,
+      quantidade: 2,
+      acessos: 2,
+      faturamento: 'R$ 50,00',
+      cortesias: 0
+    },
+    minhasVendas: {
+      totalRegistros: 2,
+      vendasConfirmadas: 2,
+      acessosConfirmados: 2,
+      valorVendidoNumero: 50,
+      valorVendido: 'R$ 50,00',
+      canceladas: 0,
+      estornadas: 0,
+      recentes: [
+        {
+          id: 'VENDA-COM-E2E-1',
+          compradorNome: 'Cliente Proprio Homologacao',
+          compradorWhatsappMascarado: '•••• 0001',
+          tipoNome: 'Individual',
+          loteNome: 'Pré-venda',
+          quantidadeVendas: 1,
+          quantidadeAcessos: 1,
+          valorTotalNumero: 25,
+          valorTotal: 'R$ 25,00',
+          formaPagamento: 'PIX',
+          status: 'CONFIRMADA',
+          criadoEm: '20/09/2026 09:30:00'
+        }
+      ]
+    },
+    comissao: {
+      configurada: false,
+      calculada: false,
+      percentual: null,
+      valorFixo: null,
+      valorComissaoNumero: null,
+      valorComissao: '',
+      codigo: 'REGRA_COMISSAO_NAO_CONFIGURADA',
+      mensagem: 'A regra de comissão ainda não foi configurada pelo produtor.'
+    }
+  };
+}
+
 async function installMock(page, state) {
   await page.route('https://script.google.com/**', async route => {
     const request = route.request();
@@ -694,6 +793,78 @@ async function installMock(page, state) {
       } else {
         ok = false;
         erro = 'Acao nao prevista no E2E autenticado: ' + action;
+      }
+    } catch (e) {
+      ok = false;
+      erro = e && e.message ? e.message : String(e);
+      resultado = null;
+    }
+
+    const payload = JSON.stringify({
+      ctMinhaCariocaPost: true,
+      id: requestId,
+      ok,
+      resultado,
+      erro
+    }).replace(/</g, '\\u003c');
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/html; charset=utf-8',
+      body:
+        '<!doctype html><html><body>' +
+        '<script>window.top.postMessage(' + payload + ', "*");<\/script>' +
+        '</body></html>'
+    });
+  });
+}
+
+
+async function installComissionadoMock(page, state) {
+  await page.route('https://script.google.com/**', async route => {
+    const request = route.request();
+    const params = new URLSearchParams(request.postData() || '');
+    const requestId = String(params.get('ctMinhaCariocaRequestId') || '');
+    const action = String(params.get('ctMinhaCariocaAction') || '');
+    const method = String(params.get('metodo') || '');
+
+    let args = [];
+    try {
+      args = JSON.parse(params.get('argsJson') || '[]');
+      if (!Array.isArray(args)) args = [];
+    } catch (_) {
+      args = [];
+    }
+
+    let resultado = null;
+    let ok = true;
+    let erro = '';
+
+    try {
+      if (action === 'portalRpc') {
+        if (method === 'ctComissionadoCarregarPROD') {
+          expect(String(args[0] || '')).toBe(state.token);
+          expect(String(args[1] || '')).toBe(EVENT_ID);
+          resultado = comissionadoFixture();
+        } else if (method === 'ctComissionadoConfirmarVendaPROD') {
+          state.transactionCalls += 1;
+          throw new Error('Teste nao deve confirmar venda do comissionado.');
+        } else if (method === 'logoutUsuarioCT2') {
+          resultado = { sucesso: true };
+        } else {
+          resultado = {
+            sucesso: false,
+            mensagem: 'Metodo nao previsto no E2E comissionado: ' + method
+          };
+        }
+      } else if (action === 'centralRestaurarSessao') {
+        expect(String(params.get('token') || '')).toBe(state.token);
+        resultado = centralContextComissionado(state.token);
+      } else if (action === 'centralLogout') {
+        resultado = { sucesso: true };
+      } else {
+        ok = false;
+        erro = 'Acao nao prevista no E2E comissionado: ' + action;
       }
     } catch (e) {
       ok = false;
@@ -956,4 +1127,60 @@ test.describe('Jornada operacional autenticada', () => {
     expect(state.barMutationCalls).toBe(0);
     expect(state.eventMutationCalls).toBe(0);
   });
+
+  test('Comissionado -> Central -> Minhas Vendas sem acesso às vendas gerais', async ({ page }) => {
+    const state = {
+      token: 'CT-E2E-COMISSIONADO-NAO-REAL',
+      transactionCalls: 0
+    };
+
+    await installComissionadoMock(page, state);
+    await seedSession(page, state.token);
+
+    await page.goto('/central/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#eventSelect')).toHaveValue(EVENT_ID);
+
+    await expect(page.locator('#mVendas')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#mComissionado')).toHaveAttribute('aria-disabled', 'false');
+    await expect(page.locator('#mComissionado')).toHaveAttribute(
+      'href',
+      new RegExp('/comissionado/\\?evento=' + EVENT_ID)
+    );
+
+    await expect(page.locator('#mPortal')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#mAcessos')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#mFinanceiro')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#mRelatorios')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#mConsulta')).toHaveAttribute('aria-disabled', 'false');
+    await expectNoTechnicalVisibleLinks(page);
+
+    await page.locator('#mComissionado').click();
+    await expect(page).toHaveURL(/\/comissionado\/\?evento=/);
+    await expect(page.getByRole('heading', { name: /Minhas Vendas/i }).first()).toBeVisible({
+      timeout: 15000
+    });
+    await expect(page.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible();
+    await expect(page.locator('#formularioVenda')).toBeVisible();
+    await expect(page.locator('#resumoEventoVendas')).toHaveText('2');
+    await expect(page.locator('#resumoEventoFaturamento')).toHaveText('R$ 50,00');
+    await expect(page.locator('#listaMinhasVendas')).toContainText('Cliente Proprio Homologacao');
+    await expect(page.locator('#comissaoMensagem')).toContainText(
+      'regra de comissão ainda não foi configurada'
+    );
+
+    const pagamentos = await page.locator('#formaPagamento option').allTextContents();
+    expect(pagamentos.join('|').toUpperCase()).not.toContain('CORTESIA');
+    await expectNoTechnicalVisibleLinks(page);
+    expect(state.transactionCalls).toBe(0);
+
+    await page.getByRole('link', { name: /Voltar para a Central/i }).click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+
+    await page.locator('#logout').click();
+    await expect(page).toHaveURL(/\/produtor\//, { timeout: 10000 });
+    expect(state.transactionCalls).toBe(0);
+  });
+
 });
