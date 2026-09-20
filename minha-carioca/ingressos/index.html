@@ -44,7 +44,21 @@ add('ctMinhaCariocaAction',action);add('ctMinhaCariocaRequestId',id);Object.keys
 document.body.append(fr,f);pending[id]={fr:fr,f:f,done:done};pending[id].timer=setTimeout(function(){var p=pending[id];if(!p)return;delete pending[id];try{p.fr.remove();p.f.remove()}catch(_){}done({ok:false,erro:'A consulta demorou mais que o esperado.'})},20000);f.submit()
 }
 window.addEventListener('message',function(ev){var p=ev.data;if(!p||p.ctMinhaCariocaPost!==true||!p.id||!pending[p.id])return;var x=pending[p.id];delete pending[p.id];clearTimeout(x.timer);try{x.fr.remove();x.f.remove()}catch(_){}x.done(p)});
-function ticketHref(raw){try{var u=new URL(String(raw||''),location.href),c=String(u.searchParams.get('codigo')||'').trim(),s=String(u.searchParams.get('sig')||'').trim();if(c&&s)return '/ingresso/?codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s)}catch(_){}return String(raw||'#')}
+function ticketHref(raw){
+try{
+  var u=new URL(String(raw||''),location.href);
+  var c=String(u.searchParams.get('codigo')||'').trim(),s=String(u.searchParams.get('sig')||'').trim();
+  if(c&&s)return '/ingresso/?v=20260919-2207&codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s);
+  var destino=String(u.searchParams.get('destino')||'').trim();
+  if(destino){
+    var d=new URL(destino);
+    c=String(d.searchParams.get('codigo')||'').trim();
+    s=String(d.searchParams.get('sig')||'').trim();
+    if(c&&s)return '/ingresso/?v=20260919-2207&codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s);
+  }
+}catch(_){}
+return String(raw||'#')
+}
 function fail(m){app.innerHTML='<div class="error">'+esc(m||'Não foi possível abrir esta compra.')+'</div><div class="actions"><a class="action primary" href="/minha-carioca/conta/">Voltar para Minha Carioca</a></div>'}
 function render(r){
 var p=r.pedido||{},e=r.evento||{},v=r.visual||{},a=Array.isArray(r.ingressos)?r.ingressos:[],capa=String(v.capaUrl||v.posterUrl||'');
