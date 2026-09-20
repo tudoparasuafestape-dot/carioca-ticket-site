@@ -1,98 +1,5202 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#080b10">
-  <title>Portal do Produtor | Carioca Ticket</title>
-  <style>
-    *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;background:#080b10}
-    body{
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:24px;
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:#fff
-    }
-    .card{
-      width:min(92vw,440px);
-      padding:28px 24px;
-      border:1px solid rgba(241,182,64,.35);
-      border-radius:22px;
-      background:linear-gradient(180deg,#11151b,#0b0e13);
-      text-align:center;
-      box-shadow:0 24px 70px rgba(0,0,0,.35)
-    }
-    .brand{
-      font-size:12px;
-      font-weight:800;
-      letter-spacing:.2em;
-      color:#f1b640;
-      text-transform:uppercase
-    }
-    h1{font-size:24px;margin:10px 0 8px}
-    p{margin:0;color:#b9c0ca;line-height:1.45}
-    .loader{
-      width:38px;
-      height:38px;
-      margin:22px auto 0;
-      border-radius:50%;
-      border:4px solid rgba(255,255,255,.12);
-      border-top-color:#f1b640;
-      animation:spin .8s linear infinite
-    }
-    @keyframes spin{to{transform:rotate(360deg)}}
-    a{
-      display:none;
-      margin-top:22px;
-      padding:14px 18px;
-      border-radius:14px;
-      background:linear-gradient(135deg,#dfa324,#f6c94c);
-      color:#111;
-      font-weight:900;
-      text-decoration:none
-    }
-    a.show{display:block}
-  </style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+<title>Portal do Produtor | Carioca Ticket</title>
+<style>
+:root{
+--bg:#090b0f;
+--card:#11151c;
+--card2:#171c24;
+--border:#282f3a;
+--gold:#e8b34b;
+--gold2:#f3cb72;
+--text:#f4f4f4;
+--muted:#9ca5b3;
+--danger:#ef6464;
+--success:#55c789;
+--blue:#65a7ff
+}
+*{
+box-sizing:border-box
+}
+html,
+body{
+margin:0;
+min-height:100%;
+background:
+radial-gradient(
+circle at top right,
+rgba(232,179,75,.08),
+transparent 32%
+),
+var(--bg);
+color:var(--text);
+font-family:
+Inter,
+Arial,
+Helvetica,
+sans-serif
+}
+body{
+min-height:100vh
+}
+button,
+input,
+select{
+font:inherit
+}
+button{
+cursor:pointer
+}
+.hidden{
+display:none!important
+}
+.app{
+width:100%;
+min-height:100vh
+}
+.login-shell{
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:28px 18px
+}
+.login-card{
+width:100%;
+max-width:470px;
+background:
+linear-gradient(
+180deg,
+rgba(255,255,255,.025),
+rgba(255,255,255,0)
+),
+var(--card);
+border:1px solid var(--border);
+border-radius:24px;
+padding:30px 26px 24px;
+box-shadow:
+0 24px 80px rgba(0,0,0,.42)
+}
+.brand{
+display:flex;
+flex-direction:column;
+align-items:center;
+text-align:center;
+gap:10px;
+margin-bottom:18px
+}
+.brand-logo-box{
+width:285px;
+min-height:92px;
+display:flex;
+align-items:center;
+justify-content:center;
+overflow:visible
+}
+.brand-logo-desktop{
+display:block;
+width:250px;
+max-height:92px;
+object-fit:contain;
+transform:scale(1.35);
+transform-origin:center
+}
+.brand-logo-error{
+max-width:320px;
+color:#ffc4c4;
+background:rgba(239,100,100,.09);
+border:1px solid rgba(239,100,100,.25);
+border-radius:10px;
+padding:9px 11px;
+font-size:11px;
+line-height:1.4;
+font-weight:700
+}
+.brand-subtitle{
+color:var(--muted);
+font-size:12px;
+font-weight:750;
+letter-spacing:.25px
+}
+.auth-view{
+width:100%
+}
+.dev-badge{
+display:inline-flex;
+padding:5px 9px;
+border-radius:999px;
+color:var(--gold2);
+border:
+1px solid rgba(232,179,75,.35);
+background:
+rgba(232,179,75,.08);
+font-size:10px;
+font-weight:800;
+letter-spacing:.7px;
+margin-bottom:14px
+}
+h1{
+margin:0 0 8px;
+font-size:27px;
+letter-spacing:-.6px
+}
+.lead{
+margin:0 0 25px;
+color:var(--muted);
+line-height:1.55;
+font-size:14px
+}
+.field{
+margin-bottom:16px
+}
+.field label{
+display:block;
+margin-bottom:7px;
+font-size:12px;
+color:var(--muted);
+font-weight:700
+}
+.field input,
+.field select{
+width:100%;
+min-height:48px;
+border-radius:13px;
+border:1px solid var(--border);
+background:#0c1016;
+color:var(--text);
+padding:0 14px;
+outline:none;
+transition:.18s
+}
+.field input:focus,
+.field select:focus{
+border-color:var(--gold);
+box-shadow:
+0 0 0 3px rgba(232,179,75,.09)
+}
+.password-wrap{
+position:relative
+}
+.password-wrap input{
+padding-right:82px
+}
+.password-toggle{
+position:absolute;
+right:10px;
+top:50%;
+transform:translateY(-50%);
+border:0;
+background:transparent;
+color:var(--gold2);
+padding:6px 4px;
+font-size:11px;
+font-weight:850;
+cursor:pointer
+}
+.password-toggle:hover{
+text-decoration:underline
+}
+.primary{
+width:100%;
+min-height:50px;
+border:0;
+border-radius:14px;
+background:
+linear-gradient(
+135deg,
+var(--gold2),
+var(--gold)
+);
+color:#161616;
+font-weight:900;
+transition:.18s
+}
+.primary:hover{
+transform:translateY(-1px)
+}
+.primary:disabled{
+opacity:.55;
+cursor:default;
+transform:none
+}
+.link-row{
+display:flex;
+justify-content:flex-end;
+margin:-5px 0 15px
+}
+.text-button{
+border:0;
+padding:0;
+background:transparent;
+color:var(--gold2);
+font-size:12px;
+font-weight:800
+}
+.text-button:hover{
+text-decoration:underline
+}
+.auth-switch{
+margin-top:19px;
+padding-top:17px;
+border-top:1px solid var(--border);
+text-align:center;
+color:var(--muted);
+font-size:12px
+}
+.auth-switch .text-button{
+margin-left:4px
+}
+.divider{
+display:flex;
+align-items:center;
+gap:11px;
+margin:19px 0 16px;
+color:#707887;
+font-size:10px;
+font-weight:800;
+text-transform:uppercase;
+letter-spacing:.8px
+}
+.divider:before,
+.divider:after{
+content:"";
+flex:1;
+height:1px;
+background:var(--border)
+}
+.social-button{
+width:100%;
+min-height:48px;
+border-radius:13px;
+border:1px solid var(--border);
+background:#fff;
+color:#202124;
+font-weight:800;
+cursor:default
+}
+.brand-promise{
+margin-top:21px;
+text-align:center;
+color:var(--gold2);
+font-size:12px;
+font-weight:800
+}
+.auth-note{
+margin-top:10px;
+text-align:center;
+color:#727b89;
+font-size:10px;
+line-height:1.45
+}
+.honeypot{
+position:absolute!important;
+left:-9999px!important;
+width:1px!important;
+height:1px!important;
+opacity:0!important;
+pointer-events:none!important
+}
+.message{
+display:none;
+margin-top:16px;
+padding:12px 13px;
+border-radius:12px;
+font-size:13px;
+line-height:1.45
+}
+.message.error{
+display:block;
+color:#ffc4c4;
+background:
+rgba(239,100,100,.09);
+border:
+1px solid rgba(239,100,100,.25)
+}
+.message.success{
+display:block;
+color:#bbf2d2;
+background:
+rgba(85,199,137,.09);
+border:
+1px solid rgba(85,199,137,.25)
+}
+.message.info{
+display:block;
+color:#c8ddff;
+background:
+rgba(101,167,255,.08);
+border:
+1px solid rgba(101,167,255,.23)
+}
+.portal{
+min-height:100vh
+}
+.topbar{
+position:sticky;
+top:0;
+z-index:20;
+background:
+rgba(9,11,15,.92);
+backdrop-filter:blur(16px);
+border-bottom:
+1px solid var(--border)
+}
+.topbar-inner{
+width:
+min(
+1240px,
+calc(100% - 30px)
+);
+margin:auto;
+min-height:72px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:18px
+}
+.top-brand,
+.top-actions{
+display:flex;
+align-items:center;
+gap:10px
+}
+.top-actions{
+flex-wrap:wrap;
+justify-content:flex-end;
+min-width:0
+}
+.top-logo-box{
+width:40px;
+height:40px;
+display:flex;
+align-items:center;
+justify-content:center
+}
+.top-logo-image{
+width:40px;
+height:40px;
+object-fit:contain
+}
+.top-title{
+font-size:15px;
+font-weight:850
+}
+.top-caption{
+color:var(--muted);
+font-size:10px;
+margin-top:2px
+}
+.top-user-label{
+color:var(--muted);
+font-size:11px
+}
+.ghost{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+text-decoration:none;
+min-height:38px;
+border-radius:10px;
+border:
+1px solid var(--border);
+background:var(--card);
+color:var(--text);
+padding:0 13px;
+font-size:12px;
+font-weight:750
+}
+.ghost.handoff-pending{
+opacity:.52;
+cursor:wait
+}
+.ghost[aria-disabled="true"]{
+opacity:.52
+}
+.container{
+width:
+min(
+1240px,
+calc(100% - 30px)
+);
+margin:auto;
+padding:26px 0 50px
+}
+.hello{
+margin-bottom:22px
+}
+.hello small{
+color:var(--muted);
+font-size:12px
+}
+.hello h2{
+margin:5px 0 0;
+font-size:25px
+}
+.selectors{
+display:grid;
+grid-template-columns:
+minmax(220px,1fr)
+minmax(250px,1.6fr)
+auto;
+gap:13px;
+align-items:end;
+margin-bottom:24px;
+background:var(--card);
+border:1px solid var(--border);
+border-radius:18px;
+padding:17px
+}
+.selectors .field{
+margin:0
+}
+.refresh-btn{
+min-height:48px;
+padding:0 18px;
+border-radius:13px;
+border:
+1px solid rgba(232,179,75,.4);
+color:var(--gold2);
+background:
+rgba(232,179,75,.08);
+font-weight:850
+}
+.event-header{
+background:
+linear-gradient(
+135deg,
+rgba(232,179,75,.13),
+rgba(232,179,75,.025)
+),
+var(--card);
+border:
+1px solid rgba(232,179,75,.21);
+border-radius:20px;
+padding:21px;
+margin-bottom:19px
+}
+.event-name{
+font-size:22px;
+font-weight:900;
+margin-bottom:8px
+}
+.event-meta{
+display:flex;
+flex-wrap:wrap;
+gap:8px 16px;
+color:var(--muted);
+font-size:12px
+}
+.metrics{
+display:grid;
+grid-template-columns:
+repeat(
+4,
+minmax(0,1fr)
+);
+gap:13px;
+margin-bottom:19px
+}
+.metric{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:17px;
+padding:17px;
+min-height:112px
+}
+.metric-label{
+color:var(--muted);
+font-size:11px;
+font-weight:750;
+margin-bottom:10px
+}
+.metric-value{
+font-size:25px;
+font-weight:900;
+word-break:break-word
+}
+.metric-note{
+color:var(--muted);
+font-size:10px;
+margin-top:7px
+}
+.gold .metric-value{
+color:var(--gold2)
+}
+.green .metric-value{
+color:var(--success)
+}
+.blue .metric-value{
+color:var(--blue)
+}
+.grid-2{
+display:grid;
+grid-template-columns:
+minmax(0,1.35fr)
+minmax(280px,.65fr);
+gap:14px
+}
+.panel-card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:18px;
+padding:19px
+}
+.panel-title{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin-bottom:17px
+}
+.panel-title h3{
+margin:0;
+font-size:15px
+}
+.panel-title span{
+color:var(--muted);
+font-size:10px
+}
+.progress-shell{
+margin:12px 0 20px
+}
+.progress-info{
+display:flex;
+justify-content:space-between;
+color:var(--muted);
+font-size:11px;
+margin-bottom:8px
+}
+.progress{
+width:100%;
+height:12px;
+border-radius:999px;
+overflow:hidden;
+background:#080b10;
+border:1px solid var(--border)
+}
+.progress>div{
+height:100%;
+width:0;
+background:
+linear-gradient(
+90deg,
+var(--gold),
+var(--gold2)
+);
+border-radius:inherit;
+transition:width .35s
+}
+.mini-grid{
+display:grid;
+grid-template-columns:
+repeat(
+2,
+minmax(0,1fr)
+);
+gap:10px
+}
+.mini{
+border:1px solid var(--border);
+background:var(--card2);
+border-radius:13px;
+padding:13px
+}
+.mini small{
+color:var(--muted);
+font-size:10px
+}
+.mini strong{
+display:block;
+font-size:17px;
+margin-top:5px
+}
+.checkin-list{
+display:flex;
+flex-direction:column;
+gap:9px
+}
+.checkin-item{
+padding:12px;
+border-radius:13px;
+border:1px solid var(--border);
+background:var(--card2)
+}
+.checkin-name{
+font-size:13px;
+font-weight:800;
+margin-bottom:4px
+}
+.checkin-meta{
+color:var(--muted);
+font-size:10px;
+display:flex;
+flex-wrap:wrap;
+gap:5px 10px
+}
+.empty{
+padding:24px 12px;
+text-align:center;
+color:var(--muted);
+font-size:12px
+}
+.updated{
+color:var(--muted);
+font-size:10px;
+margin-top:14px;
+text-align:right
+}
+.loading-overlay{
+position:fixed;
+inset:0;
+z-index:100;
+display:none;
+align-items:center;
+justify-content:center;
+background:
+rgba(5,7,10,.64);
+backdrop-filter:blur(6px)
+}
+.loading-overlay.show{
+display:flex
+}
+.loader-box{
+min-width:210px;
+background:var(--card);
+border:1px solid var(--border);
+border-radius:17px;
+padding:20px;
+text-align:center
+}
+.spinner{
+width:31px;
+height:31px;
+margin:0 auto 12px;
+border-radius:50%;
+border:3px solid #2d3440;
+border-top-color:var(--gold);
+animation:spin .75s linear infinite
+}
+@keyframes spin{
+to{
+transform:rotate(360deg)
+}
+}
+.loader-text{
+color:var(--muted);
+font-size:12px
+}
+@media(max-width:900px){
+.metrics{
+grid-template-columns:
+repeat(
+2,
+minmax(0,1fr)
+)
+}
+.grid-2{
+grid-template-columns:1fr
+}
+.selectors{
+grid-template-columns:
+1fr 1fr
+}
+.refresh-btn{
+grid-column:1/-1
+}
+}
+@media(max-width:760px){
+.topbar-inner,
+.container{
+width:
+min(
+100% - 22px,
+1240px
+)
+}
+.topbar-inner{
+flex-direction:column;
+align-items:stretch;
+gap:10px;
+padding:10px 0 12px
+}
+.top-brand{
+width:100%
+}
+.top-actions{
+width:100%;
+display:grid;
+grid-template-columns:
+repeat(
+2,
+minmax(0,1fr)
+);
+gap:8px
+}
+.top-actions .ghost{
+width:100%;
+min-width:0;
+padding:0 8px;
+font-size:11px;
+white-space:normal;
+text-align:center;
+line-height:1.15
+}
+.top-user-label{
+display:none
+}
+.selectors{
+grid-template-columns:1fr
+}
+.refresh-btn{
+grid-column:auto;
+width:100%
+}
+.metrics{
+grid-template-columns:
+repeat(
+2,
+minmax(0,1fr)
+);
+gap:9px
+}
+.metric{
+padding:14px;
+min-height:102px
+}
+.metric-value{
+font-size:21px
+}
+.event-name{
+font-size:19px
+}
+.hello h2{
+font-size:21px
+}
+.login-card{
+padding:26px 20px 22px
+}
+.brand-logo-box{
+width:240px;
+min-height:82px
+}
+.brand-logo-desktop{
+width:210px;
+max-height:82px;
+transform:scale(1.3)
+}
+}
+</style>
 </head>
 <body>
-  <main class="card">
-    <div class="brand">Carioca Ticket</div>
-    <h1>Portal do Produtor</h1>
-    <p>Redirecionando para o acesso oficial…</p>
-    <div class="loader" aria-hidden="true"></div>
-    <a id="fallback" href="#">Abrir Portal do Produtor</a>
-  </main>
+<script>
+(function(){
+  'use strict';
 
-  <script>
-    (function(){
-      'use strict';
+  var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var pending={};
 
-      var params=new URLSearchParams(window.location.search);
-      params.delete('page');
+  function cleanup(id){
+    var p=pending[id];
+    if(!p)return null;
+    delete pending[id];
+    clearTimeout(p.timer);
+    try{p.frame.remove();p.form.remove()}catch(_){}
+    return p;
+  }
 
-      var extra=params.toString();
-      var destino="https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec?page=produtor"+
-        (extra?'&'+extra:'')+
-        (window.location.hash||'');
+  function rpc(method,args,success,failure){
+    var id='CTPORTAL-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+    var frameName='ctportal_'+id.replace(/[^A-Za-z0-9_]/g,'');
+    var frame=document.createElement('iframe');
+    frame.name=frameName;
+    frame.style.display='none';
+    frame.setAttribute('aria-hidden','true');
 
-      var fallback=document.getElementById('fallback');
-      fallback.href=destino;
+    var form=document.createElement('form');
+    form.method='POST';
+    form.action=APP;
+    form.target=frameName;
+    form.style.display='none';
 
-      /*
-       * Rotas autenticadas nao usam iframe.
-       * Navegacao direta evita particionamento de storage,
-       * bloqueios de iframe e spinners presos entre origens.
-       */
-      window.location.replace(destino);
+    function add(k,v){
+      var input=document.createElement('input');
+      input.type='hidden';
+      input.name=k;
+      input.value=String(v==null?'':v);
+      form.appendChild(input);
+    }
 
-      setTimeout(function(){
-        fallback.classList.add('show');
-      },1800);
-    })();
-  </script>
+    add('ctMinhaCariocaAction','portalRpc');
+    add('ctMinhaCariocaRequestId',id);
+    add('metodo',String(method||''));
+    add('argsJson',JSON.stringify(Array.isArray(args)?args:[]));
+
+    document.body.append(frame,form);
+
+    pending[id]={
+      frame:frame,
+      form:form,
+      success:typeof success==='function'?success:function(){},
+      failure:typeof failure==='function'?failure:function(){},
+      timer:setTimeout(function(){
+        var p=cleanup(id);
+        if(p)p.failure(new Error('CT_PORTAL_RPC_TIMEOUT'));
+      },45000)
+    };
+
+    form.submit();
+  }
+
+  window.addEventListener('message',function(ev){
+    if(ev.origin!=='https://script.google.com' && !/\.googleusercontent\.com$/.test(ev.origin||''))return;
+    var payload=ev.data;
+    if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
+    var p=cleanup(payload.id);
+    if(!p)return;
+    if(payload.ok===true)p.success(payload.resultado);
+    else p.failure(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+  });
+
+  function runner(success,failure){
+    return new Proxy({},{
+      get:function(_target,prop){
+        if(prop==='withSuccessHandler'){
+          return function(fn){return runner(fn,failure)};
+        }
+        if(prop==='withFailureHandler'){
+          return function(fn){return runner(success,fn)};
+        }
+        if(prop==='then')return undefined;
+        return function(){
+          rpc(String(prop),Array.prototype.slice.call(arguments),success,failure);
+        };
+      }
+    });
+  }
+
+  window.google=window.google||{};
+  window.google.script=window.google.script||{};
+  window.google.script.run=runner(null,null);
+  window.google.script.url={
+    getLocation:function(callback){
+      if(typeof callback==='function'){
+        callback({
+          hash:String(window.location.hash||'').replace(/^#/,''),
+          parameter:Object.fromEntries(new URLSearchParams(window.location.search)),
+          parameters:{}
+        });
+      }
+    }
+  };
+}());
+</script>
+<div class="app">
+<section
+id="loginView"
+class="login-shell"
+>
+<div class="login-card">
+<div class="brand">
+<div
+id="brandLogoBox"
+class="brand-logo-box"
+>
+<img
+id="brandLogoDesktop"
+class="brand-logo-desktop hidden"
+alt="Carioca Ticket"
+>
+</div>
+<div
+id="brandLogoError"
+class="brand-logo-error hidden"
+role="alert"
+>
+Falha técnica ao carregar a identidade visual oficial da Carioca Ticket.
+</div>
+<div class="brand-subtitle">
+Portal do Produtor
+</div>
+</div>
+<div
+id="loginAuthView"
+class="auth-view"
+>
+<div class="dev-badge">
+AMBIENTE PROD
+</div>
+<h1>
+Acesse sua conta
+</h1>
+<p class="lead">
+Entre para gerenciar somente os produtores e eventos
+autorizados para o seu perfil.
+</p>
+<form
+id="loginForm"
+autocomplete="on"
+>
+<div class="field">
+<label for="email">
+E-mail
+</label>
+<input
+id="email"
+type="email"
+autocomplete="username"
+required
+placeholder="seuemail@exemplo.com"
+>
+</div>
+<div class="field">
+<label for="senha">
+Senha
+</label>
+<div class="password-wrap">
+<input
+id="senha"
+type="password"
+autocomplete="current-password"
+required
+placeholder="Sua senha"
+>
+<button
+class="password-toggle"
+type="button"
+data-password-target="senha"
+aria-label="Mostrar senha"
+aria-pressed="false"
+>
+Mostrar
+</button>
+</div>
+</div>
+<div class="link-row">
+<button
+id="forgotPasswordButton"
+class="text-button hidden"
+type="button"
+>
+Esqueci minha senha
+</button>
+</div>
+<button
+id="loginButton"
+class="primary"
+type="submit"
+disabled
+>
+Entrar
+</button>
+</form>
+<div
+id="loginMessage"
+class="message"
+></div>
+<div
+id="googleArea"
+class="hidden"
+>
+<div class="divider">
+ou
+</div>
+<button
+id="googleLoginButton"
+class="social-button"
+type="button"
+disabled
+>
+Continuar com Google
+</button>
+</div>
+<div class="auth-switch">
+Ainda não tem uma conta?
+<button
+id="showRegisterButton"
+class="text-button hidden"
+type="button"
+>
+Criar conta
+</button>
+</div>
+</div>
+<div
+id="registerAuthView"
+class="auth-view hidden"
+>
+<div class="dev-badge">
+AMBIENTE PROD
+</div>
+<h1>
+Crie sua conta
+</h1>
+<p class="lead">
+Comece com seus dados de acesso.
+A liberação como produtor acontece somente
+após o vínculo seguro do seu perfil.
+</p>
+<form
+id="registerForm"
+autocomplete="on"
+>
+<div class="field">
+<label for="registerName">
+Nome
+</label>
+<input
+id="registerName"
+type="text"
+autocomplete="name"
+required
+maxlength="120"
+placeholder="Seu nome"
+>
+</div>
+<div class="field">
+<label for="registerEmail">
+E-mail
+</label>
+<input
+id="registerEmail"
+type="email"
+autocomplete="email"
+required
+maxlength="180"
+placeholder="seuemail@exemplo.com"
+>
+</div>
+<div class="field">
+<label for="registerWhatsapp">
+WhatsApp
+</label>
+<input
+id="registerWhatsapp"
+type="tel"
+inputmode="tel"
+autocomplete="tel"
+maxlength="20"
+placeholder="(81) 99999-9999"
+>
+</div>
+<div class="field">
+<label for="registerPassword">
+Senha
+</label>
+<div class="password-wrap">
+<input
+id="registerPassword"
+type="password"
+autocomplete="new-password"
+required
+minlength="8"
+maxlength="200"
+placeholder="Mínimo de 8 caracteres"
+>
+<button
+class="password-toggle"
+type="button"
+data-password-target="registerPassword"
+aria-label="Mostrar senha"
+aria-pressed="false"
+>
+Mostrar
+</button>
+</div>
+</div>
+<div class="field">
+<label for="registerPasswordConfirm">
+Confirmar senha
+</label>
+<div class="password-wrap">
+<input
+id="registerPasswordConfirm"
+type="password"
+autocomplete="new-password"
+required
+minlength="8"
+maxlength="200"
+placeholder="Digite a senha novamente"
+>
+<button
+class="password-toggle"
+type="button"
+data-password-target="registerPasswordConfirm"
+aria-label="Mostrar senha"
+aria-pressed="false"
+>
+Mostrar
+</button>
+</div>
+</div>
+<div
+class="honeypot"
+aria-hidden="true"
+>
+<label for="registerWebsite">
+Website
+</label>
+<input
+id="registerWebsite"
+type="text"
+tabindex="-1"
+autocomplete="off"
+>
+</div>
+<button
+id="registerButton"
+class="primary"
+type="submit"
+>
+Criar minha conta
+</button>
+</form>
+<div
+id="registerMessage"
+class="message"
+></div>
+<div class="auth-switch">
+Já tem uma conta?
+<button
+id="showLoginButton"
+class="text-button"
+type="button"
+>
+Entrar
+</button>
+</div>
+</div>
+<div class="brand-promise">
+O seu sucesso é a nossa conquista!
+</div>
+<div class="auth-note">
+A criação da conta não concede acesso automático
+a produtores ou eventos.
+</div>
+</div>
+</section>
+<section
+id="portalView"
+class="portal hidden"
+>
+<header class="topbar">
+<div class="topbar-inner">
+<div class="top-brand">
+<div class="top-logo-box">
+<img
+id="topLogoMobile"
+class="top-logo-image hidden"
+alt="Carioca Ticket"
+>
+</div>
+<div>
+<div class="top-title">
+Carioca Ticket
+</div>
+<div class="top-caption">
+Portal do Produtor
+</div>
+</div>
+</div>
+<div class="top-actions">
+<span
+id="topUser"
+class="top-user-label"
+></span>
+<a
+id="centralMobileLink"
+class="ghost handoff-pending"
+href="#"
+target="_top"
+aria-disabled="true"
+>
+Central Mobile
+</a>
+<a
+id="accessManagementLink"
+class="ghost handoff-pending"
+href="#"
+target="_top"
+aria-disabled="true"
+>
+Usuários
+</a>
+<button
+id="changeEmailButton"
+class="ghost"
+type="button"
+>
+Alterar e-mail
+</button>
+<button
+id="logoutButton"
+class="ghost"
+type="button"
+>
+Sair
+</button>
+</div>
+</div>
+</header>
+<main class="container">
+<div class="hello">
+<small>
+Visão operacional
+</small>
+<h2 id="helloName">
+Portal do Produtor
+</h2>
+</div>
+<section class="selectors">
+<div class="field">
+<label for="producerSelect">
+Produtor
+</label>
+<select id="producerSelect">
+</select>
+</div>
+<div class="field">
+<label for="eventSelect">
+Evento
+</label>
+<select id="eventSelect">
+</select>
+</div>
+<button
+id="refreshButton"
+class="refresh-btn"
+type="button"
+>
+Atualizar painel
+</button>
+</section>
+<div
+id="portalMessage"
+class="message"
+></div>
+<section
+id="dashboard"
+class="hidden"
+>
+<div class="event-header">
+<div
+id="eventName"
+class="event-name"
+>
+Evento
+</div>
+<div class="event-meta">
+<span id="eventDate">
+</span>
+<span id="eventTime">
+</span>
+<span id="eventLocation">
+</span>
+</div>
+</div>
+<section class="metrics">
+<div class="metric gold">
+<div class="metric-label">
+Faturamento
+</div>
+<div
+id="metricRevenue"
+class="metric-value"
+>
+R$ 0,00
+</div>
+<div class="metric-note">
+vendas confirmadas
+</div>
+</div>
+<div class="metric">
+<div class="metric-label">
+Ingressos válidos
+</div>
+<div
+id="metricTickets"
+class="metric-value"
+>
+0
+</div>
+<div class="metric-note">
+acessos ativos
+</div>
+</div>
+<div class="metric green">
+<div class="metric-label">
+Presentes
+</div>
+<div
+id="metricPresent"
+class="metric-value"
+>
+0
+</div>
+<div class="metric-note">
+check-ins realizados
+</div>
+</div>
+<div class="metric blue">
+<div class="metric-label">
+Vagas restantes
+</div>
+<div
+id="metricRemaining"
+class="metric-value"
+>
+0
+</div>
+<div class="metric-note">
+capacidade disponível
+</div>
+</div>
+</section>
+<section class="metrics">
+<div class="metric">
+<div class="metric-label">
+Vendas pagas
+</div>
+<div
+id="metricPaid"
+class="metric-value"
+>
+0
+</div>
+</div>
+<div class="metric">
+<div class="metric-label">
+Cortesias
+</div>
+<div
+id="metricCourtesy"
+class="metric-value"
+>
+0
+</div>
+</div>
+<div class="metric">
+<div class="metric-label">
+Ticket médio
+</div>
+<div
+id="metricAverage"
+class="metric-value"
+>
+R$ 0,00
+</div>
+</div>
+<div class="metric">
+<div class="metric-label">
+Capacidade
+</div>
+<div
+id="metricCapacity"
+class="metric-value"
+>
+0
+</div>
+</div>
+</section>
+<div class="grid-2">
+<section class="panel-card">
+<div class="panel-title">
+<h3>
+Ocupação do evento
+</h3>
+<span>
+acompanhamento
+</span>
+</div>
+<div class="progress-shell">
+<div class="progress-info">
+<span>
+Ocupação
+</span>
+<strong id="occupancyPercent">
+0%
+</strong>
+</div>
+<div class="progress">
+<div id="occupancyBar">
+</div>
+</div>
+</div>
+<div class="mini-grid">
+<div class="mini">
+<small>
+Pendentes
+</small>
+<strong id="miniPending">
+0
+</strong>
+</div>
+<div class="mini">
+<small>
+Cancelados
+</small>
+<strong id="miniCancelled">
+0
+</strong>
+</div>
+<div class="mini">
+<small>
+Total emitido
+</small>
+<strong id="miniTotal">
+0
+</strong>
+</div>
+<div class="mini">
+<small>
+Check-in
+</small>
+<strong id="miniCheckin">
+0%
+</strong>
+</div>
+</div>
+</section>
+<section class="panel-card">
+<div class="panel-title">
+<h3>
+Check-ins recentes
+</h3>
+<span>
+ao vivo
+</span>
+</div>
+<div
+id="checkinList"
+class="checkin-list"
+></div>
+</section>
+</div>
+<div
+id="updatedAt"
+class="updated"
+></div>
+</section>
+</main>
+</section>
+<div
+id="loadingOverlay"
+class="loading-overlay"
+>
+<div class="loader-box">
+<div class="spinner">
+</div>
+<div
+id="loadingText"
+class="loader-text"
+>
+Carregando...
+</div>
+</div>
+</div>
+</div>
+
+<script type="module">
+import {
+initializeApp,
+getApps
+} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+
+import {
+getAuth,
+setPersistence,
+browserSessionPersistence,
+signInWithEmailAndPassword,
+createUserWithEmailAndPassword,
+sendEmailVerification,
+verifyBeforeUpdateEmail,
+updateProfile,
+getIdToken,
+deleteUser,
+signOut
+} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
+
+let firebaseApp = null;
+let firebaseAuth = null;
+
+function exigirAuth(){
+if(!firebaseAuth){
+throw new Error('CT_FIREBASE_WEB_NAO_INICIALIZADO');
+}
+return firebaseAuth;
+}
+
+window.CTFirebaseWeb = Object.freeze({
+
+inicializar: async function(config){
+if(firebaseAuth){
+return true;
+}
+
+if(!config || !config.apiKey || !config.projectId){
+throw new Error('CT_FIREBASE_WEB_CONFIG_INVALIDA');
+}
+
+const apps = getApps();
+
+firebaseApp = apps.length
+? apps[0]
+: initializeApp(config);
+
+firebaseAuth = getAuth(firebaseApp);
+firebaseAuth.languageCode = 'pt-BR';
+
+await setPersistence(
+firebaseAuth,
+browserSessionPersistence
+);
+
+return true;
+},
+
+pronto: function(){
+return !!firebaseAuth;
+},
+
+cadastrar: async function(email, senha, nome){
+const auth = exigirAuth();
+
+const credencial =
+await createUserWithEmailAndPassword(
+auth,
+email,
+senha
+);
+
+if(nome){
+await updateProfile(
+credencial.user,
+{
+displayName: nome
+}
+);
+}
+
+const idToken =
+await getIdToken(
+credencial.user,
+true
+);
+
+return {
+idToken: idToken,
+emailVerified:
+credencial.user.emailVerified === true
+};
+},
+
+login: async function(email, senha){
+const auth = exigirAuth();
+
+const credencial =
+await signInWithEmailAndPassword(
+auth,
+email,
+senha
+);
+
+const idToken =
+await getIdToken(
+credencial.user,
+true
+);
+
+return {
+idToken: idToken,
+emailVerified:
+credencial.user.emailVerified === true
+};
+},
+
+enviarVerificacao: async function(){
+const auth = exigirAuth();
+
+if(!auth.currentUser){
+throw new Error('CT_FIREBASE_WEB_USUARIO_AUSENTE');
+}
+
+await sendEmailVerification(
+auth.currentUser
+);
+
+return true;
+},
+
+alterarEmail: async function(novoEmail){
+const auth = exigirAuth();
+
+if(!auth.currentUser){
+throw new Error('CT_FIREBASE_WEB_RELOGIN_NECESSARIO');
+}
+
+novoEmail =
+String(
+novoEmail || ''
+)
+.trim()
+.toLowerCase();
+
+if(!novoEmail){
+throw new Error('CT_FIREBASE_WEB_EMAIL_NOVO_OBRIGATORIO');
+}
+
+await verifyBeforeUpdateEmail(
+auth.currentUser,
+novoEmail
+);
+
+return {
+sucesso:true,
+novoEmail:novoEmail
+};
+},
+
+recuperarSenha: async function(email){
+
+email =
+String(
+email || ''
+)
+.trim()
+.toLowerCase();
+
+if(
+!email ||
+!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+email
+)
+){
+throw new Error('auth/invalid-email');
+}
+
+return await new Promise(function(resolve, reject){
+
+if(
+typeof google === 'undefined' ||
+!google.script ||
+!google.script.run
+){
+reject(
+new Error(
+'CT_RECUPERACAO_BACKEND_INDISPONIVEL'
+)
+);
+return;
+}
+
+google.script.run
+.withSuccessHandler(
+function(resposta){
+
+if(
+!resposta ||
+resposta.sucesso !== true ||
+resposta.enviado !== true
+){
+reject(
+new Error(
+String(
+resposta &&
+resposta.codigo ||
+'CT_RECUPERACAO_NAO_ENVIADA'
+)
+)
+);
+return;
+}
+
+resolve(
+resposta
+);
+}
+)
+.withFailureHandler(
+function(erro){
+reject(
+erro ||
+new Error(
+'CT_RECUPERACAO_BACKEND_FALHOU'
+)
+);
+}
+)
+.solicitarRecuperacaoSenhaPROD(
+email
+);
+
+});
+},
+
+excluirUsuarioAtual: async function(){
+const auth = exigirAuth();
+
+if(!auth.currentUser){
+return true;
+}
+
+await deleteUser(
+auth.currentUser
+);
+
+return true;
+},
+
+sair: async function(){
+if(!firebaseAuth){
+return true;
+}
+
+await signOut(
+firebaseAuth
+);
+
+return true;
+}
+});
+</script>
+
+<script>
+(function(){
+
+'use strict';
+
+var STORAGE_KEY =
+'CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+
+var state = {
+
+token:
+'',
+
+usuario:
+null,
+
+produtores:
+[],
+
+produtorAtual:
+null,
+
+eventoAtual:
+null,
+
+refreshTimer:
+null,
+
+handoffTimer:
+null,
+
+capacidades:
+null,
+
+firebaseReady:
+false,
+
+firebaseInitPromise:
+null
+};
+
+var el = {};
+
+document.addEventListener(
+'DOMContentLoaded',
+iniciar
+);
+
+function iniciar(){
+
+[
+'loginView',
+'portalView',
+'loginAuthView',
+'registerAuthView',
+'loginForm',
+'email',
+'senha',
+'loginButton',
+'loginMessage',
+'forgotPasswordButton',
+'showRegisterButton',
+'showLoginButton',
+'googleArea',
+'googleLoginButton',
+'registerForm',
+'registerName',
+'registerEmail',
+'registerWhatsapp',
+'registerPassword',
+'registerPasswordConfirm',
+'registerWebsite',
+'registerButton',
+'registerMessage',
+'portalMessage',
+'topUser',
+'helloName',
+'producerSelect',
+'eventSelect',
+'refreshButton',
+'centralMobileLink',
+'accessManagementLink',
+'changeEmailButton',
+'logoutButton',
+'dashboard',
+'eventName',
+'eventDate',
+'eventTime',
+'eventLocation',
+'metricRevenue',
+'metricTickets',
+'metricPresent',
+'metricRemaining',
+'metricPaid',
+'metricCourtesy',
+'metricAverage',
+'metricCapacity',
+'occupancyPercent',
+'occupancyBar',
+'miniPending',
+'miniCancelled',
+'miniTotal',
+'miniCheckin',
+'checkinList',
+'updatedAt',
+'loadingOverlay',
+'loadingText',
+'brandLogoDesktop',
+'brandLogoError',
+'topLogoMobile'
+]
+.forEach(
+function(id){
+
+el[id] =
+document.getElementById(
+id
+);
+}
+);
+
+registrarEventos();
+
+carregarMarcaOficial();
+
+carregarCapacidades();
+
+inicializarFirebaseSilencioso();
+
+iniciarSessaoPortal();
+}
+
+function registrarEventos(){
+
+el.loginForm.addEventListener(
+'submit',
+executarLogin
+);
+
+el.registerForm.addEventListener(
+'submit',
+executarCadastro
+);
+
+el.showRegisterButton.addEventListener(
+'click',
+mostrarCadastro
+);
+
+el.showLoginButton.addEventListener(
+'click',
+mostrarLoginAuth
+);
+
+el.forgotPasswordButton.addEventListener(
+'click',
+consultarRecuperacao
+);
+
+el.producerSelect.addEventListener(
+'change',
+trocarProdutor
+);
+
+el.eventSelect.addEventListener(
+'change',
+trocarEvento
+);
+
+el.refreshButton.addEventListener(
+'click',
+function(){
+
+carregarPainel(
+true
+);
+}
+);
+
+el.changeEmailButton.addEventListener(
+'click',
+executarAlteracaoEmail
+);
+
+el.logoutButton.addEventListener(
+'click',
+executarLogout
+);
+
+el.centralMobileLink.addEventListener(
+'click',
+validarLinkAutenticadoPendente
+);
+
+el.accessManagementLink.addEventListener(
+'click',
+validarLinkAutenticadoPendente
+);
+
+window.addEventListener(
+'focus',
+function(){
+
+if(
+state.token
+){
+
+prepararLinksAutenticados();
+
+if(
+state.eventoAtual
+){
+
+carregarPainel(
+false
+);
+}
+}
+}
+);
+
+document.addEventListener(
+'visibilitychange',
+function(){
+
+if(
+document.visibilityState ===
+'visible' &&
+state.token &&
+state.eventoAtual
+){
+
+carregarPainel(
+false
+);
+}
+}
+);
+}
+
+function carregarCapacidades(){
+
+el.loginButton.disabled =
+true;
+
+el.forgotPasswordButton
+.classList
+.add(
+'hidden'
+);
+
+el.showRegisterButton
+.classList
+.add(
+'hidden'
+);
+
+el.googleArea
+.classList
+.add(
+'hidden'
+);
+
+google.script.run
+.withSuccessHandler(
+function(r){
+
+state.capacidades =
+r || null;
+
+var loginOk =
+!!(
+r &&
+r.loginEmailSenha &&
+r.loginEmailSenha.habilitado ===
+true
+);
+
+var cadastro =
+!!(
+r &&
+r.cadastro &&
+r.cadastro.habilitado ===
+true
+);
+
+var recuperacao =
+!!(
+r &&
+r.recuperacaoSenha &&
+r.recuperacaoSenha.habilitado ===
+true
+);
+
+var googleOk =
+!!(
+r &&
+r.google &&
+r.google.habilitado ===
+true
+);
+
+el.loginButton.disabled =
+!loginOk;
+
+el.forgotPasswordButton
+.classList
+.toggle(
+'hidden',
+!recuperacao
+);
+
+el.showRegisterButton
+.classList
+.toggle(
+'hidden',
+!cadastro
+);
+
+el.googleArea
+.classList
+.toggle(
+'hidden',
+!googleOk
+);
+
+if(
+!loginOk
+){
+mostrarMensagem(
+el.loginMessage,
+'O serviço de acesso está temporariamente indisponível. Tente novamente em instantes.',
+'error'
+);
+}
+}
+)
+.withFailureHandler(
+function(erro){
+
+state.capacidades =
+null;
+
+el.loginButton.disabled =
+true;
+
+registrarErroTecnico(
+'Capacidades de acesso',
+erro
+);
+
+mostrarMensagem(
+el.loginMessage,
+'Não foi possível inicializar os serviços de acesso. Atualize a página e tente novamente.',
+'error'
+);
+}
+)
+.ctCentralAcessoObterCapacidadesPROD();
+}
+
+function mostrarCadastro(){
+
+limparMensagem(
+el.loginMessage
+);
+
+limparMensagem(
+el.registerMessage
+);
+
+el.loginAuthView
+.classList
+.add(
+'hidden'
+);
+
+el.registerAuthView
+.classList
+.remove(
+'hidden'
+);
+
+el.registerName.focus();
+}
+
+function mostrarLoginAuth(){
+
+limparMensagem(
+el.registerMessage
+);
+
+el.registerAuthView
+.classList
+.add(
+'hidden'
+);
+
+el.loginAuthView
+.classList
+.remove(
+'hidden'
+);
+
+el.email.focus();
+}
+
+async function executarCadastro(
+e
+){
+
+e.preventDefault();
+
+limparMensagem(
+el.registerMessage
+);
+
+if(
+!state.capacidades ||
+!state.capacidades.cadastro ||
+state.capacidades.cadastro.habilitado !==
+true
+){
+mostrarMensagem(
+el.registerMessage,
+'O cadastro de contas não está disponível neste momento.',
+'error'
+);
+return;
+}
+
+var nome =
+String(
+el.registerName.value ||
+''
+)
+.trim();
+
+var email =
+String(
+el.registerEmail.value ||
+''
+)
+.trim()
+.toLowerCase();
+
+var whatsapp =
+String(
+el.registerWhatsapp.value ||
+''
+)
+.trim();
+
+var senha =
+String(
+el.registerPassword.value ||
+''
+);
+
+var confirmar =
+String(
+el.registerPasswordConfirm.value ||
+''
+);
+
+var website =
+String(
+el.registerWebsite.value ||
+''
+);
+
+if(
+!nome ||
+!email ||
+!senha ||
+!confirmar
+){
+
+mostrarMensagem(
+el.registerMessage,
+'Preencha nome, e-mail, senha e confirmação.',
+'error'
+);
+
+return;
+}
+
+if(
+senha.length <
+8
+){
+
+mostrarMensagem(
+el.registerMessage,
+'Use uma senha com pelo menos 8 caracteres.',
+'error'
+);
+
+return;
+}
+
+if(
+senha !==
+confirmar
+){
+
+mostrarMensagem(
+el.registerMessage,
+'As senhas informadas não conferem.',
+'error'
+);
+
+return;
+}
+
+definirLoading(
+true,
+'Criando sua conta...'
+);
+
+el.registerButton.disabled =
+true;
+
+var firebaseCriado =
+false;
+
+var provisionado =
+false;
+
+try{
+
+await garantirFirebasePronto();
+
+var firebaseCadastro =
+await window.CTFirebaseWeb.cadastrar(
+email,
+senha,
+nome
+);
+
+firebaseCriado =
+true;
+
+var resposta =
+await chamarCadastroFirebaseServidor(
+firebaseCadastro.idToken,
+{
+nome:
+nome,
+
+whatsapp:
+whatsapp,
+
+website:
+website
+}
+);
+
+if(
+!resposta ||
+resposta.sucesso !==
+true
+){
+
+throw criarErroPublico(
+resposta &&
+resposta.mensagem
+? resposta.mensagem
+: 'Não foi possível criar sua conta.'
+);
+}
+
+provisionado =
+true;
+
+var verificacaoEnviada =
+false;
+
+if(
+firebaseCadastro.emailVerified !==
+true
+){
+
+try{
+
+await window.CTFirebaseWeb
+.enviarVerificacao();
+
+verificacaoEnviada =
+true;
+}
+catch(
+erroVerificacao
+){
+
+registrarErroTecnico(
+'Firebase | verificação de e-mail',
+erroVerificacao
+);
+}
+}
+
+await sairFirebaseSilencioso();
+
+el.email.value =
+email;
+
+el.registerForm.reset();
+
+mostrarLoginAuth();
+
+mostrarMensagem(
+el.loginMessage,
+verificacaoEnviada
+? 'Conta criada com sucesso. Enviamos um link de verificação para o seu e-mail. Confirme o endereço antes de acessar o Portal do Produtor.'
+: 'Conta criada com sucesso. Confirme seu e-mail antes de acessar o Portal do Produtor.',
+'success'
+);
+}
+catch(
+erro
+){
+
+if(
+firebaseCriado &&
+!provisionado
+){
+
+try{
+
+await window.CTFirebaseWeb
+.excluirUsuarioAtual();
+}
+catch(
+erroRollback
+){
+
+registrarErroTecnico(
+'Firebase | rollback de cadastro',
+erroRollback
+);
+}
+}
+
+await sairFirebaseSilencioso();
+
+mostrarMensagem(
+el.registerMessage,
+mensagemErroFirebase(
+erro,
+'CADASTRO'
+),
+'error'
+);
+}
+finally{
+
+definirLoading(
+false
+);
+
+el.registerButton.disabled =
+false;
+
+el.registerPassword.value =
+'';
+
+el.registerPasswordConfirm.value =
+'';
+}
+}
+
+async function consultarRecuperacao(){
+
+limparMensagem(
+el.loginMessage
+);
+
+if(
+!state.capacidades ||
+!state.capacidades.recuperacaoSenha ||
+state.capacidades.recuperacaoSenha.habilitado !==
+true
+){
+mostrarMensagem(
+el.loginMessage,
+'A recuperação de senha não está disponível neste momento.',
+'error'
+);
+return;
+}
+
+var email =
+String(
+el.email.value ||
+''
+)
+.trim()
+.toLowerCase();
+
+if(
+!email
+){
+
+mostrarMensagem(
+el.loginMessage,
+'Informe seu e-mail para recuperar a senha.',
+'info'
+);
+
+el.email.focus();
+
+return;
+}
+
+definirLoading(
+true,
+'Enviando recuperação...'
+);
+
+el.forgotPasswordButton.disabled =
+true;
+
+try{
+
+var respostaRecuperacao =
+await window.CTFirebaseWeb
+.recuperarSenha(
+email
+);
+
+if(
+!respostaRecuperacao ||
+respostaRecuperacao.sucesso !==
+true ||
+respostaRecuperacao.enviado !==
+true
+){
+throw criarErroPublico(
+respostaRecuperacao &&
+respostaRecuperacao.mensagem
+? respostaRecuperacao.mensagem
+: 'Não foi possível solicitar a recuperação de senha.'
+);
+}
+
+mostrarMensagem(
+el.loginMessage,
+'Se existir uma conta para este e-mail, enviaremos as instruções para redefinir sua senha.',
+'success'
+);
+}
+catch(
+erro
+){
+
+var codigo =
+codigoErroFirebase(
+erro
+);
+
+if(
+codigo ===
+'auth/invalid-email'
+){
+
+mostrarMensagem(
+el.loginMessage,
+'Informe um endereço de e-mail válido.',
+'error'
+);
+}
+else{
+
+registrarErroTecnico(
+'Firebase | recuperação de senha',
+erro
+);
+
+mostrarMensagem(
+el.loginMessage,
+erro &&
+erro.ctPublicMessage
+? erro.ctPublicMessage
+: 'Não foi possível solicitar a recuperação de senha agora. Tente novamente em instantes.',
+'error'
+);
+}
+}
+finally{
+
+definirLoading(
+false
+);
+
+el.forgotPasswordButton.disabled =
+false;
+}
+}
+
+function carregarMarcaOficial(){
+
+if(
+typeof google ===
+'undefined' ||
+!google.script ||
+!google.script.run
+){
+
+registrarFalhaMarcaOficial(
+'Integração do Google Apps Script indisponível.'
+);
+
+return;
+}
+
+google.script.run
+.withSuccessHandler(
+function(uri){
+
+uri =
+String(
+uri || ''
+);
+
+if(
+uri.indexOf(
+'data:image/'
+) !==
+0
+){
+
+registrarFalhaMarcaOficial(
+'A logo oficial de desktop não foi retornada em formato válido.'
+);
+
+return;
+}
+
+el.brandLogoDesktop.onerror =
+function(){
+
+el.brandLogoDesktop
+.classList
+.add(
+'hidden'
+);
+
+registrarFalhaMarcaOficial(
+'A logo oficial de desktop não pôde ser exibida.'
+);
+};
+
+el.brandLogoDesktop.src =
+uri;
+
+el.brandLogoDesktop
+.classList
+.remove(
+'hidden'
+);
+}
+)
+.withFailureHandler(
+function(erro){
+
+registrarFalhaMarcaOficial(
+'Falha ao carregar a logo oficial de desktop.'
+);
+
+if(
+window.console &&
+typeof window.console.error ===
+'function'
+){
+
+window.console.error(
+'Carioca Ticket | marca oficial DESKTOP',
+erro
+);
+}
+}
+)
+.ctMarcaOficialObterDataUriPROD(
+'DESKTOP'
+);
+
+google.script.run
+.withSuccessHandler(
+function(uri){
+
+uri =
+String(
+uri || ''
+);
+
+if(
+uri.indexOf(
+'data:image/'
+) !==
+0
+){
+
+registrarFalhaMarcaOficial(
+'O símbolo oficial mobile não foi retornado em formato válido.'
+);
+
+return;
+}
+
+el.topLogoMobile.onerror =
+function(){
+
+el.topLogoMobile
+.classList
+.add(
+'hidden'
+);
+
+registrarFalhaMarcaOficial(
+'O símbolo oficial mobile não pôde ser exibido.'
+);
+};
+
+el.topLogoMobile.src =
+uri;
+
+el.topLogoMobile
+.classList
+.remove(
+'hidden'
+);
+}
+)
+.withFailureHandler(
+function(erro){
+
+registrarFalhaMarcaOficial(
+'Falha ao carregar o símbolo oficial mobile.'
+);
+
+if(
+window.console &&
+typeof window.console.error ===
+'function'
+){
+
+window.console.error(
+'Carioca Ticket | marca oficial MOBILE',
+erro
+);
+}
+}
+)
+.ctMarcaOficialObterDataUriPROD(
+'MOBILE'
+);
+}
+
+function registrarFalhaMarcaOficial(
+detalhe
+){
+
+if(
+el.brandLogoError
+){
+
+el.brandLogoError.textContent =
+'Falha técnica ao carregar a identidade visual oficial da Carioca Ticket. ' +
+'Atualize a página. Se persistir, contate o suporte.';
+
+el.brandLogoError
+.classList
+.remove(
+'hidden'
+);
+}
+
+if(
+window.console &&
+typeof window.console.error ===
+'function'
+){
+
+window.console.error(
+'Carioca Ticket | identidade visual oficial',
+detalhe || 'Falha não especificada.'
+);
+}
+}
+
+async function executarLogin(
+e
+){
+
+e.preventDefault();
+
+limparMensagem(
+el.loginMessage
+);
+
+if(
+!state.capacidades ||
+!state.capacidades.loginEmailSenha ||
+state.capacidades.loginEmailSenha.habilitado !==
+true
+){
+mostrarMensagem(
+el.loginMessage,
+'O serviço de acesso ainda não está disponível. Aguarde a inicialização e tente novamente.',
+'error'
+);
+return;
+}
+
+var email =
+String(
+el.email.value ||
+''
+)
+.trim()
+.toLowerCase();
+
+var senha =
+String(
+el.senha.value ||
+''
+);
+
+if(
+!email ||
+!senha
+){
+
+mostrarMensagem(
+el.loginMessage,
+'Informe e-mail e senha.',
+'error'
+);
+
+return;
+}
+
+definirLoading(
+true,
+'Validando acesso...'
+);
+
+el.loginButton.disabled =
+true;
+
+try{
+
+await garantirFirebasePronto();
+
+var firebaseLogin =
+await window.CTFirebaseWeb.login(
+email,
+senha
+);
+
+var resposta =
+await chamarLoginFirebaseServidor(
+firebaseLogin.idToken
+);
+
+if(
+!resposta ||
+resposta.autenticado !==
+true
+){
+
+if(
+resposta &&
+resposta.requerVerificacaoEmail ===
+true
+){
+
+var reenviado =
+false;
+
+try{
+
+await window.CTFirebaseWeb
+.enviarVerificacao();
+
+reenviado =
+true;
+}
+catch(
+erroVerificacao
+){
+
+registrarErroTecnico(
+'Firebase | reenvio de verificação',
+erroVerificacao
+);
+}
+
+await sairFirebaseSilencioso();
+
+mostrarMensagem(
+el.loginMessage,
+reenviado
+? 'Seu e-mail ainda não foi verificado. Enviamos um novo link de confirmação.'
+: 'Seu e-mail ainda não foi verificado. Confirme o endereço e tente novamente.',
+'info'
+);
+
+return;
+}
+
+await sairFirebaseSilencioso();
+
+mostrarMensagem(
+el.loginMessage,
+resposta &&
+resposta.mensagem
+? resposta.mensagem
+: 'Não foi possível realizar o login.',
+'error'
+);
+
+return;
+}
+
+if(
+resposta.autorizado !==
+true
+){
+
+if(
+resposta.token
+){
+
+encerrarSessaoServidorSilencioso(
+resposta.token
+);
+}
+
+await sairFirebaseSilencioso();
+
+mostrarMensagem(
+el.loginMessage,
+resposta.mensagem ||
+'Esta conta não possui acesso a produtor.',
+'error'
+);
+
+return;
+}
+
+state.token =
+String(
+resposta.token ||
+''
+);
+
+state.usuario =
+resposta.usuario ||
+null;
+
+state.produtores =
+Array.isArray(
+resposta.produtores
+)
+? resposta.produtores
+: [];
+
+salvarSessao(
+state.token,
+resposta.expiraEm ||
+''
+);
+
+el.senha.value =
+'';
+
+abrirPortal();
+}
+catch(
+erro
+){
+
+await sairFirebaseSilencioso();
+
+mostrarMensagem(
+el.loginMessage,
+mensagemErroFirebase(
+erro,
+'LOGIN'
+),
+'error'
+);
+}
+finally{
+
+definirLoading(
+false
+);
+
+el.loginButton.disabled =
+false;
+}
+}
+
+function inicializarFirebaseSilencioso(){
+
+garantirFirebasePronto()
+.catch(
+function(erro){
+
+registrarErroTecnico(
+'Firebase | inicialização',
+erro
+);
+}
+);
+}
+
+function garantirFirebasePronto(){
+
+if(
+state.firebaseReady ===
+true &&
+window.CTFirebaseWeb &&
+window.CTFirebaseWeb.pronto()
+){
+
+return Promise.resolve(
+true
+);
+}
+
+if(
+state.firebaseInitPromise
+){
+
+return state.firebaseInitPromise;
+}
+
+state.firebaseInitPromise =
+new Promise(
+function(
+resolve,
+reject
+){
+
+if(
+!window.CTFirebaseWeb ||
+typeof window.CTFirebaseWeb.inicializar !==
+'function'
+){
+
+reject(
+new Error(
+'CT_FIREBASE_WEB_MODULO_INDISPONIVEL'
+)
+);
+
+return;
+}
+
+google.script.run
+.withSuccessHandler(
+function(r){
+
+if(
+!r ||
+r.sucesso !==
+true ||
+!r.firebaseConfig
+){
+
+reject(
+new Error(
+'CT_FIREBASE_WEB_CONFIG_INDISPONIVEL'
+)
+);
+
+return;
+}
+
+window.CTFirebaseWeb
+.inicializar(
+r.firebaseConfig
+)
+.then(
+function(){
+
+state.firebaseReady =
+true;
+
+resolve(
+true
+);
+}
+)
+.catch(
+reject
+);
+}
+)
+.withFailureHandler(
+reject
+)
+.ctCentralAcessoObterFirebaseConfigPROD();
+}
+)
+.catch(
+function(erro){
+
+state.firebaseReady =
+false;
+
+state.firebaseInitPromise =
+null;
+
+throw erro;
+}
+);
+
+return state.firebaseInitPromise;
+}
+
+function chamarCadastroFirebaseServidor(
+idToken,
+dados
+){
+
+return new Promise(
+function(
+resolve,
+reject
+){
+
+google.script.run
+.withSuccessHandler(
+resolve
+)
+.withFailureHandler(
+reject
+)
+.ctCentralAcessoCadastrarPROD(
+idToken,
+dados || {}
+);
+}
+);
+}
+
+function chamarLoginFirebaseServidor(
+idToken
+){
+
+return new Promise(
+function(
+resolve,
+reject
+){
+
+google.script.run
+.withSuccessHandler(
+resolve
+)
+.withFailureHandler(
+reject
+)
+.ctPortalProdutorLoginFirebaseIsoladoPROD(
+idToken
+);
+}
+);
+}
+
+function encerrarSessaoServidorSilencioso(
+token
+){
+
+token =
+String(
+token ||
+''
+);
+
+if(
+!token
+){
+
+return;
+}
+
+google.script.run
+.withSuccessHandler(
+function(){}
+)
+.withFailureHandler(
+function(){}
+)
+.logoutUsuarioCT2(
+token
+);
+}
+
+async function sairFirebaseSilencioso(){
+
+if(
+!window.CTFirebaseWeb ||
+typeof window.CTFirebaseWeb.sair !==
+'function'
+){
+
+return;
+}
+
+try{
+
+await window.CTFirebaseWeb.sair();
+}
+catch(
+erro
+){
+
+registrarErroTecnico(
+'Firebase | logout',
+erro
+);
+}
+}
+
+function criarErroPublico(
+mensagem
+){
+
+var erro =
+new Error(
+String(
+mensagem ||
+'Não foi possível concluir esta operação.'
+)
+);
+
+erro.ctPublicMessage =
+String(
+mensagem ||
+''
+);
+
+return erro;
+}
+
+function codigoErroFirebase(
+erro
+){
+
+return String(
+erro &&
+erro.code
+? erro.code
+: ''
+)
+.trim()
+.toLowerCase();
+}
+
+function mensagemErroFirebase(
+erro,
+contexto
+){
+
+if(
+erro &&
+erro.ctPublicMessage
+){
+
+return String(
+erro.ctPublicMessage
+);
+}
+
+var codigo =
+codigoErroFirebase(
+erro
+);
+
+contexto =
+String(
+contexto ||
+''
+)
+.trim()
+.toUpperCase();
+
+if(
+codigo ===
+'auth/invalid-email'
+){
+
+return 'Informe um endereço de e-mail válido.';
+}
+
+if(
+codigo ===
+'auth/invalid-credential' ||
+codigo ===
+'auth/wrong-password' ||
+codigo ===
+'auth/user-not-found'
+){
+
+return 'E-mail ou senha inválidos.';
+}
+
+if(
+codigo ===
+'auth/email-already-in-use'
+){
+
+return 'Este e-mail já possui uma conta. Tente entrar ou use a recuperação de senha.';
+}
+
+if(
+codigo ===
+'auth/weak-password'
+){
+
+return 'Use uma senha mais forte, com pelo menos 8 caracteres.';
+}
+
+if(
+codigo ===
+'auth/user-disabled'
+){
+
+return 'Esta conta está desativada.';
+}
+
+if(
+codigo ===
+'auth/too-many-requests'
+){
+
+return 'Muitas tentativas foram realizadas. Aguarde um pouco e tente novamente.';
+}
+
+if(
+codigo ===
+'auth/network-request-failed'
+){
+
+return 'Não foi possível conectar ao serviço de autenticação. Verifique sua internet e tente novamente.';
+}
+
+if(
+codigo ===
+'auth/operation-not-allowed'
+){
+
+return 'Este método de acesso ainda não está disponível.';
+}
+
+registrarErroTecnico(
+'Firebase | ' +
+contexto,
+erro
+);
+
+return contexto ===
+'CADASTRO'
+? 'Não foi possível criar sua conta neste momento.'
+: 'Não foi possível acessar sua conta neste momento.';
+}
+
+function registrarErroTecnico(
+contexto,
+erro
+){
+
+if(
+window.console &&
+typeof window.console.error ===
+'function'
+){
+
+window.console.error(
+'Carioca Ticket | ' +
+String(
+contexto ||
+'erro'
+),
+erro
+);
+}
+}
+
+function iniciarSessaoPortal(){
+
+var processar =
+function(hashRecebido){
+
+var handoff =
+extrairHandoffPortal(
+hashRecebido
+);
+
+if(
+!handoff
+){
+
+tentarRestaurarSessao();
+
+return;
+}
+
+definirLoading(
+true,
+'Validando acesso seguro...'
+);
+
+google.script.run
+.withSuccessHandler(
+function(resposta){
+
+if(
+!resposta ||
+resposta.sucesso !==
+true ||
+resposta.autenticado !==
+true ||
+resposta.autorizado !==
+true ||
+!resposta.token
+){
+
+definirLoading(
+false
+);
+
+mostrarLogin();
+
+mostrarMensagem(
+el.loginMessage,
+'O acesso seguro expirou ou já foi utilizado. Entre novamente.',
+'error'
+);
+
+return;
+}
+
+salvarSessao(
+String(
+resposta.token
+),
+String(
+resposta.expiraEm ||
+''
+)
+);
+
+limparFragmentoHandoffPortal();
+
+definirLoading(
+false
+);
+
+tentarRestaurarSessao();
+}
+)
+.withFailureHandler(
+function(){
+
+definirLoading(
+false
+);
+
+mostrarLogin();
+
+mostrarMensagem(
+el.loginMessage,
+'Não foi possível validar o acesso seguro agora.',
+'error'
+);
+}
+)
+.ctCentralOperacionalConsumirHandoffPROD(
+handoff,
+'PORTAL'
+);
+};
+
+if(
+typeof google !==
+'undefined' &&
+google.script &&
+google.script.url &&
+typeof google.script.url.getLocation ===
+'function'
+){
+
+google.script.url.getLocation(
+function(localizacao){
+
+processar(
+localizacao &&
+localizacao.hash
+? localizacao.hash
+: (
+window.location &&
+window.location.hash
+? window.location.hash
+: ''
+)
+);
+}
+);
+
+return;
+}
+
+processar(
+window.location &&
+window.location.hash
+? window.location.hash
+: ''
+);
+}
+
+
+function extrairHandoffPortal(
+hashRecebido
+){
+
+var hash =
+String(
+hashRecebido ||
+''
+)
+.replace(
+/^#/,
+''
+)
+.trim();
+
+if(
+!hash
+){
+
+return '';
+}
+
+try{
+
+var params =
+new URLSearchParams(
+hash
+);
+
+return String(
+params.get(
+'ct_handoff'
+) ||
+''
+)
+.trim();
+}
+catch(
+erro
+){
+
+return '';
+}
+}
+
+
+function limparFragmentoHandoffPortal(){
+
+try{
+
+if(
+window.history &&
+typeof window.history.replaceState ===
+'function'
+){
+
+window.history.replaceState(
+null,
+document.title,
+window.location.pathname +
+window.location.search
+);
+}
+}
+catch(
+erro
+){}
+}
+
+
+function tentarRestaurarSessao(){
+
+var salvo =
+lerSessao();
+
+if(
+!salvo ||
+!salvo.token
+){
+
+mostrarLogin();
+
+return;
+}
+
+state.token =
+salvo.token;
+
+definirLoading(
+true,
+'Restaurando sessão...'
+);
+
+google.script.run
+.withSuccessHandler(
+function(r){
+
+definirLoading(
+false
+);
+
+if(
+!r ||
+r.autenticado !==
+true ||
+r.autorizado !==
+true
+){
+
+limparSessaoLocal();
+
+mostrarLogin();
+
+return;
+}
+
+state.usuario =
+r.usuario ||
+null;
+
+state.produtores =
+Array.isArray(
+r.produtores
+)
+? r.produtores
+: [];
+
+abrirPortal();
+}
+)
+.withFailureHandler(
+function(){
+
+definirLoading(
+false
+);
+
+limparSessaoLocal();
+
+mostrarLogin();
+}
+)
+.ctPortalProdutorRestaurarSessaoIsoladaPROD(
+state.token
+);
+}
+
+function abrirPortal(){
+
+if(
+!state.produtores.length
+){
+
+limparSessaoLocal();
+
+mostrarLogin();
+
+mostrarMensagem(
+el.loginMessage,
+'Nenhum produtor autorizado foi encontrado para esta conta.',
+'error'
+);
+
+return;
+}
+
+el.loginView
+.classList
+.add(
+'hidden'
+);
+
+el.portalView
+.classList
+.remove(
+'hidden'
+);
+
+var nome =
+state.usuario &&
+state.usuario.nome
+? state.usuario.nome
+: 'Produtor';
+
+el.topUser.textContent =
+nome;
+
+el.helloName.textContent =
+'Olá, ' +
+nome;
+
+preencherProdutores();
+
+prepararLinksAutenticados();
+
+iniciarAtualizacaoHandoff();
+
+iniciarAtualizacaoAutomatica();
+}
+
+function mostrarLogin(){
+
+pararAtualizacaoAutomatica();
+
+pararAtualizacaoHandoff();
+
+resetarLinksAutenticados();
+
+el.portalView
+.classList
+.add(
+'hidden'
+);
+
+el.loginView
+.classList
+.remove(
+'hidden'
+);
+
+el.registerAuthView
+.classList
+.add(
+'hidden'
+);
+
+el.loginAuthView
+.classList
+.remove(
+'hidden'
+);
+
+el.dashboard
+.classList
+.add(
+'hidden'
+);
+}
+
+function preencherProdutores(){
+
+el.producerSelect.innerHTML =
+'';
+
+state.produtores.forEach(
+function(p){
+
+var o =
+document.createElement(
+'option'
+);
+
+o.value =
+p.id;
+
+o.textContent =
+p.nomeFantasia ||
+p.responsavelNome ||
+p.id;
+
+el.producerSelect.appendChild(
+o
+);
+}
+);
+
+state.produtorAtual =
+state.produtores[0] ||
+null;
+
+preencherEventos();
+}
+
+function trocarProdutor(){
+
+var id =
+String(
+el.producerSelect.value ||
+''
+);
+
+state.produtorAtual =
+state.produtores.find(
+function(p){
+
+return (
+String(
+p.id || ''
+) ===
+id
+);
+}
+) ||
+null;
+
+preencherEventos();
+}
+
+function preencherEventos(){
+
+el.eventSelect.innerHTML =
+'';
+
+el.dashboard
+.classList
+.add(
+'hidden'
+);
+
+if(
+!state.produtorAtual
+){
+
+state.eventoAtual =
+null;
+
+return;
+}
+
+var eventos =
+Array.isArray(
+state.produtorAtual.eventos
+)
+? state.produtorAtual.eventos
+: [];
+
+if(
+!eventos.length
+){
+
+state.eventoAtual =
+null;
+
+var o =
+document.createElement(
+'option'
+);
+
+o.value =
+'';
+
+o.textContent =
+'Nenhum evento autorizado';
+
+el.eventSelect.appendChild(
+o
+);
+
+mostrarMensagem(
+el.portalMessage,
+'Este produtor ainda não possui eventos autorizados.',
+'error'
+);
+
+return;
+}
+
+limparMensagem(
+el.portalMessage
+);
+
+var selecioneEvento =
+document.createElement(
+'option'
+);
+
+selecioneEvento.value =
+'';
+
+selecioneEvento.textContent =
+'Selecione um evento';
+
+selecioneEvento.selected =
+true;
+
+el.eventSelect.appendChild(
+selecioneEvento
+);
+
+state.eventoAtual =
+null;
+
+eventos.forEach(
+function(ev){
+
+var o =
+document.createElement(
+'option'
+);
+
+o.value =
+ev.id;
+
+o.textContent =
+ev.nome ||
+ev.id;
+
+el.eventSelect.appendChild(
+o
+);
+}
+);
+
+}
+
+function trocarEvento(){
+
+if(
+!state.produtorAtual
+){
+
+return;
+}
+
+var id =
+String(
+el.eventSelect.value ||
+''
+);
+
+if(
+!id
+){
+state.eventoAtual =
+null;
+
+el.dashboard
+.classList
+.add(
+'hidden'
+);
+
+limparMensagem(
+el.portalMessage
+);
+return;
+}
+
+var eventos =
+Array.isArray(
+state.produtorAtual.eventos
+)
+? state.produtorAtual.eventos
+: [];
+
+state.eventoAtual =
+eventos.find(
+function(ev){
+
+return (
+String(
+ev.id || ''
+) ===
+id
+);
+}
+) ||
+null;
+
+carregarPainel(
+true
+);
+}
+
+function carregarPainel(
+show
+){
+
+if(
+!state.token ||
+!state.produtorAtual ||
+!state.eventoAtual
+){
+
+return;
+}
+
+limparMensagem(
+el.portalMessage
+);
+
+if(
+show
+){
+
+definirLoading(
+true,
+'Carregando evento...'
+);
+}
+
+google.script.run
+.withSuccessHandler(
+function(r){
+
+if(
+show
+){
+
+definirLoading(
+false
+);
+}
+
+if(
+!r ||
+r.autenticado !==
+true
+){
+
+limparSessaoLocal();
+
+mostrarLogin();
+
+mostrarMensagem(
+el.loginMessage,
+'Sua sessão expirou. Faça login novamente.',
+'error'
+);
+
+return;
+}
+
+if(
+r.autorizado !==
+true
+){
+
+el.dashboard
+.classList
+.add(
+'hidden'
+);
+
+mostrarMensagem(
+el.portalMessage,
+'Você não possui autorização para acessar este evento.',
+'error'
+);
+
+return;
+}
+
+if(
+r.sucesso !==
+true ||
+!r.painel
+){
+
+mostrarMensagem(
+el.portalMessage,
+r.mensagem ||
+'Não foi possível carregar o painel.',
+'error'
+);
+
+return;
+}
+
+renderizarPainel(
+r.painel
+);
+}
+)
+.withFailureHandler(
+function(){
+
+if(
+show
+){
+
+definirLoading(
+false
+);
+}
+
+mostrarMensagem(
+el.portalMessage,
+'Não foi possível atualizar o painel agora.',
+'error'
+);
+}
+)
+.ctPortalProdutorCarregarPainelIsoladoPROD(
+state.token,
+state.produtorAtual.id,
+state.eventoAtual.id
+);
+}
+
+function renderizarPainel(
+p
+){
+
+p =
+p || {};
+
+var ev =
+p.evento ||
+{};
+
+var r =
+p.resumo ||
+{};
+
+el.eventName.textContent =
+ev.nome ||
+state.eventoAtual.nome ||
+'Evento';
+
+el.eventDate.textContent =
+ev.data
+? '📅 ' + ev.data
+: '';
+
+el.eventTime.textContent =
+ev.horario
+? '🕒 ' + ev.horario
+: '';
+
+var local =
+[
+ev.local,
+ev.cidade,
+ev.uf
+]
+.filter(
+Boolean
+)
+.join(
+' • '
+);
+
+el.eventLocation.textContent =
+local
+? '📍 ' + local
+: '';
+
+el.metricRevenue.textContent =
+r.receita ||
+'R$ 0,00';
+
+el.metricTickets.textContent =
+numero(
+r.ingressosValidos
+);
+
+el.metricPresent.textContent =
+numero(
+r.presentes
+);
+
+el.metricRemaining.textContent =
+numero(
+r.vagasRestantes
+);
+
+el.metricPaid.textContent =
+numero(
+r.ingressosPagos
+);
+
+el.metricCourtesy.textContent =
+numero(
+r.cortesias
+);
+
+el.metricAverage.textContent =
+r.ticketMedio ||
+'R$ 0,00';
+
+el.metricCapacity.textContent =
+numero(
+r.capacidade
+);
+
+var ocup =
+limitarPercentual(
+r.percentualOcupacao
+);
+
+el.occupancyPercent.textContent =
+ocup + '%';
+
+el.occupancyBar.style.width =
+ocup + '%';
+
+el.miniPending.textContent =
+numero(
+r.pendentes
+);
+
+el.miniCancelled.textContent =
+numero(
+r.cancelados
+);
+
+el.miniTotal.textContent =
+numero(
+r.totalIngressos
+);
+
+el.miniCheckin.textContent =
+limitarPercentual(
+r.percentualCheckin
+) +
+'%';
+
+renderizarCheckins(
+p.checkinsRecentes
+);
+
+el.updatedAt.textContent =
+p.atualizadoEm
+? 'Atualizado em ' +
+p.atualizadoEm
+: 'Atualizado agora';
+
+el.dashboard
+.classList
+.remove(
+'hidden'
+);
+}
+
+function renderizarCheckins(
+itens
+){
+
+el.checkinList.innerHTML =
+'';
+
+itens =
+Array.isArray(
+itens
+)
+? itens.slice(
+0,
+10
+)
+: [];
+
+if(
+!itens.length
+){
+
+var vazio =
+document.createElement(
+'div'
+);
+
+vazio.className =
+'empty';
+
+vazio.textContent =
+'Nenhum check-in registrado recentemente.';
+
+el.checkinList.appendChild(
+vazio
+);
+
+return;
+}
+
+itens.forEach(
+function(item){
+
+item =
+item || {};
+
+var bloco =
+document.createElement(
+'div'
+);
+
+var nome =
+document.createElement(
+'div'
+);
+
+var meta =
+document.createElement(
+'div'
+);
+
+bloco.className =
+'checkin-item';
+
+nome.className =
+'checkin-name';
+
+nome.textContent =
+item.nome ||
+'Participante';
+
+meta.className =
+'checkin-meta';
+
+[
+item.tipo,
+item.codigo,
+item.horario
+]
+.filter(
+Boolean
+)
+.forEach(
+function(valor){
+
+var span =
+document.createElement(
+'span'
+);
+
+span.textContent =
+String(
+valor
+);
+
+meta.appendChild(
+span
+);
+}
+);
+
+bloco.appendChild(
+nome
+);
+
+bloco.appendChild(
+meta
+);
+
+el.checkinList.appendChild(
+bloco
+);
+}
+);
+}
+
+async function executarAlteracaoEmail(){
+
+limparMensagem(
+el.portalMessage
+);
+
+var atual =
+state.usuario &&
+state.usuario.email
+? String(
+    state.usuario.email
+  )
+: '';
+
+var novoEmail =
+window.prompt(
+'Informe o novo e-mail da sua conta Carioca Ticket:',
+atual
+);
+
+if(
+novoEmail ===
+null
+){
+
+return;
+}
+
+novoEmail =
+String(
+novoEmail || ''
+)
+.trim()
+.toLowerCase();
+
+if(
+!novoEmail ||
+novoEmail ===
+atual.toLowerCase()
+){
+
+mostrarMensagem(
+el.portalMessage,
+'Informe um e-mail diferente do atual.',
+'info'
+);
+
+return;
+}
+
+definirLoading(
+true,
+'Preparando alteração de e-mail...'
+);
+
+el.changeEmailButton.disabled =
+true;
+
+try{
+
+await garantirFirebasePronto();
+
+await window.CTFirebaseWeb
+.alterarEmail(
+novoEmail
+);
+
+mostrarMensagem(
+el.portalMessage,
+'Enviamos uma confirmação para ' +
+novoEmail +
+'. Abra esse e-mail e confirme a alteração. Depois, seu login passará a usar o novo endereço.',
+'success'
+);
+}
+catch(
+erro
+){
+
+var codigo =
+codigoErroFirebase(
+erro
+);
+
+var mensagem =
+'Não foi possível iniciar a alteração de e-mail.';
+
+if(
+String(
+erro &&
+erro.message ||
+''
+) ===
+'CT_FIREBASE_WEB_RELOGIN_NECESSARIO'
+){
+
+mensagem =
+'Por segurança, saia e entre novamente no Portal antes de alterar o e-mail.';
+}
+else if(
+codigo ===
+'auth/requires-recent-login'
+){
+
+mensagem =
+'Por segurança, saia e entre novamente no Portal e tente a alteração de e-mail.';
+}
+else if(
+codigo ===
+'auth/email-already-in-use'
+){
+
+mensagem =
+'Este e-mail já está vinculado a outra conta.';
+}
+else if(
+codigo ===
+'auth/invalid-email'
+){
+
+mensagem =
+'Informe um endereço de e-mail válido.';
+}
+
+mostrarMensagem(
+el.portalMessage,
+mensagem,
+'error'
+);
+}
+finally{
+
+definirLoading(
+false
+);
+
+el.changeEmailButton.disabled =
+false;
+}
+}
+
+
+function validarLinkAutenticadoPendente(
+evento
+){
+
+var link =
+evento.currentTarget;
+
+var expiraEm =
+Date.parse(
+String(
+link &&
+link.dataset &&
+link.dataset.handoffExpira ||
+''
+)
+);
+
+var expirado =
+!isNaN(
+expiraEm
+) &&
+expiraEm <=
+Date.now() + 5000;
+
+if(
+!link ||
+link.getAttribute(
+'aria-disabled'
+) ===
+'true' ||
+String(
+link.getAttribute(
+'href'
+) || ''
+) ===
+'#' ||
+expirado
+){
+
+evento.preventDefault();
+
+prepararLinksAutenticados();
+
+mostrarMensagem(
+el.portalMessage,
+'Preparando acesso seguro. Tente novamente em instantes.',
+'info'
+);
+}
+}
+
+
+function prepararLinksAutenticados(){
+
+if(
+!state.token
+){
+
+resetarLinksAutenticados();
+
+return;
+}
+
+gerarLinkHandoff(
+'CENTRAL',
+el.centralMobileLink,
+'https://cariocaticket.com.br/central/'
+);
+
+gerarLinkHandoff(
+'ACESSOS',
+el.accessManagementLink,
+'https://cariocaticket.com.br/acessos/'
+);
+}
+
+
+function gerarLinkHandoff(
+destino,
+elemento,
+urlBase
+){
+
+if(
+!elemento ||
+!state.token
+){
+
+return;
+}
+
+var hrefAtual =
+String(
+elemento.getAttribute(
+'href'
+) ||
+''
+);
+
+if(
+hrefAtual ===
+'#'
+){
+
+elemento
+.classList
+.add(
+'handoff-pending'
+);
+
+elemento.setAttribute(
+'aria-disabled',
+'true'
+);
+}
+
+google.script.run
+.withSuccessHandler(
+function(resposta){
+
+if(
+!resposta ||
+resposta.sucesso !==
+true ||
+!resposta.handoff
+){
+
+invalidarLinkHandoffSeExpirado(
+elemento
+);
+
+return;
+}
+
+elemento.href =
+urlBase +
+'#ct_handoff=' +
+encodeURIComponent(
+String(
+resposta.handoff
+)
+);
+
+elemento.dataset.handoffExpira =
+String(
+resposta.expiraEm ||
+''
+);
+
+elemento.setAttribute(
+'aria-disabled',
+'false'
+);
+
+elemento
+.classList
+.remove(
+'handoff-pending'
+);
+}
+)
+.withFailureHandler(
+function(){
+
+invalidarLinkHandoffSeExpirado(
+elemento
+);
+}
+)
+.ctCentralOperacionalCriarHandoffPROD(
+state.token,
+destino
+);
+}
+
+
+function invalidarLinkHandoffSeExpirado(
+elemento
+){
+
+if(
+!elemento
+){
+
+return;
+}
+
+var expiraEm =
+Date.parse(
+String(
+elemento.dataset.handoffExpira ||
+''
+)
+);
+
+if(
+isNaN(
+expiraEm
+) ||
+expiraEm <=
+Date.now()
+){
+
+elemento.href =
+'#';
+
+elemento.setAttribute(
+'aria-disabled',
+'true'
+);
+
+elemento
+.classList
+.add(
+'handoff-pending'
+);
+}
+}
+
+
+function resetarLinksAutenticados(){
+
+[
+el.centralMobileLink,
+el.accessManagementLink
+]
+.forEach(
+function(link){
+
+if(
+!link
+){
+
+return;
+}
+
+link.href =
+'#';
+
+link.setAttribute(
+'aria-disabled',
+'true'
+);
+
+link
+.classList
+.add(
+'handoff-pending'
+);
+
+delete link.dataset.handoffExpira;
+}
+);
+}
+
+
+function iniciarAtualizacaoHandoff(){
+
+pararAtualizacaoHandoff();
+
+state.handoffTimer =
+setInterval(
+function(){
+
+if(
+document.visibilityState ===
+'visible' &&
+state.token
+){
+
+prepararLinksAutenticados();
+}
+},
+120000
+);
+}
+
+
+function pararAtualizacaoHandoff(){
+
+if(
+state.handoffTimer
+){
+
+clearInterval(
+state.handoffTimer
+);
+
+state.handoffTimer =
+null;
+}
+}
+
+
+function executarLogout(){
+
+var tokenAtual =
+state.token;
+
+pararAtualizacaoAutomatica();
+
+limparSessaoLocal();
+
+resetarEstado();
+
+mostrarLogin();
+
+sairFirebaseSilencioso();
+
+if(
+!tokenAtual
+){
+
+return;
+}
+
+google.script.run
+.withSuccessHandler(
+function(){}
+)
+.withFailureHandler(
+function(){}
+)
+.logoutUsuarioCT2(
+tokenAtual
+);
+}
+
+function salvarSessao(
+token,
+expiraEm
+){
+
+var payload =
+JSON.stringify({
+
+token:
+token,
+
+expiraEm:
+String(
+expiraEm || ''
+)
+});
+
+try{
+
+sessionStorage.setItem(
+STORAGE_KEY,
+payload
+);
+}
+catch(
+erro
+){}
+
+try{
+
+localStorage.setItem(
+STORAGE_KEY,
+payload
+);
+}
+catch(
+erro
+){}
+}
+
+function lerSessao(){
+
+try{
+
+var bruto =
+sessionStorage.getItem(
+STORAGE_KEY
+);
+
+if(
+!bruto
+){
+
+bruto =
+localStorage.getItem(
+STORAGE_KEY
+);
+}
+
+if(
+!bruto
+){
+
+return null;
+}
+
+var dados =
+JSON.parse(
+bruto
+);
+
+if(
+!dados ||
+!dados.token
+){
+
+return null;
+}
+
+if(
+dados.expiraEm
+){
+
+var expira =
+new Date(
+dados.expiraEm
+);
+
+if(
+!isNaN(
+expira.getTime()
+) &&
+expira.getTime() <=
+Date.now()
+){
+
+sessionStorage.removeItem(
+STORAGE_KEY
+);
+
+try{
+
+localStorage.removeItem(
+STORAGE_KEY
+);
+}
+catch(
+erroStorage
+){}
+
+return null;
+}
+}
+
+return dados;
+}
+catch(
+erro
+){
+
+return null;
+}
+}
+
+function limparSessaoLocal(){
+
+try{
+
+sessionStorage.removeItem(
+STORAGE_KEY
+);
+}
+catch(
+erro
+){}
+
+try{
+
+localStorage.removeItem(
+STORAGE_KEY
+);
+}
+catch(
+erro
+){}
+}
+
+function resetarEstado(){
+
+state.token =
+'';
+
+state.usuario =
+null;
+
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+el.email.value =
+'';
+
+el.senha.value =
+'';
+
+el.dashboard
+.classList
+.add(
+'hidden'
+);
+}
+
+function iniciarAtualizacaoAutomatica(){
+
+pararAtualizacaoAutomatica();
+
+state.refreshTimer =
+setInterval(
+function(){
+
+if(
+document.visibilityState ===
+'visible' &&
+state.token &&
+state.eventoAtual
+){
+
+carregarPainel(
+false
+);
+}
+},
+30000
+);
+}
+
+function pararAtualizacaoAutomatica(){
+
+if(
+state.refreshTimer
+){
+
+clearInterval(
+state.refreshTimer
+);
+
+state.refreshTimer =
+null;
+}
+}
+
+function definirLoading(
+ativo,
+texto
+){
+
+el.loadingText.textContent =
+texto ||
+'Carregando...';
+
+el.loadingOverlay
+.classList
+.toggle(
+'show',
+ativo ===
+true
+);
+}
+
+function mostrarMensagem(
+elemento,
+texto,
+tipo
+){
+
+elemento.textContent =
+texto || '';
+
+var classe =
+tipo ===
+'success'
+? 'success'
+: (
+tipo ===
+'info'
+? 'info'
+: 'error'
+);
+
+elemento.className =
+'message ' +
+classe;
+}
+
+function limparMensagem(
+elemento
+){
+
+elemento.textContent =
+'';
+
+elemento.className =
+'message';
+}
+
+function numero(
+valor
+){
+
+var n =
+Number(
+valor || 0
+);
+
+if(
+isNaN(
+n
+)
+){
+
+n =
+0;
+}
+
+return Math.floor(
+n
+)
+.toLocaleString(
+'pt-BR'
+);
+}
+
+function limitarPercentual(
+valor
+){
+
+var n =
+Number(
+valor || 0
+);
+
+if(
+isNaN(
+n
+)
+){
+
+n =
+0;
+}
+
+return Math.max(
+0,
+Math.min(
+100,
+Math.round(
+n
+)
+)
+);
+}
+
+})();
+</script>
+
+<script>
+/* CT_PASSWORD_TOGGLE_V1 */
+(function(){
+'use strict';
+
+document.querySelectorAll(
+'[data-password-target]'
+).forEach(
+function(botao){
+
+botao.addEventListener(
+'click',
+function(){
+
+var alvoId =
+String(
+botao.getAttribute(
+'data-password-target'
+) || ''
+);
+
+var campo =
+document.getElementById(
+alvoId
+);
+
+if(
+!campo
+){
+return;
+}
+
+var mostrando =
+campo.type ===
+'text';
+
+campo.type =
+mostrando
+? 'password'
+: 'text';
+
+botao.textContent =
+mostrando
+? 'Mostrar'
+: 'Ocultar';
+
+botao.setAttribute(
+'aria-label',
+mostrando
+? 'Mostrar senha'
+: 'Ocultar senha'
+);
+
+botao.setAttribute(
+'aria-pressed',
+mostrando
+? 'false'
+: 'true'
+);
+}
+);
+}
+);
+})();
+</script>
 </body>
 </html>
