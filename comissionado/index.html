@@ -718,7 +718,7 @@
     var eventId=String(params.get('evento')||params.get('eventoId')||'').trim();
 
     if(!token){
-      setTimeout(function(){failure(new Error('CT_VENDAS_SESSAO_AUSENTE'))},0);
+      setTimeout(function(){failure(new Error('Acesso restrito. Entre no Portal do Produtor para acessar suas vendas.'))},0);
       return;
     }
 
