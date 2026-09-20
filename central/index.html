@@ -133,6 +133,9 @@
       <a id="mFornecedores" class="module" data-perm="FORNECEDORES" href="#">
         <div class="icon">🤝</div><div><strong>Fornecedores</strong><span>Prestadores, serviços, valores e pagamentos do evento.</span></div>
       </a>
+      <a id="mCRM" class="module" data-perm="CRM" href="#">
+        <div class="icon">👥</div><div><strong>Público & Clientes</strong><span>Compradores, participantes, histórico e relacionamento do evento.</span></div>
+      </a>
     </section>
   </main>
 
@@ -325,6 +328,10 @@ function updateModules(){
   document.getElementById('mFornecedores').href=id
     ?'/fornecedores/?evento='+encodeURIComponent(id)
     :'#';
+
+  document.getElementById('mCRM').href=id
+    ?'/crm/?evento='+encodeURIComponent(id)
+    :'/crm/';
 
   if(!id){
     document.getElementById('mCheckin').classList.add('disabled');
