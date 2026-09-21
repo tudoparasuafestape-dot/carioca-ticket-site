@@ -58,8 +58,41 @@ test.describe('Jornada publica protegida', () => {
     expect(manifestHref).toBe('/manifest.webmanifest');
 
     const pwa = await page.evaluate(async () => {
-      const manifestResponse = await fetch('/manifest.webmanifest', { cache: 'no-store' });
-      const manifest = await manifestResponse.json();
+      const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+      const deadline = Date.now() + 90000;
+      let status = 0;
+      let manifest = null;
+
+      while (Date.now() < deadline) {
+        try {
+          const response = await fetch('/manifest.webmanifest?e2e=' + Date.now(), {
+            cache: 'no-store'
+          });
+          status = response.status;
+          manifest = await response.json();
+
+          const icons = Array.isArray(manifest.icons) ? manifest.icons : [];
+          const ready =
+            icons.some(icon =>
+              icon.src === '/assets/carioca-ticket-icon-192.png' &&
+              icon.sizes === '192x192'
+            ) &&
+            icons.some(icon =>
+              icon.src === '/assets/carioca-ticket-icon-512.png' &&
+              icon.sizes === '512x512'
+            ) &&
+            icons.some(icon =>
+              icon.src === '/assets/carioca-ticket-icon-maskable-512.png' &&
+              icon.sizes === '512x512' &&
+              String(icon.purpose || '').includes('maskable')
+            );
+
+          if (ready) break;
+        } catch (_) {}
+
+        await sleep(2000);
+      }
+
       async function measure(src) {
         return await new Promise(resolve => {
           const img = new Image();
@@ -68,13 +101,27 @@ test.describe('Jornada publica protegida', () => {
           img.src = src + '?e2e=' + Date.now();
         });
       }
+
+      let swReady = false;
+      if ('serviceWorker' in navigator) {
+        try {
+          await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+          await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('SW_TIMEOUT')), 15000))
+          ]);
+          swReady = true;
+        } catch (_) {}
+      }
+
       return {
-        status: manifestResponse.status,
+        status,
         manifest,
         icon192: await measure('/assets/carioca-ticket-icon-192.png'),
         icon512: await measure('/assets/carioca-ticket-icon-512.png'),
         mask512: await measure('/assets/carioca-ticket-icon-maskable-512.png'),
-        swSupported: 'serviceWorker' in navigator
+        swSupported: 'serviceWorker' in navigator,
+        swReady
       };
     });
 
@@ -98,6 +145,7 @@ test.describe('Jornada publica protegida', () => {
     expect(pwa.icon512).toEqual({ ok: true, width: 512, height: 512 });
     expect(pwa.mask512).toEqual({ ok: true, width: 512, height: 512 });
     expect(pwa.swSupported).toBe(true);
+    expect(pwa.swReady).toBe(true);
 
     await expectNoForbiddenVisibleLinks(page);
 
