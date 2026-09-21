@@ -23,6 +23,32 @@ test.describe('Canario real first-party', () => {
     await expect(page.locator('#loginButton')).toBeEnabled({ timeout: 45000 });
   });
 
+  test('Portal oficial carrega a marca real do backend sem alerta visual', async ({ page }) => {
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+    await expectFirstParty(page, '/produtor/');
+
+    await expect(page.getByRole('heading', { name: /Acesse sua conta/i })).toBeVisible();
+    await expect(page.locator('#brandLogoDesktop')).toBeVisible();
+    await expect(page.locator('#brandLogoError')).toBeHidden();
+
+    await expect.poll(
+      () => page.locator('#brandLogoDesktop').getAttribute('data-brand-source'),
+      { timeout: 60000 }
+    ).toBe('backend');
+
+    const logo = await page.locator('#brandLogoDesktop').evaluate(img => ({
+      src: img.getAttribute('src') || '',
+      width: img.naturalWidth,
+      height: img.naturalHeight
+    }));
+
+    expect(logo.src.startsWith('data:image/')).toBe(true);
+    expect(logo.width).toBeGreaterThan(0);
+    expect(logo.height).toBeGreaterThan(0);
+    await expect(page.locator('#brandLogoError')).toBeHidden();
+  });
+
+
   test('Evento v2 carrega o evento real e aponta para Checkout v2', async ({ page }) => {
     await page.goto('/evento-v2/?evento=' + encodeURIComponent(EVENT_ID), {
       waitUntil: 'domcontentloaded'
