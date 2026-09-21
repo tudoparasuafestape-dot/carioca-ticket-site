@@ -234,8 +234,13 @@ if (producerPage) {
   if (!producerPage.includes('<title>Portal do Produtor | Carioca Ticket</title>')) {
     fail('produtor/index.html', 'titulo do Portal do Produtor incorreto');
   }
-  if (!producerPage.includes('carioca-ticket-logo')) {
-    fail('produtor/index.html', 'Portal do Produtor sem logomarca oficial');
+  if (
+    !producerPage.includes('id="brandLogoDesktop"') ||
+    !producerPage.includes("ctMarcaOficialObterDataUriPROD") ||
+    !producerPage.includes("'DESKTOP'") ||
+    !producerPage.includes("'MOBILE'")
+  ) {
+    fail('produtor/index.html', 'Portal do Produtor sem carregamento da identidade visual oficial');
   }
 }
 
