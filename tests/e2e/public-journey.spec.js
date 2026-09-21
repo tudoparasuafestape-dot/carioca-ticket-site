@@ -73,6 +73,7 @@ test.describe('Jornada publica protegida', () => {
     expect(pwa.manifest.name).toBe('Carioca Ticket');
     expect(pwa.manifest.display).toBe('standalone');
     expect(pwa.manifest.icons.some(icon => icon.src === '/assets/carioca-ticket-simbolo.png')).toBe(true);
+    console.log('CT_ICON_DIMENSIONS', JSON.stringify(pwa.icon));
     expect(pwa.icon.ok).toBe(true);
     expect(pwa.icon.width).toBeGreaterThan(0);
     expect(pwa.icon.height).toBeGreaterThan(0);
