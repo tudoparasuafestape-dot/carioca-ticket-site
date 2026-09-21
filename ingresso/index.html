@@ -328,7 +328,23 @@
               shareButton.textContent='✓ Link copiado';
               setTimeout(function(){shareButton.textContent='🔗 Compartilhar ingresso'},2200);
             }catch(_){
-              window.prompt('Copie o link do ingresso:',shareUrl);
+              try{
+                var area=document.createElement('textarea');
+                area.value=shareUrl;
+                area.setAttribute('readonly','');
+                area.style.position='fixed';
+                area.style.opacity='0';
+                document.body.appendChild(area);
+                area.select();
+                var copiado=document.execCommand('copy');
+                area.remove();
+                if(!copiado)throw new Error('COPY_FALLBACK');
+                shareButton.textContent='✓ Link copiado';
+                setTimeout(function(){shareButton.textContent='🔗 Compartilhar ingresso'},2200);
+              }catch(__){
+                shareButton.textContent='Use o menu do navegador para copiar';
+                setTimeout(function(){shareButton.textContent='🔗 Compartilhar ingresso'},3200);
+              }
             }
           });
         }
