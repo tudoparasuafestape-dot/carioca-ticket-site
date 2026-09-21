@@ -185,6 +185,47 @@ function vendasFixture() {
 }
 
 
+function consultaFixture() {
+  return {
+    sucesso: true,
+    autenticado: true,
+    autorizado: true,
+    mensagem: '1 ingresso encontrado.',
+    total: 1,
+    filtroEvento: {
+      eventoId: EVENT_ID,
+      eventoNome: 'Roda de Samba Estilo Carioca',
+      pesquisarTodos: false
+    },
+    filtroStatus: {
+      status: '',
+      statusClasse: '',
+      statusNome: ''
+    },
+    atualizadoEm: '20/09/2026 09:10:00',
+    ingressos: [
+      {
+        id: '1',
+        nome: 'Cliente Homologacao',
+        telefone: '(81) 99999-0001',
+        tipo: 'Individual',
+        codigo: 'CT-E2E-CONSULTA',
+        status: 'VALIDO',
+        statusClasse: 'VALIDO',
+        dataCompra: '20/09/2026 09:00:00',
+        dataCheckin: '',
+        valorPago: 'R$ 25,00',
+        vendaId: 'VENDA-E2E-CONSULTA',
+        ingressoCompartilhamentoUrl: '/ingresso/?codigo=CT-E2E-CONSULTA&sig=TESTE',
+        ingressoUrl: '/ingresso/?codigo=CT-E2E-CONSULTA&sig=TESTE',
+        whatsappUrl: 'https://wa.me/5581999990001',
+        pdfUrl: ''
+      }
+    ]
+  };
+}
+
+
 function barFixture() {
   return {
     sucesso: true,
@@ -728,6 +769,19 @@ async function installMock(page, state) {
             resultado = portalSession();
             break;
 
+          case 'ctPortalProdutorCarregarCatalogoEventosPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe('PROD-E2E');
+            resultado = {
+              sucesso: true,
+              autenticado: true,
+              autorizado: true,
+              produtorId: 'PROD-E2E',
+              eventos: portalSession().produtores[0].eventos
+            };
+            break;
+
+
           case 'ctPortalProdutorCarregarPainelIsoladoPROD':
             expect(String(args[0] || '')).toBe(state.token);
             expect(String(args[2] || '')).toBe(EVENT_ID);
@@ -745,6 +799,23 @@ async function installMock(page, state) {
             };
             break;
           }
+
+          case 'ctConsultaIngressosOperacionalPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = consultaFixture();
+            break;
+
+          case 'ctCheckinOperacionalCriarCredencialPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = {
+              sucesso: true,
+              autorizado: true,
+              credencial: 'CHECKIN_E2E_CREDENCIAL_SEGURA_ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+              expiraEm: '2099-01-01T00:00:00.000Z'
+            };
+            break;
 
           case 'ctCentralVendasCarregarSeguraPROD':
             expect(String(args[0] || '')).toBe(state.token);
@@ -1124,9 +1195,24 @@ test.describe('Jornada operacional autenticada', () => {
     );
     await expect(page.locator('#mComissoes')).toHaveAttribute('aria-disabled', 'false');
 
-    await expect(page.locator('#mCheckin')).toHaveAttribute('href', /\/checkin\//);
+    await expect(page.locator('#mCheckin')).toHaveAttribute('href', '#');
     await expect(page.locator('#mConsulta')).toHaveAttribute('href', /\/consulta\//);
     await expectNoTechnicalVisibleLinks(page);
+
+    await page.locator('#mConsulta').click();
+    await expect(page).toHaveURL(/\/consulta\/\?evento=/);
+    await expect(page.getByRole('heading', { name: /Consulta de Ingressos/i })).toBeVisible({
+      timeout: 15000
+    });
+    await page.locator('#term').fill('Cliente Homologacao');
+    await page.locator('#searchButton').click();
+    await expect(page.locator('#results')).toContainText('Cliente Homologacao');
+    await expect(page.locator('#results')).toContainText('CT-E2E-CONSULTA');
+    await expectNoTechnicalVisibleLinks(page);
+
+    await page.getByRole('link', { name: /Central Mobile/i }).click();
+    await expect(page).toHaveURL(/\/central\//);
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
     await vendas.click();
     await expect(page).toHaveURL(/\/vendas\/\?evento=/);
