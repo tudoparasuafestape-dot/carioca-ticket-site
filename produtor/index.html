@@ -827,6 +827,76 @@ linear-gradient(180deg,#090b0f,#07090c 75%)}
  .event-header{border-radius:18px}
 }
 
+
+/* QA UX PORTAL V2 */
+.event-select-native{
+position:absolute!important;
+width:1px!important;
+height:1px!important;
+opacity:0!important;
+pointer-events:none!important
+}
+.event-picker-button{
+width:100%;
+min-height:52px;
+border-radius:14px;
+border:1px solid var(--border);
+background:#0c1016;
+color:var(--text);
+padding:10px 14px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+text-align:left;
+cursor:pointer
+}
+.event-picker-button:focus-visible{
+outline:none;
+border-color:var(--gold);
+box-shadow:0 0 0 3px rgba(232,179,75,.09)
+}
+.event-picker-button:disabled{opacity:.55;cursor:not-allowed}
+.event-picker-main{min-width:0}
+.event-picker-title{display:block;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.event-picker-meta{display:block;margin-top:3px;color:var(--muted);font-size:10px}
+.event-picker-chevron{color:var(--gold2);font-size:18px;flex:0 0 auto}
+.portal-sheet-backdrop{
+position:fixed;inset:0;z-index:120;display:none;align-items:flex-end;justify-content:center;
+padding:16px;background:rgba(0,0,0,.76);backdrop-filter:blur(8px)
+}
+.portal-sheet-backdrop.show{display:flex}
+.portal-sheet{
+width:min(620px,100%);max-height:min(78vh,700px);overflow:hidden;
+background:#11161d;border:1px solid rgba(232,179,75,.28);border-radius:24px;
+box-shadow:0 24px 90px rgba(0,0,0,.62)
+}
+.portal-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px;border-bottom:1px solid var(--border)}
+.portal-sheet-head strong{font-size:17px}
+.portal-sheet-close{width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:#0c1016;color:var(--text);font-size:22px}
+.event-picker-list{padding:10px;overflow:auto;max-height:calc(min(78vh,700px) - 78px)}
+.event-picker-option{width:100%;border:0;background:transparent;color:var(--text);padding:14px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;border-radius:14px}
+.event-picker-option+.event-picker-option{margin-top:4px}
+.event-picker-option:hover,.event-picker-option:focus-visible{background:rgba(232,179,75,.08);outline:none}
+.event-picker-option.is-selected{background:rgba(232,179,75,.12);box-shadow:inset 0 0 0 1px rgba(232,179,75,.28)}
+.event-picker-option-name{display:block;font-size:14px;font-weight:900;line-height:1.35}
+.event-picker-option-meta{display:block;margin-top:5px;color:var(--muted);font-size:11px;line-height:1.35}
+.event-picker-check{color:var(--gold2);font-size:18px;font-weight:900}
+.portal-modal-body{padding:18px}
+.portal-modal-body label{display:block;margin-bottom:8px;color:var(--muted);font-size:12px;font-weight:800}
+.portal-modal-body input{width:100%;min-height:50px;border-radius:13px;border:1px solid var(--border);background:#0c1016;color:var(--text);padding:0 14px;font:inherit;outline:none}
+.portal-modal-body input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,179,75,.09)}
+.portal-modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.portal-modal-actions button{min-height:46px}
+body.portal-modal-open{overflow:hidden}
+.refresh-btn:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:760px){
+  .topbar{position:static}
+  .event-picker-button{min-height:58px}
+  .portal-sheet-backdrop{padding:10px}
+  .portal-sheet{border-radius:22px 22px 16px 16px}
+}
+
 </style>
   <script src="/pwa-register.js" defer></script>
 </head>
@@ -1330,13 +1400,33 @@ Produtor
 <label for="eventSelect">
 Evento
 </label>
-<select id="eventSelect">
+<select
+id="eventSelect"
+class="event-select-native"
+aria-hidden="true"
+tabindex="-1"
+>
 </select>
+<button
+id="eventPickerButton"
+class="event-picker-button"
+type="button"
+aria-haspopup="dialog"
+aria-expanded="false"
+disabled
+>
+<span class="event-picker-main">
+<span id="eventPickerTitle" class="event-picker-title">Selecione um evento</span>
+<span id="eventPickerMeta" class="event-picker-meta"></span>
+</span>
+<span class="event-picker-chevron" aria-hidden="true">⌄</span>
+</button>
 </div>
 <button
 id="refreshButton"
 class="refresh-btn"
 type="button"
+disabled
 >
 Atualizar painel
 </button>
@@ -1550,6 +1640,34 @@ class="updated"
 </section>
 </main>
 </section>
+<div id="eventPickerBackdrop" class="portal-sheet-backdrop" aria-hidden="true">
+<section class="portal-sheet" role="dialog" aria-modal="true" aria-labelledby="eventPickerDialogTitle">
+<div class="portal-sheet-head">
+<strong id="eventPickerDialogTitle">Selecionar evento</strong>
+<button id="eventPickerClose" class="portal-sheet-close" type="button" aria-label="Fechar">×</button>
+</div>
+<div id="eventPickerList" class="event-picker-list"></div>
+</section>
+</div>
+
+<div id="emailModalBackdrop" class="portal-sheet-backdrop" aria-hidden="true">
+<section class="portal-sheet" role="dialog" aria-modal="true" aria-labelledby="emailModalTitle">
+<div class="portal-sheet-head">
+<strong id="emailModalTitle">Alterar e-mail</strong>
+<button id="emailModalClose" class="portal-sheet-close" type="button" aria-label="Fechar">×</button>
+</div>
+<div class="portal-modal-body">
+<label for="emailModalInput">Novo e-mail da sua conta Carioca Ticket</label>
+<input id="emailModalInput" type="email" autocomplete="email" inputmode="email" placeholder="seuemail@exemplo.com">
+<div id="emailModalMessage" class="message"></div>
+<div class="portal-modal-actions">
+<button id="emailModalCancel" class="ghost" type="button">Cancelar</button>
+<button id="emailModalConfirm" class="refresh-btn" type="button">Enviar confirmação</button>
+</div>
+</div>
+</section>
+</div>
+
 <div
 id="loadingOverlay"
 class="loading-overlay"
@@ -1869,7 +1987,13 @@ firebaseReady:
 false,
 
 firebaseInitPromise:
-null
+null,
+
+painelEmAndamento:
+false,
+
+painelSequencia:
+0
 };
 
 var el = {};
@@ -1912,10 +2036,22 @@ function iniciar(){
 'helloName',
 'producerSelect',
 'eventSelect',
+'eventPickerButton',
+'eventPickerTitle',
+'eventPickerMeta',
+'eventPickerBackdrop',
+'eventPickerClose',
+'eventPickerList',
 'refreshButton',
 'centralMobileLink',
 'accessManagementLink',
 'changeEmailButton',
+'emailModalBackdrop',
+'emailModalClose',
+'emailModalInput',
+'emailModalMessage',
+'emailModalCancel',
+'emailModalConfirm',
 'logoutButton',
 'dashboard',
 'eventName',
@@ -2004,6 +2140,25 @@ el.eventSelect.addEventListener(
 trocarEvento
 );
 
+el.eventPickerButton.addEventListener(
+'click',
+abrirSeletorEvento
+);
+
+el.eventPickerClose.addEventListener(
+'click',
+fecharSeletorEvento
+);
+
+el.eventPickerBackdrop.addEventListener(
+'click',
+function(evento){
+if(evento.target===el.eventPickerBackdrop){
+fecharSeletorEvento();
+}
+}
+);
+
 el.refreshButton.addEventListener(
 'click',
 function(){
@@ -2029,6 +2184,30 @@ preencherEventos();
 );
 
 el.changeEmailButton.addEventListener(
+'click',
+abrirModalEmail
+);
+
+el.emailModalClose.addEventListener(
+'click',
+fecharModalEmail
+);
+
+el.emailModalCancel.addEventListener(
+'click',
+fecharModalEmail
+);
+
+el.emailModalBackdrop.addEventListener(
+'click',
+function(evento){
+if(evento.target===el.emailModalBackdrop){
+fecharModalEmail();
+}
+}
+);
+
+el.emailModalConfirm.addEventListener(
 'click',
 executarAlteracaoEmail
 );
@@ -4091,6 +4270,18 @@ el.eventSelect.innerHTML =
 el.eventSelect.disabled =
 true;
 
+el.eventPickerButton.disabled =
+true;
+
+el.refreshButton.disabled =
+true;
+
+el.eventPickerTitle.textContent =
+'Carregando eventos...';
+
+el.eventPickerMeta.textContent =
+'';
+
 el.dashboard
 .classList
 .add(
@@ -4135,6 +4326,15 @@ vazio
 
 el.eventSelect.disabled =
 false;
+
+el.eventPickerButton.disabled =
+true;
+
+el.eventPickerTitle.textContent =
+'Nenhum evento autorizado';
+
+el.eventPickerMeta.textContent =
+'';
 
 mostrarMensagem(
 el.portalMessage,
@@ -4293,36 +4493,10 @@ ev.id ||
 ''
 );
 
-var nome =
+o.textContent =
 String(
 ev.nome ||
 'Evento'
-).trim();
-
-var detalhes =
-[
-String(
-ev.data ||
-''
-).trim(),
-String(
-ev.status ||
-''
-).trim()
-]
-.filter(
-Boolean
-);
-
-o.textContent =
-nome +
-(
-detalhes.length
-? ' · ' +
-detalhes.join(
-' · '
-)
-: ''
 );
 
 el.eventSelect.appendChild(
@@ -4333,6 +4507,24 @@ o
 
 el.eventSelect.disabled =
 false;
+
+el.eventPickerButton.disabled =
+!eventos ||
+!eventos.length;
+
+el.refreshButton.disabled =
+true;
+
+el.eventPickerTitle.textContent =
+'Selecione um evento';
+
+el.eventPickerMeta.textContent =
+eventos &&
+eventos.length
+? eventos.length + (eventos.length===1?' evento disponível':' eventos disponíveis')
+: '';
+
+renderizarListaSeletorEvento();
 
 if(
 !eventos ||
@@ -4346,7 +4538,6 @@ el.portalMessage,
 );
 }
 }
-
 
 function renderizarFalhaCatalogoEventos(){
 
@@ -4371,6 +4562,18 @@ o
 el.eventSelect.disabled =
 false;
 
+el.eventPickerButton.disabled =
+false;
+
+el.eventPickerTitle.textContent =
+'Não foi possível carregar os eventos';
+
+el.eventPickerMeta.textContent =
+'Toque para tentar novamente';
+
+el.refreshButton.disabled =
+true;
+
 mostrarMensagem(
 el.portalMessage,
 'Não foi possível carregar a lista de eventos agora. Use “Atualizar painel” para tentar novamente.',
@@ -4378,12 +4581,111 @@ el.portalMessage,
 );
 }
 
+function renderizarListaSeletorEvento(){
+
+el.eventPickerList.innerHTML =
+'';
+
+var eventos =
+state.produtorAtual &&
+Array.isArray(
+state.produtorAtual.eventos
+)
+? state.produtorAtual.eventos
+: [];
+
+if(!eventos.length){
+var vazio=document.createElement('div');
+vazio.className='empty';
+vazio.textContent='Nenhum evento disponível.';
+el.eventPickerList.appendChild(vazio);
+return;
+}
+
+eventos.forEach(
+function(ev){
+
+var botao=document.createElement('button');
+var bloco=document.createElement('span');
+var nome=document.createElement('span');
+var meta=document.createElement('span');
+var check=document.createElement('span');
+
+botao.type='button';
+botao.className='event-picker-option';
+
+if(
+state.eventoAtual &&
+String(state.eventoAtual.id||'')===String(ev.id||'')
+){
+botao.classList.add('is-selected');
+}
+
+nome.className='event-picker-option-name';
+meta.className='event-picker-option-meta';
+check.className='event-picker-check';
+
+nome.textContent=String(ev.nome||'Evento');
+
+meta.textContent=[
+String(ev.data||'').trim(),
+String(ev.status||'').trim()
+].filter(Boolean).join(' • ');
+
+check.textContent=
+state.eventoAtual &&
+String(state.eventoAtual.id||'')===String(ev.id||'')
+?'✓':'';
+
+bloco.appendChild(nome);
+bloco.appendChild(meta);
+botao.appendChild(bloco);
+botao.appendChild(check);
+
+botao.addEventListener(
+'click',
+function(){
+el.eventSelect.value=String(ev.id||'');
+fecharSeletorEvento();
+trocarEvento();
+}
+);
+
+el.eventPickerList.appendChild(botao);
+}
+);
+}
+
+function abrirSeletorEvento(){
+
+if(el.eventPickerButton.disabled){
+if(state.produtorAtual){
+preencherEventos();
+}
+return;
+}
+
+renderizarListaSeletorEvento();
+
+el.eventPickerBackdrop.classList.add('show');
+el.eventPickerBackdrop.setAttribute('aria-hidden','false');
+el.eventPickerButton.setAttribute('aria-expanded','true');
+document.body.classList.add('portal-modal-open');
+}
+
+function fecharSeletorEvento(){
+el.eventPickerBackdrop.classList.remove('show');
+el.eventPickerBackdrop.setAttribute('aria-hidden','true');
+el.eventPickerButton.setAttribute('aria-expanded','false');
+document.body.classList.remove('portal-modal-open');
+}
+
+
 function trocarEvento(){
 
 if(
 !state.produtorAtual
 ){
-
 return;
 }
 
@@ -4396,18 +4698,13 @@ el.eventSelect.value ||
 if(
 !id
 ){
-state.eventoAtual =
-null;
-
-el.dashboard
-.classList
-.add(
-'hidden'
-);
-
-limparMensagem(
-el.portalMessage
-);
+state.eventoAtual = null;
+el.refreshButton.disabled = true;
+el.eventPickerTitle.textContent = 'Selecione um evento';
+el.eventPickerMeta.textContent = '';
+el.dashboard.classList.add('hidden');
+limparMensagem(el.portalMessage);
+renderizarListaSeletorEvento();
 return;
 }
 
@@ -4421,20 +4718,25 @@ state.produtorAtual.eventos
 state.eventoAtual =
 eventos.find(
 function(ev){
-
-return (
-String(
-ev.id || ''
-) ===
-id
-);
+return String(ev.id||'')===id;
 }
-) ||
-null;
+) || null;
 
-carregarPainel(
-true
-);
+if(!state.eventoAtual){
+el.refreshButton.disabled = true;
+return;
+}
+
+el.refreshButton.disabled = false;
+el.eventPickerTitle.textContent = String(state.eventoAtual.nome||'Evento');
+el.eventPickerMeta.textContent = [
+String(state.eventoAtual.data||'').trim(),
+String(state.eventoAtual.status||'').trim()
+].filter(Boolean).join(' • ');
+
+renderizarListaSeletorEvento();
+
+carregarPainel(true);
 }
 
 function carregarPainel(
@@ -4444,114 +4746,114 @@ show
 if(
 !state.token ||
 !state.produtorAtual ||
-!state.eventoAtual
+!state.eventoAtual ||
+state.painelEmAndamento
 ){
-
 return;
 }
 
-limparMensagem(
-el.portalMessage
-);
+state.painelEmAndamento=true;
+var sequencia=++state.painelSequencia;
 
-if(
-show
-){
+limparMensagem(el.portalMessage);
 
-definirLoading(
-true,
-'Carregando evento...'
-);
+if(show){
+definirLoading(true,'Carregando painel...');
 }
+
+var timer=setTimeout(
+function(){
+
+if(sequencia!==state.painelSequencia){
+return;
+}
+
+state.painelSequencia++;
+state.painelEmAndamento=false;
+
+if(show){
+definirLoading(false);
+}
+
+mostrarMensagem(
+el.portalMessage,
+'A consulta está demorando mais do que deveria. Tente novamente em instantes.',
+'error'
+);
+},
+12000
+);
 
 google.script.run
 .withSuccessHandler(
 function(r){
 
-if(
-show
-){
-
-definirLoading(
-false
-);
+if(sequencia!==state.painelSequencia){
+return;
 }
 
-if(
-!r ||
-r.autenticado !==
-true
-){
+clearTimeout(timer);
+state.painelEmAndamento=false;
 
+if(show){
+definirLoading(false);
+}
+
+if(!r || r.autenticado!==true){
 limparSessaoLocal();
-
 mostrarLogin();
-
 mostrarMensagem(
 el.loginMessage,
 'Sua sessão expirou. Faça login novamente.',
 'error'
 );
-
 return;
 }
 
-if(
-r.autorizado !==
-true
-){
-
-el.dashboard
-.classList
-.add(
-'hidden'
-);
-
+if(r.autorizado!==true){
+el.dashboard.classList.add('hidden');
 mostrarMensagem(
 el.portalMessage,
 'Você não possui autorização para acessar este evento.',
 'error'
 );
-
 return;
 }
 
-if(
-r.sucesso !==
-true ||
-!r.painel
-){
-
+if(r.sucesso!==true || !r.painel){
 mostrarMensagem(
 el.portalMessage,
-r.mensagem ||
-'Não foi possível carregar o painel.',
+r.mensagem || 'Não foi possível carregar o painel.',
 'error'
 );
-
 return;
 }
 
-renderizarPainel(
-r.painel
-);
+renderizarPainel(r.painel);
 }
 )
 .withFailureHandler(
-function(){
+function(erro){
 
-if(
-show
-){
-
-definirLoading(
-false
-);
+if(sequencia!==state.painelSequencia){
+return;
 }
+
+clearTimeout(timer);
+state.painelEmAndamento=false;
+
+if(show){
+definirLoading(false);
+}
+
+registrarErroTecnico(
+'Painel do evento',
+erro
+);
 
 mostrarMensagem(
 el.portalMessage,
-'Não foi possível atualizar o painel agora.',
+'Não foi possível carregar o painel deste evento. Tente novamente.',
 'error'
 );
 }
@@ -4765,8 +5067,10 @@ nome.className =
 'checkin-name';
 
 nome.textContent =
+formatarNomePainel(
 item.nome ||
-'Participante';
+'Participante'
+);
 
 meta.className =
 'checkin-meta';
@@ -4774,7 +5078,7 @@ meta.className =
 [
 item.tipo,
 item.codigo,
-item.horario
+formatarDataCheckinPainel(item.data,item.horario)
 ]
 .filter(
 Boolean
@@ -4813,147 +5117,150 @@ bloco
 );
 }
 
-async function executarAlteracaoEmail(){
+function formatarNomePainel(valor){
 
-limparMensagem(
-el.portalMessage
-);
+var texto=String(valor||'').trim().toLocaleLowerCase('pt-BR');
 
-var atual =
-state.usuario &&
-state.usuario.email
-? String(
-    state.usuario.email
-  )
-: '';
-
-var novoEmail =
-window.prompt(
-'Informe o novo e-mail da sua conta Carioca Ticket:',
-atual
-);
-
-if(
-novoEmail ===
-null
-){
-
-return;
+if(!texto){
+return 'Participante';
 }
 
-novoEmail =
-String(
-novoEmail || ''
-)
+var conectores={da:true,de:true,do:true,das:true,dos:true,e:true};
+
+return texto.split(/\s+/).map(
+function(palavra,indice){
+if(indice>0 && conectores[palavra]){
+return palavra;
+}
+return palavra.charAt(0).toLocaleUpperCase('pt-BR')+palavra.slice(1);
+}
+).join(' ');
+}
+
+function formatarDataCheckinPainel(dataCompleta,horario){
+
+var data=String(dataCompleta||'').trim();
+var hora=String(horario||'').trim();
+
+if(data){
+var partes=data.split(/\s+/);
+var dataCurta=String(partes[0]||'');
+if(/^\d{2}\/\d{2}\/\d{4}$/.test(dataCurta)){
+dataCurta=dataCurta.substring(0,5);
+}
+return [dataCurta,hora||partes[1]||''].filter(Boolean).join(' · ');
+}
+
+return hora;
+}
+
+
+function abrirModalEmail(){
+
+limparMensagem(el.emailModalMessage);
+
+var atual=
+state.usuario && state.usuario.email
+? String(state.usuario.email)
+: '';
+
+el.emailModalInput.value=atual;
+el.emailModalBackdrop.classList.add('show');
+el.emailModalBackdrop.setAttribute('aria-hidden','false');
+document.body.classList.add('portal-modal-open');
+
+setTimeout(function(){
+el.emailModalInput.focus();
+el.emailModalInput.select();
+},30);
+}
+
+function fecharModalEmail(){
+el.emailModalBackdrop.classList.remove('show');
+el.emailModalBackdrop.setAttribute('aria-hidden','true');
+document.body.classList.remove('portal-modal-open');
+}
+
+async function executarAlteracaoEmail(){
+
+limparMensagem(el.emailModalMessage);
+
+var atual=
+state.usuario && state.usuario.email
+? String(state.usuario.email)
+: '';
+
+var novoEmail=
+String(el.emailModalInput.value||'')
 .trim()
 .toLowerCase();
 
-if(
-!novoEmail ||
-novoEmail ===
-atual.toLowerCase()
-){
-
+if(!novoEmail || novoEmail===atual.toLowerCase()){
 mostrarMensagem(
-el.portalMessage,
+el.emailModalMessage,
 'Informe um e-mail diferente do atual.',
 'info'
 );
-
 return;
 }
 
-definirLoading(
-true,
-'Preparando alteração de e-mail...'
+if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(novoEmail)){
+mostrarMensagem(
+el.emailModalMessage,
+'Informe um endereço de e-mail válido.',
+'error'
 );
+return;
+}
 
-el.changeEmailButton.disabled =
-true;
+definirLoading(true,'Preparando alteração de e-mail...');
+el.emailModalConfirm.disabled=true;
 
 try{
 
 await garantirFirebasePronto();
 
-await window.CTFirebaseWeb
-.alterarEmail(
+await window.CTFirebaseWeb.alterarEmail(
 novoEmail
 );
 
 mostrarMensagem(
-el.portalMessage,
-'Enviamos uma confirmação para ' +
-novoEmail +
-'. Abra esse e-mail e confirme a alteração. Depois, seu login passará a usar o novo endereço.',
+el.emailModalMessage,
+'Confirmação enviada. Abra o e-mail recebido para concluir a alteração.',
 'success'
 );
+
+setTimeout(fecharModalEmail,900);
 }
-catch(
-erro
-){
+catch(erro){
 
-var codigo =
-codigoErroFirebase(
-erro
-);
+var codigo=codigoErroFirebase(erro);
+var mensagem='Não foi possível iniciar a alteração de e-mail.';
 
-var mensagem =
-'Não foi possível iniciar a alteração de e-mail.';
-
-if(
-String(
-erro &&
-erro.message ||
-''
-) ===
-'CT_FIREBASE_WEB_RELOGIN_NECESSARIO'
-){
-
-mensagem =
-'Por segurança, saia e entre novamente no Portal antes de alterar o e-mail.';
+if(String(erro&&erro.message||'')==='CT_FIREBASE_WEB_RELOGIN_NECESSARIO'){
+mensagem='Por segurança, saia e entre novamente no Portal antes de alterar o e-mail.';
 }
-else if(
-codigo ===
-'auth/requires-recent-login'
-){
-
-mensagem =
-'Por segurança, saia e entre novamente no Portal e tente a alteração de e-mail.';
+else if(codigo==='auth/requires-recent-login'){
+mensagem='Por segurança, saia e entre novamente no Portal e tente a alteração de e-mail.';
 }
-else if(
-codigo ===
-'auth/email-already-in-use'
-){
-
-mensagem =
-'Este e-mail já está vinculado a outra conta.';
+else if(codigo==='auth/email-already-in-use'){
+mensagem='Este e-mail já está vinculado a outra conta.';
 }
-else if(
-codigo ===
-'auth/invalid-email'
-){
-
-mensagem =
-'Informe um endereço de e-mail válido.';
+else if(codigo==='auth/invalid-email'){
+mensagem='Informe um endereço de e-mail válido.';
 }
 
 mostrarMensagem(
-el.portalMessage,
+el.emailModalMessage,
 mensagem,
 'error'
 );
 }
 finally{
-
-definirLoading(
-false
-);
-
-el.changeEmailButton.disabled =
-false;
+definirLoading(false);
+el.emailModalConfirm.disabled=false;
 }
 }
-
 
 function validarLinkAutenticadoPendente(
 evento
@@ -5446,6 +5753,23 @@ null;
 
 state.eventoAtual =
 null;
+
+state.painelEmAndamento =
+false;
+
+state.painelSequencia++;
+
+el.refreshButton.disabled =
+true;
+
+if(el.eventPickerButton){
+el.eventPickerButton.disabled=true;
+el.eventPickerTitle.textContent='Selecione um evento';
+el.eventPickerMeta.textContent='';
+}
+
+fecharSeletorEvento();
+fecharModalEmail();
 
 el.email.value =
 '';
