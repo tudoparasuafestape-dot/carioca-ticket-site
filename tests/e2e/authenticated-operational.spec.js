@@ -1123,9 +1123,12 @@ test.describe('Jornada operacional autenticada', () => {
 
     await expect(page.locator('#portalView')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#helloName')).toContainText('Operador Homologacao');
-    await expect(page.locator('#eventSelect')).toBeVisible();
+    await expect(page.locator('#eventPickerButton')).toBeVisible();
 
-    await page.locator('#eventSelect').selectOption(EVENT_ID);
+    await page.locator('#eventPickerButton').click();
+    await page.locator('.event-picker-option').filter({
+      hasText: 'Roda de Samba Estilo Carioca'
+    }).click();
     await expect(page.locator('#dashboard')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#eventName')).toHaveText('Roda de Samba Estilo Carioca');
 
