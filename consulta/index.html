@@ -1,58 +1,88 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#080b10">
-  <title>Consulta de Ingressos | Carioca Ticket</title>
-  <style>
-    *{box-sizing:border-box}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b10}
-    body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    #loading{position:fixed;inset:0;z-index:3;display:grid;place-items:center;background:#080b10;color:#fff;transition:opacity .2s ease}
-    #loading.hide{opacity:0;pointer-events:none}
-    .card{width:min(90vw,440px);padding:28px 24px;border:1px solid rgba(241,182,64,.35);border-radius:22px;background:linear-gradient(180deg,#11151b,#0b0e13);text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.35)}
-    .brand{font-size:12px;font-weight:800;letter-spacing:.2em;color:#f1b640;text-transform:uppercase}
-    h1{font-size:24px;margin:10px 0 8px}
-    p{margin:0;color:#b9c0ca;line-height:1.45}
-    .loader{width:40px;height:40px;margin:22px auto 0;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:#f1b640;animation:spin .8s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    iframe{display:block;width:100%;height:100%;border:0;background:#fff}
-    .fallback{display:none;position:fixed;right:14px;bottom:14px;z-index:4;text-decoration:none;font-size:12px;font-weight:700;color:#111;background:#f1b640;padding:10px 12px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25)}.fallback.show{display:inline-block}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#080b10">
+<link rel="manifest" href="/manifest-produtor.webmanifest">
+<link rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+<title>Consulta de Ingressos | Carioca Ticket</title>
+<style>
+:root{--bg:#07090c;--panel:#10151b;--panel2:#0b0f14;--line:#28303a;--gold:#dfa324;--gold2:#f6c94c;--text:#f6f3ec;--muted:#9aa3ad;--green:#4ade95;--red:#ff7c7c}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 80% 0,rgba(223,163,36,.14),transparent 26%),linear-gradient(180deg,#080b10,#050608 78%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.shell{width:min(980px,calc(100% - 26px));margin:auto;padding:18px 0 48px}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}.logo{width:118px;max-height:54px;object-fit:contain}.ghost{min-height:42px;padding:0 14px;border:1px solid #343a42;border-radius:12px;background:#11161c;color:#eee;text-decoration:none;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.hero{padding:24px;border:1px solid rgba(246,201,76,.24);border-radius:24px;background:linear-gradient(145deg,#111820,#0a0e13);box-shadow:0 22px 70px rgba(0,0,0,.32)}.ey{color:var(--gold2);font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}h1{margin:8px 0 6px;font-size:clamp(29px,7vw,44px);letter-spacing:-.04em}.lead{margin:0;color:#bbc2ca;line-height:1.55}.event{margin-top:14px;color:#e5d6aa;font-size:13px;font-weight:800}
+.search{margin-top:18px;display:grid;grid-template-columns:minmax(0,1fr) 180px 130px;gap:10px}.input,.select{min-height:50px;border:1px solid #363d46;border-radius:14px;background:#090c10;color:#fff;padding:0 14px;font:inherit;outline:none}.input:focus,.select:focus{border-color:var(--gold)}.btn{border:0;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;font-weight:900;font:inherit;cursor:pointer}.btn:disabled{opacity:.55;cursor:wait}
+.status{min-height:22px;margin:14px 2px 0;color:#b9c0ca;font-size:12px}.status.err{color:#ffb1b1}.status.ok{color:#b9f5d4}
+.results{display:grid;gap:12px;margin-top:18px}.card{padding:18px;border:1px solid var(--line);border-radius:18px;background:#0c1015;box-shadow:0 12px 36px rgba(0,0,0,.16)}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.name{font-size:16px;font-weight:900}.code{margin-top:5px;color:var(--gold2);font-size:12px;font-weight:850;word-break:break-all}.badge{padding:6px 9px;border-radius:999px;background:#171d24;color:#d5d9dd;font-size:10px;font-weight:900;text-transform:uppercase}.badge.ok{background:rgba(74,222,149,.11);color:#8ef0bc}.badge.bad{background:rgba(255,124,124,.1);color:#ffabab}
+.meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}.meta div{padding:10px;border-radius:12px;background:#090c10}.meta small{display:block;color:#8f98a3;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.meta strong{display:block;margin-top:4px;font-size:12px;line-height:1.35;word-break:break-word}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.action{min-height:38px;padding:0 12px;border:1px solid #343b44;border-radius:11px;background:#151a20;color:#fff;text-decoration:none;font-size:11px;font-weight:850;display:inline-flex;align-items:center}.action.primary{border-color:rgba(246,201,76,.3);color:#111;background:linear-gradient(135deg,var(--gold),var(--gold2))}
+.empty{margin-top:18px;padding:26px;border:1px dashed #38404a;border-radius:18px;text-align:center;color:#9ba4ae}.gate{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:20px;background:#080b10}.gate.hidden{display:none}.gate-card{width:min(430px,100%);padding:25px;border:1px solid rgba(246,201,76,.24);border-radius:22px;background:#11161c;text-align:center}.gate-card img{width:138px}.gate-card h2{margin:16px 0 7px}.gate-card p{color:#aab2bb;line-height:1.5}.loader{width:36px;height:36px;margin:18px auto 0;border-radius:50%;border:4px solid rgba(255,255,255,.1);border-top-color:var(--gold2);animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.hidden{display:none!important}
+@media(max-width:700px){.search{grid-template-columns:1fr}.btn{min-height:50px}.meta{grid-template-columns:1fr 1fr}.top .ghost{padding:0 10px}.hero{padding:20px}}
+</style>
+<script src="/pwa-register.js" defer></script>
 </head>
 <body>
-  <div id="loading">
-    <div class="card">
-      <div class="brand">Carioca Ticket</div>
-      <h1>Consulta de Ingressos</h1>
-      <p>Carregando acesso oficial…</p>
-      <div class="loader" aria-hidden="true"></div>
-    </div>
-  </div>
-  <iframe id="app" title="Consultar ingressos" ></iframe>
-  <a id="fallback" class="fallback" href="/central/">Voltar à Central Mobile</a>
-  <script>
-    const p=new URLSearchParams(location.search);p.delete('page');
-   const q=p.toString();
-   const destino='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec?page=ingressos'+(q?'&'+q:'')+location.hash;
-    const frame=document.getElementById('app');
-    const loading=document.getElementById('loading');
-    const fallback=document.getElementById('fallback');
-    frame.src=destino;
-    fallback.href="/central/";
-    let carregou=false;
-    frame.addEventListener('load',()=>{
-      carregou=true;
-      loading.classList.add('hide');
-    });
-    setTimeout(()=>{
-      if(!carregou){
-        loading.classList.add('hide');
-        fallback.classList.add('show');
-      }
-    },7000);
-  </script>
+<div id="gate" class="gate">
+ <div class="gate-card">
+  <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+  <h2 id="gateTitle">Validando acesso</h2>
+  <p id="gateText">Confirmando sua sessão e o evento selecionado.</p>
+  <div id="gateLoader" class="loader"></div>
+  <a id="gateBack" class="ghost hidden" href="/central/">Voltar à Central Mobile</a>
+ </div>
+</div>
+<main id="app" class="shell hidden">
+ <header class="top">
+  <a href="/central/"><img class="logo" src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a>
+  <a class="ghost" href="/central/">Central Mobile</a>
+ </header>
+ <section class="hero">
+  <div class="ey">Operação segura</div>
+  <h1>Consulta de Ingressos</h1>
+  <p class="lead">Localize por nome, WhatsApp, código ou venda. A consulta fica restrita ao evento selecionado e à sua sessão.</p>
+  <div id="eventName" class="event"></div>
+  <form id="searchForm" class="search">
+   <input id="term" class="input" autocomplete="off" placeholder="Nome, WhatsApp, código ou venda">
+   <select id="statusFilter" class="select" aria-label="Status">
+    <option value="">Todos os status</option>
+    <option value="VALIDO">Válidos</option>
+    <option value="UTILIZADO">Utilizados</option>
+    <option value="CANCELADO">Cancelados</option>
+    <option value="PENDENTE">Pendentes</option>
+   </select>
+   <button id="searchButton" class="btn" type="submit">Buscar</button>
+  </form>
+  <div id="message" class="status"></div>
+ </section>
+ <section id="results" class="results"></section>
+</main>
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var pending={};
+var state={token:'',eventoId:'',eventoNome:''};
+var gate=document.getElementById('gate'),gateTitle=document.getElementById('gateTitle'),gateText=document.getElementById('gateText'),gateLoader=document.getElementById('gateLoader'),gateBack=document.getElementById('gateBack'),app=document.getElementById('app'),results=document.getElementById('results'),message=document.getElementById('message'),button=document.getElementById('searchButton');
+
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE);if(!raw)return null;var d=JSON.parse(raw);if(!d||!d.token)return null;if(d.expiraEm){var t=Date.parse(d.expiraEm);if(!isNaN(t)&&t<=Date.now())return null}return d}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){return new Promise(function(resolve,reject){var id='CTCONS-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='ctcons_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';frame.setAttribute('aria-hidden','true');form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A consulta demorou mais do que o esperado.'))},15000)};form.submit()})}
+window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível concluir a consulta.')))});
+
+function deny(text){gateTitle.textContent='Acesso restrito';gateText.textContent=text||'Entre pelo Portal do Produtor.';gateLoader.classList.add('hidden');gateBack.classList.remove('hidden')}
+function status(text,type){message.textContent=text||'';message.className='status '+(type||'')}
+function badgeClass(i){var s=String(i.statusClasse||'').toUpperCase();return s==='VALIDO'?'ok':(s==='CANCELADO'?'bad':'')}
+function render(r){state.eventoNome=r&&r.filtroEvento&&r.filtroEvento.eventoNome?String(r.filtroEvento.eventoNome):state.eventoNome;document.getElementById('eventName').textContent=state.eventoNome||'Evento selecionado';var arr=r&&Array.isArray(r.ingressos)?r.ingressos:[];if(!arr.length){results.innerHTML='<div class="empty">'+esc(r&&r.mensagem||'Nenhum ingresso encontrado.')+'</div>';return}results.innerHTML=arr.map(function(i){var ingresso=i.ingressoCompartilhamentoUrl||i.ingressoUrl||'';var a=[];if(ingresso)a.push('<a class="action primary" target="_blank" rel="noopener" href="'+esc(ingresso)+'">Abrir ingresso</a>');if(i.whatsappUrl)a.push('<a class="action" target="_blank" rel="noopener" href="'+esc(i.whatsappUrl)+'">Enviar no WhatsApp</a>');if(i.pdfUrl)a.push('<a class="action" target="_blank" rel="noopener" href="'+esc(i.pdfUrl)+'">Abrir PDF</a>');return '<article class="card"><div class="card-head"><div><div class="name">'+esc(i.nome||'Participante')+'</div><div class="code">'+esc(i.codigo||'Sem código')+'</div></div><span class="badge '+badgeClass(i)+'">'+esc(i.status||i.statusClasse||'—')+'</span></div><div class="meta"><div><small>Tipo</small><strong>'+esc(i.tipo||'—')+'</strong></div><div><small>WhatsApp</small><strong>'+esc(i.telefone||'—')+'</strong></div><div><small>Valor</small><strong>'+esc(i.valorPago||'R$ 0,00')+'</strong></div><div><small>Compra</small><strong>'+esc(i.dataCompra||'—')+'</strong></div><div><small>Check-in</small><strong>'+esc(i.dataCheckin||'—')+'</strong></div><div><small>Venda</small><strong>'+esc(i.vendaId||'—')+'</strong></div></div><div class="actions">'+a.join('')+'</div></article>'}).join('')}
+async function search(){var term=String(document.getElementById('term').value||'').trim(),filter=String(document.getElementById('statusFilter').value||'');if(term.length<2&&!filter){status('Digite pelo menos 2 caracteres ou selecione um status.','err');return}button.disabled=true;status('Consultando ingressos…','');try{var r=await rpc('ctConsultaIngressosOperacionalPROD',[state.token,state.eventoId,term,filter]);if(!r||r.autorizado!==true)throw new Error(r&&r.mensagem||'Acesso não autorizado.');status(r.mensagem||'Consulta concluída.','ok');render(r)}catch(e){status(e&&e.message?e.message:String(e),'err');results.innerHTML=''}finally{button.disabled=false}}
+document.getElementById('searchForm').addEventListener('submit',function(e){e.preventDefault();search()});
+
+(function start(){var s=readSession(),p=new URLSearchParams(location.search);state.eventoId=String(p.get('evento')||p.get('eventoId')||'').trim();if(!s||!s.token){deny('Entre no Portal do Produtor para acessar a consulta.');return}if(!state.eventoId){deny('Selecione um evento na Central Mobile antes de consultar ingressos.');return}state.token=String(s.token);gate.classList.add('hidden');app.classList.remove('hidden');document.getElementById('eventName').textContent='Evento selecionado';status('Digite um termo para iniciar a consulta.','')})();
+}());
+</script>
 </body>
 </html>

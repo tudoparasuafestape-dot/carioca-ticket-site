@@ -230,9 +230,13 @@ for (const file of [
 }
 
 const producerPage = read('produtor/index.html');
+if (producerPage && !producerPage.includes('ctPortalProdutorCarregarCatalogoEventosPROD')) {
+  fail('produtor/index.html', 'Portal sem catalogo leve pos-login');
+}
 if (producerPage) {
   if (
-    !producerPage.includes("? 90000 : 45000") ||
+    !producerPage.includes("? 90000 : (") ||
+    !producerPage.includes(") ? 15000 : 30000") ||
     !producerPage.includes("'CT_PORTAL_RPC_TIMEOUT'") ||
     !producerPage.includes('Sua senha pode ter sido validada')
   ) {
@@ -363,6 +367,32 @@ if (saudeVendas) {
   }
   if (/COMPRADOR_(?:NOME|EMAIL|WHATSAPP)/i.test(saudeVendas)) {
     fail('saude-vendas/index.html', 'Saude das Vendas referencia PII do comprador');
+  }
+}
+
+const consultaOperacional = read('consulta/index.html');
+if (consultaOperacional) {
+  if (!consultaOperacional.includes("ctMinhaCariocaAction','portalRpc'")) {
+    fail('consulta/index.html', 'Consulta operacional sem ponte first-party segura');
+  }
+  if (!consultaOperacional.includes('ctConsultaIngressosOperacionalPROD')) {
+    fail('consulta/index.html', 'Consulta operacional sem gateway autenticado');
+  }
+  if (/id=["']app["'][^>]*iframe|<iframe[^>]+id=["']app["']/i.test(consultaOperacional)) {
+    fail('consulta/index.html', 'Consulta operacional ainda depende do iframe legado');
+  }
+  if (!consultaOperacional.includes('CT_PORTAL_PRODUTOR_PROD_SESSION_V1')) {
+    fail('consulta/index.html', 'Consulta operacional sem sessao do Portal do Produtor');
+  }
+}
+
+const centralSeguro = read('central/index.html');
+if (centralSeguro) {
+  if (!centralSeguro.includes('ctCheckinOperacionalCriarCredencialPROD')) {
+    fail('central/index.html', 'Central abre Check-in sem credencial operacional');
+  }
+  if (!centralSeguro.includes('#ct_checkin=')) {
+    fail('central/index.html', 'Central nao transfere credencial do Check-in pelo fragmento');
   }
 }
 

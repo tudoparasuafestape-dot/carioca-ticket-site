@@ -171,7 +171,7 @@ var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzB
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 var EVENT_KEY='CT_CENTRAL_EVENTO_OFICIAL_V1';
 var pending={};
-var state={token:'',context:null,event:null};
+var state={token:'',context:null,event:null,checkinBusy:false};
 
 var gate=document.getElementById('gate');
 var gateLoading=document.getElementById('gateLoading');
@@ -332,9 +332,7 @@ function updateModules(){
   });
 
   var ev=state.event,id=ev?String(ev.id||''):'',nome=ev?String(ev.nome||''):'';
-  document.getElementById('mCheckin').href=id
-    ?'/checkin/?v=2.1.7&evento='+encodeURIComponent(id)+'&eventoNome='+encodeURIComponent(nome)
-    :'#';
+  document.getElementById('mCheckin').href='#';
   document.getElementById('mConsulta').href=id
     ?'/consulta/?evento='+encodeURIComponent(id)
     :'/consulta/';
@@ -395,9 +393,40 @@ function updateModules(){
   }
 }
 
+function openSecureCheckin(e){
+  if(e)e.preventDefault();
+  var link=document.getElementById('mCheckin');
+  if(!state.event||!state.token||!allowed('CHECKIN')||state.checkinBusy)return false;
+
+  state.checkinBusy=true;
+  link.classList.add('disabled');
+  link.setAttribute('aria-disabled','true');
+
+  var id=String(state.event.id||''),nome=String(state.event.nome||'');
+  post('portalRpc',{
+    metodo:'ctCheckinOperacionalCriarCredencialPROD',
+    argsJson:JSON.stringify([state.token,id])
+  },function(env){
+    state.checkinBusy=false;
+    updateModules();
+
+    var r=env&&env.resultado;
+    if(!env||env.ok!==true||!r||r.sucesso!==true||r.autorizado!==true||!r.credencial){
+      return;
+    }
+
+    location.href='/checkin/?v=2.2.0&evento='+encodeURIComponent(id)+
+      '&eventoNome='+encodeURIComponent(nome)+
+      '#ct_checkin='+encodeURIComponent(String(r.credencial));
+  });
+
+  return false;
+}
+
 function escapeHtml(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 eventSelect.addEventListener('change',applyEvent);
+document.getElementById('mCheckin').addEventListener('click',openSecureCheckin);
 document.getElementById('retry').addEventListener('click',start);
 document.getElementById('logout').addEventListener('click',function(){
   var token=state.token;clearSession();state.token='';state.context=null;state.event=null;

@@ -797,6 +797,36 @@ max-height:82px;
 transform:scale(1.3)
 }
 }
+
+/* AUDITORIA UX 2026-09-21 */
+.portal{background:
+radial-gradient(circle at 92% 3%,rgba(232,179,75,.12),transparent 24%),
+linear-gradient(180deg,#090b0f,#07090c 75%)}
+.topbar{box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.top-actions .ghost{transition:.18s;border-color:#303846}
+.top-actions .ghost:hover{border-color:rgba(232,179,75,.45);background:#151a22}
+.selectors{position:relative;overflow:hidden;box-shadow:0 18px 48px rgba(0,0,0,.18)}
+.selectors:before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.55}
+.selectors select{font-weight:750}
+.selectors select:disabled{opacity:.65;cursor:wait}
+.refresh-btn{transition:.18s}
+.refresh-btn:hover{background:rgba(232,179,75,.14);transform:translateY(-1px)}
+.event-header{box-shadow:0 18px 50px rgba(0,0,0,.18)}
+.metric{transition:.18s}
+.metric:hover{transform:translateY(-1px);border-color:#343d49}
+@media(max-width:760px){
+ .container{padding-top:18px}
+ .hello{margin-bottom:15px}
+ .selectors{padding:15px;border-radius:20px;gap:11px}
+ .selectors .field label{font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+ .selectors select{min-height:52px;font-size:14px;border-radius:14px}
+ .refresh-btn{min-height:50px}
+ .topbar-inner{padding-bottom:10px}
+ .top-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .top-actions .ghost{min-height:42px;border-radius:12px}
+ .event-header{border-radius:18px}
+}
+
 </style>
   <script src="/pwa-register.js" defer></script>
 </head>
@@ -857,7 +887,10 @@ transform:scale(1.3)
       },(
         String(method||'').indexOf('Login')>=0 ||
         String(method||'').indexOf('RestaurarSessao')>=0
-      ) ? 90000 : 45000)
+      ) ? 90000 : (
+        String(method||'').indexOf('CarregarPainel')>=0 ||
+        String(method||'').indexOf('CatalogoEventos')>=0
+      ) ? 15000 : 30000)
     };
 
     form.submit();
@@ -1975,9 +2008,23 @@ el.refreshButton.addEventListener(
 'click',
 function(){
 
+if(
+state.eventoAtual
+){
+
 carregarPainel(
 true
 );
+
+return;
+}
+
+if(
+state.produtorAtual
+){
+
+preencherEventos();
+}
 }
 );
 
@@ -4041,23 +4088,26 @@ function preencherEventos(){
 el.eventSelect.innerHTML =
 '';
 
+el.eventSelect.disabled =
+true;
+
 el.dashboard
 .classList
 .add(
 'hidden'
 );
 
+state.eventoAtual =
+null;
+
 if(
 !state.produtorAtual
 ){
 
-state.eventoAtual =
-null;
-
 return;
 }
 
-var eventos =
+var eventosBase =
 Array.isArray(
 state.produtorAtual.eventos
 )
@@ -4065,62 +4115,171 @@ state.produtorAtual.eventos
 : [];
 
 if(
-!eventos.length
+!eventosBase.length
 ){
 
-state.eventoAtual =
-null;
-
-var o =
+var vazio =
 document.createElement(
 'option'
 );
 
-o.value =
+vazio.value =
 '';
 
-o.textContent =
+vazio.textContent =
 'Nenhum evento autorizado';
 
 el.eventSelect.appendChild(
-o
+vazio
 );
+
+el.eventSelect.disabled =
+false;
 
 mostrarMensagem(
 el.portalMessage,
 'Este produtor ainda não possui eventos autorizados.',
-'error'
+'info'
 );
 
 return;
 }
 
-limparMensagem(
-el.portalMessage
-);
-
-var selecioneEvento =
+var carregando =
 document.createElement(
 'option'
 );
 
-selecioneEvento.value =
+carregando.value =
 '';
 
-selecioneEvento.textContent =
-'Selecione um evento';
+carregando.textContent =
+'Carregando seus eventos...';
 
-selecioneEvento.selected =
+carregando.selected =
 true;
 
 el.eventSelect.appendChild(
-selecioneEvento
+carregando
 );
 
-state.eventoAtual =
-null;
+limparMensagem(
+el.portalMessage
+);
 
-eventos.forEach(
+carregarCatalogoEventosProdutor();
+}
+
+
+function carregarCatalogoEventosProdutor(){
+
+if(
+!state.token ||
+!state.produtorAtual
+){
+
+return;
+}
+
+var produtorId =
+String(
+state.produtorAtual.id ||
+''
+);
+
+google.script.run
+.withSuccessHandler(
+function(r){
+
+if(
+!state.produtorAtual ||
+String(
+state.produtorAtual.id ||
+''
+) !==
+produtorId
+){
+
+return;
+}
+
+if(
+!r ||
+r.autenticado !== true ||
+r.autorizado !== true ||
+!Array.isArray(
+r.eventos
+)
+){
+
+renderizarFalhaCatalogoEventos();
+return;
+}
+
+state.produtorAtual.eventos =
+r.eventos;
+
+renderizarOpcoesEventos(
+r.eventos
+);
+}
+)
+.withFailureHandler(
+function(){
+
+if(
+state.produtorAtual &&
+String(
+state.produtorAtual.id ||
+''
+) ===
+produtorId
+){
+
+renderizarFalhaCatalogoEventos();
+}
+}
+)
+.ctPortalProdutorCarregarCatalogoEventosPROD(
+state.token,
+produtorId
+);
+}
+
+
+function renderizarOpcoesEventos(
+eventos
+){
+
+el.eventSelect.innerHTML =
+'';
+
+var selecione =
+document.createElement(
+'option'
+);
+
+selecione.value =
+'';
+
+selecione.textContent =
+'Selecione um evento';
+
+selecione.selected =
+true;
+
+el.eventSelect.appendChild(
+selecione
+);
+
+(
+Array.isArray(
+eventos
+)
+? eventos
+: []
+)
+.forEach(
 function(ev){
 
 var o =
@@ -4129,11 +4288,42 @@ document.createElement(
 );
 
 o.value =
-ev.id;
+String(
+ev.id ||
+''
+);
+
+var nome =
+String(
+ev.nome ||
+'Evento'
+).trim();
+
+var detalhes =
+[
+String(
+ev.data ||
+''
+).trim(),
+String(
+ev.status ||
+''
+).trim()
+]
+.filter(
+Boolean
+);
 
 o.textContent =
-ev.nome ||
-ev.id;
+nome +
+(
+detalhes.length
+? ' · ' +
+detalhes.join(
+' · '
+)
+: ''
+);
 
 el.eventSelect.appendChild(
 o
@@ -4141,6 +4331,51 @@ o
 }
 );
 
+el.eventSelect.disabled =
+false;
+
+if(
+!eventos ||
+!eventos.length
+){
+
+mostrarMensagem(
+el.portalMessage,
+'Nenhum evento autorizado foi encontrado para este produtor.',
+'info'
+);
+}
+}
+
+
+function renderizarFalhaCatalogoEventos(){
+
+el.eventSelect.innerHTML =
+'';
+
+var o =
+document.createElement(
+'option'
+);
+
+o.value =
+'';
+
+o.textContent =
+'Não foi possível carregar os eventos';
+
+el.eventSelect.appendChild(
+o
+);
+
+el.eventSelect.disabled =
+false;
+
+mostrarMensagem(
+el.portalMessage,
+'Não foi possível carregar a lista de eventos agora. Use “Atualizar painel” para tentar novamente.',
+'error'
+);
 }
 
 function trocarEvento(){
