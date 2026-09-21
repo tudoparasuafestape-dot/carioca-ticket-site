@@ -251,6 +251,15 @@ if (producerPage) {
   }
 }
 
+if (producerPage) {
+  if (
+    !producerPage.includes('Portal | abertura pós-login') ||
+    !producerPage.includes('Seu login foi realizado, mas não foi possível carregar toda a área administrativa')
+  ) {
+    fail('produtor/index.html', 'Portal volta a confundir falha pos-login com falha de autenticacao');
+  }
+}
+
 const home = read('index.html');
 if (home) {
   if (!/href=["'][^"']*\/evento\//i.test(home)) {
