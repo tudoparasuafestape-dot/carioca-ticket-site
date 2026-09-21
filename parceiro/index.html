@@ -4,49 +4,982 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#08090c">
-  <title>Portal Parceiro CT | Carioca Ticket</title>
-  <meta name="description" content="Acesse seu Portal Parceiro Carioca Ticket para acompanhar produtores indicados, vendas elegíveis e comissões.">
-  <link rel="canonical" href="https://cariocaticket.com.br/parceiro/">
-  <meta property="og:locale" content="pt_BR">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Carioca Ticket">
-  <meta property="og:title" content="Portal Parceiro CT | Carioca Ticket">
-  <meta property="og:description" content="Acompanhe produtores indicados, vendas elegíveis e suas comissões no Portal Parceiro CT.">
-  <meta property="og:url" content="https://cariocaticket.com.br/parceiro/">
-  <meta property="og:image" content="https://cariocaticket.com.br/assets/carioca-ticket-preview-oficial-v9.jpg">
-  <meta name="twitter:card" content="summary_large_image">
+  <title>Portal Parceiro CT | Carioca Ticket</title>\n  <meta name="description" content="Acompanhe produtores indicados, vendas elegíveis e comissões no Portal Parceiro CT.">\n  <link rel="canonical" href="https://cariocaticket.com.br/parceiro/">\n  <meta property="og:locale" content="pt_BR">\n  <meta property="og:type" content="website">\n  <meta property="og:site_name" content="Carioca Ticket">\n  <meta property="og:title" content="Portal Parceiro CT | Carioca Ticket">\n  <meta property="og:description" content="Acompanhe produtores indicados, vendas elegíveis e suas comissões.">\n  <meta property="og:url" content="https://cariocaticket.com.br/parceiro/">
   <style>
+    :root{
+      --bg:#07080b;
+      --card:#101217;
+      --card2:#151821;
+      --gold:#e8b34b;
+      --gold2:#ffd87a;
+      --text:#f8f8fa;
+      --muted:#9fa5b2;
+      --border:rgba(232,179,75,.24);
+      --green:#39c985;
+      --red:#ff6f79;
+      --blue:#73b8ff;
+      --shadow:0 28px 80px rgba(0,0,0,.38);
+    }
     *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;background:#08090c;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    body{display:grid;place-items:center;padding:24px;background:
-      radial-gradient(circle at 80% 0,rgba(232,179,75,.14),transparent 34%),
-      #08090c}
-    .card{width:min(92vw,460px);padding:28px;border-radius:24px;border:1px solid rgba(232,179,75,.28);
-      background:linear-gradient(180deg,#151821,#0d0f14);text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.4)}
-    img{width:min(300px,82%);height:92px;object-fit:contain}
-    .eyebrow{display:inline-block;margin-top:14px;padding:7px 10px;border-radius:999px;border:1px solid rgba(232,179,75,.28);
-      color:#ffd87a;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
-    h1{margin:15px 0 9px;font-size:28px}
-    p{margin:0;color:#a3a9b4;line-height:1.55}
-    .spinner{width:38px;height:38px;margin:22px auto 0;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:#e8b34b;animation:spin .8s linear infinite}
-    a{display:inline-block;margin-top:22px;color:#17120a;background:linear-gradient(135deg,#ffd87a,#e8b34b);padding:12px 16px;border-radius:12px;text-decoration:none;font-weight:900}
+    html,body{margin:0;min-height:100%;background:
+      radial-gradient(circle at 80% 0,rgba(232,179,75,.12),transparent 32%),
+      radial-gradient(circle at 10% 40%,rgba(232,179,75,.05),transparent 30%),
+      var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .hidden{display:none!important}
+    .shell{min-height:100vh}
+    .login-view{min-height:100vh;display:grid;place-items:center;padding:24px}
+    .login-card{width:min(100%,440px);background:linear-gradient(180deg,rgba(20,23,30,.98),rgba(10,12,16,.98));
+      border:1px solid var(--border);border-radius:28px;padding:30px;box-shadow:var(--shadow)}
+    .brand{text-align:center;margin-bottom:24px}
+    .brand-logo{width:min(280px,82%);height:86px;object-fit:contain}
+    .brand-fallback{font-weight:950;font-size:28px;color:var(--gold2);letter-spacing:.02em}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:rgba(232,179,75,.08);
+      color:var(--gold2);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.12em}
+    h1{margin:16px 0 8px;font-size:30px;line-height:1.08}
+    .lead{color:var(--muted);line-height:1.55;margin:0 0 24px}
+    .field{margin-bottom:15px}
+    label{display:block;font-size:12px;font-weight:800;margin-bottom:7px;color:#d8dbe3}
+    input{width:100%;min-height:50px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:#0b0d12;color:#fff;
+      padding:0 14px;outline:none}
+    input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,179,75,.10)}
+    .password-wrap{position:relative}
+    .password-wrap input{padding-right:82px}
+    .toggle{position:absolute;right:8px;top:7px;height:36px;border:0;border-radius:10px;background:#1a1d25;color:var(--gold2);font-size:11px;font-weight:850;padding:0 11px}
+    .primary{width:100%;min-height:52px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#17120a;font-weight:950}
+    .text-btn{border:0;background:transparent;color:var(--gold2);padding:8px 0;font-weight:800}
+    .row-between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .message{margin-top:14px;border-radius:12px;padding:0;font-size:12px;line-height:1.5}
+    .message.on{padding:11px 12px;border:1px solid rgba(255,255,255,.08);background:#11141a}
+    .message.error{color:#ffc3c7;border-color:rgba(255,111,121,.28);background:rgba(255,111,121,.08)}
+    .message.success{color:#bff2d8;border-color:rgba(57,201,133,.28);background:rgba(57,201,133,.08)}
+    .message.info{color:#d9e8ff;border-color:rgba(115,184,255,.28);background:rgba(115,184,255,.08)}
+    .secure-note{margin-top:18px;text-align:center;color:#737a88;font-size:10px;line-height:1.5}
+
+    .topbar{position:sticky;top:0;z-index:20;background:rgba(7,8,11,.9);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.07)}
+    .topbar-in{width:min(1220px,calc(100% - 28px));margin:auto;min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .top-brand{display:flex;align-items:center;gap:12px}
+    .top-logo{width:44px;height:44px;object-fit:contain;border-radius:12px}
+    .top-title{font-size:14px;font-weight:950}
+    .top-sub{font-size:10px;color:var(--muted);margin-top:2px}
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .user-pill{font-size:11px;color:#d7dae2;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ghost{border:1px solid var(--border);background:rgba(232,179,75,.06);color:var(--gold2);border-radius:12px;padding:10px 13px;font-weight:850}
+
+    .container{width:min(1220px,calc(100% - 28px));margin:auto;padding:28px 0 56px}
+    .hero{background:linear-gradient(135deg,rgba(232,179,75,.14),rgba(232,179,75,.03)),var(--card);
+      border:1px solid var(--border);border-radius:24px;padding:24px;margin-bottom:18px;display:grid;grid-template-columns:1.3fr .7fr;gap:18px;align-items:center}
+    .hero h2{font-size:28px;margin:9px 0 8px}
+    .hero p{color:var(--muted);margin:0;line-height:1.5}
+    .code-box{border:1px solid rgba(232,179,75,.32);background:#0b0d12;border-radius:18px;padding:18px}
+    .code-label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:800}
+    .code{font-size:25px;font-weight:950;color:var(--gold2);margin:6px 0 12px;word-break:break-all}
+    .link{font-size:11px;color:#c5c9d2;word-break:break-all;line-height:1.45}
+    .copy-row{display:flex;gap:8px;margin-top:13px}
+    .copy-row button{flex:1;border-radius:12px;padding:10px;border:1px solid var(--border);background:#151821;color:var(--gold2);font-weight:850}
+
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+    .metric{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:17px;min-height:120px}
+    .metric small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+    .metric strong{display:block;font-size:25px;margin-top:12px;word-break:break-word}
+    .metric .note{font-size:10px;color:#777e8c;margin-top:7px}
+    .metric.gold strong{color:var(--gold2)}
+    .metric.green strong{color:var(--green)}
+    .metric.blue strong{color:var(--blue)}
+
+    .section{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:20px;margin-bottom:16px}
+    .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:16px}
+    .section h3{margin:0;font-size:16px}
+    .section-desc{font-size:11px;color:var(--muted);margin-top:5px}
+    .badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 9px;font-size:9px;font-weight:900;letter-spacing:.05em}
+    .badge.active{background:rgba(57,201,133,.12);color:#8ce1b6}
+    .badge.pending{background:rgba(232,179,75,.12);color:var(--gold2)}
+    .badge.paid{background:rgba(115,184,255,.12);color:#a9d2ff}
+    .badge.cancel{background:rgba(255,111,121,.11);color:#ffabb1}
+
+    .producer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .producer{background:var(--card2);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px}
+    .producer-top{display:flex;justify-content:space-between;gap:10px}
+    .producer-name{font-weight:900}
+    .producer-meta{font-size:10px;color:var(--muted);margin-top:4px}
+    .producer-money{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+    .producer-money div{background:#0d0f14;border-radius:12px;padding:10px}
+    .producer-money small{display:block;color:#777e8c;font-size:9px}
+    .producer-money strong{display:block;margin-top:4px;font-size:13px}
+
+    .table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.06);border-radius:14px}
+    table{width:100%;border-collapse:collapse;min-width:760px}
+    th,td{text-align:left;padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px}
+    th{color:#8f96a5;font-size:9px;text-transform:uppercase;letter-spacing:.08em;background:#0c0e13}
+    td strong{font-size:11px}
+    tr:last-child td{border-bottom:0}
+
+    .empty{border:1px dashed rgba(255,255,255,.11);border-radius:14px;padding:22px;text-align:center;color:var(--muted);font-size:12px}
+    .goal{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;background:var(--card2);border:1px solid rgba(255,255,255,.07);border-radius:15px;padding:15px;margin-top:10px}
+    .goal strong{display:block}
+    .goal span{display:block;color:var(--muted);font-size:10px;margin-top:5px;line-height:1.45}
+    .updated{text-align:right;color:#6f7684;font-size:9px;margin-top:10px}
+
+    .loading{position:fixed;inset:0;z-index:100;background:rgba(3,4,6,.72);backdrop-filter:blur(8px);display:grid;place-items:center}
+    .loader{background:#101217;border:1px solid var(--border);border-radius:18px;padding:20px 24px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+    .spinner{width:25px;height:25px;border:3px solid rgba(255,255,255,.12);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media(max-width:860px){
+      .hero{grid-template-columns:1fr}
+      .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .producer-grid{grid-template-columns:1fr}
+      .user-pill{display:none}
+    }
+    @media(max-width:520px){
+      .login-card{padding:24px 19px;border-radius:22px}
+      .container{width:min(100% - 20px,1220px);padding-top:18px}
+      .topbar-in{width:calc(100% - 20px)}
+      .hero{padding:18px}
+      .hero h2{font-size:23px}
+      .metrics{grid-template-columns:1fr 1fr;gap:9px}
+      .metric{padding:14px;min-height:104px}
+      .metric strong{font-size:20px}
+      .producer-money{grid-template-columns:1fr}
+      .copy-row{flex-direction:column}
+    }
   </style>
 </head>
-<body>
-  <main class="card">
-    <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
-    <div class="eyebrow">Parceiro Carioca Ticket</div>
-    <h1>Abrindo seu portal...</h1>
-    <p>Você será direcionado para o ambiente seguro do Portal Parceiro CT.</p>
-    <div class="spinner" aria-hidden="true"></div>
-    <a id="fallback" href="https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec?page=parceiro-ct">Acessar agora</a>
-  </main>
-  <script>
-    (function(){
-      var destino='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec?page=parceiro-ct';
-      window.setTimeout(function(){ window.location.replace(destino); },450);
-    })();
-  </script>
+<body>\n<script>
+(function(){
+  'use strict';
+
+  var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var pending={};
+
+  function cleanup(id){
+    var p=pending[id];
+    if(!p)return null;
+    delete pending[id];
+    clearTimeout(p.timer);
+    try{p.frame.remove();p.form.remove()}catch(_){}
+    return p;
+  }
+
+  function rpc(method,args,success,failure){
+    var id='CTPARCEIRO-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+    var frameName='ctparceiro_'+id.replace(/[^A-Za-z0-9_]/g,'');
+    var frame=document.createElement('iframe');
+    frame.name=frameName;
+    frame.style.display='none';
+    frame.setAttribute('aria-hidden','true');
+
+    var form=document.createElement('form');
+    form.method='POST';
+    form.action=APP;
+    form.target=frameName;
+    form.style.display='none';
+
+    function add(k,v){
+      var input=document.createElement('input');
+      input.type='hidden';
+      input.name=k;
+      input.value=String(v==null?'':v);
+      form.appendChild(input);
+    }
+
+    add('ctMinhaCariocaAction','portalRpc');
+    add('ctMinhaCariocaRequestId',id);
+    add('metodo',String(method||''));
+    add('argsJson',JSON.stringify(Array.isArray(args)?args:[]));
+
+    document.body.append(frame,form);
+
+    pending[id]={
+      frame:frame,
+      form:form,
+      success:typeof success==='function'?success:function(){},
+      failure:typeof failure==='function'?failure:function(){},
+      timer:setTimeout(function(){
+        var p=cleanup(id);
+        if(p)p.failure(new Error('CT_PARCEIRO_RPC_TIMEOUT'));
+      },45000)
+    };
+
+    form.submit();
+  }
+
+  window.addEventListener('message',function(ev){
+    if(ev.origin!=='https://script.google.com' && !/\.googleusercontent\.com$/.test(ev.origin||''))return;
+    var payload=ev.data;
+    if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
+    var p=cleanup(payload.id);
+    if(!p)return;
+    if(payload.ok===true)p.success(payload.resultado);
+    else p.failure(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+  });
+
+  function runner(success,failure){
+    return new Proxy({},{
+      get:function(_target,prop){
+        if(prop==='withSuccessHandler'){
+          return function(fn){return runner(fn,failure)};
+        }
+        if(prop==='withFailureHandler'){
+          return function(fn){return runner(success,fn)};
+        }
+        if(prop==='then')return undefined;
+        return function(){
+          rpc(String(prop),Array.prototype.slice.call(arguments),success,failure);
+        };
+      }
+    });
+  }
+
+  window.google=window.google||{};
+  window.google.script=window.google.script||{};
+  window.google.script.run=runner(null,null);
+  window.google.script.url={
+    getLocation:function(callback){
+      if(typeof callback==='function'){
+        callback({
+          hash:String(window.location.hash||'').replace(/^#/,''),
+          parameter:Object.fromEntries(new URLSearchParams(window.location.search)),
+          parameters:{}
+        });
+      }
+    }
+  };
+}());
+</script>
+<div class="shell">
+  <section id="loginView" class="login-view">
+    <div class="login-card">
+      <div class="brand">
+        <img id="brandLogo" class="brand-logo hidden" alt="Carioca Ticket">
+        <div id="brandFallback" class="brand-fallback">CARIOCA TICKET</div>
+      </div>
+      <div class="eyebrow">Parceiro Carioca Ticket</div>
+      <h1>Seu resultado em um só lugar.</h1>
+      <p class="lead">Acompanhe produtores indicados, vendas elegíveis e suas comissões com segurança.</p>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input id="email" type="email" autocomplete="username" required placeholder="seuemail@exemplo.com">
+        </div>
+        <div class="field">
+          <label for="senha">Senha</label>
+          <div class="password-wrap">
+            <input id="senha" type="password" autocomplete="current-password" required placeholder="Sua senha">
+            <button id="togglePassword" class="toggle" type="button">Mostrar</button>
+          </div>
+        </div>
+        <div class="row-between">
+          <button id="forgotButton" class="text-btn" type="button">Esqueci minha senha</button>
+        </div>
+        <button id="loginButton" class="primary" type="submit">Entrar no Portal</button>
+      </form>
+      <div id="loginMessage" class="message"></div>
+      <div class="secure-note">Acesso individual. Os dados exibidos pertencem exclusivamente ao Parceiro CT autenticado.</div>
+    </div>
+  </section>
+
+  <section id="portalView" class="hidden">
+    <header class="topbar">
+      <div class="topbar-in">
+        <div class="top-brand">
+          <img id="topLogo" class="top-logo hidden" alt="Carioca Ticket">
+          <div>
+            <div class="top-title">Portal Parceiro CT</div>
+            <div class="top-sub">Motor comercial Carioca Ticket</div>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span id="topUser" class="user-pill"></span>
+          <button id="refreshButton" class="ghost" type="button">Atualizar</button>
+          <button id="logoutButton" class="ghost" type="button">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Programa Parceiro CT</div>
+          <h2 id="helloName">Olá.</h2>
+          <p id="heroText">Seu painel mostra exclusivamente os resultados ligados ao seu código de indicação.</p>
+        </div>
+        <div class="code-box">
+          <div class="code-label">Seu código de indicação</div>
+          <div id="partnerCode" class="code">—</div>
+          <div id="partnerLink" class="link">—</div>
+          <div class="copy-row">
+            <button id="copyButton" type="button">Copiar link</button>
+            <button id="shareButton" type="button">Compartilhar</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics">
+        <article class="metric">
+          <small>Produtores ativos</small>
+          <strong id="metricProducers">0</strong>
+          <div id="metricPending" class="note">0 indicações pendentes</div>
+        </article>
+        <article class="metric blue">
+          <small>Vendas elegíveis</small>
+          <strong id="metricBase">R$ 0,00</strong>
+          <div class="note">Base líquida considerada pelo motor comercial</div>
+        </article>
+        <article class="metric gold">
+          <small>Comissão a receber</small>
+          <strong id="metricReceive">R$ 0,00</strong>
+          <div id="metricRate" class="note">Regra-base do Parceiro CT</div>
+        </article>
+        <article class="metric green">
+          <small>Comissão paga</small>
+          <strong id="metricPaid">R$ 0,00</strong>
+          <div class="note">Valores marcados como pagos</div>
+        </article>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h3>Produtores indicados</h3>
+            <div class="section-desc">Somente produtores vinculados ao seu cadastro de Parceiro CT.</div>
+          </div>
+          <span id="producerCountBadge" class="badge active">0 produtores</span>
+        </div>
+        <div id="producerList" class="producer-grid"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h3>Comissões recentes</h3>
+            <div class="section-desc">Cancelamentos e estornos ficam separados do valor válido.</div>
+          </div>
+          <span id="validCommissionBadge" class="badge pending">R$ 0,00 válido</span>
+        </div>
+        <div id="commissionTable"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h3>Metas & benefícios</h3>
+            <div class="section-desc">Incentivos só aparecem quando forem configurados expressamente pela Carioca Ticket.</div>
+          </div>
+          <span id="goalCountBadge" class="badge pending">0 ativas</span>
+        </div>
+        <div id="goalsList"></div>
+      </section>
+
+      <div id="updatedAt" class="updated"></div>
+    </main>
+  </section>
+
+  <div id="loading" class="loading hidden">
+    <div class="loader">
+      <div class="spinner"></div>
+      <div id="loadingText">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+import {
+  getAuth,
+  setPersistence,
+  browserSessionPersistence,
+  signInWithEmailAndPassword,
+  getIdToken,
+  signOut
+} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
+
+let app = null;
+let auth = null;
+
+window.CTParceiroFirebase = Object.freeze({
+  inicializar: async function(config){
+    if(auth) return true;
+    if(!config || !config.apiKey || !config.projectId) throw new Error('CT_FIREBASE_CONFIG_INVALIDA');
+    const apps = getApps();
+    app = apps.length ? apps[0] : initializeApp(config);
+    auth = getAuth(app);
+    auth.languageCode = 'pt-BR';
+    await setPersistence(auth,browserSessionPersistence);
+    return true;
+  },
+  pronto: function(){ return !!auth; },
+  login: async function(email,senha){
+    if(!auth) throw new Error('CT_FIREBASE_NAO_INICIALIZADO');
+    const cred = await signInWithEmailAndPassword(auth,email,senha);
+    return {
+      idToken: await getIdToken(cred.user,true),
+      emailVerified: cred.user.emailVerified === true
+    };
+  },
+  sair: async function(){
+    if(auth) await signOut(auth);
+    return true;
+  }
+});
+</script>
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY = 'CT_PARCEIRO_CT_SESSION_V1';
+  var state = {
+    token:'',
+    expiraEm:'',
+    usuario:null,
+    parceiro:null,
+    painel:null,
+    firebaseReady:false,
+    firebasePromise:null
+  };
+
+  var el = {};
+  var ids = [
+    'loginView','portalView','loginForm','email','senha','togglePassword','forgotButton','loginButton','loginMessage',
+    'brandLogo','brandFallback','topLogo','topUser','refreshButton','logoutButton','helloName','heroText','partnerCode',
+    'partnerLink','copyButton','shareButton','metricProducers','metricPending','metricBase','metricReceive','metricRate',
+    'metricPaid','producerCountBadge','producerList','validCommissionBadge','commissionTable','goalCountBadge','goalsList',
+    'updatedAt','loading','loadingText'
+  ];
+
+  document.addEventListener('DOMContentLoaded', iniciar);
+
+  function iniciar(){
+    ids.forEach(function(id){ el[id]=document.getElementById(id); });
+    el.loginForm.addEventListener('submit', executarLogin);
+    el.togglePassword.addEventListener('click', alternarSenha);
+    el.forgotButton.addEventListener('click', recuperarSenha);
+    el.refreshButton.addEventListener('click', function(){ carregarPainel(true); });
+    el.logoutButton.addEventListener('click', executarLogout);
+    el.copyButton.addEventListener('click', copiarLink);
+    el.shareButton.addEventListener('click', compartilharLink);
+    carregarMarca();
+    inicializarFirebase();
+    restaurarSessao();
+  }
+
+  function carregarMarca(){
+    if(typeof google==='undefined' || !google.script || !google.script.run) return;
+    google.script.run
+      .withSuccessHandler(function(uri){
+        uri=String(uri||'');
+        if(uri.indexOf('data:image/')===0){
+          el.brandLogo.src=uri;
+          el.brandLogo.classList.remove('hidden');
+          el.brandFallback.classList.add('hidden');
+        }
+      })
+      .withFailureHandler(function(){})
+      .ctMarcaOficialObterDataUriPROD('DESKTOP');
+
+    google.script.run
+      .withSuccessHandler(function(uri){
+        uri=String(uri||'');
+        if(uri.indexOf('data:image/')===0){
+          el.topLogo.src=uri;
+          el.topLogo.classList.remove('hidden');
+        }
+      })
+      .withFailureHandler(function(){})
+      .ctMarcaOficialObterDataUriPROD('MOBILE');
+  }
+
+  function inicializarFirebase(){
+    garantirFirebase().catch(function(erro){
+      console.error('Carioca Ticket | Firebase Parceiro CT',erro);
+      mensagem('Não foi possível inicializar o serviço de acesso. Atualize a página e tente novamente.','error');
+    });
+  }
+
+  function garantirFirebase(){
+    if(state.firebaseReady && window.CTParceiroFirebase && window.CTParceiroFirebase.pronto()){
+      return Promise.resolve(true);
+    }
+    if(state.firebasePromise) return state.firebasePromise;
+
+    state.firebasePromise = new Promise(function(resolve,reject){
+      if(!window.CTParceiroFirebase){
+        reject(new Error('CT_FIREBASE_WEB_INDISPONIVEL'));
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(r){
+          if(!r || r.sucesso!==true || !r.firebaseConfig){
+            reject(new Error('CT_FIREBASE_CONFIG_INDISPONIVEL'));
+            return;
+          }
+          window.CTParceiroFirebase.inicializar(r.firebaseConfig)
+            .then(function(){
+              state.firebaseReady=true;
+              resolve(true);
+            })
+            .catch(reject);
+        })
+        .withFailureHandler(reject)
+        .ctCentralAcessoObterFirebaseConfigPROD();
+    }).catch(function(erro){
+      state.firebasePromise=null;
+      state.firebaseReady=false;
+      throw erro;
+    });
+
+    return state.firebasePromise;
+  }
+
+  async function executarLogin(e){
+    e.preventDefault();
+    limparMensagem();
+
+    var email=String(el.email.value||'').trim().toLowerCase();
+    var senha=String(el.senha.value||'');
+
+    if(!email || !senha){
+      mensagem('Informe e-mail e senha.','error');
+      return;
+    }
+
+    loading(true,'Validando acesso de Parceiro CT...');
+    el.loginButton.disabled=true;
+
+    try{
+      await garantirFirebase();
+      var firebase=await window.CTParceiroFirebase.login(email,senha);
+      var resposta=await rpcLogin(firebase.idToken);
+
+      if(!resposta || resposta.autenticado!==true){
+        await sairFirebaseSilencioso();
+        mensagem(
+          resposta && resposta.requerVerificacaoEmail===true
+            ? 'Confirme seu e-mail antes de acessar o Portal Parceiro CT.'
+            : (resposta && resposta.mensagem ? resposta.mensagem : 'Não foi possível realizar o login.'),
+          resposta && resposta.requerVerificacaoEmail===true ? 'info' : 'error'
+        );
+        return;
+      }
+
+      if(resposta.autorizado!==true || !resposta.token){
+        await sairFirebaseSilencioso();
+        mensagem(
+          resposta && resposta.mensagem
+            ? resposta.mensagem
+            : 'Esta conta não possui acesso ativo como Parceiro Carioca Ticket.',
+          'error'
+        );
+        return;
+      }
+
+      state.token=String(resposta.token||'');
+      state.expiraEm=String(resposta.expiraEm||'');
+      state.usuario=resposta.usuario||null;
+      state.parceiro=resposta.parceiro||null;
+      salvarSessao();
+      el.senha.value='';
+      abrirPortal();
+      await carregarPainel(false);
+
+    }catch(erro){
+      await sairFirebaseSilencioso();
+      mensagem(mensagemErro(erro),'error');
+    }finally{
+      loading(false);
+      el.loginButton.disabled=false;
+    }
+  }
+
+  function rpcLogin(idToken){
+    return new Promise(function(resolve,reject){
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .ctParceiroCTLoginFirebasePROD(idToken);
+    });
+  }
+
+  function restaurarSessao(){
+    var salvo=lerSessao();
+    if(!salvo || !salvo.token){
+      mostrarLogin();
+      return;
+    }
+
+    state.token=String(salvo.token||'');
+    state.expiraEm=String(salvo.expiraEm||'');
+
+    if(state.expiraEm){
+      var expira=new Date(state.expiraEm);
+      if(!isNaN(expira.getTime()) && expira.getTime()<=Date.now()){
+        limparSessao();
+        mostrarLogin();
+        return;
+      }
+    }
+
+    loading(true,'Restaurando sua sessão...');
+    google.script.run
+      .withSuccessHandler(function(r){
+        loading(false);
+        if(!r || r.autenticado!==true || r.autorizado!==true){
+          limparSessao();
+          mostrarLogin();
+          return;
+        }
+        state.usuario=r.usuario||null;
+        state.parceiro=r.parceiro||null;
+        abrirPortal();
+        carregarPainel(false);
+      })
+      .withFailureHandler(function(){
+        loading(false);
+        limparSessao();
+        mostrarLogin();
+      })
+      .ctParceiroCTRestaurarSessaoPROD(state.token);
+  }
+
+  function abrirPortal(){
+    el.loginView.classList.add('hidden');
+    el.portalView.classList.remove('hidden');
+    var nome=(state.usuario&&state.usuario.nome) || (state.parceiro&&state.parceiro.nome) || 'Parceiro';
+    el.topUser.textContent=nome;
+    el.helloName.textContent='Olá, '+nome+'.';
+    preencherIdentidadeParceiro(state.parceiro||{});
+  }
+
+  function mostrarLogin(){
+    el.portalView.classList.add('hidden');
+    el.loginView.classList.remove('hidden');
+  }
+
+  async function carregarPainel(manual){
+    if(!state.token) return;
+    if(manual) loading(true,'Atualizando resultados...');
+
+    try{
+      var r=await new Promise(function(resolve,reject){
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .ctParceiroCTCarregarPainelPROD(state.token);
+      });
+
+      if(!r || r.autenticado!==true || r.autorizado!==true){
+        await executarLogout(false);
+        return;
+      }
+
+      state.painel=r;
+      state.usuario=r.usuario||state.usuario;
+      state.parceiro=r.parceiro||state.parceiro;
+      renderizar(r);
+
+    }catch(erro){
+      console.error('Carioca Ticket | painel Parceiro CT',erro);
+      if(manual) mensagem('Não foi possível atualizar o painel agora.','error');
+    }finally{
+      if(manual) loading(false);
+    }
+  }
+
+  function renderizar(r){
+    var p=r.parceiro||{};
+    var resumo=r.resumo||{};
+    preencherIdentidadeParceiro(p);
+
+    var nome=(r.usuario&&r.usuario.nome) || p.nome || 'Parceiro';
+    el.topUser.textContent=nome;
+    el.helloName.textContent='Olá, '+nome+'.';
+    el.heroText.textContent='Seu código remunera '+formatNumero(p.percentualBase)+'% sobre as vendas elegíveis dos produtores vinculados.';
+
+    el.metricProducers.textContent=String(resumo.produtoresAtivos||0);
+    el.metricPending.textContent=String(resumo.indicacoesPendentes||0)+' indicações pendentes';
+    el.metricBase.textContent=resumo.baseElegivel||money(resumo.baseElegivelNumero);
+    el.metricReceive.textContent=resumo.comissaoAReceber||money(resumo.comissaoAReceberNumero);
+    el.metricPaid.textContent=resumo.comissaoPaga||money(resumo.comissaoPagaNumero);
+    el.metricRate.textContent='Regra-base: '+formatNumero(p.percentualBase)+'%';
+    el.validCommissionBadge.textContent=(resumo.totalValido||money(resumo.totalValidoNumero))+' válido';
+
+    renderProdutores(r.produtores||[]);
+    renderComissoes(r.lancamentosRecentes||[]);
+    renderMetas(r.metasBeneficios||{});
+
+    el.updatedAt.textContent=r.atualizadoEm ? 'Atualizado em '+r.atualizadoEm : '';
+  }
+
+  function preencherIdentidadeParceiro(p){
+    el.partnerCode.textContent=p.codigoIndicacao||'—';
+    el.partnerLink.textContent=p.linkIndicacao||'Link ainda não disponível';
+    el.copyButton.disabled=!p.linkIndicacao;
+    el.shareButton.disabled=!p.linkIndicacao;
+  }
+
+  function renderProdutores(lista){
+    el.producerList.innerHTML='';
+    el.producerCountBadge.textContent=lista.length+' '+(lista.length===1?'produtor':'produtores');
+
+    if(!lista.length){
+      el.producerList.innerHTML='<div class="empty">Nenhum produtor vinculado ainda. Compartilhe seu link de indicação para começar.</div>';
+      return;
+    }
+
+    lista.forEach(function(p){
+      var f=p.financeiro||{};
+      var card=document.createElement('article');
+      card.className='producer';
+      card.innerHTML=
+        '<div class="producer-top">'+
+          '<div><div class="producer-name">'+esc(p.nome||p.produtorId)+'</div>'+
+          '<div class="producer-meta">'+esc(localProdutor(p))+'</div></div>'+
+          '<span class="badge '+(String(p.statusVinculo||'').toUpperCase()==='ATIVO'?'active':'cancel')+'">'+esc(p.statusVinculo||'')+'</span>'+
+        '</div>'+
+        '<div class="producer-money">'+
+          '<div><small>Base elegível</small><strong>'+esc(f.baseElegivel||money(f.baseElegivelNumero))+'</strong></div>'+
+          '<div><small>A receber</small><strong>'+esc(f.comissaoAReceber||money(f.comissaoAReceberNumero))+'</strong></div>'+
+          '<div><small>Pago</small><strong>'+esc(f.comissaoPaga||money(f.comissaoPagaNumero))+'</strong></div>'+
+        '</div>';
+      el.producerList.appendChild(card);
+    });
+  }
+
+  function renderComissoes(lista){
+    if(!lista.length){
+      el.commissionTable.innerHTML='<div class="empty">Ainda não existem lançamentos de comissão para este parceiro.</div>';
+      return;
+    }
+
+    var html='<div class="table-wrap"><table><thead><tr>'+
+      '<th>Data</th><th>Produtor</th><th>Evento</th><th>Base</th><th>%</th><th>Comissão</th><th>Status</th>'+
+      '</tr></thead><tbody>';
+
+    lista.forEach(function(item){
+      var status=String(item.status||'').toUpperCase();
+      var cls=status==='PAGA'?'paid':(status==='A_RECEBER'?'pending':'cancel');
+      html+='<tr>'+
+        '<td>'+esc(item.criadoEm||'—')+'</td>'+
+        '<td><strong>'+esc(item.produtorNome||item.produtorId||'—')+'</strong></td>'+
+        '<td>'+esc(item.evento&&item.evento.nome?item.evento.nome:'—')+'</td>'+
+        '<td>'+esc(item.base||money(item.baseNumero))+'</td>'+
+        '<td>'+esc(formatNumero(item.percentual))+'%</td>'+
+        '<td><strong>'+esc(item.comissao||money(item.comissaoNumero))+'</strong></td>'+
+        '<td><span class="badge '+cls+'">'+esc(status||'—')+'</span></td>'+
+      '</tr>';
+    });
+
+    html+='</tbody></table></div>';
+    el.commissionTable.innerHTML=html;
+  }
+
+  function renderMetas(metas){
+    var lista=Array.isArray(metas.ativas)?metas.ativas:[];
+    el.goalCountBadge.textContent=lista.length+' ativas';
+    el.goalsList.innerHTML='';
+
+    if(!lista.length){
+      el.goalsList.innerHTML='<div class="empty">'+esc(metas.mensagem||'Nenhuma meta ou benefício está ativo neste momento.')+'</div>';
+      return;
+    }
+
+    lista.forEach(function(item){
+      var div=document.createElement('div');
+      div.className='goal';
+      div.innerHTML=
+        '<div><strong>'+esc(rotuloMeta(item.tipoMeta))+' — meta '+esc(formatNumero(item.metaNumero))+'</strong>'+
+        '<span>'+esc(item.beneficioDescricao||rotuloRecompensa(item.recompensaTipo,item.recompensaValor))+
+        (item.fimEm?' • até '+esc(item.fimEm):'')+'</span></div>'+
+        '<span class="badge pending">ATIVA</span>';
+      el.goalsList.appendChild(div);
+    });
+  }
+
+  async function copiarLink(){
+    var link=state.parceiro&&state.parceiro.linkIndicacao?state.parceiro.linkIndicacao:'';
+    if(!link) return;
+    try{
+      await navigator.clipboard.writeText(link);
+      el.copyButton.textContent='Copiado!';
+      setTimeout(function(){el.copyButton.textContent='Copiar link';},1600);
+    }catch(erro){
+      window.prompt('Copie seu link:',link);
+    }
+  }
+
+  async function compartilharLink(){
+    var link=state.parceiro&&state.parceiro.linkIndicacao?state.parceiro.linkIndicacao:'';
+    if(!link) return;
+    var titulo='Carioca Ticket — convite para produtores';
+    var texto='Conheça a Carioca Ticket e crie sua conta pelo meu link de indicação.';
+    if(navigator.share){
+      try{
+        await navigator.share({title:titulo,text:texto,url:link});
+        return;
+      }catch(erro){}
+    }
+    copiarLink();
+  }
+
+  async function recuperarSenha(){
+    limparMensagem();
+    var email=String(el.email.value||'').trim().toLowerCase();
+    if(!email){
+      mensagem('Informe seu e-mail primeiro.','info');
+      el.email.focus();
+      return;
+    }
+
+    loading(true,'Enviando recuperação...');
+    el.forgotButton.disabled=true;
+
+    try{
+      var r=await new Promise(function(resolve,reject){
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .solicitarRecuperacaoSenhaPROD(email);
+      });
+
+      mensagem(
+        r && r.sucesso===true
+          ? 'Se existir uma conta para este e-mail, enviaremos as instruções de recuperação.'
+          : 'Não foi possível solicitar a recuperação agora.',
+        r && r.sucesso===true ? 'success' : 'error'
+      );
+    }catch(erro){
+      mensagem('Não foi possível solicitar a recuperação agora.','error');
+    }finally{
+      loading(false);
+      el.forgotButton.disabled=false;
+    }
+  }
+
+  async function executarLogout(mostrar){
+    var token=state.token;
+    try{
+      if(token){
+        await new Promise(function(resolve){
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(resolve)
+            .ctParceiroCTLogoutPROD(token);
+        });
+      }
+    }catch(erro){}
+
+    await sairFirebaseSilencioso();
+    limparSessao();
+    state.token='';
+    state.usuario=null;
+    state.parceiro=null;
+    state.painel=null;
+    mostrarLogin();
+    if(mostrar!==false) mensagem('Sessão encerrada.','success');
+  }
+
+  async function sairFirebaseSilencioso(){
+    try{
+      if(window.CTParceiroFirebase) await window.CTParceiroFirebase.sair();
+    }catch(erro){}
+  }
+
+  function salvarSessao(){
+    try{
+      sessionStorage.setItem(STORAGE_KEY,JSON.stringify({
+        token:state.token,
+        expiraEm:state.expiraEm
+      }));
+    }catch(erro){}
+  }
+
+  function lerSessao(){
+    try{
+      var raw=sessionStorage.getItem(STORAGE_KEY);
+      return raw?JSON.parse(raw):null;
+    }catch(erro){return null;}
+  }
+
+  function limparSessao(){
+    try{sessionStorage.removeItem(STORAGE_KEY);}catch(erro){}
+  }
+
+  function alternarSenha(){
+    var mostrar=el.senha.type==='password';
+    el.senha.type=mostrar?'text':'password';
+    el.togglePassword.textContent=mostrar?'Ocultar':'Mostrar';
+  }
+
+  function loading(ativo,texto){
+    el.loading.classList.toggle('hidden',!ativo);
+    if(texto) el.loadingText.textContent=texto;
+  }
+
+  function mensagem(texto,tipo){
+    el.loginMessage.textContent=String(texto||'');
+    el.loginMessage.className='message on '+String(tipo||'info');
+  }
+
+  function limparMensagem(){
+    el.loginMessage.textContent='';
+    el.loginMessage.className='message';
+  }
+
+  function mensagemErro(erro){
+    var codigo=String(erro&&erro.code?erro.code:'').toLowerCase();
+    if(codigo==='auth/invalid-credential' || codigo==='auth/wrong-password' || codigo==='auth/user-not-found'){
+      return 'E-mail ou senha inválidos.';
+    }
+    if(codigo==='auth/invalid-email') return 'Informe um e-mail válido.';
+    if(codigo==='auth/too-many-requests') return 'Muitas tentativas. Aguarde um pouco e tente novamente.';
+    if(codigo==='auth/network-request-failed') return 'Não foi possível conectar ao serviço de autenticação.';
+    return erro&&erro.message&&String(erro.message).indexOf('CT_')!==0
+      ? String(erro.message)
+      : 'Não foi possível acessar sua conta neste momento.';
+  }
+
+  function localProdutor(p){
+    var local=[p.cidade,p.uf].filter(Boolean).join(' / ');
+    return local || 'Produtor Carioca Ticket';
+  }
+
+  function money(v){
+    var n=Number(v||0);
+    try{return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+    catch(erro){return 'R$ '+n.toFixed(2).replace('.',',');}
+  }
+
+  function formatNumero(v){
+    var n=Number(v||0);
+    return String(Number.isInteger(n)?n:n.toFixed(2).replace('.',','));
+  }
+
+  function rotuloMeta(tipo){
+    tipo=String(tipo||'').toUpperCase();
+    var mapa={FATURAMENTO:'Faturamento',VENDAS:'Vendas',ACESSOS:'Acessos',NOVOS_PRODUTORES:'Novos produtores'};
+    return mapa[tipo]||tipo||'Meta';
+  }
+
+  function rotuloRecompensa(tipo,valor){
+    tipo=String(tipo||'').toUpperCase();
+    if(tipo==='BONUS_PERCENTUAL') return 'Bônus de '+formatNumero(valor)+'%';
+    if(tipo==='BONUS_FIXO') return 'Bônus de '+money(valor);
+    return tipo==='BENEFICIO'?'Benefício comercial':'Recompensa';
+  }
+
+  function esc(valor){
+    return String(valor==null?'':valor)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+})();
+</script>
 </body>
 </html>
