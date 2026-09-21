@@ -268,9 +268,9 @@
           <input id="buyerWhatsapp" inputmode="tel" autocomplete="tel" maxlength="20">
         </div>
         <div class="full">
-          <label for="buyerEmail">E-mail *</label>
-          <input id="buyerEmail" type="email" autocomplete="email" maxlength="320" required>
-          <div class="help">Usaremos este e-mail para enviar o acesso seguro aos seus ingressos após a confirmação do pagamento.</div>
+          <label id="buyerEmailLabel" for="buyerEmail">E-mail *</label>
+          <input id="buyerEmail" type="email" autocomplete="email" maxlength="320">
+          <div id="buyerEmailHelp" class="help">Usaremos este e-mail para enviar o acesso seguro aos seus ingressos após a confirmação do pagamento.</div>
         </div>
         <div class="full consent">
           <input id="marketing" type="checkbox">
@@ -354,14 +354,15 @@
         polling:null,
         expiryTimer:null,
         busy:false,
-        paymentMethod:'PIX'
+        paymentMethod:'PIX',
+        emailRequired:true
       };
 
       var el={};
       [
         'loading','loadingTitle','loadingText','eventName','eventMeta','eventDescription','eventBack','checkoutCover','checkoutCoverImage','salePanel','buyerPanel','payActionPanel',
         'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',
-        'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','marketing','paymentPix','paymentCard','payButton','payHelp',
+        'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','buyerEmailLabel','buyerEmailHelp','marketing','paymentPix','paymentCard','payButton','payHelp',
         'pixPanel','pixStatus','qrImage','pixCode','copyButton','refreshButton','expiryText',
         'cardPanel','cardStatus','cardPaymentLink','cardRefreshButton','cardExpiryText',
         'successPanel','ticketLinks','minhaCariocaLink','closedPanel','closedMessage',
@@ -505,6 +506,14 @@
       function renderCatalog(){
         var e=state.catalog.evento||{};
         var visual=state.catalog.visual||{};
+        var identidade=state.catalog.identidadeCliente||{};
+        state.emailRequired=identidade.emailObrigatorio!==false;
+
+        el.buyerEmailLabel.textContent=state.emailRequired?'E-mail *':'E-mail (opcional)';
+        el.buyerEmailHelp.textContent=state.emailRequired
+          ?'Usaremos este e-mail para enviar o acesso seguro aos seus ingressos após a confirmação do pagamento.'
+          :'Seu WhatsApp será o identificador principal da Conta Carioca. Se informar um e-mail, ele também poderá ser usado como canal de contato.';
+
         el.eventName.textContent=e.nome||'Comprar ingressos';
         el.eventMeta.textContent=[e.data,e.horario,e.local,[e.cidade,e.uf].filter(Boolean).join(' / ')].filter(Boolean).join(' · ');
         el.eventDescription.textContent=visual.descricaoCurta||'Escolha seu ingresso e finalize sua compra com segurança.';
@@ -618,7 +627,9 @@
         if(String(el.buyerName.value||'').trim().length<3)return 'Informe o nome completo do comprador.';
         if(onlyDigits(el.buyerCpf.value).length!==11 && onlyDigits(el.buyerCpf.value).length!==14)return 'Informe um CPF ou CNPJ válido.';
         var w=onlyDigits(el.buyerWhatsapp.value); if(w.length<10||w.length>13)return 'Informe um WhatsApp válido.';
-        var email=String(el.buyerEmail.value||'').trim(); if(!email||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))return 'Informe um e-mail válido para receber seus ingressos.';
+        var email=String(el.buyerEmail.value||'').trim();
+        if(state.emailRequired&&!email)return 'Informe um e-mail válido para receber seus ingressos.';
+        if(email&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))return 'Confira o e-mail informado.';
         var bad=false;
         el.participants.querySelectorAll('[data-name]').forEach(function(i){if(String(i.value||'').trim().length<2)bad=true;});
         if(bad)return 'Informe o nome de todos os participantes.';
