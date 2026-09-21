@@ -235,7 +235,8 @@ if (producerPage && !producerPage.includes('ctPortalProdutorCarregarCatalogoEven
 }
 if (producerPage) {
   if (
-    !producerPage.includes("? 90000 : 45000") ||
+    !producerPage.includes("? 90000 : (") ||
+    !producerPage.includes(") ? 15000 : 30000") ||
     !producerPage.includes("'CT_PORTAL_RPC_TIMEOUT'") ||
     !producerPage.includes('Sua senha pode ter sido validada')
   ) {
