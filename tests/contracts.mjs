@@ -8,6 +8,7 @@ const protectedFiles = [
   'checkout/index.html',
   'ingresso/index.html',
   'central/index.html',
+  'saude-vendas/index.html',
   'checkin/index.html',
   'consulta/index.html',
   'produtor/index.html',
@@ -123,6 +124,33 @@ for (const file of ['checkout/index.html', 'checkout-v2/index.html']) {
 
   if (!html.includes("state.emailRequired&&!email")) {
     fail(file, 'checkout sem fallback seguro para exigir e-mail antes do WhatsApp estar pronto');
+  }
+}
+
+
+const saudeVendas = read('saude-vendas/index.html');
+if (saudeVendas) {
+  if (!saudeVendas.includes("ctMinhaCariocaAction','portalRpc'")) {
+    fail('saude-vendas/index.html', 'Saude das Vendas sem ponte first-party segura');
+  }
+  if (!saudeVendas.includes('ctSaudeVendasCarregarPROD')) {
+    fail('saude-vendas/index.html', 'Saude das Vendas sem RPC de diagnostico');
+  }
+  if (!saudeVendas.includes('ctSaudeVendasReprocessarPedidoPROD')) {
+    fail('saude-vendas/index.html', 'Saude das Vendas sem recuperacao segura');
+  }
+  if (/COMPRADOR_(?:NOME|EMAIL|WHATSAPP)/i.test(saudeVendas)) {
+    fail('saude-vendas/index.html', 'Saude das Vendas referencia PII do comprador');
+  }
+}
+
+const centralOficial = read('central/index.html');
+if (centralOficial) {
+  if (!centralOficial.includes('data-perm="SAUDE_VENDAS"')) {
+    fail('central/index.html', 'Central sem permissao SAUDE_VENDAS');
+  }
+  if (!centralOficial.includes('/saude-vendas/?evento=')) {
+    fail('central/index.html', 'Central sem rota first-party para Saude das Vendas');
   }
 }
 
