@@ -242,6 +242,13 @@ if (producerPage) {
   ) {
     fail('produtor/index.html', 'Portal do Produtor sem carregamento da identidade visual oficial');
   }
+  if (
+    !producerPage.includes('src="/assets/carioca-ticket-logo.png"') ||
+    !producerPage.includes('data-brand-source="fallback"') ||
+    !producerPage.includes("'/assets/carioca-ticket-icon-192.png'")
+  ) {
+    fail('produtor/index.html', 'Portal do Produtor sem fallback oficial resiliente');
+  }
 }
 
 const home = read('index.html');
