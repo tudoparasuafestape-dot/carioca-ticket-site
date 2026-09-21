@@ -231,6 +231,13 @@ for (const file of [
 
 const producerPage = read('produtor/index.html');
 if (producerPage) {
+  if (
+    !producerPage.includes("? 90000 : 45000") ||
+    !producerPage.includes("'CT_PORTAL_RPC_TIMEOUT'") ||
+    !producerPage.includes('Sua senha pode ter sido validada')
+  ) {
+    fail('produtor/index.html', 'Portal sem tolerancia/diagnostico de timeout no login');
+  }
   if (!producerPage.includes('<title>Portal do Produtor | Carioca Ticket</title>')) {
     fail('produtor/index.html', 'titulo do Portal do Produtor incorreto');
   }
