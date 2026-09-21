@@ -165,6 +165,9 @@ if (saudeVendas) {
   if (!saudeVendas.includes('sysAsaasCoverage') || !saudeVendas.includes('sysAsaasMissing')) {
     fail('saude-vendas/index.html', 'Saude das Vendas sem auditoria visual do webhook Asaas');
   }
+  if (!saudeVendas.includes('sysAsaasHosts')) {
+    fail('saude-vendas/index.html', 'Saude das Vendas sem destino sanitizado do webhook Asaas');
+  }
   if (/COMPRADOR_(?:NOME|EMAIL|WHATSAPP)/i.test(saudeVendas)) {
     fail('saude-vendas/index.html', 'Saude das Vendas referencia PII do comprador');
   }
