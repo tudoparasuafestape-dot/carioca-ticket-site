@@ -99,6 +99,36 @@ function rpcResult(method, args) {
       expect(String(args[0] || '')).toBe(EVENT_ID);
       return checkoutFixture();
 
+    case 'ctSaudeVendasCarregarPROD':
+      expect(String(args[1] || '')).toBe(EVENT_ID);
+      return {
+        sucesso: true,
+        autenticado: true,
+        autorizado: true,
+        modulo: 'SAUDE_VENDAS',
+        evento: eventoFixture().evento,
+        nivel: 'VERDE',
+        resumo: {
+          pedidos: 4,
+          concluidos: 4,
+          aguardando: 0,
+          criticos: 0,
+          atencoes: 0,
+          webhookFila: 0,
+          webhookFalhas: 0
+        },
+        sistema: {
+          processadorAgendado: true,
+          webhook: { recebidos: 0, processados: 4, falhas: 0, atrasados: 0 },
+          observabilidade24h: { abertos: 0, error: 0, critical: 0 },
+          recuperacaoAutomatica: true
+        },
+        ocorrencias: [],
+        piiExposta: false,
+        somenteLeitura: true,
+        atualizadoEm: '21/09/2026 09:30:00'
+      };
+
     default:
       return {
         sucesso: false,
@@ -520,6 +550,39 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expect(page.locator('body')).not.toContainText('\\n');
 
     expect(new URL(page.url()).pathname).toBe('/crm/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
+
+  test('Saude das Vendas exige sessao quando aberta diretamente', async ({ page }) => {
+    await page.goto('/saude-vendas/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.locator('#gateDenied')).toBeVisible();
+    await expect(page.locator('body')).toContainText(/Saúde das Vendas|Acesso restrito/i);
+    expect(new URL(page.url()).pathname).toBe('/saude-vendas/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
+  test('Saude das Vendas renderiza estado VERDE sem expor PII', async ({ page }) => {
+    await page.addInitScript(({ key }) => {
+      localStorage.setItem(key, JSON.stringify({
+        token: 'TOKEN-TESTE-SAÚDE',
+        expiraEm: '2099-01-01T00:00:00.000Z'
+      }));
+    }, { key: 'CT_PORTAL_PRODUTOR_PROD_SESSION_V1' });
+
+    await page.goto('/saude-vendas/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.locator('#healthTitle')).toHaveText('VERDE');
+    await expect(page.locator('#sOrders')).toHaveText('4');
+    await expect(page.locator('#sCritical')).toHaveText('0');
+    await expect(page.locator('#sysTrigger')).toHaveText('ATIVO');
+    await expect(page.locator('body')).not.toContainText(/CPF|E-mail do comprador|WhatsApp do comprador/i);
+    expect(new URL(page.url()).pathname).toBe('/saude-vendas/');
     await expectNoTechnicalVisibleLinks(page);
   });
 
