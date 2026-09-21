@@ -27,6 +27,38 @@ jobs:
           node-version: '20'
       - name: Validar rotas e contratos protegidos
         run: node tests/contracts.mjs
+      - name: Gerar icones PWA quadrados para diagnostico
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import base64
+
+          src = Image.open('assets/carioca-ticket-simbolo.png').convert('RGBA')
+          alpha = src.getchannel('A')
+          bbox = alpha.getbbox()
+          if bbox:
+              src = src.crop(bbox)
+
+          def build(size, ratio, name):
+              canvas = Image.new('RGBA', (size, size), '#090909')
+              maxw = int(size * ratio)
+              maxh = int(size * ratio)
+              img = src.copy()
+              img.thumbnail((maxw, maxh), Image.Resampling.LANCZOS)
+              x = (size - img.width) // 2
+              y = (size - img.height) // 2
+              canvas.alpha_composite(img, (x, y))
+              out = Path('/tmp') / name
+              canvas.convert('RGB').save(out, 'PNG', optimize=True)
+              data = base64.b64encode(out.read_bytes()).decode('ascii')
+              print(f'CT_ICON_BASE64_{name.upper().replace(".","_")}={data}')
+
+          build(192, 0.72, 'carioca-ticket-icon-192.png')
+          build(512, 0.72, 'carioca-ticket-icon-512.png')
+          build(512, 0.62, 'carioca-ticket-icon-maskable-512.png')
+          PY
 
   publico-producao:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
