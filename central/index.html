@@ -334,7 +334,8 @@ function updateModules(){
   var ev=state.event,id=ev?String(ev.id||''):'',nome=ev?String(ev.nome||''):'';
   document.getElementById('mCheckin').href='#';
   document.getElementById('mConsulta').href=id
-    ?'/consulta/?evento='+encodeURIComponent(id)
+    ?'/consulta/?evento='+encodeURIComponent(id)+
+      '&eventoNome='+encodeURIComponent(nome)
     :'/consulta/';
 
   document.getElementById('mVendas').href=id

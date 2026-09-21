@@ -1204,6 +1204,7 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.getByRole('heading', { name: /Consulta de Ingressos/i })).toBeVisible({
       timeout: 15000
     });
+    await expect(page.locator('#eventName')).toHaveText('Roda de Samba Estilo Carioca');
     await page.locator('#term').fill('Cliente Homologacao');
     await page.locator('#searchButton').click();
     await expect(page.locator('#results')).toContainText('Cliente Homologacao');
