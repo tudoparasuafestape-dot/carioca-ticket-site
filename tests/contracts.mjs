@@ -74,6 +74,24 @@ for (const file of protectedFiles) {
   }
 }
 
+const iconPath = path.join(root, 'assets/carioca-ticket-simbolo.png');
+if (fs.existsSync(iconPath)) {
+  const iconBuffer = fs.readFileSync(iconPath);
+  if (
+    iconBuffer.length >= 24 &&
+    iconBuffer[0] === 0x89 &&
+    iconBuffer.toString('ascii', 1, 4) === 'PNG'
+  ) {
+    const iconWidth = iconBuffer.readUInt32BE(16);
+    const iconHeight = iconBuffer.readUInt32BE(20);
+    console.log('CT_ICON_FILE_DIMENSIONS', JSON.stringify({
+      width: iconWidth,
+      height: iconHeight,
+      bytes: iconBuffer.length
+    }));
+  }
+}
+
 const manifest = read('manifest.webmanifest');
 if (manifest) {
   let parsed = null;
