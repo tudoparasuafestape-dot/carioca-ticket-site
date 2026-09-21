@@ -129,6 +129,13 @@ function rpcResult(method, args) {
             total: 1,
             coberturaCompleta: true,
             eventosFaltantes: [],
+            webhooks: [
+              {
+                host: 'webhook.cariocaticket.com.br',
+                enabled: true,
+                interrupted: false
+              }
+            ],
             somenteLeitura: true
           },
           recuperacaoAutomatica: true
@@ -652,6 +659,7 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expect(page.locator('#sysTrigger')).toHaveText('ATIVO');
     await expect(page.locator('#sysAsaasCoverage')).toHaveText('COMPLETA');
     await expect(page.locator('#sysAsaasActive')).toHaveText('1');
+    await expect(page.locator('#sysAsaasHosts')).toHaveText('webhook.cariocaticket.com.br');
     await expect(page.locator('#sysAsaasMissing')).toHaveText('Nenhum');
     await expect(page.locator('body')).not.toContainText(/CPF|E-mail do comprador|WhatsApp do comprador|access_token|credencialRef/i);
     expect(new URL(page.url()).pathname).toBe('/saude-vendas/');
