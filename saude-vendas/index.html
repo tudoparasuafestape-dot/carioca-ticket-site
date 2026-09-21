@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Saúde das Vendas | Carioca Ticket</title>
+<link rel="icon" href="/assets/carioca-ticket-icon-192.png">
+<style>
+:root{--bg:#08090c;--card:#111319;--card2:#171a21;--border:#292d36;--text:#f7f2e8;--muted:#9a9faa;--gold:#d5a536;--gold2:#f0c95a;--green:#62d78e;--yellow:#f1c85b;--red:#ff7676;--blue:#79aaff}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}a{color:inherit}button{font:inherit;cursor:pointer}
+.hidden{display:none!important}.shell{width:min(1180px,calc(100% - 28px));margin:auto;padding:22px 0 48px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:12px;text-decoration:none}.brand img{width:46px;height:46px;object-fit:contain}.brand strong{display:block;font-size:16px}.brand span{display:block;color:var(--muted);font-size:11px;margin-top:2px}.ghost,.btn{min-height:42px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:0 14px;font-weight:800}.btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#111;border:0}.btn:disabled{opacity:.5;cursor:not-allowed}
+.gate{min-height:70vh;display:grid;place-items:center}.gate-card{max-width:560px;text-align:center;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px}.gate-card h1{margin:0 0 8px;color:var(--gold2)}.gate-card p{color:var(--muted);line-height:1.5}
+.hero{border:1px solid rgba(213,165,54,.28);background:linear-gradient(135deg,rgba(213,165,54,.12),rgba(213,165,54,.02)),var(--card);border-radius:22px;padding:22px;margin-bottom:16px}.ey{font-size:11px;color:var(--gold2);font-weight:900;text-transform:uppercase;letter-spacing:.9px}.hero h1{margin:7px 0 6px;font-size:26px}.hero p{margin:0;color:var(--muted);line-height:1.55;font-size:13px}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.chip{font-size:10px;border:1px solid var(--border);background:var(--card2);border-radius:999px;padding:6px 9px;color:#c8ccd4}
+.health{display:flex;align-items:center;gap:16px;border-radius:20px;padding:18px;border:1px solid var(--border);margin-bottom:16px}.health-dot{width:18px;height:18px;border-radius:50%;flex:0 0 auto}.health strong{font-size:20px}.health span{display:block;color:var(--muted);font-size:12px;margin-top:3px}.health.verde{border-color:rgba(98,215,142,.35);background:rgba(98,215,142,.07)}.health.verde .health-dot{background:var(--green);box-shadow:0 0 20px rgba(98,215,142,.45)}.health.atencao{border-color:rgba(241,200,91,.4);background:rgba(241,200,91,.08)}.health.atencao .health-dot{background:var(--yellow)}.health.critico{border-color:rgba(255,118,118,.42);background:rgba(255,118,118,.08)}.health.critico .health-dot{background:var(--red)}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px}.stat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;min-height:104px}.stat span{display:block;color:var(--muted);font-size:10px;font-weight:800}.stat strong{display:block;font-size:22px;margin-top:10px}.stat small{display:block;color:#6f7681;font-size:9px;margin-top:6px}
+.grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.6fr);gap:14px}.panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px}.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.head h2{font-size:16px;margin:0}.head p{font-size:10px;color:var(--muted);margin:4px 0 0}
+.issue-list{display:flex;flex-direction:column;gap:10px}.issue{border:1px solid var(--border);background:var(--card2);border-radius:14px;padding:14px}.issue.critico{border-color:rgba(255,118,118,.3)}.issue.atencao{border-color:rgba(241,200,91,.28)}.issue-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.badge{border-radius:999px;padding:5px 8px;font-size:9px;font-weight:900;letter-spacing:.5px}.badge.critico{color:#ffd0d0;background:rgba(255,118,118,.12)}.badge.atencao{color:#ffe7a4;background:rgba(241,200,91,.12)}.issue h3{font-size:13px;margin:8px 0 5px}.issue p{font-size:11px;color:var(--muted);line-height:1.45;margin:0}.issue-meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;color:#8b919d;font-size:9px}.issue-actions{margin-top:11px}.issue-actions .btn{min-height:36px;font-size:10px}
+.system-row{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);font-size:11px}.system-row:last-child{border-bottom:0}.ok{color:var(--green)}.warn{color:var(--yellow)}.bad{color:var(--red)}.empty{padding:30px 12px;text-align:center;color:var(--muted);font-size:12px}.updated{text-align:right;color:#707681;font-size:9px;margin-top:12px}.toast{position:fixed;right:16px;bottom:16px;max-width:360px;background:#171a21;border:1px solid var(--border);border-radius:14px;padding:13px 15px;font-size:12px;box-shadow:0 16px 40px rgba(0,0,0,.35);z-index:20}
+@media(max-width:920px){.stats{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}}
+@media(max-width:620px){.shell{width:min(100% - 20px,1180px)}.top{align-items:flex-start}.top .ghost{font-size:10px;padding:0 10px}.hero h1{font-size:21px}.stats{grid-template-columns:repeat(2,1fr)}.health strong{font-size:17px}}
+</style>
+</head>
+<body>
+<section id="gate" class="gate">
+  <div class="gate-card">
+    <div id="gateLoading"><h1>Carioca Ticket</h1><p>Validando acesso à Central de Saúde das Vendas…</p></div>
+    <div id="gateDenied" class="hidden"><h1>Acesso restrito</h1><p id="gateMessage">Entre pelo Portal do Produtor.</p><p><a class="ghost" href="/central/">Voltar à Central</a></p></div>
+  </div>
+</section>
+
+<main id="app" class="shell hidden">
+  <header class="top">
+    <a class="brand" href="/central/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Saúde das Vendas</strong><span>Monitoramento de produção</span></div></a>
+    <div><button id="refresh" class="btn" type="button">Atualizar</button> <a class="ghost" href="/central/">← Central</a></div>
+  </header>
+
+  <section class="hero">
+    <div class="ey">Carioca Ticket · Produção</div>
+    <h1 id="eventName">Evento</h1>
+    <p>Diagnóstico da cadeia de pagamento e emissão. Dados pessoais do comprador não são exibidos nesta tela.</p>
+    <div id="eventMeta" class="meta"></div>
+  </section>
+
+  <section id="health" class="health verde">
+    <div class="health-dot"></div>
+    <div><strong id="healthTitle">VERDE</strong><span id="healthText">Operação sem ocorrências críticas.</span></div>
+  </section>
+
+  <section class="stats">
+    <article class="stat"><span>Pedidos</span><strong id="sOrders">0</strong><small>neste evento</small></article>
+    <article class="stat"><span>Concluídos</span><strong id="sDone">0</strong><small>venda + emissão</small></article>
+    <article class="stat"><span>Aguardando</span><strong id="sWaiting">0</strong><small>pagamento em aberto</small></article>
+    <article class="stat"><span>Críticos</span><strong id="sCritical">0</strong><small>exigem atenção imediata</small></article>
+    <article class="stat"><span>Atenções</span><strong id="sAttention">0</strong><small>acompanhar</small></article>
+    <article class="stat"><span>Webhook</span><strong id="sWebhook">0</strong><small>itens aguardando</small></article>
+  </section>
+
+  <section class="grid">
+    <div class="panel">
+      <div class="head"><div><h2>Ocorrências</h2><p>Prioridade automática: crítico antes de atenção.</p></div></div>
+      <div id="issues" class="issue-list"></div>
+    </div>
+    <aside class="panel">
+      <div class="head"><div><h2>Infraestrutura</h2><p>Saúde do pipeline financeiro.</p></div></div>
+      <div class="system-row"><span>Processador automático</span><strong id="sysTrigger">—</strong></div>
+      <div class="system-row"><span>Webhook processados</span><strong id="sysProcessed">0</strong></div>
+      <div class="system-row"><span>Webhook falhas</span><strong id="sysFailures">0</strong></div>
+      <div class="system-row"><span>Webhook atrasados</span><strong id="sysLate">0</strong></div>
+      <div class="system-row"><span>Erros abertos 24h</span><strong id="sysErrors">0</strong></div>
+      <div class="system-row"><span>Recuperação automática</span><strong id="sysRecovery">ATIVA</strong></div>
+      <div id="updated" class="updated">—</div>
+    </aside>
+  </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var pending={};
+var state={session:null,eventId:'',data:null};
+
+var gate=document.getElementById('gate'),gateLoading=document.getElementById('gateLoading'),gateDenied=document.getElementById('gateDenied'),gateMessage=document.getElementById('gateMessage'),app=document.getElementById('app');
+
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm){var t=Date.parse(d.expiraEm);if(!isNaN(t)&&t<=Date.now())return null}return d}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){return new Promise(function(resolve,reject){var id='CTHEALTH-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='cthealth_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A consulta demorou mais do que o esperado.'))},45000)};form.submit()})}
+window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível consultar a saúde das vendas.')))});
+
+function deny(msg){gateLoading.classList.add('hidden');gateDenied.classList.remove('hidden');gateMessage.textContent=msg||'Acesso restrito.'}
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.remove('hidden');setTimeout(function(){el.classList.add('hidden')},4200)}
+function healthCopy(level){if(level==='CRITICO')return 'Há ocorrência crítica que precisa ser tratada.';if(level==='ATENCAO')return 'A operação está ativa, mas há itens para acompanhar.';return 'Operação sem ocorrências críticas.'}
+
+function renderIssue(x){
+  var nivel=String(x.nivel||'ATENCAO').toLowerCase();
+  var meta=[];
+  if(x.pedidoFinal)meta.push('Pedido …'+esc(x.pedidoFinal));
+  if(x.statusPedido)meta.push('Pedido: '+esc(x.statusPedido));
+  if(x.formaPagamento)meta.push(esc(x.formaPagamento));
+  if(Number(x.idadeMinutos||0)>0)meta.push('há '+Number(x.idadeMinutos||0)+' min');
+
+  return '<article class="issue '+nivel+'">'+
+    '<div class="issue-top"><div><span class="badge '+nivel+'">'+esc(x.nivel||'ATENÇÃO')+'</span><h3>'+esc(x.titulo||x.codigo||'Ocorrência')+'</h3></div></div>'+
+    '<p>'+esc(x.mensagem||'')+'</p>'+
+    '<div class="issue-meta">'+meta.map(function(m){return '<span>'+m+'</span>'}).join('')+'</div>'+
+    (x.recuperavel===true&&x.pedidoId?'<div class="issue-actions"><button class="btn gold recover" data-pedido="'+esc(x.pedidoId)+'" type="button">Reprocessar com segurança</button></div>':'')+
+    '</article>';
+}
+
+function render(r){
+  state.data=r;
+  var e=r.evento||{},x=r.resumo||{},sys=r.sistema||{},wh=sys.webhook||{},obs=sys.observabilidade24h||{};
+  document.getElementById('eventName').textContent=e.nome||state.eventId;
+  document.getElementById('eventMeta').innerHTML=[e.data,e.horario,e.local,[e.cidade,e.uf].filter(Boolean).join(' - ')].filter(Boolean).map(function(v){return '<span class="chip">'+esc(v)+'</span>'}).join('');
+
+  var level=String(r.nivel||'VERDE').toUpperCase();
+  var h=document.getElementById('health');h.className='health '+level.toLowerCase();
+  document.getElementById('healthTitle').textContent=level;
+  document.getElementById('healthText').textContent=healthCopy(level);
+
+  document.getElementById('sOrders').textContent=Number(x.pedidos||0);
+  document.getElementById('sDone').textContent=Number(x.concluidos||0);
+  document.getElementById('sWaiting').textContent=Number(x.aguardando||0);
+  document.getElementById('sCritical').textContent=Number(x.criticos||0);
+  document.getElementById('sAttention').textContent=Number(x.atencoes||0);
+  document.getElementById('sWebhook').textContent=Number(x.webhookFila||0);
+
+  var issues=Array.isArray(r.ocorrencias)?r.ocorrencias:[];
+  document.getElementById('issues').innerHTML=issues.length?issues.map(renderIssue).join(''):'<div class="empty">Nenhuma ocorrência encontrada. O fluxo de vendas está saudável.</div>';
+
+  var trigger=document.getElementById('sysTrigger');trigger.textContent=sys.processadorAgendado?'ATIVO':'INATIVO';trigger.className=sys.processadorAgendado?'ok':'bad';
+  document.getElementById('sysProcessed').textContent=Number(wh.processados||0);
+  var failures=document.getElementById('sysFailures');failures.textContent=Number(wh.falhas||0);failures.className=Number(wh.falhas||0)?'bad':'ok';
+  var late=document.getElementById('sysLate');late.textContent=Number(wh.atrasados||0);late.className=Number(wh.atrasados||0)?'warn':'ok';
+  document.getElementById('sysErrors').textContent=Number(obs.abertos||0);
+  document.getElementById('sysRecovery').className=sys.recuperacaoAutomatica?'ok':'warn';
+  document.getElementById('sysRecovery').textContent=sys.recuperacaoAutomatica?'ATIVA':'INDISPONÍVEL';
+  document.getElementById('updated').textContent='Atualizado em '+String(r.atualizadoEm||'—');
+
+  document.querySelectorAll('.recover').forEach(function(btn){
+    btn.addEventListener('click',function(){recover(btn,String(btn.getAttribute('data-pedido')||''))});
+  });
+}
+
+async function load(){
+  var btn=document.getElementById('refresh');btn.disabled=true;
+  try{
+    var r=await rpc('ctSaudeVendasCarregarPROD',[String(state.session.token),state.eventId]);
+    if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Sua conta não possui permissão para Saúde das Vendas neste evento.');
+    render(r);gate.classList.add('hidden');app.classList.remove('hidden');
+  }catch(e){
+    if(app.classList.contains('hidden'))deny(e&&e.message?e.message:String(e));
+    else toast(e&&e.message?e.message:String(e));
+  }finally{btn.disabled=false}
+}
+
+async function recover(btn,pedidoId){
+  if(!pedidoId)return;
+  btn.disabled=true;btn.textContent='Reprocessando…';
+  try{
+    var r=await rpc('ctSaudeVendasReprocessarPedidoPROD',[String(state.session.token),state.eventId,pedidoId]);
+    if(!r||r.sucesso!==true)throw new Error('Não foi possível reprocessar este pedido.');
+    toast(r.concluido?'Pedido concluído e ingresso liberado.':'Reprocessamento concluído. O status foi atualizado.');
+    await load();
+  }catch(e){toast(e&&e.message?e.message:String(e));btn.disabled=false;btn.textContent='Reprocessar com segurança'}
+}
+
+function init(){
+  state.session=readSession();
+  state.eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();
+  if(!state.session||!state.session.token){deny('Entre no Portal do Produtor para acessar a Saúde das Vendas.');return}
+  if(!state.eventId){deny('Selecione um evento na Central antes de abrir a Saúde das Vendas.');return}
+  document.getElementById('refresh').addEventListener('click',load);
+  load();
+}
+init();
+}());
+</script>
+</body>
+</html>
