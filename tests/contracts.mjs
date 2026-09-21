@@ -15,6 +15,17 @@ const protectedFiles = [
   'produtor/index.html',
   'produtor-v2/index.html',
   'acessos-v2/index.html',
+  'acessos/index.html',
+  'vendas/index.html',
+  'comissionado/index.html',
+  'bar/index.html',
+  'fornecedores/index.html',
+  'crm/index.html',
+  'financeiro/index.html',
+  'reembolsos/index.html',
+  'saude-vendas/index.html',
+  'relatorios/index.html',
+  'comissoes/index.html',
   'eventos-v2/index.html',
   'evento-v2/index.html',
   'checkout-v2/index.html',
@@ -208,11 +219,19 @@ if (producerManifest) {
 for (const file of [
   'produtor/index.html',
   'central/index.html',
-  'saude-vendas/index.html',
-  'reembolsos/index.html',
-  'financeiro/index.html',
-  'relatorios/index.html',
   'acessos/index.html',
+  'vendas/index.html',
+  'comissionado/index.html',
+  'bar/index.html',
+  'eventos-v2/index.html',
+  'fornecedores/index.html',
+  'crm/index.html',
+  'financeiro/index.html',
+  'reembolsos/index.html',
+  'saude-vendas/index.html',
+  'relatorios/index.html',
+  'comissoes/index.html',
+  'consulta/index.html',
   'checkin/index.html'
 ]) {
   const html = read(file);
@@ -394,16 +413,41 @@ if (saudeVendas) {
 
 for (const file of [
   'produtor/index.html',
+  'central/index.html',
+  'acessos/index.html',
+  'vendas/index.html',
+  'comissionado/index.html',
+  'bar/index.html',
+  'eventos-v2/index.html',
+  'fornecedores/index.html',
+  'crm/index.html',
+  'financeiro/index.html',
+  'reembolsos/index.html',
+  'saude-vendas/index.html',
+  'relatorios/index.html',
+  'comissoes/index.html',
   'consulta/index.html',
   'ingresso/index.html',
-  'central/index.html',
   'checkin/index.html'
 ]) {
   const html = read(file);
   if (!html) continue;
-  const nativeDialog = html.match(/(?:window\.)?(?:alert|confirm|prompt)\s*\(/i);
+  const nativeDialog = html.match(/(?:window\.(?:alert|confirm|prompt)|(?<![\w.])(?:alert|confirm|prompt))\s*\(/i);
   if (nativeDialog) {
     fail(file, 'dialogo nativo do navegador em fluxo critico', nativeDialog[0]);
+  }
+}
+
+const eventosAdmin = read('eventos-v2/index.html');
+if (eventosAdmin) {
+  if (!eventosAdmin.includes("ctEventosOperacionalSelecionarSeguraPROD")) {
+    fail('eventos-v2/index.html', 'Eventos sem seleção segura first-party');
+  }
+  if (!eventosAdmin.includes('confirmarAcaoCT')) {
+    fail('eventos-v2/index.html', 'Eventos sem confirmação visual própria');
+  }
+  if (!eventosAdmin.includes('manifest-produtor.webmanifest')) {
+    fail('eventos-v2/index.html', 'Eventos fora do PWA administrativo');
   }
 }
 
