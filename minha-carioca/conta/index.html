@@ -19,7 +19,8 @@ label{display:block;margin:0 0 8px;font-size:13px;font-weight:800}input{width:10
 .sec{margin-top:22px;padding:17px;border:1px solid #22303d;border-radius:17px;background:#0d131a}.sec strong{display:block;margin-bottom:5px}.sec p{margin:0;color:#a8b2bd;font-size:12px;line-height:1.6}
 .code{text-align:center;font-size:28px;font-weight:900;letter-spacing:.3em;padding-left:.3em}.list{display:grid;gap:12px}.item{padding:18px;border:1px solid #292720;border-radius:18px;background:#0b0b0b}.item h3{margin:7px 0 8px;font-size:19px}.item p{margin:0 0 12px;color:var(--m);font-size:12px;line-height:1.55}.row{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #25231f;padding-top:13px}.open{display:inline-flex;align-items:center;justify-content:center;min-height:43px;border-radius:11px;background:linear-gradient(135deg,var(--g),var(--g2));color:#111;text-decoration:none;font-size:12px;font-weight:900;padding:0 15px}.logout{border:1px solid #37342f;border-radius:11px;background:#101010;color:#ddd5c8;min-height:42px;padding:0 14px;font-weight:800}
 .head{display:flex;justify-content:space-between;gap:18px;align-items:start}.meta{color:var(--m);font-size:12px}.small{color:var(--m);font-size:11px}.empty{padding:24px;border:1px dashed #3c382f;border-radius:17px;text-align:center;color:var(--m);font-size:13px}
-@media(max-width:560px){.card{padding:22px}.back{font-size:11px}.head{display:grid}}
+.overview{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0 26px}.stat{padding:15px;border:1px solid #2c2922;border-radius:15px;background:#0a0a0a}.stat small{display:block;color:#8e887d;font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}.stat strong{font-size:22px;line-height:1}.section-head{display:flex;justify-content:space-between;align-items:end;gap:14px;margin:4px 0 14px}.section-head h2{margin:0;font-size:25px}.section-head p{margin:0;color:var(--m);font-size:11px;line-height:1.45;text-align:right;max-width:310px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.ghost{display:inline-flex;align-items:center;justify-content:center;min-height:43px;border:1px solid #37342f;border-radius:11px;background:#101010;color:#ddd5c8;text-decoration:none;font-size:12px;font-weight:900;padding:0 15px}.purchase-id{display:block;margin-top:4px;color:#6f6a61;font-size:9px;word-break:break-all}
+@media(max-width:560px){.card{padding:22px}.back{font-size:11px}.head{display:grid}.overview{grid-template-columns:1fr}.section-head{display:block}.section-head p{text-align:left;margin-top:6px}.row{align-items:flex-end}}
 </style>
 </head>
 <body>
@@ -94,41 +95,106 @@ b.onclick=go;i.oninput=function(){this.value=this.value.replace(/\D/g,'').slice(
 }
 
 function account(data,msg){
-app.innerHTML='';var u=data.usuario||{},arr=Array.isArray(data.compras)?data.compras:[];
-var head=e('div','head'),left=e('div');left.append(e('div','ey','Minha Carioca'),e('h1','',u.nome?('Olá, '+String(u.nome).split(/\s+/)[0]):'Seus ingressos'));
-var meta=[];if(u.emailMascarado)meta.push(u.emailMascarado);if(u.whatsappMascarado)meta.push(u.whatsappMascarado);left.append(e('div','meta',meta.join(' · ')));
-var out=e('button','logout','Sair');out.type='button';head.append(left,out);app.append(head);if(msg)app.append(e('p','msg ok',msg));
-app.append(e('h2','','Meus ingressos'));var list=e('div','list');
-if(!arr.length)list.append(e('div','empty','Nenhuma compra concluída foi localizada para esta conta.'));
+app.innerHTML='';
+var u=data.usuario||{},arr=Array.isArray(data.compras)?data.compras:[];
+var totalIngressos=arr.reduce(function(n,x){return n+(Number(x.quantidade||0)||0)},0);
 var grupos={};
 arr.forEach(function(x){
-var chave=String(x.eventoId||'')||[x.eventoNome||'',x.data||'',x.local||''].join('|');
-if(!grupos[chave])grupos[chave]={evento:x,itens:[],total:0};
-grupos[chave].itens.push(x);grupos[chave].total+=Number(x.quantidade||0);
+  var chave=String(x.eventoId||'')||[x.eventoNome||'',x.data||'',x.local||''].join('|');
+  if(!grupos[chave])grupos[chave]={evento:x,itens:[],total:0};
+  grupos[chave].itens.push(x);
+  grupos[chave].total+=Number(x.quantidade||0)||0;
 });
-Object.keys(grupos).forEach(function(chave){
-var g=grupos[chave],x=g.evento||{},it=e('article','item');
-it.append(e('div','ey','Ingresso Carioca Ticket'),e('h3','',x.eventoNome||'Evento Carioca Ticket'));
-var d=[];if(x.data)d.push(x.data);if(x.horario)d.push(x.horario);if(x.local)d.push(x.local);if(x.cidade)d.push(x.cidade+(x.uf?' - '+x.uf:''));
-it.append(e('p','',d.join(' · ')));
-var resumo=e('div','row');resumo.append(e('strong','',g.total+(g.total===1?' ingresso':' ingressos')));resumo.append(e('span','small',g.itens.length+(g.itens.length===1?' compra confirmada':' compras confirmadas')));it.append(resumo);
-g.itens.forEach(function(pedido,idx){
-var linha=e('div','row'),rotulo=e('span','small','Ingresso '+(idx+1)+' · '+(Number(pedido.quantidade||0)||0)+(Number(pedido.quantidade)===1?' acesso':' acessos'));
-var a=e('a','open',Number(pedido.quantidade)===1?'Abrir ingresso':'Abrir ingressos');
-try{
-  var pu=new URL(String(pedido.link||''),location.origin);
-  var pp=String(pu.searchParams.get('pedido')||pedido.pedidoId||'').trim();
-  var pt=String(pu.searchParams.get('token')||'').trim();
-  a.href='/minha-carioca/ingressos/?v=20260919-2158&pedido='+encodeURIComponent(pp)+'&token='+encodeURIComponent(pt);
-}catch(_){
-  a.href=String(pedido.link||'#');
+var chaves=Object.keys(grupos);
+
+var head=e('div','head'),left=e('div');
+left.append(
+  e('div','ey','Conta Carioca'),
+  e('h1','',u.nome?('Olá, '+String(u.nome).split(/\s+/)[0]):'Minha Carioca')
+);
+var meta=[];
+if(u.whatsappMascarado)meta.push(u.whatsappMascarado);
+if(u.emailMascarado)meta.push(u.emailMascarado);
+left.append(e('div','meta',meta.join(' · ')));
+var out=e('button','logout','Sair');out.type='button';
+head.append(left,out);app.append(head);
+if(msg)app.append(e('p','msg ok',msg));
+
+var overview=e('div','overview');
+[
+  ['Ingressos',totalIngressos],
+  ['Eventos',chaves.length],
+  ['Compras',arr.length]
+].forEach(function(x){
+  var card=e('div','stat');
+  card.append(e('small','',x[0]),e('strong','',String(x[1])));
+  overview.append(card);
+});
+app.append(overview);
+
+var sec=e('div','section-head'),secLeft=e('div');
+secLeft.append(e('h2','','Meus ingressos'));
+sec.append(secLeft,e('p','','Seus ingressos digitais ficam reunidos aqui, organizados por evento e compra.'));
+app.append(sec);
+
+var list=e('div','list');
+if(!arr.length){
+  var vazio=e('div','empty','Você ainda não possui compras concluídas nesta conta.');
+  list.append(vazio);
 }
-linha.append(rotulo,a);it.append(linha);
+
+chaves.forEach(function(chave){
+  var g=grupos[chave],x=g.evento||{},it=e('article','item');
+  it.append(e('div','ey','Ingresso Carioca Ticket'),e('h3','',x.eventoNome||'Evento Carioca Ticket'));
+  var d=[];
+  if(x.data)d.push(x.data);
+  if(x.horario)d.push(x.horario);
+  if(x.local)d.push(x.local);
+  if(x.cidade)d.push(x.cidade+(x.uf?' - '+x.uf:''));
+  it.append(e('p','',d.join(' · ')));
+
+  var resumo=e('div','row');
+  resumo.append(
+    e('strong','',g.total+(g.total===1?' ingresso':' ingressos')),
+    e('span','small',g.itens.length+(g.itens.length===1?' compra confirmada':' compras confirmadas'))
+  );
+  it.append(resumo);
+
+  g.itens.forEach(function(pedido,idx){
+    var linha=e('div','row');
+    var info=e('div');
+    var qtd=Number(pedido.quantidade||0)||0;
+    info.append(e('span','small','Compra '+(idx+1)+' · '+qtd+(qtd===1?' acesso':' acessos')));
+    if(pedido.pedidoId)info.append(e('span','purchase-id',String(pedido.pedidoId)));
+
+    var a=e('a','open',qtd===1?'Abrir ingresso':'Abrir ingressos');
+    try{
+      var pu=new URL(String(pedido.link||''),location.origin);
+      var pp=String(pu.searchParams.get('pedido')||pedido.pedidoId||'').trim();
+      var pt=String(pu.searchParams.get('token')||'').trim();
+      a.href='/minha-carioca/ingressos/?v=20260921-0530&pedido='+encodeURIComponent(pp)+'&token='+encodeURIComponent(pt);
+    }catch(_){
+      a.href=String(pedido.link||'#');
+    }
+    linha.append(info,a);it.append(linha);
+  });
+  list.append(it);
 });
-list.append(it);
-});
-app.append(list);security();
-out.onclick=function(){var token=String(data&&data.token||'').trim();if(token){post('logout',{token:token});return}localStorage.removeItem(STORE);sessionStorage.clear();login('Sessão encerrada.')}
+app.append(list);
+
+var toolbar=e('div','toolbar');
+var eventos=e('a','ghost','Ver outros eventos');
+eventos.href='/?v=20260921-0530#todos-eventos';
+toolbar.append(eventos);
+app.append(toolbar);
+
+security();
+
+out.onclick=function(){
+  var token=String(data&&data.token||'').trim();
+  if(token){post('logout',{token:token});return}
+  localStorage.removeItem(STORE);sessionStorage.clear();login('Sessão encerrada.')
+}
 }
 
 if(location.hash.indexOf('#ctmc=')===0){
