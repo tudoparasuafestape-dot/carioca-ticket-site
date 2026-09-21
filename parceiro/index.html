@@ -4,7 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#08090c">
-  <title>Portal Parceiro CT | Carioca Ticket</title>\n  <meta name="description" content="Acompanhe produtores indicados, vendas elegíveis e comissões no Portal Parceiro CT.">\n  <link rel="canonical" href="https://cariocaticket.com.br/parceiro/">\n  <meta property="og:locale" content="pt_BR">\n  <meta property="og:type" content="website">\n  <meta property="og:site_name" content="Carioca Ticket">\n  <meta property="og:title" content="Portal Parceiro CT | Carioca Ticket">\n  <meta property="og:description" content="Acompanhe produtores indicados, vendas elegíveis e suas comissões.">\n  <meta property="og:url" content="https://cariocaticket.com.br/parceiro/">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+  <title>Portal Parceiro CT | Carioca Ticket</title>
+  <meta name="description" content="Acompanhe produtores indicados, vendas elegíveis e comissões no Portal Parceiro CT.">
+  <link rel="canonical" href="https://cariocaticket.com.br/parceiro/">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Carioca Ticket">
+  <meta property="og:title" content="Portal Parceiro CT | Carioca Ticket">
+  <meta property="og:description" content="Acompanhe produtores indicados, vendas elegíveis e suas comissões.">
+  <meta property="og:url" content="https://cariocaticket.com.br/parceiro/">
+  <meta property="og:image" content="https://cariocaticket.com.br/assets/carioca-ticket-preview-oficial-v9.jpg">
+  <meta name="twitter:card" content="summary_large_image">
   <style>
     :root{
       --bg:#07080b;
@@ -146,7 +159,8 @@
     }
   </style>
 </head>
-<body>\n<script>
+<body>
+<script>
 (function(){
   'use strict';
 
@@ -199,7 +213,7 @@
       timer:setTimeout(function(){
         var p=cleanup(id);
         if(p)p.failure(new Error('CT_PARCEIRO_RPC_TIMEOUT'));
-      },45000)
+      },30000)
     };
 
     form.submit();
@@ -252,8 +266,8 @@
   <section id="loginView" class="login-view">
     <div class="login-card">
       <div class="brand">
-        <img id="brandLogo" class="brand-logo hidden" alt="Carioca Ticket">
-        <div id="brandFallback" class="brand-fallback">CARIOCA TICKET</div>
+        <img id="brandLogo" class="brand-logo" src="https://cariocaticket.com.br/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+        <div id="brandFallback" class="brand-fallback hidden">CARIOCA TICKET</div>
       </div>
       <div class="eyebrow">Parceiro Carioca Ticket</div>
       <h1>Seu resultado em um só lugar.</h1>
@@ -285,7 +299,7 @@
     <header class="topbar">
       <div class="topbar-in">
         <div class="top-brand">
-          <img id="topLogo" class="top-logo hidden" alt="Carioca Ticket">
+          <img id="topLogo" class="top-logo" src="https://cariocaticket.com.br/assets/carioca-ticket-simbolo.png" alt="Carioca Ticket">
           <div>
             <div class="top-title">Portal Parceiro CT</div>
             <div class="top-sub">Motor comercial Carioca Ticket</div>
@@ -415,7 +429,7 @@ window.CTParceiroFirebase = Object.freeze({
     if(!auth) throw new Error('CT_FIREBASE_NAO_INICIALIZADO');
     const cred = await signInWithEmailAndPassword(auth,email,senha);
     return {
-      idToken: await getIdToken(cred.user,true),
+      idToken: await getIdToken(cred.user,false),
       emailVerified: cred.user.emailVerified === true
     };
   },
@@ -431,6 +445,7 @@ window.CTParceiroFirebase = Object.freeze({
   'use strict';
 
   var STORAGE_KEY = 'CT_PARCEIRO_CT_SESSION_V1';
+  var FIREBASE_CONFIG_KEY = 'CT_PARCEIRO_FIREBASE_CONFIG_V1';
   var state = {
     token:'',
     expiraEm:'',
@@ -461,35 +476,8 @@ window.CTParceiroFirebase = Object.freeze({
     el.logoutButton.addEventListener('click', executarLogout);
     el.copyButton.addEventListener('click', copiarLink);
     el.shareButton.addEventListener('click', compartilharLink);
-    carregarMarca();
     inicializarFirebase();
     restaurarSessao();
-  }
-
-  function carregarMarca(){
-    if(typeof google==='undefined' || !google.script || !google.script.run) return;
-    google.script.run
-      .withSuccessHandler(function(uri){
-        uri=String(uri||'');
-        if(uri.indexOf('data:image/')===0){
-          el.brandLogo.src=uri;
-          el.brandLogo.classList.remove('hidden');
-          el.brandFallback.classList.add('hidden');
-        }
-      })
-      .withFailureHandler(function(){})
-      .ctMarcaOficialObterDataUriPROD('DESKTOP');
-
-    google.script.run
-      .withSuccessHandler(function(uri){
-        uri=String(uri||'');
-        if(uri.indexOf('data:image/')===0){
-          el.topLogo.src=uri;
-          el.topLogo.classList.remove('hidden');
-        }
-      })
-      .withFailureHandler(function(){})
-      .ctMarcaOficialObterDataUriPROD('MOBILE');
   }
 
   function inicializarFirebase(){
@@ -511,21 +499,22 @@ window.CTParceiroFirebase = Object.freeze({
         return;
       }
 
-      google.script.run
-        .withSuccessHandler(function(r){
-          if(!r || r.sucesso!==true || !r.firebaseConfig){
-            reject(new Error('CT_FIREBASE_CONFIG_INDISPONIVEL'));
-            return;
-          }
-          window.CTParceiroFirebase.inicializar(r.firebaseConfig)
-            .then(function(){
-              state.firebaseReady=true;
-              resolve(true);
-            })
-            .catch(reject);
-        })
-        .withFailureHandler(reject)
-        .ctCentralAcessoObterFirebaseConfigPROD();
+      var configCache = lerFirebaseConfigCache();
+
+      if(configCache){
+        window.CTParceiroFirebase.inicializar(configCache)
+          .then(function(){
+            state.firebaseReady=true;
+            resolve(true);
+          })
+          .catch(function(){
+            apagarFirebaseConfigCache();
+            buscarFirebaseConfigServidor(resolve,reject);
+          });
+        return;
+      }
+
+      buscarFirebaseConfigServidor(resolve,reject);
     }).catch(function(erro){
       state.firebasePromise=null;
       state.firebaseReady=false;
@@ -533,6 +522,51 @@ window.CTParceiroFirebase = Object.freeze({
     });
 
     return state.firebasePromise;
+  }
+
+  function buscarFirebaseConfigServidor(resolve,reject){
+    google.script.run
+      .withSuccessHandler(function(r){
+        if(!r || r.sucesso!==true || !r.firebaseConfig){
+          reject(new Error('CT_FIREBASE_CONFIG_INDISPONIVEL'));
+          return;
+        }
+
+        salvarFirebaseConfigCache(r.firebaseConfig);
+
+        window.CTParceiroFirebase.inicializar(r.firebaseConfig)
+          .then(function(){
+            state.firebaseReady=true;
+            resolve(true);
+          })
+          .catch(reject);
+      })
+      .withFailureHandler(reject)
+      .ctCentralAcessoObterFirebaseConfigPROD();
+  }
+
+  function lerFirebaseConfigCache(){
+    try{
+      var raw=localStorage.getItem(FIREBASE_CONFIG_KEY);
+      if(!raw) return null;
+      var parsed=JSON.parse(raw);
+      if(!parsed || !parsed.apiKey || !parsed.projectId) return null;
+      return parsed;
+    }catch(erro){
+      return null;
+    }
+  }
+
+  function salvarFirebaseConfigCache(config){
+    try{
+      localStorage.setItem(FIREBASE_CONFIG_KEY,JSON.stringify(config||{}));
+    }catch(erro){}
+  }
+
+  function apagarFirebaseConfigCache(){
+    try{
+      localStorage.removeItem(FIREBASE_CONFIG_KEY);
+    }catch(erro){}
   }
 
   async function executarLogin(e){
@@ -581,10 +615,18 @@ window.CTParceiroFirebase = Object.freeze({
       state.expiraEm=String(resposta.expiraEm||'');
       state.usuario=resposta.usuario||null;
       state.parceiro=resposta.parceiro||null;
+      state.painel=resposta.painel||null;
       salvarSessao();
       el.senha.value='';
       abrirPortal();
-      await carregarPainel(false);
+
+      if(state.painel){
+        state.usuario=state.painel.usuario||state.usuario;
+        state.parceiro=state.painel.parceiro||state.parceiro;
+        renderizar(state.painel);
+      }else{
+        carregarPainel(false);
+      }
 
     }catch(erro){
       await sairFirebaseSilencioso();
@@ -634,8 +676,16 @@ window.CTParceiroFirebase = Object.freeze({
         }
         state.usuario=r.usuario||null;
         state.parceiro=r.parceiro||null;
+        state.painel=r.painel||null;
         abrirPortal();
-        carregarPainel(false);
+
+        if(state.painel){
+          state.usuario=state.painel.usuario||state.usuario;
+          state.parceiro=state.painel.parceiro||state.parceiro;
+          renderizar(state.painel);
+        }else{
+          carregarPainel(false);
+        }
       })
       .withFailureHandler(function(){
         loading(false);
