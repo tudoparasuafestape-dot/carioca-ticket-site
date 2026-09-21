@@ -17,7 +17,7 @@
 .stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px}.stat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;min-height:104px}.stat span{display:block;color:var(--muted);font-size:10px;font-weight:800}.stat strong{display:block;font-size:22px;margin-top:10px}.stat small{display:block;color:#6f7681;font-size:9px;margin-top:6px}
 .grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.6fr);gap:14px}.panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px}.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.head h2{font-size:16px;margin:0}.head p{font-size:10px;color:var(--muted);margin:4px 0 0}
 .issue-list{display:flex;flex-direction:column;gap:10px}.issue{border:1px solid var(--border);background:var(--card2);border-radius:14px;padding:14px}.issue.critico{border-color:rgba(255,118,118,.3)}.issue.atencao{border-color:rgba(241,200,91,.28)}.issue-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.badge{border-radius:999px;padding:5px 8px;font-size:9px;font-weight:900;letter-spacing:.5px}.badge.critico{color:#ffd0d0;background:rgba(255,118,118,.12)}.badge.atencao{color:#ffe7a4;background:rgba(241,200,91,.12)}.issue h3{font-size:13px;margin:8px 0 5px}.issue p{font-size:11px;color:var(--muted);line-height:1.45;margin:0}.issue-meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;color:#8b919d;font-size:9px}.issue-actions{margin-top:11px}.issue-actions .btn{min-height:36px;font-size:10px}
-.system-row{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);font-size:11px}.system-row:last-child{border-bottom:0}.ok{color:var(--green)}.warn{color:var(--yellow)}.bad{color:var(--red)}.empty{padding:30px 12px;text-align:center;color:var(--muted);font-size:12px}.updated{text-align:right;color:#707681;font-size:9px;margin-top:12px}.toast{position:fixed;right:16px;bottom:16px;max-width:360px;background:#171a21;border:1px solid var(--border);border-radius:14px;padding:13px 15px;font-size:12px;box-shadow:0 16px 40px rgba(0,0,0,.35);z-index:20}
+.system-row{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);font-size:11px}.system-row:last-child{border-bottom:0}.system-row.stack{display:block}.system-row.stack strong{display:block;margin-top:6px;font-size:10px;line-height:1.45;overflow-wrap:anywhere}.ok{color:var(--green)}.warn{color:var(--yellow)}.bad{color:var(--red)}.empty{padding:30px 12px;text-align:center;color:var(--muted);font-size:12px}.updated{text-align:right;color:#707681;font-size:9px;margin-top:12px}.toast{position:fixed;right:16px;bottom:16px;max-width:360px;background:#171a21;border:1px solid var(--border);border-radius:14px;padding:13px 15px;font-size:12px;box-shadow:0 16px 40px rgba(0,0,0,.35);z-index:20}
 @media(max-width:920px){.stats{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}}
 @media(max-width:620px){.shell{width:min(100% - 20px,1180px)}.top{align-items:flex-start}.top .ghost{font-size:10px;padding:0 10px}.hero h1{font-size:21px}.stats{grid-template-columns:repeat(2,1fr)}.health strong{font-size:17px}}
 </style>
@@ -69,6 +69,9 @@
       <div class="system-row"><span>Webhook falhas</span><strong id="sysFailures">0</strong></div>
       <div class="system-row"><span>Webhook atrasados</span><strong id="sysLate">0</strong></div>
       <div class="system-row"><span>Erros abertos 24h</span><strong id="sysErrors">0</strong></div>
+      <div class="system-row"><span>Cobertura webhook Asaas</span><strong id="sysAsaasCoverage">—</strong></div>
+      <div class="system-row"><span>Webhooks Asaas ativos</span><strong id="sysAsaasActive">0</strong></div>
+      <div class="system-row stack"><span>Eventos Asaas faltantes</span><strong id="sysAsaasMissing">—</strong></div>
       <div class="system-row"><span>Recuperação automática</span><strong id="sysRecovery">ATIVA</strong></div>
       <div id="updated" class="updated">—</div>
     </aside>
@@ -115,7 +118,7 @@ function renderIssue(x){
 
 function render(r){
   state.data=r;
-  var e=r.evento||{},x=r.resumo||{},sys=r.sistema||{},wh=sys.webhook||{},obs=sys.observabilidade24h||{};
+  var e=r.evento||{},x=r.resumo||{},sys=r.sistema||{},wh=sys.webhook||{},obs=sys.observabilidade24h||{},asaas=sys.webhookAsaas||{};
   document.getElementById('eventName').textContent=e.nome||state.eventId;
   document.getElementById('eventMeta').innerHTML=[e.data,e.horario,e.local,[e.cidade,e.uf].filter(Boolean).join(' - ')].filter(Boolean).map(function(v){return '<span class="chip">'+esc(v)+'</span>'}).join('');
 
@@ -139,6 +142,28 @@ function render(r){
   var failures=document.getElementById('sysFailures');failures.textContent=Number(wh.falhas||0);failures.className=Number(wh.falhas||0)?'bad':'ok';
   var late=document.getElementById('sysLate');late.textContent=Number(wh.atrasados||0);late.className=Number(wh.atrasados||0)?'warn':'ok';
   document.getElementById('sysErrors').textContent=Number(obs.abertos||0);
+
+  var coverage=document.getElementById('sysAsaasCoverage');
+  if(asaas.consultaOk!==true){
+    coverage.textContent='NÃO CONSULTADO';
+    coverage.className='warn';
+  }else if(asaas.coberturaCompleta===true){
+    coverage.textContent='COMPLETA';
+    coverage.className='ok';
+  }else{
+    coverage.textContent='INCOMPLETA';
+    coverage.className='bad';
+  }
+
+  var active=document.getElementById('sysAsaasActive');
+  active.textContent=Number(asaas.ativos||0);
+  active.className=Number(asaas.ativos||0)>0?'ok':'bad';
+
+  var missing=Array.isArray(asaas.eventosFaltantes)?asaas.eventosFaltantes:[];
+  var missingEl=document.getElementById('sysAsaasMissing');
+  missingEl.textContent=missing.length?missing.join(', '):'Nenhum';
+  missingEl.className=missing.length?'bad':'ok';
+
   document.getElementById('sysRecovery').className=sys.recuperacaoAutomatica?'ok':'warn';
   document.getElementById('sysRecovery').textContent=sys.recuperacaoAutomatica?'ATIVA':'INDISPONÍVEL';
   document.getElementById('updated').textContent='Atualizado em '+String(r.atualizadoEm||'—');

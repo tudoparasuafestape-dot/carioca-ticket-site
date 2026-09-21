@@ -121,6 +121,16 @@ function rpcResult(method, args) {
           processadorAgendado: true,
           webhook: { recebidos: 0, processados: 4, falhas: 0, atrasados: 0 },
           observabilidade24h: { abertos: 0, error: 0, critical: 0 },
+          webhookAsaas: {
+            consultaOk: true,
+            configurado: true,
+            ativos: 1,
+            interrompidos: 0,
+            total: 1,
+            coberturaCompleta: true,
+            eventosFaltantes: [],
+            somenteLeitura: true
+          },
           recuperacaoAutomatica: true
         },
         ocorrencias: [],
@@ -640,7 +650,10 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expect(page.locator('#sOrders')).toHaveText('4');
     await expect(page.locator('#sCritical')).toHaveText('0');
     await expect(page.locator('#sysTrigger')).toHaveText('ATIVO');
-    await expect(page.locator('body')).not.toContainText(/CPF|E-mail do comprador|WhatsApp do comprador/i);
+    await expect(page.locator('#sysAsaasCoverage')).toHaveText('COMPLETA');
+    await expect(page.locator('#sysAsaasActive')).toHaveText('1');
+    await expect(page.locator('#sysAsaasMissing')).toHaveText('Nenhum');
+    await expect(page.locator('body')).not.toContainText(/CPF|E-mail do comprador|WhatsApp do comprador|access_token|credencialRef/i);
     expect(new URL(page.url()).pathname).toBe('/saude-vendas/');
     await expectNoTechnicalVisibleLinks(page);
   });
