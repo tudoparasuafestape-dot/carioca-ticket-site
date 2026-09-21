@@ -278,9 +278,11 @@
       }
 
       function render(res){
-        var t=res.ingresso||{},e=res.evento||{},v=res.visual||{};
+        var t=res.ingresso||{},e=res.evento||{},v=res.visual||{},seg=res.seguranca||{};
         var capa=String(v.capaUrl||v.posterUrl||'');
         var qr=String(t.qrUrl||'');
+        var autoriza=seg.autorizaEntrada===true;
+        var classe=String(t.statusClasse||'').toLowerCase();
         spinner.style.display='none';abrir.style.display='none';erro.style.display='none';
         document.querySelector('.eyebrow').style.display='none';
         document.querySelector('h1').style.display='none';
@@ -297,11 +299,9 @@
           '</div>'+
           (qr?'<img class="qr" src="'+esc(qr)+'" alt="QR Code do ingresso">':'')+
           '<div class="code">'+esc(t.codigo||codigo)+'</div>'+
-          '<div class="security-note">Este ingresso é individual e permite somente uma entrada. Não compartilhe o QR Code com terceiros.</div>'+
+          '<div class="security-note">'+esc(seg.mensagem||(autoriza?'Este ingresso é individual e permite somente uma entrada.':'Este ingresso não autoriza entrada neste momento.'))+'</div>'+
           '<div class="actions">'+
-            '<a id="share-whatsapp" class="action whatsapp full" href="#" target="_blank" rel="noopener">📲 Compartilhar pelo WhatsApp</a>'+
-            '<button id="share-ticket" class="action" type="button">🔗 Compartilhar ingresso</button>'+
-            '<button id="save-pdf" class="action" type="button">📄 Salvar em PDF</button>'+
+            (autoriza?'<a id="share-whatsapp" class="action whatsapp full" href="#" target="_blank" rel="noopener">📲 Compartilhar pelo WhatsApp</a><button id="share-ticket" class="action" type="button">🔗 Compartilhar ingresso</button><button id="save-pdf" class="action" type="button">📄 Salvar em PDF</button>':'')+
             '<a class="action primary" href="/minha-carioca/conta/?v=20260919-2215">Voltar para Minha Carioca</a>'+
             '<a class="action" href="https://cariocaticket.com.br/?v=20260920-0035#todos-eventos">Ver eventos</a>'+
           '</div>';
