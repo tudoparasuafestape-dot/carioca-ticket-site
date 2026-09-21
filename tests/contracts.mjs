@@ -9,6 +9,7 @@ const protectedFiles = [
   'ingresso/index.html',
   'central/index.html',
   'saude-vendas/index.html',
+  'reembolsos/index.html',
   'checkin/index.html',
   'consulta/index.html',
   'produtor/index.html',
@@ -128,6 +129,28 @@ for (const file of ['checkout/index.html', 'checkout-v2/index.html']) {
 }
 
 
+const reembolsos = read('reembolsos/index.html');
+if (reembolsos) {
+  if (!reembolsos.includes("ctMinhaCariocaAction','portalRpc'")) {
+    fail('reembolsos/index.html', 'Reembolsos sem ponte first-party segura');
+  }
+  if (!reembolsos.includes('ctReembolsosCarregarPROD')) {
+    fail('reembolsos/index.html', 'Reembolsos sem RPC de carga');
+  }
+  if (!reembolsos.includes('ctReembolsosDiagnosticarPROD')) {
+    fail('reembolsos/index.html', 'Reembolsos sem diagnostico previo');
+  }
+  if (!reembolsos.includes('ctReembolsosExecutarPROD')) {
+    fail('reembolsos/index.html', 'Reembolsos sem executor seguro');
+  }
+  if (!reembolsos.includes("==='REEMBOLSAR'")) {
+    fail('reembolsos/index.html', 'Reembolsos sem confirmacao textual de seguranca');
+  }
+  if (/cardNumber|creditCardNumber|cvv|ccv/i.test(reembolsos)) {
+    fail('reembolsos/index.html', 'Reembolsos referencia dados completos de cartao');
+  }
+}
+
 const saudeVendas = read('saude-vendas/index.html');
 if (saudeVendas) {
   if (!saudeVendas.includes("ctMinhaCariocaAction','portalRpc'")) {
@@ -151,6 +174,12 @@ if (centralOficial) {
   }
   if (!centralOficial.includes('/saude-vendas/?evento=')) {
     fail('central/index.html', 'Central sem rota first-party para Saude das Vendas');
+  }
+  if (!centralOficial.includes('data-perm="REEMBOLSOS"')) {
+    fail('central/index.html', 'Central sem permissao REEMBOLSOS');
+  }
+  if (!centralOficial.includes('/reembolsos/?evento=')) {
+    fail('central/index.html', 'Central sem rota first-party para Reembolsos');
   }
 }
 
