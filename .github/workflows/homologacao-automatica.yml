@@ -45,8 +45,10 @@ jobs:
               canvas = Image.new('RGBA', (size, size), '#090909')
               maxw = int(size * ratio)
               maxh = int(size * ratio)
-              img = src.copy()
-              img.thumbnail((maxw, maxh), Image.Resampling.LANCZOS)
+              scale = min(maxw / src.width, maxh / src.height)
+              width = max(1, round(src.width * scale))
+              height = max(1, round(src.height * scale))
+              img = src.resize((width, height), Image.Resampling.LANCZOS)
               x = (size - img.width) // 2
               y = (size - img.height) // 2
               canvas.alpha_composite(img, (x, y))
