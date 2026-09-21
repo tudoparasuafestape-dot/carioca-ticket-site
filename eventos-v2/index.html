@@ -763,7 +763,26 @@
         width: 100%;
       }
     }
-  </style>
+  
+/* CT ADMIN UI V2 */
+:root{--preto:#080b10;--branco:#f6f3ec;--texto:#f6f3ec;--cinza:#9ca4ae;--cinza-claro:#080b10;--borda:#2a313b;--dourado:#e0aa34;--verde-claro:rgba(80,210,140,.12);--azul-claro:rgba(90,150,255,.12);--amarelo-claro:rgba(224,170,52,.11);--vermelho-claro:rgba(255,100,110,.10)}
+body{background:radial-gradient(circle at 90% 0,rgba(224,170,52,.13),transparent 26rem),#07090c;color:var(--texto);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.topo{background:linear-gradient(145deg,#111820,#0a0e13);border:1px solid rgba(224,170,52,.22);box-shadow:0 18px 55px rgba(0,0,0,.32)}
+.estado,.barra-acoes,.evento-card{background:#11161d;color:var(--texto);border:1px solid #29313b;box-shadow:0 14px 42px rgba(0,0,0,.22)}
+.evento-ativo{background:linear-gradient(145deg,#17150f,#10151b);color:#f3e5bd;border:1px solid rgba(224,170,52,.32)}
+.botao-secundario{background:#171c23;color:#f4f0e8;border:1px solid #303844}.botao-principal{background:#171c23;color:#fff;border:1px solid #343c46}.botao-dourado{background:linear-gradient(135deg,#d99d24,#f2c451);color:#111}.campo{background:#0b0f14!important;color:#fff!important;border-color:#333b46!important}.campo:disabled{color:#aeb5bf!important}
+dialog{background:#11161d;color:#f6f3ec;border:1px solid rgba(224,170,52,.28);box-shadow:0 24px 80px rgba(0,0,0,.62)}
+dialog::backdrop{background:rgba(0,0,0,.76);backdrop-filter:blur(7px)}
+.ct-confirm-dialog{width:min(460px,calc(100% - 24px));border-radius:22px;padding:0}
+.ct-confirm-body{padding:22px}.ct-confirm-body h3{margin:0 0 8px;font-size:20px}.ct-confirm-body p{margin:0;color:#aab2bc;line-height:1.55}
+.ct-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 22px 22px}
+.ct-confirm-actions button{min-height:46px;border-radius:12px;border:1px solid #343c46;font:inherit;font-weight:850}
+.ct-confirm-cancel{background:#171c23;color:#fff}.ct-confirm-ok{background:linear-gradient(135deg,#d99d24,#f2c451);color:#111;border-color:transparent!important}
+.ct-toast{position:fixed;z-index:999;left:50%;bottom:22px;transform:translateX(-50%) translateY(18px);width:min(520px,calc(100% - 24px));padding:13px 15px;border-radius:14px;background:#151b23;border:1px solid #343c46;color:#fff;box-shadow:0 18px 55px rgba(0,0,0,.52);opacity:0;pointer-events:none;transition:.2s}
+.ct-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.ct-toast.error{border-color:#65353b;color:#ffc1c5}
+footer{color:#858e99!important}
+
+</style>
 </head>
 
 <body>
@@ -812,6 +831,9 @@
     switch(String(method||'')){
       case 'ctEventosPublicacaoListagemRapidaPROD':
         return {method:'ctEventosOperacionalListarSeguraPROD',args:[token]};
+
+      case 'selecionarEventoAtivo':
+        return {method:'ctEventosOperacionalSelecionarSeguraPROD',args:[token,String(args[0]||'')]};
 
       case 'ctEventosPublicacaoPublicarPROD':
         return {method:'ctEventosOperacionalPublicarSeguraPROD',args:[token,String(args[0]||'')]};
@@ -1520,6 +1542,93 @@
     }
 
 
+    function obterDialogConfirmacaoCT() {
+      var dialog=document.getElementById('ctConfirmDialog');
+      if(dialog)return dialog;
+
+      dialog=document.createElement('dialog');
+      dialog.id='ctConfirmDialog';
+      dialog.className='ct-confirm-dialog';
+      dialog.innerHTML=
+        '<div class="ct-confirm-body"><h3 id="ctConfirmTitle">Confirmar ação</h3><p id="ctConfirmText"></p></div>'+
+        '<div class="ct-confirm-actions"><button id="ctConfirmCancel" class="ct-confirm-cancel" type="button">Cancelar</button><button id="ctConfirmOk" class="ct-confirm-ok" type="button">Confirmar</button></div>';
+      document.body.appendChild(dialog);
+      return dialog;
+    }
+
+    function confirmarAcaoCT(mensagem,titulo) {
+      return new Promise(function(resolve){
+        var dialog=obterDialogConfirmacaoCT();
+        var texto=dialog.querySelector('#ctConfirmText');
+        var cabecalho=dialog.querySelector('#ctConfirmTitle');
+        var ok=dialog.querySelector('#ctConfirmOk');
+        var cancelar=dialog.querySelector('#ctConfirmCancel');
+        var resolvido=false;
+
+        cabecalho.textContent=titulo||'Confirmar ação';
+        texto.textContent=String(mensagem||'');
+
+        function terminar(valor){
+          if(resolvido)return;
+          resolvido=true;
+          ok.removeEventListener('click',aceitar);
+          cancelar.removeEventListener('click',recusar);
+          dialog.removeEventListener('cancel',cancelarDialog);
+          if(dialog.open)dialog.close();
+          resolve(valor);
+        }
+        function aceitar(){terminar(true)}
+        function recusar(){terminar(false)}
+        function cancelarDialog(e){e.preventDefault();terminar(false)}
+
+        ok.addEventListener('click',aceitar);
+        cancelar.addEventListener('click',recusar);
+        dialog.addEventListener('cancel',cancelarDialog);
+        dialog.showModal();
+      });
+    }
+
+    function notificarAcaoCT(mensagem,erro) {
+      var toast=document.getElementById('ctToast');
+      if(!toast){
+        toast=document.createElement('div');
+        toast.id='ctToast';
+        toast.className='ct-toast';
+        toast.setAttribute('role','status');
+        toast.setAttribute('aria-live','polite');
+        document.body.appendChild(toast);
+      }
+      toast.textContent=String(mensagem||'');
+      toast.className='ct-toast'+(erro?' error':'')+' show';
+      clearTimeout(notificarAcaoCT._timer);
+      notificarAcaoCT._timer=setTimeout(function(){toast.classList.remove('show')},3200);
+    }
+
+    async function copiarTextoCT(texto) {
+      var valor=String(texto||'');
+      try{
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(valor);
+          return true;
+        }
+      }catch(_){}
+      try{
+        var area=document.createElement('textarea');
+        area.value=valor;
+        area.setAttribute('readonly','');
+        area.style.position='fixed';
+        area.style.opacity='0';
+        document.body.appendChild(area);
+        area.select();
+        var ok=document.execCommand('copy');
+        area.remove();
+        return !!ok;
+      }catch(_){
+        return false;
+      }
+    }
+
+
     function carregarEventos() {
       alterarCarregamento(
         true
@@ -2008,14 +2117,13 @@
     }
 
 
-    function ativarEvento(
+    async function ativarEvento(
       eventoId
     ) {
-      if (
-        !confirm(
-          'Deseja selecionar este evento para gestão? Isso não altera a publicação dos outros eventos.'
-        )
-      ) {
+      if (!(await confirmarAcaoCT(
+        'Deseja selecionar este evento para gestão? Isso não altera a publicação dos outros eventos.',
+        'Selecionar evento'
+      ))) {
         return;
       }
 
@@ -2030,10 +2138,7 @@
               false
             );
 
-            alert(
-              resposta.mensagem ||
-              'Evento selecionado para gestão.'
-            );
+            notificarAcaoCT(resposta.mensagem || 'Evento selecionado para gestão.',false);
 
             carregarEventos();
           }
@@ -2056,14 +2161,13 @@
     }
 
 
-    function publicarEvento(
+    async function publicarEvento(
       eventoId
     ) {
-      if (
-        !confirm(
-          'Deseja publicar as vendas online deste evento? Outros eventos já publicados continuarão vendendo normalmente.'
-        )
-      ) {
+      if (!(await confirmarAcaoCT(
+        'Deseja publicar as vendas online deste evento? Outros eventos já publicados continuarão vendendo normalmente.',
+        'Publicar vendas'
+      ))) {
         return;
       }
 
@@ -2099,7 +2203,7 @@
                         : []
                     );
 
-              alert(
+              notificarAcaoCT(
                 (
                   resposta &&
                   resposta.mensagem
@@ -2108,22 +2212,17 @@
                 ) +
                 (
                   pendencias.length
-                    ? '\n\n• ' +
-                      pendencias.join(
-                        '\n• '
-                      )
+                    ? ' • ' + pendencias.join(' • ')
                     : ''
-                )
+                ),
+                true
               );
 
               carregarEventos();
               return;
             }
 
-            alert(
-              resposta.mensagem ||
-              'Vendas publicadas com sucesso.'
-            );
+            notificarAcaoCT(resposta.mensagem || 'Vendas publicadas com sucesso.',false);
 
             carregarEventos();
           }
@@ -2146,14 +2245,13 @@
     }
 
 
-    function fecharVendasEvento(
+    async function fecharVendasEvento(
       eventoId
     ) {
-      if (
-        !confirm(
-          'Deseja fechar as vendas online somente deste evento? Os demais eventos publicados continuarão ativos.'
-        )
-      ) {
+      if (!(await confirmarAcaoCT(
+        'Deseja fechar as vendas online somente deste evento? Os demais eventos publicados continuarão ativos.',
+        'Fechar vendas'
+      ))) {
         return;
       }
 
@@ -2168,10 +2266,7 @@
               false
             );
 
-            alert(
-              resposta.mensagem ||
-              'Vendas online fechadas.'
-            );
+            notificarAcaoCT(resposta.mensagem || 'Vendas online fechadas.',false);
 
             carregarEventos();
           }
@@ -2214,53 +2309,21 @@
     }
 
 
-    function copiarLinkCheckout(
+    async function copiarLinkCheckout(
       url
     ) {
-      const destino =
-        String(
-          url || ''
-        ).trim();
-
-      if (!destino) {
-        return;
-      }
-
-      if (
-        navigator.clipboard &&
-        navigator.clipboard.writeText
-      ) {
-        navigator.clipboard
-          .writeText(
-            destino
-          )
-          .then(
-            function() {
-              alert(
-                'Link do checkout copiado.'
-              );
-            }
-          )
-          .catch(
-            function() {
-              prompt(
-                'Copie o link do checkout:',
-                destino
-              );
-            }
-          );
-
-        return;
-      }
-
-      prompt(
-        'Copie o link do checkout:',
-        destino
+      const destino=String(url||'').trim();
+      if(!destino)return;
+      var copiado=await copiarTextoCT(destino);
+      notificarAcaoCT(
+        copiado
+          ? 'Link do checkout copiado.'
+          : 'Não foi possível copiar automaticamente. Abra o checkout e use o compartilhamento do navegador.',
+        !copiado
       );
     }
 
-
-    function alterarStatus(
+    async function alterarStatus(
       eventoId,
       novoStatus
     ) {
@@ -2273,11 +2336,10 @@
                 : 'Deseja alterar o status deste evento?'
             );
 
-      if (
-        !confirm(
-          mensagem
-        )
-      ) {
+      if (!(await confirmarAcaoCT(
+        mensagem,
+        'Alterar status do evento'
+      ))) {
         return;
       }
 
@@ -2292,10 +2354,7 @@
               false
             );
 
-            alert(
-              resposta.mensagem ||
-              'Status atualizado.'
-            );
+            notificarAcaoCT(resposta.mensagem || 'Status atualizado.',false);
 
             carregarEventos();
           }
