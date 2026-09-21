@@ -142,6 +142,9 @@
       <a id="mFinanceiro" class="module" data-perm="FINANCEIRO" href="#">
         <div class="icon">💰</div><div><strong>Financeiro</strong><span>Receita confirmada, pagamentos e evolução do evento.</span></div>
       </a>
+      <a id="mReembolsos" class="module" data-perm="REEMBOLSOS" href="#">
+        <div class="icon">↩️</div><div><strong>Cancelamentos & Reembolsos</strong><span>Analise pagamentos e processe estornos integrais com validação do Asaas.</span></div>
+      </a>
       <a id="mSaudeVendas" class="module" data-perm="SAUDE_VENDAS" href="#">
         <div class="icon">🛡️</div><div><strong>Saúde das Vendas</strong><span>Monitore pagamentos, webhooks, emissão e recupere pedidos presos com segurança.</span></div>
       </a>
@@ -356,6 +359,10 @@ function updateModules(){
     ?'/financeiro/?evento='+encodeURIComponent(id)
     :'#';
 
+  document.getElementById('mReembolsos').href=id
+    ?'/reembolsos/?evento='+encodeURIComponent(id)
+    :'#';
+
   document.getElementById('mSaudeVendas').href=id
     ?'/saude-vendas/?evento='+encodeURIComponent(id)
     :'#';
@@ -375,6 +382,7 @@ function updateModules(){
     document.getElementById('mBar').classList.add('disabled');
     document.getElementById('mFornecedores').classList.add('disabled');
     document.getElementById('mFinanceiro').classList.add('disabled');
+    document.getElementById('mReembolsos').classList.add('disabled');
     document.getElementById('mSaudeVendas').classList.add('disabled');
     document.getElementById('mRelatorios').classList.add('disabled');
     document.getElementById('mComissoes').classList.add('disabled');
