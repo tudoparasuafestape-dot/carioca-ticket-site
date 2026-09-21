@@ -142,6 +142,9 @@
       <a id="mFinanceiro" class="module" data-perm="FINANCEIRO" href="#">
         <div class="icon">💰</div><div><strong>Financeiro</strong><span>Receita confirmada, pagamentos e evolução do evento.</span></div>
       </a>
+      <a id="mSaudeVendas" class="module" data-perm="SAUDE_VENDAS" href="#">
+        <div class="icon">🛡️</div><div><strong>Saúde das Vendas</strong><span>Monitore pagamentos, webhooks, emissão e recupere pedidos presos com segurança.</span></div>
+      </a>
       <a id="mRelatorios" class="module" data-perm="RELATORIOS" href="#">
         <div class="icon">📈</div><div><strong>Relatórios</strong><span>Vendas, ingressos e check-in consolidados por evento.</span></div>
       </a>
@@ -353,6 +356,10 @@ function updateModules(){
     ?'/financeiro/?evento='+encodeURIComponent(id)
     :'#';
 
+  document.getElementById('mSaudeVendas').href=id
+    ?'/saude-vendas/?evento='+encodeURIComponent(id)
+    :'#';
+
   document.getElementById('mRelatorios').href=id
     ?'/relatorios/?evento='+encodeURIComponent(id)
     :'#';
@@ -368,6 +375,7 @@ function updateModules(){
     document.getElementById('mBar').classList.add('disabled');
     document.getElementById('mFornecedores').classList.add('disabled');
     document.getElementById('mFinanceiro').classList.add('disabled');
+    document.getElementById('mSaudeVendas').classList.add('disabled');
     document.getElementById('mRelatorios').classList.add('disabled');
     document.getElementById('mComissoes').classList.add('disabled');
   }
