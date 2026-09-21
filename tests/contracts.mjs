@@ -108,6 +108,24 @@ if (checkoutPublico) {
   }
 }
 
+
+for (const file of ['checkout/index.html', 'checkout-v2/index.html']) {
+  const html = read(file);
+  if (!html) continue;
+
+  if (!html.includes('identidadeCliente') || !html.includes('emailObrigatorio')) {
+    fail(file, 'checkout sem requisito adaptativo de e-mail/WhatsApp');
+  }
+
+  if (/id=["']buyerEmail["'][^>]*\srequired(?:\s|>|=)/i.test(html)) {
+    fail(file, 'e-mail continua rigidamente obrigatorio no HTML');
+  }
+
+  if (!html.includes("state.emailRequired&&!email")) {
+    fail(file, 'checkout sem fallback seguro para exigir e-mail antes do WhatsApp estar pronto');
+  }
+}
+
 const ingresso = read('ingresso/index.html');
 if (ingresso && !/Voltar para Minha Carioca/i.test(ingresso)) {
   fail('ingresso/index.html', 'ingresso sem retorno para Minha Carioca');
