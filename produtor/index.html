@@ -486,6 +486,24 @@ border-radius:20px;
 padding:21px;
 margin-bottom:19px
 }
+.event-status-badge{
+display:inline-flex;
+align-items:center;
+min-height:28px;
+margin-top:10px;
+padding:0 10px;
+border-radius:999px;
+border:1px solid rgba(232,179,75,.28);
+background:rgba(232,179,75,.08);
+color:var(--gold2);
+font-size:10px;
+font-weight:900;
+letter-spacing:.08em;
+text-transform:uppercase
+}
+.event-status-badge.status-encerrado{border-color:#39414c;background:#171c23;color:#b8c0ca}
+.event-status-badge.status-rascunho{border-color:#6b5a2b;background:#241d0e;color:#f0c75a}
+
 .event-name{
 font-size:22px;
 font-weight:900;
@@ -1446,6 +1464,7 @@ class="event-name"
 >
 Evento
 </div>
+<div id="eventStatusBadge" class="event-status-badge">STATUS</div>
 <div class="event-meta">
 <span id="eventDate">
 </span>
@@ -1585,8 +1604,8 @@ Ocupação
 </div>
 <div class="mini-grid">
 <div class="mini">
-<small>
-Pendentes
+<small id="miniPendingLabel">
+Aguardando check-in
 </small>
 <strong id="miniPending">
 0
@@ -1623,7 +1642,7 @@ Check-in
 <h3>
 Check-ins recentes
 </h3>
-<span>
+<span id="checkinModeLabel">
 ao vivo
 </span>
 </div>
@@ -2055,6 +2074,7 @@ function iniciar(){
 'logoutButton',
 'dashboard',
 'eventName',
+'eventStatusBadge',
 'eventDate',
 'eventTime',
 'eventLocation',
@@ -2069,10 +2089,12 @@ function iniciar(){
 'occupancyPercent',
 'occupancyBar',
 'miniPending',
+'miniPendingLabel',
 'miniCancelled',
 'miniTotal',
 'miniCheckin',
 'checkinList',
+'checkinModeLabel',
 'updatedAt',
 'loadingOverlay',
 'loadingText',
@@ -4890,6 +4912,43 @@ ev.nome ||
 state.eventoAtual.nome ||
 'Evento';
 
+var statusEvento =
+String(
+ev.status ||
+state.eventoAtual.status ||
+''
+)
+.trim()
+.toUpperCase();
+
+el.eventStatusBadge.textContent =
+statusEvento ||
+'SEM STATUS';
+
+el.eventStatusBadge.className =
+'event-status-badge ' +
+(
+statusEvento === 'ENCERRADO'
+? 'status-encerrado'
+: (
+statusEvento === 'RASCUNHO'
+? 'status-rascunho'
+: ''
+)
+);
+
+el.checkinModeLabel.textContent =
+statusEvento === 'ENCERRADO'
+? 'histórico'
+: (
+statusEvento === 'RASCUNHO'
+? 'pré-evento'
+: 'ao vivo'
+);
+
+el.miniPendingLabel.textContent =
+'Aguardando check-in';
+
 el.eventDate.textContent =
 ev.data
 ? '📅 ' + ev.data
@@ -4971,6 +5030,9 @@ el.miniPending.textContent =
 numero(
 r.pendentes
 );
+
+el.miniPending.parentElement.title =
+'Ingressos válidos que ainda não tiveram check-in registrado.';
 
 el.miniCancelled.textContent =
 numero(
