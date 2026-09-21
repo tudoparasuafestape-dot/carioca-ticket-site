@@ -457,6 +457,66 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expectNoTechnicalVisibleLinks(page);
   });
 
+  test('Portal do Produtor usa PWA separado com identidade e icones oficiais', async ({ page }) => {
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+
+    await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+      'href',
+      '/manifest-produtor.webmanifest'
+    );
+    await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+      'href',
+      '/assets/carioca-ticket-icon-192.png'
+    );
+
+    const pwa = await page.evaluate(async () => {
+      const response = await fetch('/manifest-produtor.webmanifest?e2e=' + Date.now(), {
+        cache: 'no-store'
+      });
+      const manifest = await response.json();
+
+      async function measure(src) {
+        return await new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => resolve({
+            ok: true,
+            width: img.naturalWidth,
+            height: img.naturalHeight
+          });
+          img.onerror = () => resolve({
+            ok: false,
+            width: 0,
+            height: 0
+          });
+          img.src = src + '?e2e=' + Date.now();
+        });
+      }
+
+      return {
+        status: response.status,
+        manifest,
+        icon192: await measure('/assets/carioca-ticket-icon-192.png'),
+        icon512: await measure('/assets/carioca-ticket-icon-512.png'),
+        mask512: await measure('/assets/carioca-ticket-icon-maskable-512.png')
+      };
+    });
+
+    expect(pwa.status).toBe(200);
+    expect(pwa.manifest.id).toBe('/produtor/');
+    expect(pwa.manifest.name).toBe('Carioca Ticket Produtor');
+    expect(pwa.manifest.short_name).toBe('CT Produtor');
+    expect(pwa.manifest.start_url).toBe('/produtor/');
+    expect(pwa.manifest.scope).toBe('/');
+    expect(pwa.manifest.display).toBe('standalone');
+    expect(pwa.icon192).toEqual({ ok: true, width: 192, height: 192 });
+    expect(pwa.icon512).toEqual({ ok: true, width: 512, height: 512 });
+    expect(pwa.mask512).toEqual({ ok: true, width: 512, height: 512 });
+
+    await expect(page.locator('.brand-logo-desktop')).toBeVisible();
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
+
   test('Portal do Produtor preserva codigo de indicacao do Parceiro CT', async ({ page }) => {
     await page.goto('/produtor/?ref=PARCEIROTESTE', { waitUntil: 'domcontentloaded' });
 
