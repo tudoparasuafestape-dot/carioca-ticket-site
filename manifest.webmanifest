@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "Carioca Ticket",
+  "short_name": "Carioca Ticket",
+  "description": "Ingressos digitais, pagamentos e tecnologia para eventos.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#090909",
+  "theme_color": "#090909",
+  "icons": [
+    {
+      "src": "/assets/carioca-ticket-simbolo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
