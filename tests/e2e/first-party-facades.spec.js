@@ -86,6 +86,7 @@ function rpcResult(method, args) {
       };
 
     case 'ctMarcaOficialObterDataUriPROD':
+      expect(['DESKTOP', 'MOBILE']).toContain(String(args[0] || ''));
       return ONE_PIXEL_PNG;
 
     case 'ctCentralAcessoObterFirebaseConfigPROD':
