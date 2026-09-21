@@ -854,7 +854,10 @@ transform:scale(1.3)
       timer:setTimeout(function(){
         var p=cleanup(id);
         if(p)p.failure(new Error('CT_PORTAL_RPC_TIMEOUT'));
-      },45000)
+      },(
+        String(method||'').indexOf('Login')>=0 ||
+        String(method||'').indexOf('RestaurarSessao')>=0
+      ) ? 90000 : 45000)
     };
 
     form.submit();
@@ -3486,6 +3489,19 @@ contexto ||
 )
 .trim()
 .toUpperCase();
+
+if(
+String(
+erro &&
+erro.message ||
+''
+).indexOf(
+'CT_PORTAL_RPC_TIMEOUT'
+) >= 0
+){
+
+return 'O servidor demorou mais do que o esperado para concluir o acesso. Sua senha pode ter sido validada; aguarde alguns segundos e tente atualizar a página.';
+}
 
 if(
 codigo ===
