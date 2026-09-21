@@ -323,8 +323,17 @@ test.describe('Matriz crítica de homologação', () => {
     await expect(page.locator('#refreshButton')).toBeEnabled();
     await expect(page.locator('#dashboard')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#eventName')).toHaveText('Samba 90');
+    await expect(page.locator('#eventStatusBadge')).toHaveText('ENCERRADO');
+    await expect(page.locator('#checkinModeLabel')).toHaveText('histórico');
+    await expect(page.locator('#miniPendingLabel')).toHaveText('Aguardando check-in');
     await expect(page.locator('#checkinList')).toContainText('Vinicius Medeiros dos Santos');
     await expect(page.locator('#checkinList')).toContainText('19/09 · 00:05:51');
+
+    await page.locator('#eventPickerButton').click();
+    await page.locator('.event-picker-option').filter({ hasText: 'Evento de Teste Lento' }).click();
+    await expect(page.locator('#dashboard')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#eventStatusBadge')).toHaveText('RASCUNHO');
+    await expect(page.locator('#checkinModeLabel')).toHaveText('pré-evento');
 
     const native = await page.locator('#eventSelect').evaluate(el => {
       const s = getComputedStyle(el);
