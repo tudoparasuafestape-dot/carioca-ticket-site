@@ -231,7 +231,7 @@
 
     var codePanel=el('section','panel');
     var field=el('div','field');
-    var label=el('label','', 'E-mail ou WhatsApp');
+    var label=el('label','', 'WhatsApp ou e-mail');
     label.htmlFor='identifier';
     var input=document.createElement('input');
     input.id='identifier';input.type='text';input.autocomplete='username';
@@ -240,12 +240,12 @@
 
     var send=el('button','primary','Continuar');
     send.type='button';
-    var helper=el('p','helper','Você pode informar o WhatsApp para localizar a compra. Nesta versão, o código é enviado ao e-mail vinculado ao pedido.');
+    var helper=el('p','helper','Use preferencialmente seu WhatsApp. O código será enviado pelo canal seguro disponível na sua conta.');
     var msg=el('p','message',note||'');
     var otp=el('div','otp-box');otp.hidden=true;
 
     var otpTitle=el('div','otp-title','Digite o código de 6 dígitos');
-    var otpHelp=el('p','helper','Confira o e-mail vinculado à sua compra. O código expira em 5 minutos.');
+    var otpHelp=el('p','helper','Confira o canal seguro da sua conta. O código expira em 5 minutos.');
     var codeInput=document.createElement('input');
     codeInput.className='otp-code';codeInput.type='text';codeInput.inputMode='numeric';
     codeInput.autocomplete='one-time-code';codeInput.maxLength=6;codeInput.placeholder='000000';
