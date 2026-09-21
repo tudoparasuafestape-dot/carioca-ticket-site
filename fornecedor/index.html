@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08090c">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+  <title>Portal do Fornecedor | Carioca Ticket</title>
+  <meta name="description" content="Portal do Fornecedor Carioca Ticket: acompanhe eventos, serviços contratados e situação dos pagamentos.">
+  <link rel="canonical" href="https://cariocaticket.com.br/fornecedor/">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Carioca Ticket">
+  <meta property="og:title" content="Portal do Fornecedor | Carioca Ticket">
+  <meta property="og:description" content="Acompanhe suas contratações, eventos e pagamentos no ecossistema Carioca Ticket.">
+  <meta property="og:url" content="https://cariocaticket.com.br/fornecedor/">
+  <meta property="og:image" content="https://cariocaticket.com.br/assets/carioca-ticket-preview-oficial-v9.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    :root{
+      --bg:#07080b;--card:#101217;--card2:#151821;--gold:#e8b34b;--gold2:#ffd87a;
+      --text:#f8f8fa;--muted:#9fa5b2;--border:rgba(232,179,75,.24);
+      --green:#39c985;--red:#ff6f79;--blue:#73b8ff;--shadow:0 28px 80px rgba(0,0,0,.38)
+    }
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:
+      radial-gradient(circle at 80% 0,rgba(232,179,75,.12),transparent 32%),
+      radial-gradient(circle at 10% 40%,rgba(232,179,75,.05),transparent 30%),var(--bg);
+      color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}.shell{min-height:100vh}
+    .login-view{min-height:100vh;display:grid;place-items:center;padding:24px}
+    .login-card{width:min(100%,470px);background:linear-gradient(180deg,rgba(20,23,30,.98),rgba(10,12,16,.98));
+      border:1px solid var(--border);border-radius:28px;padding:30px;box-shadow:var(--shadow)}
+    .brand{text-align:center;margin-bottom:18px}.brand-logo{width:min(280px,80%);height:88px;object-fit:contain}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:rgba(232,179,75,.08);
+      color:var(--gold2);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.12em}
+    h1{margin:15px 0 8px;font-size:29px;line-height:1.1}.lead{color:var(--muted);line-height:1.55;margin:0 0 22px}
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#0b0d12;border-radius:14px;padding:5px;margin-bottom:18px}
+    .tab{border:0;border-radius:10px;padding:10px;background:transparent;color:var(--muted);font-weight:850}
+    .tab.active{background:#1a1d25;color:var(--gold2)}
+    .field{margin-bottom:14px}label{display:block;font-size:12px;font-weight:800;margin-bottom:7px;color:#d8dbe3}
+    input{width:100%;min-height:49px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:#0b0d12;color:#fff;padding:0 14px;outline:none}
+    input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,179,75,.10)}
+    .password-wrap{position:relative}.password-wrap input{padding-right:84px}
+    .toggle{position:absolute;right:8px;top:7px;height:35px;border:0;border-radius:10px;background:#1a1d25;color:var(--gold2);font-size:11px;font-weight:850;padding:0 11px}
+    .primary{width:100%;min-height:51px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#17120a;font-weight:950}
+    .text-btn{border:0;background:transparent;color:var(--gold2);padding:8px 0;font-weight:800}.helper{font-size:10px;color:#777e8c;line-height:1.5;margin-top:6px}
+    .message{margin-top:13px;border-radius:12px;padding:0;font-size:12px;line-height:1.5}.message.on{padding:11px 12px;border:1px solid rgba(255,255,255,.08);background:#11141a}
+    .message.error{color:#ffc3c7;border-color:rgba(255,111,121,.28);background:rgba(255,111,121,.08)}
+    .message.success{color:#bff2d8;border-color:rgba(57,201,133,.28);background:rgba(57,201,133,.08)}
+    .message.info{color:#d9e8ff;border-color:rgba(115,184,255,.28);background:rgba(115,184,255,.08)}
+    .secure-note{margin-top:17px;text-align:center;color:#737a88;font-size:10px;line-height:1.5}
+
+    .topbar{position:sticky;top:0;z-index:20;background:rgba(7,8,11,.92);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.07)}
+    .topbar-in{width:min(1220px,calc(100% - 28px));margin:auto;min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .top-brand{display:flex;align-items:center;gap:12px}.top-logo{width:44px;height:44px;object-fit:contain}
+    .top-title{font-size:14px;font-weight:950}.top-sub{font-size:10px;color:var(--muted);margin-top:2px}
+    .top-actions{display:flex;align-items:center;gap:10px}.user-pill{font-size:11px;color:#d7dae2;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ghost{border:1px solid var(--border);background:rgba(232,179,75,.06);color:var(--gold2);border-radius:12px;padding:10px 13px;font-weight:850}
+
+    .container{width:min(1220px,calc(100% - 28px));margin:auto;padding:28px 0 56px}
+    .hero{background:linear-gradient(135deg,rgba(232,179,75,.14),rgba(232,179,75,.03)),var(--card);
+      border:1px solid var(--border);border-radius:24px;padding:24px;margin-bottom:18px;display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:center}
+    .hero h2{font-size:28px;margin:9px 0 8px}.hero p{color:var(--muted);margin:0;line-height:1.5}
+    .profile-box{border:1px solid rgba(232,179,75,.32);background:#0b0d12;border-radius:18px;padding:18px}
+    .profile-box small{color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-size:9px;font-weight:850}
+    .profile-box strong{display:block;margin-top:6px;font-size:18px}.profile-line{margin-top:10px;font-size:11px;color:#c7cbd4;line-height:1.55}
+
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+    .metric{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:17px;min-height:120px}
+    .metric small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+    .metric strong{display:block;font-size:25px;margin-top:12px}.metric .note{font-size:10px;color:#777e8c;margin-top:7px}
+    .metric.gold strong{color:var(--gold2)}.metric.green strong{color:var(--green)}.metric.blue strong{color:var(--blue)}
+
+    .section{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:20px;margin-bottom:16px}
+    .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:16px}
+    .section h3{margin:0;font-size:16px}.section-desc{font-size:11px;color:var(--muted);margin-top:5px}
+    .badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 9px;font-size:9px;font-weight:900;letter-spacing:.05em}
+    .badge.active{background:rgba(57,201,133,.12);color:#8ce1b6}.badge.pending{background:rgba(232,179,75,.12);color:var(--gold2)}
+    .badge.paid{background:rgba(115,184,255,.12);color:#a9d2ff}.badge.cancel{background:rgba(255,111,121,.11);color:#ffabb1}
+    .contract-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .contract{background:var(--card2);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px}
+    .contract-top{display:flex;justify-content:space-between;gap:10px}.contract-name{font-weight:900}.contract-meta{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.45}
+    .contract-values{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}.contract-values div{background:#0d0f14;border-radius:12px;padding:10px}
+    .contract-values small{display:block;color:#777e8c;font-size:9px}.contract-values strong{display:block;margin-top:4px;font-size:13px}
+    .empty{border:1px dashed rgba(255,255,255,.11);border-radius:14px;padding:22px;text-align:center;color:var(--muted);font-size:12px}
+    .updated{text-align:right;color:#6f7684;font-size:9px;margin-top:10px}
+
+    .loading{position:fixed;inset:0;z-index:100;background:rgba(3,4,6,.72);backdrop-filter:blur(8px);display:grid;place-items:center}
+    .loader{background:#101217;border:1px solid var(--border);border-radius:18px;padding:20px 24px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+    .spinner{width:25px;height:25px;border:3px solid rgba(255,255,255,.12);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:860px){.hero{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.contract-grid{grid-template-columns:1fr}.user-pill{display:none}}
+    @media(max-width:520px){.login-card{padding:24px 19px;border-radius:22px}.container{width:min(100% - 20px,1220px);padding-top:18px}.topbar-in{width:calc(100% - 20px)}.hero{padding:18px}.hero h2{font-size:23px}.metrics{grid-template-columns:1fr 1fr;gap:9px}.metric{padding:14px;min-height:104px}.metric strong{font-size:20px}}
+  </style>
+</head>
+<body>
+<script>
+(function(){
+  'use strict';
+
+  var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var pending={};
+
+  function cleanup(id){
+    var p=pending[id];
+    if(!p)return null;
+    delete pending[id];
+    clearTimeout(p.timer);
+    try{p.frame.remove();p.form.remove()}catch(_){}
+    return p;
+  }
+
+  function rpc(method,args,success,failure){
+    var id='CTFORNECEDOR-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+    var frameName='ctfornecedor_'+id.replace(/[^A-Za-z0-9_]/g,'');
+    var frame=document.createElement('iframe');
+    frame.name=frameName;
+    frame.style.display='none';
+    frame.setAttribute('aria-hidden','true');
+
+    var form=document.createElement('form');
+    form.method='POST';
+    form.action=APP;
+    form.target=frameName;
+    form.style.display='none';
+
+    function add(k,v){
+      var input=document.createElement('input');
+      input.type='hidden';
+      input.name=k;
+      input.value=String(v==null?'':v);
+      form.appendChild(input);
+    }
+
+    add('ctMinhaCariocaAction','portalRpc');
+    add('ctMinhaCariocaRequestId',id);
+    add('metodo',String(method||''));
+    add('argsJson',JSON.stringify(Array.isArray(args)?args:[]));
+
+    document.body.append(frame,form);
+
+    pending[id]={
+      frame:frame,
+      form:form,
+      success:typeof success==='function'?success:function(){},
+      failure:typeof failure==='function'?failure:function(){},
+      timer:setTimeout(function(){
+        var p=cleanup(id);
+        if(p)p.failure(new Error('CT_FORNECEDOR_RPC_TIMEOUT'));
+      },30000)
+    };
+
+    form.submit();
+  }
+
+  window.addEventListener('message',function(ev){
+    if(ev.origin!=='https://script.google.com' && !/\.googleusercontent\.com$/.test(ev.origin||''))return;
+    var payload=ev.data;
+    if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
+    var p=cleanup(payload.id);
+    if(!p)return;
+    if(payload.ok===true)p.success(payload.resultado);
+    else p.failure(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+  });
+
+  function runner(success,failure){
+    return new Proxy({},{
+      get:function(_target,prop){
+        if(prop==='withSuccessHandler')return function(fn){return runner(fn,failure)};
+        if(prop==='withFailureHandler')return function(fn){return runner(success,fn)};
+        if(prop==='then')return undefined;
+        return function(){rpc(String(prop),Array.prototype.slice.call(arguments),success,failure)};
+      }
+    });
+  }
+
+  window.google=window.google||{};
+  window.google.script=window.google.script||{};
+  window.google.script.run=runner(null,null);
+  window.google.script.url={
+    getLocation:function(callback){
+      if(typeof callback==='function'){
+        callback({
+          hash:String(window.location.hash||'').replace(/^#/,''),
+          parameter:Object.fromEntries(new URLSearchParams(window.location.search)),
+          parameters:{}
+        });
+      }
+    }
+  };
+}());
+</script>
+<div class="shell">
+  <section id="loginView" class="login-view">
+    <div class="login-card">
+      <div class="brand">
+        <img class="brand-logo" src="https://cariocaticket.com.br/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+      </div>
+      <div class="eyebrow">Portal do Fornecedor</div>
+      <h1>Suas contratações em um só lugar.</h1>
+      <p class="lead">Acompanhe eventos, serviços contratados e situação dos pagamentos com segurança.</p>
+
+      <div class="tabs">
+        <button id="loginTab" class="tab active" type="button">Entrar</button>
+        <button id="registerTab" class="tab" type="button">Criar acesso</button>
+      </div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input id="email" type="email" autocomplete="username" required placeholder="Use o e-mail informado ao produtor">
+        </div>
+        <div class="field">
+          <label for="senha">Senha</label>
+          <div class="password-wrap">
+            <input id="senha" type="password" autocomplete="current-password" required placeholder="Sua senha">
+            <button class="toggle" data-target="senha" type="button">Mostrar</button>
+          </div>
+        </div>
+        <button id="forgotButton" class="text-btn" type="button">Esqueci minha senha</button>
+        <button id="loginButton" class="primary" type="submit">Entrar no Portal</button>
+      </form>
+
+      <form id="registerForm" class="hidden">
+        <div class="field">
+          <label for="registerName">Nome do responsável</label>
+          <input id="registerName" maxlength="160" required placeholder="Seu nome">
+        </div>
+        <div class="field">
+          <label for="registerEmail">E-mail cadastrado pelo produtor</label>
+          <input id="registerEmail" type="email" autocomplete="email" required placeholder="mesmo e-mail do cadastro de fornecedor">
+          <div class="helper">O acesso só será liberado quando este e-mail corresponder a um fornecedor ativo cadastrado na Carioca Ticket.</div>
+        </div>
+        <div class="field">
+          <label for="registerWhatsapp">WhatsApp</label>
+          <input id="registerWhatsapp" inputmode="tel" maxlength="20" placeholder="(81) 99999-9999">
+        </div>
+        <div class="field">
+          <label for="registerPassword">Crie uma senha</label>
+          <div class="password-wrap">
+            <input id="registerPassword" type="password" minlength="8" autocomplete="new-password" required>
+            <button class="toggle" data-target="registerPassword" type="button">Mostrar</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="registerPasswordConfirm">Confirme a senha</label>
+          <div class="password-wrap">
+            <input id="registerPasswordConfirm" type="password" minlength="8" autocomplete="new-password" required>
+            <button class="toggle" data-target="registerPasswordConfirm" type="button">Mostrar</button>
+          </div>
+        </div>
+        <input id="registerWebsite" class="hidden" tabindex="-1" autocomplete="off">
+        <button id="registerButton" class="primary" type="submit">Criar meu acesso</button>
+      </form>
+
+      <div id="loginMessage" class="message"></div>
+      <div class="secure-note">Fornecedor é um perfil externo. Esta conta não concede acesso à Central operacional da Carioca Ticket.</div>
+    </div>
+  </section>
+
+  <section id="portalView" class="hidden">
+    <header class="topbar">
+      <div class="topbar-in">
+        <div class="top-brand">
+          <img class="top-logo" src="https://cariocaticket.com.br/assets/carioca-ticket-simbolo.png" alt="Carioca Ticket">
+          <div><div class="top-title">Portal do Fornecedor</div><div class="top-sub">Ecossistema Carioca Ticket</div></div>
+        </div>
+        <div class="top-actions">
+          <span id="topUser" class="user-pill"></span>
+          <button id="refreshButton" class="ghost" type="button">Atualizar</button>
+          <button id="logoutButton" class="ghost" type="button">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Fornecedor Carioca Ticket</div>
+          <h2 id="helloName">Olá.</h2>
+          <p id="heroText">Aqui você acompanha somente as contratações vinculadas ao seu cadastro.</p>
+        </div>
+        <div class="profile-box">
+          <small>Seu cadastro</small>
+          <strong id="supplierName">—</strong>
+          <div id="supplierCategory" class="profile-line"></div>
+          <div id="supplierContact" class="profile-line"></div>
+          <div id="supplierPix" class="profile-line"></div>
+        </div>
+      </section>
+
+      <section class="metrics">
+        <article class="metric"><small>Contratos ativos</small><strong id="metricContracts">0</strong><div class="note">vínculos atuais</div></article>
+        <article class="metric blue"><small>Total contratado</small><strong id="metricTotal">R$ 0,00</strong><div class="note">contratos ativos</div></article>
+        <article class="metric gold"><small>A receber</small><strong id="metricPending">R$ 0,00</strong><div class="note">pendente ou parcial</div></article>
+        <article class="metric green"><small>Pago</small><strong id="metricPaid">R$ 0,00</strong><div class="note">contratos marcados como pagos</div></article>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div><h3>Minhas contratações</h3><div class="section-desc">Eventos e serviços vinculados exclusivamente ao seu fornecedor.</div></div>
+          <span id="contractBadge" class="badge active">0 contratos</span>
+        </div>
+        <div id="contractList" class="contract-grid"></div>
+      </section>
+
+      <div id="updatedAt" class="updated"></div>
+    </main>
+  </section>
+
+  <div id="loading" class="loading hidden">
+    <div class="loader"><div class="spinner"></div><div id="loadingText">Carregando...</div></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+import {
+  getAuth,setPersistence,browserSessionPersistence,signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,sendEmailVerification,updateProfile,getIdToken,deleteUser,signOut
+} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
+
+let app=null,auth=null;
+function exigirAuth(){if(!auth)throw new Error('CT_FIREBASE_NAO_INICIALIZADO');return auth}
+
+window.CTFornecedorFirebase=Object.freeze({
+  inicializar:async function(config){
+    if(auth)return true;
+    if(!config||!config.apiKey||!config.projectId)throw new Error('CT_FIREBASE_CONFIG_INVALIDA');
+    const apps=getApps();app=apps.length?apps[0]:initializeApp(config);auth=getAuth(app);auth.languageCode='pt-BR';
+    await setPersistence(auth,browserSessionPersistence);return true;
+  },
+  pronto:function(){return !!auth},
+  login:async function(email,senha){
+    const cred=await signInWithEmailAndPassword(exigirAuth(),email,senha);
+    return {idToken:await getIdToken(cred.user,false),emailVerified:cred.user.emailVerified===true};
+  },
+  cadastrar:async function(email,senha,nome){
+    const cred=await createUserWithEmailAndPassword(exigirAuth(),email,senha);
+    if(nome)await updateProfile(cred.user,{displayName:nome});
+    return {idToken:await getIdToken(cred.user,true),emailVerified:cred.user.emailVerified===true};
+  },
+  enviarVerificacao:async function(){const a=exigirAuth();if(!a.currentUser)throw new Error('CT_FIREBASE_USUARIO_AUSENTE');await sendEmailVerification(a.currentUser);return true},
+  excluirAtual:async function(){const a=exigirAuth();if(a.currentUser)await deleteUser(a.currentUser);return true},
+  sair:async function(){if(auth)await signOut(auth);return true}
+});
+</script>
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY='CT_PORTAL_FORNECEDOR_SESSION_V1';
+  var FIREBASE_CONFIG_KEY='CT_FORNECEDOR_FIREBASE_CONFIG_V1';
+  var state={token:'',expiraEm:'',usuario:null,fornecedor:null,painel:null,firebaseReady:false,firebasePromise:null};
+  var el={};
+
+  document.addEventListener('DOMContentLoaded',iniciar);
+
+  function iniciar(){
+    ['loginView','portalView','loginForm','registerForm','loginTab','registerTab','email','senha','registerName','registerEmail',
+     'registerWhatsapp','registerPassword','registerPasswordConfirm','registerWebsite','loginButton','registerButton','forgotButton',
+     'loginMessage','topUser','refreshButton','logoutButton','helloName','supplierName','supplierCategory','supplierContact','supplierPix',
+     'metricContracts','metricTotal','metricPending','metricPaid','contractBadge','contractList','updatedAt','loading','loadingText']
+      .forEach(function(id){el[id]=document.getElementById(id)});
+
+    el.loginForm.addEventListener('submit',executarLogin);
+    el.registerForm.addEventListener('submit',executarCadastro);
+    el.loginTab.addEventListener('click',function(){mostrarAba('LOGIN')});
+    el.registerTab.addEventListener('click',function(){mostrarAba('CADASTRO')});
+    el.forgotButton.addEventListener('click',recuperarSenha);
+    el.refreshButton.addEventListener('click',function(){carregarPainel(true)});
+    el.logoutButton.addEventListener('click',executarLogout);
+    document.querySelectorAll('.toggle').forEach(function(btn){btn.addEventListener('click',function(){alternarSenha(btn.dataset.target,btn)})});
+
+    inicializarFirebase();
+    restaurarSessao();
+  }
+
+  function mostrarAba(tipo){
+    var cadastro=tipo==='CADASTRO';
+    el.loginForm.classList.toggle('hidden',cadastro);
+    el.registerForm.classList.toggle('hidden',!cadastro);
+    el.loginTab.classList.toggle('active',!cadastro);
+    el.registerTab.classList.toggle('active',cadastro);
+    limparMensagem();
+  }
+
+  function inicializarFirebase(){garantirFirebase().catch(function(erro){console.error(erro);mensagem('Não foi possível inicializar o serviço de acesso.','error')})}
+
+  function garantirFirebase(){
+    if(state.firebaseReady&&window.CTFornecedorFirebase&&window.CTFornecedorFirebase.pronto())return Promise.resolve(true);
+    if(state.firebasePromise)return state.firebasePromise;
+    state.firebasePromise=new Promise(function(resolve,reject){
+      var cache=lerFirebaseConfigCache();
+      if(cache){
+        window.CTFornecedorFirebase.inicializar(cache).then(function(){state.firebaseReady=true;resolve(true)}).catch(function(){apagarFirebaseConfigCache();buscarFirebaseConfig(resolve,reject)});
+        return;
+      }
+      buscarFirebaseConfig(resolve,reject);
+    }).catch(function(erro){state.firebasePromise=null;state.firebaseReady=false;throw erro});
+    return state.firebasePromise;
+  }
+
+  function buscarFirebaseConfig(resolve,reject){
+    google.script.run.withSuccessHandler(function(r){
+      if(!r||r.sucesso!==true||!r.firebaseConfig){reject(new Error('CT_FIREBASE_CONFIG_INDISPONIVEL'));return}
+      salvarFirebaseConfigCache(r.firebaseConfig);
+      window.CTFornecedorFirebase.inicializar(r.firebaseConfig).then(function(){state.firebaseReady=true;resolve(true)}).catch(reject);
+    }).withFailureHandler(reject).ctCentralAcessoObterFirebaseConfigPROD();
+  }
+
+  async function executarLogin(e){
+    e.preventDefault();limparMensagem();
+    var email=String(el.email.value||'').trim().toLowerCase(),senha=String(el.senha.value||'');
+    if(!email||!senha){mensagem('Informe e-mail e senha.','error');return}
+    loading(true,'Validando seu acesso...');
+    try{
+      await garantirFirebase();
+      var fb=await window.CTFornecedorFirebase.login(email,senha);
+      var r=await rpc('ctPortalFornecedorLoginFirebasePROD',[fb.idToken]);
+      if(!r||r.autenticado!==true||r.autorizado!==true||!r.token){
+        await sairFirebaseSilencioso();
+        mensagem(r&&r.mensagem?r.mensagem:(r&&r.requerVerificacaoEmail===true?'Confirme seu e-mail antes de acessar.':'Não foi possível liberar seu acesso.'),r&&r.requerVerificacaoEmail===true?'info':'error');
+        return;
+      }
+      state.token=String(r.token||'');state.expiraEm=String(r.expiraEm||'');state.usuario=r.usuario||null;state.fornecedor=r.fornecedor||null;state.painel=r.painel||null;
+      salvarSessao();el.senha.value='';abrirPortal();if(state.painel)renderizar(state.painel);else carregarPainel(false);
+    }catch(erro){await sairFirebaseSilencioso();mensagem(mensagemErro(erro),'error')}
+    finally{loading(false)}
+  }
+
+  async function executarCadastro(e){
+    e.preventDefault();limparMensagem();
+    var nome=String(el.registerName.value||'').trim(),email=String(el.registerEmail.value||'').trim().toLowerCase(),
+        whatsapp=String(el.registerWhatsapp.value||'').trim(),senha=String(el.registerPassword.value||''),confirmar=String(el.registerPasswordConfirm.value||''),
+        website=String(el.registerWebsite.value||'');
+    if(website)return;
+    if(!nome||!email||!senha||!confirmar){mensagem('Preencha nome, e-mail, senha e confirmação.','error');return}
+    if(senha.length<8){mensagem('Use uma senha com pelo menos 8 caracteres.','error');return}
+    if(senha!==confirmar){mensagem('As senhas informadas não conferem.','error');return}
+
+    loading(true,'Criando seu acesso...');
+    var firebaseCriado=false,provisionado=false;
+    try{
+      await garantirFirebase();
+      var fb=await window.CTFornecedorFirebase.cadastrar(email,senha,nome);firebaseCriado=true;
+      var r=await rpc('ctCentralAcessoCadastrarPROD',[fb.idToken,{nome:nome,whatsapp:whatsapp,website:''}]);
+      if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem?r.mensagem:'Não foi possível criar a conta.');
+      provisionado=true;
+      var enviado=false;
+      if(fb.emailVerified!==true){try{await window.CTFornecedorFirebase.enviarVerificacao();enviado=true}catch(_){ }}
+      await sairFirebaseSilencioso();
+      el.email.value=email;el.registerForm.reset();mostrarAba('LOGIN');
+      mensagem(enviado?'Conta criada. Enviamos um link de verificação para o seu e-mail. Depois de confirmar, entre no Portal do Fornecedor.':'Conta criada. Confirme seu e-mail antes de entrar no Portal do Fornecedor.','success');
+    }catch(erro){
+      if(firebaseCriado&&!provisionado){try{await window.CTFornecedorFirebase.excluirAtual()}catch(_){}}
+      await sairFirebaseSilencioso();mensagem(mensagemErro(erro),'error');
+    }finally{loading(false);el.registerPassword.value='';el.registerPasswordConfirm.value=''}
+  }
+
+  function restaurarSessao(){
+    var salvo=lerSessao();if(!salvo||!salvo.token){mostrarLogin();return}
+    state.token=String(salvo.token||'');state.expiraEm=String(salvo.expiraEm||'');
+    if(state.expiraEm){var exp=new Date(state.expiraEm);if(!isNaN(exp.getTime())&&exp.getTime()<=Date.now()){limparSessao();mostrarLogin();return}}
+    loading(true,'Restaurando sua sessão...');
+    rpc('ctPortalFornecedorRestaurarSessaoPROD',[state.token]).then(function(r){
+      if(!r||r.autenticado!==true||r.autorizado!==true){limparSessao();mostrarLogin();return}
+      state.usuario=r.usuario||null;state.fornecedor=r.fornecedor||null;state.painel=r.painel||null;abrirPortal();if(state.painel)renderizar(state.painel);else carregarPainel(false);
+    }).catch(function(){limparSessao();mostrarLogin()}).finally(function(){loading(false)});
+  }
+
+  function abrirPortal(){
+    el.loginView.classList.add('hidden');el.portalView.classList.remove('hidden');
+    var nome=(state.usuario&&state.usuario.nome)||(state.fornecedor&&state.fornecedor.nome)||'Fornecedor';
+    el.topUser.textContent=nome;el.helloName.textContent='Olá, '+nome+'.';
+  }
+  function mostrarLogin(){el.portalView.classList.add('hidden');el.loginView.classList.remove('hidden')}
+
+  async function carregarPainel(manual){
+    if(!state.token)return;if(manual)loading(true,'Atualizando contratações...');
+    try{
+      var r=await rpc('ctPortalFornecedorCarregarPainelPROD',[state.token]);
+      if(!r||r.autenticado!==true||r.autorizado!==true){await executarLogout(false);return}
+      state.painel=r;state.usuario=r.usuario||state.usuario;state.fornecedor=r.fornecedor||state.fornecedor;renderizar(r);
+    }catch(erro){console.error(erro);if(manual)mensagem('Não foi possível atualizar agora.','error')}
+    finally{if(manual)loading(false)}
+  }
+
+  function renderizar(r){
+    var f=r.fornecedor||{},resumo=r.resumo||{},contratos=Array.isArray(r.contratos)?r.contratos:[];
+    var nome=(r.usuario&&r.usuario.nome)||f.nome||'Fornecedor';
+    el.topUser.textContent=nome;el.helloName.textContent='Olá, '+nome+'.';
+    el.supplierName.textContent=f.nome||'—';el.supplierCategory.textContent=f.categoria?('Categoria: '+f.categoria):'Categoria não informada';
+    el.supplierContact.textContent=[f.email,f.whatsapp].filter(Boolean).join(' • ')||'Contato não informado';
+    el.supplierPix.textContent=f.pix&&f.pix.configurado?('PIX: '+(f.pix.tipo||'')+' '+(f.pix.chaveMascarada||'')):'PIX ainda não configurado';
+    el.metricContracts.textContent=String(resumo.contratosAtivos||0);el.metricTotal.textContent=resumo.totalContratado||'R$ 0,00';
+    el.metricPending.textContent=resumo.totalPendente||'R$ 0,00';el.metricPaid.textContent=resumo.totalPago||'R$ 0,00';
+    el.contractBadge.textContent=contratos.length+' '+(contratos.length===1?'contrato':'contratos');renderContratos(contratos);
+    el.updatedAt.textContent=r.atualizadoEm?'Atualizado em '+r.atualizadoEm:'';
+  }
+
+  function renderContratos(lista){
+    el.contractList.innerHTML='';
+    if(!lista.length){el.contractList.innerHTML='<div class="empty">Ainda não existem contratações vinculadas ao seu fornecedor.</div>';return}
+    lista.forEach(function(c){
+      var evt=c.evento||{},prod=c.produtor||{},status=String(c.statusPagamento||'').toUpperCase();
+      var classe=status==='PAGO'?'paid':(status==='CANCELADO'?'cancel':'pending');
+      var card=document.createElement('article');card.className='contract';
+      card.innerHTML='<div class="contract-top"><div><div class="contract-name">'+esc(evt.nome||c.eventoId||'Evento')+'</div>'+
+        '<div class="contract-meta">'+esc([evt.data,evt.horario,evt.local,[evt.cidade,evt.uf].filter(Boolean).join('/'),prod.nome].filter(Boolean).join(' • '))+'</div></div>'+
+        '<span class="badge '+(c.statusVinculo==='ATIVO'?'active':'cancel')+'">'+esc(c.statusVinculo||'')+'</span></div>'+
+        '<div class="contract-values"><div><small>Serviço</small><strong>'+esc(c.servico||'—')+'</strong></div>'+
+        '<div><small>Valor</small><strong>'+esc(c.valor||'R$ 0,00')+'</strong></div></div>'+
+        '<div style="margin-top:10px"><span class="badge '+classe+'">'+esc(status||'—')+'</span></div>';
+      el.contractList.appendChild(card);
+    });
+  }
+
+  async function recuperarSenha(){
+    limparMensagem();var email=String(el.email.value||'').trim().toLowerCase();if(!email){mensagem('Informe seu e-mail primeiro.','info');el.email.focus();return}
+    loading(true,'Enviando recuperação...');
+    try{var r=await rpc('solicitarRecuperacaoSenhaPROD',[email]);mensagem(r&&r.sucesso===true?'Se existir uma conta para este e-mail, enviaremos as instruções de recuperação.':'Não foi possível solicitar a recuperação agora.',r&&r.sucesso===true?'success':'error')}
+    catch(_){mensagem('Não foi possível solicitar a recuperação agora.','error')}finally{loading(false)}
+  }
+
+  async function executarLogout(mostrar){
+    var token=state.token;try{if(token)await rpc('ctPortalFornecedorLogoutPROD',[token])}catch(_){}
+    await sairFirebaseSilencioso();limparSessao();state={token:'',expiraEm:'',usuario:null,fornecedor:null,painel:null,firebaseReady:state.firebaseReady,firebasePromise:state.firebasePromise};
+    mostrarLogin();if(mostrar!==false)mensagem('Sessão encerrada.','success');
+  }
+
+  function rpc(method,args){return new Promise(function(resolve,reject){var chain=google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);chain[method].apply(chain,args||[])})}
+  async function sairFirebaseSilencioso(){try{if(window.CTFornecedorFirebase)await window.CTFornecedorFirebase.sair()}catch(_){}}
+  function salvarSessao(){try{sessionStorage.setItem(STORAGE_KEY,JSON.stringify({token:state.token,expiraEm:state.expiraEm}))}catch(_){}}
+  function lerSessao(){try{var raw=sessionStorage.getItem(STORAGE_KEY);return raw?JSON.parse(raw):null}catch(_){return null}}
+  function limparSessao(){try{sessionStorage.removeItem(STORAGE_KEY)}catch(_){}}
+  function lerFirebaseConfigCache(){try{var raw=localStorage.getItem(FIREBASE_CONFIG_KEY);if(!raw)return null;var p=JSON.parse(raw);return p&&p.apiKey&&p.projectId?p:null}catch(_){return null}}
+  function salvarFirebaseConfigCache(c){try{localStorage.setItem(FIREBASE_CONFIG_KEY,JSON.stringify(c||{}))}catch(_){}}
+  function apagarFirebaseConfigCache(){try{localStorage.removeItem(FIREBASE_CONFIG_KEY)}catch(_){}}
+  function alternarSenha(id,btn){var input=document.getElementById(id);if(!input)return;var show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'Ocultar':'Mostrar'}
+  function loading(a,t){el.loading.classList.toggle('hidden',!a);if(t)el.loadingText.textContent=t}
+  function mensagem(t,tipo){el.loginMessage.textContent=String(t||'');el.loginMessage.className='message on '+String(tipo||'info')}
+  function limparMensagem(){el.loginMessage.textContent='';el.loginMessage.className='message'}
+  function mensagemErro(erro){var c=String(erro&&erro.code?erro.code:'').toLowerCase();if(c==='auth/invalid-credential'||c==='auth/wrong-password'||c==='auth/user-not-found')return 'E-mail ou senha inválidos.';if(c==='auth/email-already-in-use')return 'Já existe uma conta com este e-mail.';if(c==='auth/invalid-email')return 'Informe um e-mail válido.';if(c==='auth/weak-password')return 'Use uma senha mais forte, com pelo menos 8 caracteres.';if(c==='auth/too-many-requests')return 'Muitas tentativas. Aguarde um pouco e tente novamente.';return erro&&erro.message&&String(erro.message).indexOf('CT_')!==0?String(erro.message):'Não foi possível concluir a operação neste momento.'}
+  function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+}());
+</script>
+</body>
+</html>
