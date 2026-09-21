@@ -27,7 +27,15 @@
     .blocking{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.68);display:none;place-items:center}.blocking.show{display:grid}.blocking-box{border:1px solid #44391f;background:#111;border-radius:18px;padding:20px;text-align:center;width:min(330px,90vw)}.blocking-box .loader{margin:0 auto 12px}
     @media(max-width:900px){.grid-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.actions-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:560px){.shell{width:min(100% - 18px,1180px)}.top{align-items:flex-start}.top-actions{flex-direction:column;align-items:stretch}.hero{padding:19px}.grid-stats,.actions-grid,.form-grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.stat strong{font-size:20px}.brand span{display:none}}
-  </style>
+  
+.ct-confirm-dialog{width:min(460px,calc(100% - 24px));padding:0;border:1px solid rgba(217,166,46,.30);border-radius:20px;background:#11161d;color:#f7f2e8;box-shadow:0 24px 80px rgba(0,0,0,.65)}
+.ct-confirm-dialog::backdrop{background:rgba(0,0,0,.76);backdrop-filter:blur(7px)}
+.ct-confirm-body{padding:21px}.ct-confirm-body h3{margin:0 0 8px;font-size:19px}.ct-confirm-body p{margin:0;color:#aaa39a;line-height:1.55}
+.ct-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 21px 21px}
+.ct-confirm-actions button{min-height:45px;border-radius:12px;font:inherit;font-weight:850}
+.ct-confirm-cancel{border:1px solid #343c46;background:#171c23;color:#fff}.ct-confirm-ok{border:0;background:linear-gradient(135deg,#d9a62e,#f2c451);color:#111}
+
+</style>
 </head>
 <body>
   <section id="gate" class="gate">
@@ -272,8 +280,26 @@ function renderMoves(moves){
   document.getElementById('movesWrap').innerHTML='<div class="table-wrap" style="border:0"><table class="table"><thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th class="num">Qtd.</th><th>Responsável</th><th>Observação</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 function formObject(form){var o={};new FormData(form).forEach(function(v,k){o[k]=v});return o}
+function confirmCt(message,title){
+  return new Promise(function(resolve){
+    var d=document.getElementById('ctConfirmDialog');
+    if(!d){
+      d=document.createElement('dialog');
+      d.id='ctConfirmDialog';
+      d.className='ct-confirm-dialog';
+      d.innerHTML='<div class="ct-confirm-body"><h3 id="ctConfirmTitle">Confirmar ação</h3><p id="ctConfirmText"></p></div><div class="ct-confirm-actions"><button id="ctConfirmCancel" class="ct-confirm-cancel" type="button">Cancelar</button><button id="ctConfirmOk" class="ct-confirm-ok" type="button">Confirmar</button></div>';
+      document.body.appendChild(d);
+    }
+    d.querySelector('#ctConfirmTitle').textContent=title||'Confirmar ação';
+    d.querySelector('#ctConfirmText').textContent=String(message||'');
+    var ok=d.querySelector('#ctConfirmOk'),cancel=d.querySelector('#ctConfirmCancel'),done=false;
+    function finish(v){if(done)return;done=true;ok.removeEventListener('click',yes);cancel.removeEventListener('click',no);d.removeEventListener('cancel',esc);if(d.open)d.close();resolve(v)}
+    function yes(){finish(true)} function no(){finish(false)} function esc(e){e.preventDefault();finish(false)}
+    ok.addEventListener('click',yes);cancel.addEventListener('click',no);d.addEventListener('cancel',esc);d.showModal();
+  });
+}
 async function mutate(method,args,message,confirmText){
-  if(confirmText&&!window.confirm(confirmText))return;
+  if(confirmText&&!(await confirmCt(confirmText)))return;
   try{busy(true,'Salvando operação...');var r=await rpc(method,args);if(!r||r.sucesso!==true)throw new Error((r&&r.mensagem)||'Operação não concluída.');toast(message||'Operação concluída.','ok');await load()}catch(e){toast(e&&e.message?e.message:String(e),'err')}finally{busy(false)}
 }
 document.querySelectorAll('[data-open]').forEach(function(b){b.addEventListener('click',function(){var d=document.getElementById(b.getAttribute('data-open'));d.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})})});
