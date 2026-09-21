@@ -916,7 +916,9 @@ class="brand-logo-box"
 >
 <img
 id="brandLogoDesktop"
-class="brand-logo-desktop hidden"
+class="brand-logo-desktop"
+src="/assets/carioca-ticket-logo.png"
+data-brand-source="fallback"
 alt="Carioca Ticket"
 >
 </div>
@@ -1216,7 +1218,9 @@ class="portal hidden"
 <div class="top-logo-box">
 <img
 id="topLogoMobile"
-class="top-logo-image hidden"
+class="top-logo-image"
+src="/assets/carioca-ticket-icon-192.png"
+data-brand-source="fallback"
 alt="Carioca Ticket"
 >
 </div>
@@ -2721,19 +2725,47 @@ return;
 el.brandLogoDesktop.onerror =
 function(){
 
+el.brandLogoDesktop.onerror =
+null;
+
+el.brandLogoDesktop.src =
+'/assets/carioca-ticket-logo.png';
+
+el.brandLogoDesktop
+.setAttribute(
+'data-brand-source',
+'fallback'
+);
+
 el.brandLogoDesktop
 .classList
-.add(
+.remove(
 'hidden'
 );
 
 registrarFalhaMarcaOficial(
-'A logo oficial de desktop não pôde ser exibida.'
+'A logo dinâmica de desktop não pôde ser exibida; fallback oficial mantido.'
 );
 };
 
 el.brandLogoDesktop.src =
 uri;
+
+el.brandLogoDesktop
+.setAttribute(
+'data-brand-source',
+'backend'
+);
+
+if(
+el.brandLogoError
+){
+el.brandLogoError
+.classList
+.add(
+'hidden'
+);
+}
 
 el.brandLogoDesktop
 .classList
@@ -2792,19 +2824,37 @@ return;
 el.topLogoMobile.onerror =
 function(){
 
+el.topLogoMobile.onerror =
+null;
+
+el.topLogoMobile.src =
+'/assets/carioca-ticket-icon-192.png';
+
+el.topLogoMobile
+.setAttribute(
+'data-brand-source',
+'fallback'
+);
+
 el.topLogoMobile
 .classList
-.add(
+.remove(
 'hidden'
 );
 
 registrarFalhaMarcaOficial(
-'O símbolo oficial mobile não pôde ser exibido.'
+'O símbolo dinâmico mobile não pôde ser exibido; fallback oficial mantido.'
 );
 };
 
 el.topLogoMobile.src =
 uri;
+
+el.topLogoMobile
+.setAttribute(
+'data-brand-source',
+'backend'
+);
 
 el.topLogoMobile
 .classList
@@ -2842,9 +2892,34 @@ function registrarFalhaMarcaOficial(
 detalhe
 ){
 
+var fallbackOficialDisponivel =
+Boolean(
+el.brandLogoDesktop &&
+String(
+el.brandLogoDesktop.getAttribute(
+'src'
+) ||
+''
+)
+);
+
 if(
 el.brandLogoError
 ){
+
+if(
+fallbackOficialDisponivel
+){
+
+el.brandLogoError
+.classList
+.add(
+'hidden'
+);
+
+}
+else
+{
 
 el.brandLogoError.textContent =
 'Falha técnica ao carregar a identidade visual oficial da Carioca Ticket. ' +
@@ -2855,17 +2930,19 @@ el.brandLogoError
 .remove(
 'hidden'
 );
+
+}
 }
 
 if(
 window.console &&
-typeof window.console.error ===
+typeof window.console.warn ===
 'function'
 ){
 
-window.console.error(
-'Carioca Ticket | identidade visual oficial',
-detalhe || 'Falha não especificada.'
+window.console.warn(
+'Carioca Ticket | identidade visual dinâmica',
+detalhe || 'Falha não especificada; fallback oficial mantido.'
 );
 }
 }
