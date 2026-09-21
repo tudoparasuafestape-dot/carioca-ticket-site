@@ -235,6 +235,28 @@ if (producerPage && !producerPage.includes('ctPortalProdutorCarregarCatalogoEven
 }
 if (producerPage) {
   if (
+    !producerPage.includes('id="eventPickerButton"') ||
+    !producerPage.includes('id="eventPickerBackdrop"') ||
+    !producerPage.includes('renderizarListaSeletorEvento')
+  ) {
+    fail('produtor/index.html', 'Portal voltou a depender do seletor nativo de evento');
+  }
+  if (
+    !producerPage.includes('painelEmAndamento') ||
+    !producerPage.includes('painelSequencia') ||
+    !producerPage.includes('12000')
+  ) {
+    fail('produtor/index.html', 'Portal sem proteção de concorrência/timeout do painel');
+  }
+  if (
+    !producerPage.includes('id="emailModalBackdrop"') ||
+    !producerPage.includes('abrirModalEmail')
+  ) {
+    fail('produtor/index.html', 'Alteração de e-mail sem modal profissional');
+  }
+}
+if (producerPage) {
+  if (
     !producerPage.includes("? 90000 : (") ||
     !producerPage.includes(") ? 15000 : 30000") ||
     !producerPage.includes("'CT_PORTAL_RPC_TIMEOUT'") ||
@@ -367,6 +389,21 @@ if (saudeVendas) {
   }
   if (/COMPRADOR_(?:NOME|EMAIL|WHATSAPP)/i.test(saudeVendas)) {
     fail('saude-vendas/index.html', 'Saude das Vendas referencia PII do comprador');
+  }
+}
+
+for (const file of [
+  'produtor/index.html',
+  'consulta/index.html',
+  'ingresso/index.html',
+  'central/index.html',
+  'checkin/index.html'
+]) {
+  const html = read(file);
+  if (!html) continue;
+  const nativeDialog = html.match(/(?:window\.)?(?:alert|confirm|prompt)\s*\(/i);
+  if (nativeDialog) {
+    fail(file, 'dialogo nativo do navegador em fluxo critico', nativeDialog[0]);
   }
 }
 
