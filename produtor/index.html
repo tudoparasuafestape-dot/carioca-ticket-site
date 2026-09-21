@@ -4755,6 +4755,8 @@ return;
 state.painelEmAndamento=true;
 var sequencia=++state.painelSequencia;
 
+el.refreshButton.disabled=true;
+
 limparMensagem(el.portalMessage);
 
 if(show){
@@ -4770,6 +4772,7 @@ return;
 
 state.painelSequencia++;
 state.painelEmAndamento=false;
+el.refreshButton.disabled=!state.eventoAtual;
 
 if(show){
 definirLoading(false);
@@ -4794,6 +4797,7 @@ return;
 
 clearTimeout(timer);
 state.painelEmAndamento=false;
+el.refreshButton.disabled=!state.eventoAtual;
 
 if(show){
 definirLoading(false);
@@ -4841,6 +4845,7 @@ return;
 
 clearTimeout(timer);
 state.painelEmAndamento=false;
+el.refreshButton.disabled=!state.eventoAtual;
 
 if(show){
 definirLoading(false);
