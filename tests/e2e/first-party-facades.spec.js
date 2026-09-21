@@ -129,6 +129,65 @@ function rpcResult(method, args) {
         atualizadoEm: '21/09/2026 09:30:00'
       };
 
+    case 'ctReembolsosCarregarPROD':
+      expect(String(args[1] || '')).toBe(EVENT_ID);
+      return {
+        sucesso: true,
+        autenticado: true,
+        autorizado: true,
+        evento: eventoFixture().evento,
+        itens: [
+          {
+            pedidoId: 'PED-TESTE-1234567890',
+            pedidoFinal: '1234567890',
+            vendaId: 'VENDA-TESTE',
+            compradorNome: 'Cliente Teste',
+            tipoNome: 'Individual',
+            formaPagamento: 'CREDIT_CARD',
+            valorNumero: 25,
+            valor: 'R$ 25,00',
+            statusFinanceiro: 'CONFIRMADO',
+            statusProvedor: 'CONFIRMED',
+            statusPedido: 'CONCLUIDO',
+            podeAnalisar: true,
+            potencialmenteReembolsavel: true
+          }
+        ],
+        somenteLeitura: true,
+        parcialAutomatico: false
+      };
+
+    case 'ctReembolsosDiagnosticarPROD':
+      expect(String(args[1] || '')).toBe(EVENT_ID);
+      return {
+        sucesso: true,
+        autorizado: true,
+        pedido: {
+          pedidoId: 'PED-TESTE-1234567890',
+          pedidoFinal: '1234567890',
+          vendaId: 'VENDA-TESTE',
+          compradorNome: 'Cliente Teste',
+          tipoNome: 'Individual',
+          status: 'CONCLUIDO'
+        },
+        pagamento: {
+          formaPagamento: 'CREDIT_CARD',
+          valorNumero: 25,
+          valor: 'R$ 25,00',
+          statusFinanceiro: 'CONFIRMADO',
+          statusProvedorLocal: 'CONFIRMED',
+          statusAsaas: 'CONFIRMED'
+        },
+        cancelamentoLocal: {
+          prontoParaCancelar: true,
+          cancelamentoConcluido: false,
+          erros: []
+        },
+        podeReembolsar: true,
+        bloqueios: [],
+        somenteLeitura: true
+      };
+
     default:
       return {
         sucesso: false,
@@ -583,6 +642,42 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expect(page.locator('#sysTrigger')).toHaveText('ATIVO');
     await expect(page.locator('body')).not.toContainText(/CPF|E-mail do comprador|WhatsApp do comprador/i);
     expect(new URL(page.url()).pathname).toBe('/saude-vendas/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
+
+  test('Reembolsos exige sessao quando aberto diretamente', async ({ page }) => {
+    await page.goto('/reembolsos/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.locator('#gateDenied')).toBeVisible();
+    await expect(page.locator('body')).toContainText(/Cancelamentos & Reembolsos|Acesso restrito/i);
+    expect(new URL(page.url()).pathname).toBe('/reembolsos/');
+    await expectNoTechnicalVisibleLinks(page);
+  });
+
+  test('Reembolsos renderiza pagamento e exige confirmacao antes de estorno', async ({ page }) => {
+    await page.addInitScript(({ key }) => {
+      localStorage.setItem(key, JSON.stringify({
+        token: 'TOKEN-TESTE-REEMBOLSO',
+        expiraEm: '2099-01-01T00:00:00.000Z'
+      }));
+    }, { key: 'CT_PORTAL_PRODUTOR_PROD_SESSION_V1' });
+
+    await page.goto('/reembolsos/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.getByText('Cliente Teste')).toBeVisible();
+    await expect(page.getByText('R$ 25,00')).toBeVisible();
+    await page.getByRole('button', { name: 'Analisar' }).click();
+    await expect(page.locator('#executeRefund')).toBeDisabled();
+    await page.locator('#reason').fill('Solicitação de cancelamento do comprador');
+    await page.locator('#confirm').fill('REEMBOLSAR');
+    await expect(page.locator('#executeRefund')).toBeEnabled();
+    await expect(page.locator('body')).not.toContainText(/CVV|número do cartão|cardNumber/i);
+    expect(new URL(page.url()).pathname).toBe('/reembolsos/');
     await expectNoTechnicalVisibleLinks(page);
   });
 
