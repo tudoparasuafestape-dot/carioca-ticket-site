@@ -145,8 +145,7 @@ for (const file of [
   'index.html',
   'evento/index.html',
   'checkout/index.html',
-  'minha-carioca/conta/index.html',
-  'central/index.html'
+  'minha-carioca/conta/index.html'
 ]) {
   const html = read(file);
   if (!html) continue;
@@ -159,6 +158,89 @@ for (const file of [
   }
   if (!html.includes('/pwa-register.js')) {
     fail(file, 'pagina sem registro do service worker PWA');
+  }
+}
+
+
+const producerManifest = read('manifest-produtor.webmanifest');
+if (producerManifest) {
+  let parsedProducer = null;
+  try {
+    parsedProducer = JSON.parse(producerManifest);
+  } catch {
+    fail('manifest-produtor.webmanifest', 'manifesto PWA do produtor invalido');
+  }
+
+  if (parsedProducer) {
+    if (
+      parsedProducer.id !== '/produtor/' ||
+      parsedProducer.name !== 'Carioca Ticket Produtor' ||
+      parsedProducer.short_name !== 'CT Produtor'
+    ) {
+      fail('manifest-produtor.webmanifest', 'identidade do app do produtor incorreta');
+    }
+    if (
+      parsedProducer.start_url !== '/produtor/' ||
+      parsedProducer.scope !== '/' ||
+      parsedProducer.display !== 'standalone'
+    ) {
+      fail('manifest-produtor.webmanifest', 'start_url/scope/display do app do produtor incorretos');
+    }
+
+    const producerIcons = Array.isArray(parsedProducer.icons) ? parsedProducer.icons : [];
+    for (const required of [
+      ['/assets/carioca-ticket-icon-192.png', '192x192', 'any'],
+      ['/assets/carioca-ticket-icon-512.png', '512x512', 'any'],
+      ['/assets/carioca-ticket-icon-maskable-512.png', '512x512', 'maskable']
+    ]) {
+      if (!producerIcons.some(icon =>
+        icon &&
+        icon.src === required[0] &&
+        icon.sizes === required[1] &&
+        String(icon.purpose || '').includes(required[2])
+      )) {
+        fail('manifest-produtor.webmanifest', `icone do app do produtor ausente/incorreto: ${required[0]}`);
+      }
+    }
+  }
+}
+
+for (const file of [
+  'produtor/index.html',
+  'central/index.html',
+  'saude-vendas/index.html',
+  'reembolsos/index.html',
+  'financeiro/index.html',
+  'relatorios/index.html',
+  'acessos/index.html',
+  'checkin/index.html'
+]) {
+  const html = read(file);
+  if (!html) continue;
+
+  if (!html.includes('rel="manifest" href="/manifest-produtor.webmanifest"')) {
+    fail(file, 'area administrativa sem manifesto PWA do produtor');
+  }
+  if (!html.includes('carioca-ticket-icon-192.png')) {
+    fail(file, 'area administrativa sem icone quadrado oficial');
+  }
+  if (!html.includes('/pwa-register.js')) {
+    fail(file, 'area administrativa sem registro PWA');
+  }
+}
+
+const producerPage = read('produtor/index.html');
+if (producerPage) {
+  if (!producerPage.includes('<title>Portal do Produtor | Carioca Ticket</title>')) {
+    fail('produtor/index.html', 'titulo do Portal do Produtor incorreto');
+  }
+  if (
+    !producerPage.includes('id="brandLogoDesktop"') ||
+    !producerPage.includes("ctMarcaOficialObterDataUriPROD") ||
+    !producerPage.includes("'DESKTOP'") ||
+    !producerPage.includes("'MOBILE'")
+  ) {
+    fail('produtor/index.html', 'Portal do Produtor sem carregamento da identidade visual oficial');
   }
 }
 
