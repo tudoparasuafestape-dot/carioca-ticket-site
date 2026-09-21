@@ -60,22 +60,44 @@ test.describe('Jornada publica protegida', () => {
     const pwa = await page.evaluate(async () => {
       const manifestResponse = await fetch('/manifest.webmanifest', { cache: 'no-store' });
       const manifest = await manifestResponse.json();
-      const icon = await new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => resolve({ ok: true, width: img.naturalWidth, height: img.naturalHeight });
-        img.onerror = () => resolve({ ok: false, width: 0, height: 0 });
-        img.src = '/assets/carioca-ticket-simbolo.png?e2e=' + Date.now();
-      });
-      return { status: manifestResponse.status, manifest, icon };
+      async function measure(src) {
+        return await new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => resolve({ ok: true, width: img.naturalWidth, height: img.naturalHeight });
+          img.onerror = () => resolve({ ok: false, width: 0, height: 0 });
+          img.src = src + '?e2e=' + Date.now();
+        });
+      }
+      return {
+        status: manifestResponse.status,
+        manifest,
+        icon192: await measure('/assets/carioca-ticket-icon-192.png'),
+        icon512: await measure('/assets/carioca-ticket-icon-512.png'),
+        mask512: await measure('/assets/carioca-ticket-icon-maskable-512.png'),
+        swSupported: 'serviceWorker' in navigator
+      };
     });
 
     expect(pwa.status).toBe(200);
     expect(pwa.manifest.name).toBe('Carioca Ticket');
     expect(pwa.manifest.display).toBe('standalone');
-    expect(pwa.manifest.icons.some(icon => icon.src === '/assets/carioca-ticket-simbolo.png')).toBe(true);
-    expect(pwa.icon.ok).toBe(true);
-    expect(pwa.icon.width).toBeGreaterThan(0);
-    expect(pwa.icon.height).toBeGreaterThan(0);
+    expect(pwa.manifest.icons.some(icon =>
+      icon.src === '/assets/carioca-ticket-icon-192.png' &&
+      icon.sizes === '192x192'
+    )).toBe(true);
+    expect(pwa.manifest.icons.some(icon =>
+      icon.src === '/assets/carioca-ticket-icon-512.png' &&
+      icon.sizes === '512x512'
+    )).toBe(true);
+    expect(pwa.manifest.icons.some(icon =>
+      icon.src === '/assets/carioca-ticket-icon-maskable-512.png' &&
+      icon.sizes === '512x512' &&
+      String(icon.purpose || '').includes('maskable')
+    )).toBe(true);
+    expect(pwa.icon192).toEqual({ ok: true, width: 192, height: 192 });
+    expect(pwa.icon512).toEqual({ ok: true, width: 512, height: 512 });
+    expect(pwa.mask512).toEqual({ ok: true, width: 512, height: 512 });
+    expect(pwa.swSupported).toBe(true);
 
     await expectNoForbiddenVisibleLinks(page);
 

@@ -74,6 +74,38 @@ for (const file of protectedFiles) {
   }
 }
 
+function readPngSize(file) {
+  const full = path.join(root, file);
+  if (!fs.existsSync(full)) {
+    fail(file, 'icone PNG ausente');
+    return null;
+  }
+  const buffer = fs.readFileSync(full);
+  if (
+    buffer.length < 24 ||
+    buffer[0] !== 0x89 ||
+    buffer.toString('ascii', 1, 4) !== 'PNG'
+  ) {
+    fail(file, 'icone nao e PNG valido');
+    return null;
+  }
+  return {
+    width: buffer.readUInt32BE(16),
+    height: buffer.readUInt32BE(20)
+  };
+}
+
+for (const spec of [
+  ['assets/carioca-ticket-icon-192.png', 192, 192],
+  ['assets/carioca-ticket-icon-512.png', 512, 512],
+  ['assets/carioca-ticket-icon-maskable-512.png', 512, 512]
+]) {
+  const size = readPngSize(spec[0]);
+  if (size && (size.width !== spec[1] || size.height !== spec[2])) {
+    fail(spec[0], `dimensao incorreta: ${size.width}x${size.height}`);
+  }
+}
+
 const manifest = read('manifest.webmanifest');
 if (manifest) {
   let parsed = null;
@@ -91,8 +123,20 @@ if (manifest) {
       fail('manifest.webmanifest', 'escopo/start_url/display PWA incorretos');
     }
     const icons = Array.isArray(parsed.icons) ? parsed.icons : [];
-    if (!icons.some(icon => icon && icon.src === '/assets/carioca-ticket-simbolo.png')) {
-      fail('manifest.webmanifest', 'simbolo oficial nao configurado como icone instalavel');
+    const requiredIcons = [
+      ['/assets/carioca-ticket-icon-192.png', '192x192', 'any'],
+      ['/assets/carioca-ticket-icon-512.png', '512x512', 'any'],
+      ['/assets/carioca-ticket-icon-maskable-512.png', '512x512', 'maskable']
+    ];
+    for (const required of requiredIcons) {
+      if (!icons.some(icon =>
+        icon &&
+        icon.src === required[0] &&
+        icon.sizes === required[1] &&
+        String(icon.purpose || '').includes(required[2])
+      )) {
+        fail('manifest.webmanifest', `icone PWA ausente/incorreto: ${required[0]}`);
+      }
     }
   }
 }
@@ -110,8 +154,11 @@ for (const file of [
   if (!html.includes('rel="manifest" href="/manifest.webmanifest"')) {
     fail(file, 'pagina sem manifesto PWA oficial');
   }
-  if (!html.includes('rel="apple-touch-icon" href="/assets/carioca-ticket-simbolo.png"')) {
-    fail(file, 'pagina sem icone mobile oficial');
+  if (!html.includes('rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png"')) {
+    fail(file, 'pagina sem icone mobile quadrado oficial');
+  }
+  if (!html.includes('/pwa-register.js')) {
+    fail(file, 'pagina sem registro do service worker PWA');
   }
 }
 

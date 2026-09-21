@@ -27,7 +27,6 @@ jobs:
           node-version: '20'
       - name: Validar rotas e contratos protegidos
         run: node tests/contracts.mjs
-
   publico-producao:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     name: Publico homologado ${{ matrix.viewport }}
