@@ -370,8 +370,21 @@ if (saudeVendas) {
   }
 }
 
+const ingressoPublico = read('ingresso/index.html');
+if (ingressoPublico) {
+  if (!ingressoPublico.includes('seg.autorizaEntrada===true')) {
+    fail('ingresso/index.html', 'Ingresso público não condiciona QR/compartilhamento à autorização de entrada');
+  }
+  if (!ingressoPublico.includes("autoriza?'")) {
+    fail('ingresso/index.html', 'Ingresso público mantém ações de compartilhamento sem validar autorização');
+  }
+}
+
 const consultaOperacional = read('consulta/index.html');
 if (consultaOperacional) {
+  if (!consultaOperacional.includes('Aguardando confirmação do pagamento')) {
+    fail('consulta/index.html', 'Consulta operacional não sinaliza pagamento pendente sem ações de compartilhamento');
+  }
   if (!consultaOperacional.includes("ctMinhaCariocaAction','portalRpc'")) {
     fail('consulta/index.html', 'Consulta operacional sem ponte first-party segura');
   }
