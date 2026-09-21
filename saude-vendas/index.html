@@ -71,6 +71,7 @@
       <div class="system-row"><span>Erros abertos 24h</span><strong id="sysErrors">0</strong></div>
       <div class="system-row"><span>Cobertura webhook Asaas</span><strong id="sysAsaasCoverage">—</strong></div>
       <div class="system-row"><span>Webhooks Asaas ativos</span><strong id="sysAsaasActive">0</strong></div>
+      <div class="system-row stack"><span>Destino(s) do webhook</span><strong id="sysAsaasHosts">—</strong></div>
       <div class="system-row stack"><span>Eventos Asaas faltantes</span><strong id="sysAsaasMissing">—</strong></div>
       <div class="system-row"><span>Recuperação automática</span><strong id="sysRecovery">ATIVA</strong></div>
       <div id="updated" class="updated">—</div>
@@ -158,6 +159,15 @@ function render(r){
   var active=document.getElementById('sysAsaasActive');
   active.textContent=Number(asaas.ativos||0);
   active.className=Number(asaas.ativos||0)>0?'ok':'bad';
+
+  var hosts=[];
+  (Array.isArray(asaas.webhooks)?asaas.webhooks:[]).forEach(function(w){
+    var h=String(w&&w.host||'').trim();
+    if(h&&hosts.indexOf(h)<0)hosts.push(h);
+  });
+  var hostsEl=document.getElementById('sysAsaasHosts');
+  hostsEl.textContent=hosts.length?hosts.join(', '):'Não informado';
+  hostsEl.className=hosts.length?'ok':'warn';
 
   var missing=Array.isArray(asaas.eventosFaltantes)?asaas.eventosFaltantes:[];
   var missingEl=document.getElementById('sysAsaasMissing');
