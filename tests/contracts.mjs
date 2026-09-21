@@ -74,6 +74,47 @@ for (const file of protectedFiles) {
   }
 }
 
+const manifest = read('manifest.webmanifest');
+if (manifest) {
+  let parsed = null;
+  try {
+    parsed = JSON.parse(manifest);
+  } catch {
+    fail('manifest.webmanifest', 'manifesto PWA invalido');
+  }
+
+  if (parsed) {
+    if (parsed.name !== 'Carioca Ticket' || parsed.short_name !== 'Carioca Ticket') {
+      fail('manifest.webmanifest', 'nome oficial da aplicacao ausente');
+    }
+    if (parsed.start_url !== '/' || parsed.scope !== '/' || parsed.display !== 'standalone') {
+      fail('manifest.webmanifest', 'escopo/start_url/display PWA incorretos');
+    }
+    const icons = Array.isArray(parsed.icons) ? parsed.icons : [];
+    if (!icons.some(icon => icon && icon.src === '/assets/carioca-ticket-simbolo.png')) {
+      fail('manifest.webmanifest', 'simbolo oficial nao configurado como icone instalavel');
+    }
+  }
+}
+
+for (const file of [
+  'index.html',
+  'evento/index.html',
+  'checkout/index.html',
+  'minha-carioca/conta/index.html',
+  'central/index.html'
+]) {
+  const html = read(file);
+  if (!html) continue;
+
+  if (!html.includes('rel="manifest" href="/manifest.webmanifest"')) {
+    fail(file, 'pagina sem manifesto PWA oficial');
+  }
+  if (!html.includes('rel="apple-touch-icon" href="/assets/carioca-ticket-simbolo.png"')) {
+    fail(file, 'pagina sem icone mobile oficial');
+  }
+}
+
 const home = read('index.html');
 if (home) {
   if (!/href=["'][^"']*\/evento\//i.test(home)) {

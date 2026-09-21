@@ -53,6 +53,30 @@ test.describe('Jornada publica protegida', () => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expectOfficialTopUrl(page, /^\/$/);
     await expect(page.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible();
+
+    const manifestHref = await page.locator('link[rel="manifest"]').getAttribute('href');
+    expect(manifestHref).toBe('/manifest.webmanifest');
+
+    const pwa = await page.evaluate(async () => {
+      const manifestResponse = await fetch('/manifest.webmanifest', { cache: 'no-store' });
+      const manifest = await manifestResponse.json();
+      const icon = await new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve({ ok: true, width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => resolve({ ok: false, width: 0, height: 0 });
+        img.src = '/assets/carioca-ticket-simbolo.png?e2e=' + Date.now();
+      });
+      return { status: manifestResponse.status, manifest, icon };
+    });
+
+    expect(pwa.status).toBe(200);
+    expect(pwa.manifest.name).toBe('Carioca Ticket');
+    expect(pwa.manifest.display).toBe('standalone');
+    expect(pwa.manifest.icons.some(icon => icon.src === '/assets/carioca-ticket-simbolo.png')).toBe(true);
+    expect(pwa.icon.ok).toBe(true);
+    expect(pwa.icon.width).toBeGreaterThan(0);
+    expect(pwa.icon.height).toBeGreaterThan(0);
+
     await expectNoForbiddenVisibleLinks(page);
 
     const verEvento = page.getByRole('link', { name: /^ver evento$/i }).first();
