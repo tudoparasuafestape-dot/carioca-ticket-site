@@ -21,7 +21,15 @@
     .toast{position:fixed;z-index:40;left:50%;bottom:18px;transform:translateX(-50%) translateY(120px);opacity:0;transition:.25s;border:1px solid #333;background:#171717;padding:12px 15px;border-radius:11px;box-shadow:var(--shadow);font-size:12px;max-width:min(620px,calc(100% - 30px))}.toast.show{transform:translateX(-50%) translateY(0);opacity:1}.toast.ok{border-color:#275a39}.toast.err{border-color:#6b2929}.block{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.66);display:none;place-items:center}.block.show{display:grid}.block-box{width:min(320px,90vw);border:1px solid #41371f;background:#111;border-radius:17px;padding:19px;text-align:center}
     @media(max-width:800px){.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.cards{grid-template-columns:1fr}}
     @media(max-width:560px){.shell{width:min(100% - 18px,1120px)}.top{align-items:flex-start}.selectors,.form-grid{grid-template-columns:1fr}.wide{grid-column:auto}.hero{padding:18px}.actions{flex-direction:column}.stats{grid-template-columns:1fr 1fr}.card-actions{flex-direction:column;align-items:stretch}}
-  </style>
+  
+.ct-confirm-dialog{width:min(460px,calc(100% - 24px));padding:0;border:1px solid rgba(217,166,46,.30);border-radius:20px;background:#11161d;color:#f7f2e8;box-shadow:0 24px 80px rgba(0,0,0,.65)}
+.ct-confirm-dialog::backdrop{background:rgba(0,0,0,.76);backdrop-filter:blur(7px)}
+.ct-confirm-body{padding:21px}.ct-confirm-body h3{margin:0 0 8px;font-size:19px}.ct-confirm-body p{margin:0;color:#aaa39a;line-height:1.55}
+.ct-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 21px 21px}
+.ct-confirm-actions button{min-height:45px;border-radius:12px;font:inherit;font-weight:850}
+.ct-confirm-cancel{border:1px solid #343c46;background:#171c23;color:#fff}.ct-confirm-ok{border:0;background:linear-gradient(135deg,#d9a62e,#f2c451);color:#111}
+
+</style>
 </head>
 <body>
   <section id="gate" class="gate">
@@ -181,8 +189,26 @@ function renderList(){
     return '<article class="card" data-id="'+esc(item.vinculoId)+'"><div class="card-top"><div><h3>'+esc(name)+'</h3><div class="meta">'+esc(contacts||f.categoria||'Sem contato informado')+'</div></div><span class="tag">'+esc(item.statusPagamento||'PENDENTE')+'</span></div><div class="kv"><div><span>Serviço</span><strong>'+esc(item.servico||'—')+'</strong></div><div><span>Valor</span><strong>'+money(item.valorContratado)+'</strong></div></div><div class="card-actions"><div class="field"><label>Status de pagamento</label><select class="status-select">'+opts+'</select></div><button type="button" class="save" data-save="'+esc(item.vinculoId)+'">Salvar status</button><button type="button" class="danger" data-remove="'+esc(item.vinculoId)+'">Remover vínculo</button></div></article>';
   }).join('');
 }
+function confirmCt(message,title){
+  return new Promise(function(resolve){
+    var d=document.getElementById('ctConfirmDialog');
+    if(!d){
+      d=document.createElement('dialog');
+      d.id='ctConfirmDialog';
+      d.className='ct-confirm-dialog';
+      d.innerHTML='<div class="ct-confirm-body"><h3 id="ctConfirmTitle">Confirmar ação</h3><p id="ctConfirmText"></p></div><div class="ct-confirm-actions"><button id="ctConfirmCancel" class="ct-confirm-cancel" type="button">Cancelar</button><button id="ctConfirmOk" class="ct-confirm-ok" type="button">Confirmar</button></div>';
+      document.body.appendChild(d);
+    }
+    d.querySelector('#ctConfirmTitle').textContent=title||'Confirmar ação';
+    d.querySelector('#ctConfirmText').textContent=String(message||'');
+    var ok=d.querySelector('#ctConfirmOk'),cancel=d.querySelector('#ctConfirmCancel'),done=false;
+    function finish(v){if(done)return;done=true;ok.removeEventListener('click',yes);cancel.removeEventListener('click',no);d.removeEventListener('cancel',esc);if(d.open)d.close();resolve(v)}
+    function yes(){finish(true)} function no(){finish(false)} function esc(e){e.preventDefault();finish(false)}
+    ok.addEventListener('click',yes);cancel.addEventListener('click',no);d.addEventListener('cancel',esc);d.showModal();
+  });
+}
 async function mutate(method,args,confirmText,okText){
-  if(confirmText&&!window.confirm(confirmText))return;
+  if(confirmText&&!(await confirmCt(confirmText)))return;
   try{busy(true,'Salvando...');var r=await rpc(method,args);if(!r||r.sucesso!==true)throw new Error((r&&r.mensagem)||'Operação não concluída.');toast(r.mensagem||okText||'Operação concluída.','ok');await loadList();return r}catch(e){toast(e&&e.message?e.message:String(e),'err');return null}finally{busy(false)}
 }
 document.getElementById('producerSelect').addEventListener('change',function(){state.produtorId=this.value;state.eventoId='';renderSelectors();loadList()});
