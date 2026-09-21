@@ -65,7 +65,12 @@ function checkoutFixture() {
       descricaoCurta: base.visual.descricaoCurta,
       capaUrl: ''
     },
-    tipos: base.tipos
+    tipos: base.tipos,
+    identidadeCliente: {
+      identificadorPrincipal: 'WHATSAPP',
+      whatsappObrigatorio: true,
+      emailObrigatorio: false
+    }
   };
 }
 
@@ -265,7 +270,10 @@ test.describe('Fachadas first-party em homologacao', () => {
       timeout: 15000
     });
     await expect(page.getByText('Seus dados')).toBeVisible();
-    await expect(page.getByLabel(/E-mail/i)).toBeVisible();
+    const emailV2 = page.locator('#buyerEmail');
+    await expect(emailV2).toBeVisible();
+    await expect(page.locator('#buyerEmailLabel')).toHaveText('E-mail (opcional)');
+    await expect(emailV2).not.toHaveAttribute('required', /.*/);
     await expect(page.getByText('Cartão de crédito')).toBeVisible();
     await expect(page.getByText(/^PIX$/)).toBeVisible();
 
@@ -312,7 +320,10 @@ test.describe('Fachadas first-party em homologacao', () => {
       timeout: 15000
     });
     await expect(page.getByText('Seus dados')).toBeVisible();
-    await expect(page.getByLabel(/E-mail/i)).toBeVisible();
+    const emailOficial = page.locator('#buyerEmail');
+    await expect(emailOficial).toBeVisible();
+    await expect(page.locator('#buyerEmailLabel')).toHaveText('E-mail (opcional)');
+    await expect(emailOficial).not.toHaveAttribute('required', /.*/);
 
     await page.locator('#typeSelect').selectOption('TIPO-IND');
     await page.locator('#lotSelect').selectOption('LOTE-1');
