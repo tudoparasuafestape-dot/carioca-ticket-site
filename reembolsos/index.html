@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#08090c">
+<title>Cancelamentos e Reembolsos | Carioca Ticket</title>
+<link rel="icon" href="/assets/carioca-ticket-simbolo.png">
+<style>
+:root{--bg:#07090c;--card:#11151b;--card2:#171c23;--line:#29313b;--text:#f7f2e8;--muted:#9ba3ad;--gold:#d9a72e;--gold2:#f1c652;--green:#54d58b;--yellow:#f2c75b;--red:#ff7474;--blue:#79a9ff}
+*{box-sizing:border-box}html,body{margin:0;background:radial-gradient(circle at 80% 0,rgba(217,167,46,.12),transparent 28%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,textarea{font:inherit}.hidden{display:none!important}.shell{width:min(1120px,calc(100% - 28px));margin:auto;padding:20px 0 52px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}.brand img{width:48px;height:48px;object-fit:contain}.brand strong{display:block;font-size:16px}.brand span{display:block;color:var(--muted);font-size:10px;margin-top:2px}.ghost,.btn{min-height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:0 14px;font-weight:850;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.btn.gold{border:0;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#111}.btn.danger{border-color:rgba(255,116,116,.45);background:rgba(255,116,116,.09);color:#ffd1d1}.btn:disabled{opacity:.42;cursor:not-allowed}
+.gate{min-height:72vh;display:grid;place-items:center}.gate-card{max-width:540px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:30px}.gate-card h1{margin:0 0 10px;color:var(--gold2)}.gate-card p{color:var(--muted);line-height:1.55}
+.hero{background:linear-gradient(145deg,rgba(217,167,46,.12),rgba(217,167,46,.02)),var(--card);border:1px solid rgba(217,167,46,.28);border-radius:22px;padding:22px;margin-bottom:15px}.ey{font-size:10px;font-weight:900;color:var(--gold2);letter-spacing:.12em;text-transform:uppercase}.hero h1{font-size:27px;margin:7px 0}.hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}.meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.chip{padding:6px 9px;border:1px solid var(--line);border-radius:999px;background:var(--card2);font-size:10px;color:#c7ccd3}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:15px}.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px}.stat span{display:block;color:var(--muted);font-size:10px}.stat strong{display:block;font-size:22px;margin-top:8px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:17px}.panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:13px}.panel-head h2{font-size:17px;margin:0}.panel-head p{font-size:10px;color:var(--muted);margin:4px 0 0}.search{width:min(310px,100%);min-height:42px;border:1px solid var(--line);border-radius:12px;background:#0a0d11;color:#fff;padding:0 12px;outline:none}
+.list{display:flex;flex-direction:column;gap:9px}.item{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(110px,.55fr) minmax(120px,.55fr) auto;align-items:center;gap:12px;background:var(--card2);border:1px solid var(--line);border-radius:15px;padding:13px}.item-main strong{display:block;font-size:13px}.item-main small{display:block;color:var(--muted);font-size:9px;margin-top:4px}.item-col span{display:block;color:var(--muted);font-size:9px}.item-col strong{display:block;font-size:12px;margin-top:3px}.status{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}.status.ok{color:#bdf5d1;background:rgba(84,213,139,.1)}.status.warn{color:#ffe8a4;background:rgba(242,199,91,.1)}.status.bad{color:#ffd0d0;background:rgba(255,116,116,.1)}.empty{text-align:center;color:var(--muted);font-size:12px;padding:30px 10px}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);z-index:30;display:flex;align-items:center;justify-content:center;padding:18px}.modal{width:min(620px,100%);max-height:90vh;overflow:auto;background:#10151b;border:1px solid #343d48;border-radius:21px;padding:20px;box-shadow:0 28px 80px rgba(0,0,0,.5)}.modal h2{margin:0 0 5px;font-size:20px}.modal .lead{color:var(--muted);font-size:11px;line-height:1.5;margin:0 0 15px}.diag{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}.diag .box{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px}.diag .box span{display:block;color:var(--muted);font-size:9px}.diag .box strong{display:block;font-size:12px;margin-top:4px}.notice{border:1px solid rgba(242,199,91,.3);background:rgba(242,199,91,.07);border-radius:13px;padding:12px;color:#eadcae;font-size:11px;line-height:1.5;margin-bottom:14px}.notice.bad{border-color:rgba(255,116,116,.35);background:rgba(255,116,116,.07);color:#ffc8c8}.field{margin-top:12px}.field label{display:block;color:#c9cdd3;font-size:10px;font-weight:850;margin-bottom:6px}.field textarea,.field input{width:100%;border:1px solid var(--line);border-radius:12px;background:#090c10;color:#fff;padding:11px 12px;outline:none}.field textarea{min-height:88px;resize:vertical}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.toast{position:fixed;right:16px;bottom:16px;z-index:50;max-width:390px;background:#171d24;border:1px solid var(--line);border-radius:13px;padding:13px 15px;font-size:11px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+@media(max-width:800px){.summary{grid-template-columns:repeat(2,1fr)}.item{grid-template-columns:1fr 1fr}.item .item-main{grid-column:1/-1}.item .item-action{grid-column:1/-1}.item-action .btn{width:100%}.panel-head{align-items:stretch;flex-direction:column}.search{width:100%}}
+@media(max-width:560px){.shell{width:min(100% - 20px,1120px)}.top{align-items:flex-start}.brand img{width:42px;height:42px}.hero h1{font-size:22px}.diag{grid-template-columns:1fr}.actions{flex-direction:column}.actions .btn{width:100%}}
+</style>
+</head>
+<body>
+<section id="gate" class="gate">
+  <div class="gate-card">
+    <div id="gateLoading"><h1>Carioca Ticket</h1><p>Validando sua permissão financeira para este evento…</p></div>
+    <div id="gateDenied" class="hidden"><h1>Acesso restrito</h1><p id="gateMessage">Entre pela Central do Produtor.</p><p><a class="ghost" href="/central/">Voltar à Central</a></p></div>
+  </div>
+</section>
+
+<main id="app" class="shell hidden">
+  <header class="top">
+    <a class="brand" href="/central/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Cancelamentos & Reembolsos</strong><span>Operação financeira pós-venda</span></div></a>
+    <div><button id="refresh" class="btn" type="button">Atualizar</button> <a class="ghost" href="/central/">← Central</a></div>
+  </header>
+
+  <section class="hero">
+    <div class="ey">Carioca Ticket · Financeiro</div>
+    <h1 id="eventName">Evento</h1>
+    <p>Reembolso integral com validação do Asaas e cancelamento sincronizado de venda, ingresso e CRM. Reembolsos parciais ficam bloqueados para análise manual.</p>
+    <div id="eventMeta" class="meta"></div>
+  </section>
+
+  <section class="summary">
+    <article class="stat"><span>Pagamentos</span><strong id="sumAll">0</strong></article>
+    <article class="stat"><span>Confirmados</span><strong id="sumConfirmed">0</strong></article>
+    <article class="stat"><span>Estornados</span><strong id="sumRefunded">0</strong></article>
+    <article class="stat"><span>Chargebacks</span><strong id="sumChargeback">0</strong></article>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>Pagamentos do evento</h2><p>Pesquise por nome do comprador ou final do pedido.</p></div>
+      <input id="search" class="search" type="search" placeholder="Buscar pagamento">
+    </div>
+    <div id="list" class="list"></div>
+  </section>
+</main>
+
+<div id="modalBackdrop" class="backdrop hidden" aria-hidden="true">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">Analisar reembolso</h2>
+    <p class="lead">O sistema consulta o pagamento diretamente no Asaas antes de liberar qualquer ação financeira.</p>
+    <div id="diag" class="diag"></div>
+    <div id="diagNotice" class="notice"></div>
+    <div id="refundForm">
+      <div class="field"><label for="reason">Motivo do reembolso</label><textarea id="reason" maxlength="500" placeholder="Descreva o motivo com pelo menos 8 caracteres"></textarea></div>
+      <div class="field"><label for="confirm">Confirmação de segurança</label><input id="confirm" autocomplete="off" placeholder="Digite REEMBOLSAR"></div>
+    </div>
+    <div class="actions">
+      <button id="closeModal" class="btn" type="button">Fechar</button>
+      <button id="executeRefund" class="btn danger" type="button" disabled>Confirmar reembolso integral</button>
+    </div>
+  </section>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var pending={};
+var state={session:null,eventId:'',items:[],selected:null};
+
+var gate=document.getElementById('gate'),gateLoading=document.getElementById('gateLoading'),gateDenied=document.getElementById('gateDenied'),gateMessage=document.getElementById('gateMessage'),app=document.getElementById('app');
+var modal=document.getElementById('modalBackdrop'),reason=document.getElementById('reason'),confirmInput=document.getElementById('confirm'),execute=document.getElementById('executeRefund');
+
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function session(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm){var t=Date.parse(d.expiraEm);if(!isNaN(t)&&t<=Date.now())return null}return d}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){return new Promise(function(resolve,reject){var id='CTREF-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='ctref_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},50000)};form.submit()})}
+window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível concluir a operação.')))});
+function deny(msg){gateLoading.classList.add('hidden');gateDenied.classList.remove('hidden');gateMessage.textContent=msg||'Acesso restrito.'}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');setTimeout(function(){t.classList.add('hidden')},4500)}
+function statusClass(s){s=String(s||'').toUpperCase();if(s==='ESTORNADO')return'ok';if(s==='CHARGEBACK')return'bad';if(/REFUND/.test(s))return'warn';if(s==='CONFIRMADO')return'ok';return'warn'}
+
+function itemHtml(x,index){
+  return '<article class="item" data-search="'+esc((x.compradorNome||'')+' '+(x.pedidoFinal||'')+' '+(x.tipoNome||''))+'">'+
+    '<div class="item-main"><strong>'+esc(x.compradorNome||'Comprador não identificado')+'</strong><small>Pedido …'+esc(x.pedidoFinal||'')+' · '+esc(x.tipoNome||'Ingresso')+'</small></div>'+
+    '<div class="item-col"><span>Pagamento</span><strong>'+esc(x.formaPagamento||'—')+' · '+esc(x.valor||'R$ 0,00')+'</strong></div>'+
+    '<div class="item-col"><span>Status</span><strong class="status '+statusClass(x.statusFinanceiro)+'">'+esc(x.statusFinanceiro||'—')+'</strong></div>'+
+    '<div class="item-action"><button class="btn analyze" type="button" data-index="'+index+'" '+(x.podeAnalisar?'':'disabled')+'>Analisar</button></div>'+
+    '</article>';
+}
+
+function renderList(){
+  var q=String(document.getElementById('search').value||'').trim().toLowerCase();
+  var items=state.items||[];
+  document.getElementById('list').innerHTML=items.length?items.map(itemHtml).join(''):'<div class="empty">Nenhum pagamento encontrado neste evento.</div>';
+  document.querySelectorAll('.item').forEach(function(el){if(q&&String(el.getAttribute('data-search')||'').toLowerCase().indexOf(q)<0)el.classList.add('hidden')});
+  document.querySelectorAll('.analyze').forEach(function(btn){btn.addEventListener('click',function(){analyze(Number(btn.getAttribute('data-index')))})});
+}
+
+function renderSummary(){
+  var all=state.items.length,confirmed=0,refunded=0,chargeback=0;
+  state.items.forEach(function(x){var s=String(x.statusFinanceiro||'').toUpperCase();if(s==='CONFIRMADO')confirmed++;if(s==='ESTORNADO')refunded++;if(s==='CHARGEBACK')chargeback++});
+  document.getElementById('sumAll').textContent=all;
+  document.getElementById('sumConfirmed').textContent=confirmed;
+  document.getElementById('sumRefunded').textContent=refunded;
+  document.getElementById('sumChargeback').textContent=chargeback;
+}
+
+async function load(){
+  document.getElementById('refresh').disabled=true;
+  try{
+    var r=await rpc('ctReembolsosCarregarPROD',[String(state.session.token),state.eventId]);
+    if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Sua conta não possui permissão de reembolsos para este evento.');
+    state.items=Array.isArray(r.itens)?r.itens:[];
+    var e=r.evento||{};document.getElementById('eventName').textContent=e.nome||state.eventId;
+    document.getElementById('eventMeta').innerHTML=[e.data,e.horario,e.local].filter(Boolean).map(function(v){return '<span class="chip">'+esc(v)+'</span>'}).join('');
+    renderSummary();renderList();gate.classList.add('hidden');app.classList.remove('hidden');
+  }catch(e){if(app.classList.contains('hidden'))deny(e&&e.message?e.message:String(e));else toast(e&&e.message?e.message:String(e))}
+  finally{document.getElementById('refresh').disabled=false}
+}
+
+async function analyze(index){
+  var x=state.items[index];if(!x)return;
+  state.selected=null;reason.value='';confirmInput.value='';execute.disabled=true;execute.textContent='Confirmar reembolso integral';
+  modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');
+  document.getElementById('diag').innerHTML='<div class="box"><span>Pedido</span><strong>Consultando…</strong></div>';
+  document.getElementById('diagNotice').className='notice';document.getElementById('diagNotice').textContent='Consultando o Asaas e validando o ingresso…';
+  try{
+    var r=await rpc('ctReembolsosDiagnosticarPROD',[String(state.session.token),state.eventId,String(x.pedidoId)]);
+    state.selected=r;
+    var p=r.pagamento||{},ped=r.pedido||{};
+    document.getElementById('diag').innerHTML=
+      '<div class="box"><span>Pedido</span><strong>…'+esc(ped.pedidoFinal||'')+'</strong></div>'+
+      '<div class="box"><span>Comprador</span><strong>'+esc(ped.compradorNome||'—')+'</strong></div>'+
+      '<div class="box"><span>Valor</span><strong>'+esc(p.valor||'R$ 0,00')+'</strong></div>'+
+      '<div class="box"><span>Forma</span><strong>'+esc(p.formaPagamento||'—')+'</strong></div>'+
+      '<div class="box"><span>Ledger CT</span><strong>'+esc(p.statusFinanceiro||'—')+'</strong></div>'+
+      '<div class="box"><span>Asaas agora</span><strong>'+esc(p.statusAsaas||'—')+'</strong></div>';
+    var notice=document.getElementById('diagNotice');
+    if(r.podeReembolsar===true){
+      notice.className='notice';notice.textContent='Diagnóstico aprovado. O reembolso será integral e, após aceito pelo Asaas, o ingresso será cancelado localmente.';
+    }else{
+      notice.className='notice bad';notice.innerHTML='<strong>Operação bloqueada.</strong><br>'+esc((r.bloqueios||[]).join(' · ')||'O pagamento não está elegível.');
+    }
+    updateExecute();
+  }catch(e){document.getElementById('diagNotice').className='notice bad';document.getElementById('diagNotice').textContent=e&&e.message?e.message:String(e)}
+}
+
+function updateExecute(){
+  var ok=state.selected&&state.selected.podeReembolsar===true&&String(reason.value||'').trim().length>=8&&String(confirmInput.value||'').trim().toUpperCase()==='REEMBOLSAR';
+  execute.disabled=!ok;
+}
+
+async function refund(){
+  if(!state.selected||state.selected.podeReembolsar!==true)return;
+  execute.disabled=true;execute.textContent='Enviando ao Asaas…';
+  try{
+    var r=await rpc('ctReembolsosExecutarPROD',[
+      String(state.session.token),
+      state.eventId,
+      String(state.selected.pedido.pedidoId),
+      String(reason.value||'').trim(),
+      String(confirmInput.value||'').trim()
+    ]);
+    if(!r||r.sucesso!==true)throw new Error('O reembolso não foi confirmado.');
+    closeModal();
+    toast(r.mensagem||'Operação concluída.');
+    await load();
+  }catch(e){toast(e&&e.message?e.message:String(e));execute.textContent='Confirmar reembolso integral';updateExecute()}
+}
+
+function closeModal(){modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');state.selected=null}
+document.getElementById('closeModal').addEventListener('click',closeModal);
+modal.addEventListener('click',function(e){if(e.target===modal)closeModal()});
+reason.addEventListener('input',updateExecute);confirmInput.addEventListener('input',updateExecute);execute.addEventListener('click',refund);
+document.getElementById('refresh').addEventListener('click',load);document.getElementById('search').addEventListener('input',renderList);
+
+function init(){
+  state.session=session();state.eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();
+  if(!state.session||!state.session.token){deny('Entre no Portal do Produtor para acessar Cancelamentos e Reembolsos.');return}
+  if(!state.eventId){deny('Selecione um evento na Central antes de abrir este módulo.');return}
+  load();
+}
+init();
+}());
+</script>
+</body>
+</html>
