@@ -3134,7 +3134,45 @@ resposta.expiraEm ||
 el.senha.value =
 '';
 
+/*
+ * A autenticação já terminou e a sessão CT foi persistida.
+ * Falhas exclusivamente visuais/operacionais na abertura do painel
+ * não podem ser classificadas como falha de login nem encerrar
+ * uma sessão válida.
+ */
+try{
+
 abrirPortal();
+
+}
+catch(
+erroPortal
+){
+
+registrarErroTecnico(
+'Portal | abertura pós-login',
+erroPortal
+);
+
+el.loginView
+.classList
+.add(
+'hidden'
+);
+
+el.portalView
+.classList
+.remove(
+'hidden'
+);
+
+mostrarMensagem(
+el.portalMessage,
+'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Atualize a página para restaurar sua sessão.',
+'error'
+);
+
+}
 }
 catch(
 erro
