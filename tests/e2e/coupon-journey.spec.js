@@ -29,6 +29,8 @@ function campaign(status='ATIVA'){
     percentual:0,valorFixo:0,precoPromocional:15,status,statusConfigurado:status,
     limiteTotalUsos:50,limitePorComprador:2,limitePorPedido:2,utilizacoes:0,reservadas:0,
     descontoTotal:0,receitaGerada:0,disponiveis:50,responsavelEconomico:'PRODUTOR',
+    cliquesLink:12,vendasViaLink:3,sessoesConvertidasViaLink:3,conversaoLinkPercentual:25,
+    compartilhamentos:5,compartilhamentosWhatsapp:2,copiasLink:2,copiasCodigo:1,
     elegibilidades:[{tipoId:TYPE_INDIVIDUAL,loteId:LOT_INDIVIDUAL}]
   };
 }
@@ -75,12 +77,17 @@ async function mock(page,state){
           result={sucesso:true,campanha:campaign()};
         }else if(method==='ctCuponsCampanhasAlterarStatusPROD'){
           state.statusCalls++;state.paused=String(args[3]||'')==='PAUSAR';result={sucesso:true,campanha:campaign(state.paused?'PAUSADA':'ATIVA')};
+        }else if(method==='ctCuponsCampanhasRegistrarCompartilhamentoPROD'){
+          state.shareCalls=Number(state.shareCalls||0)+1;state.lastShare={campanhaId:String(args[2]||''),acao:String(args[3]||'')};result={sucesso:true,registrado:true};
         }else if(method==='ctCuponsCampanhasAdminListarPROD'){
           result={sucesso:true,autorizado:true,admin:{nome:'Admin',perfil:'ADMINISTRADOR'},itens:state.saved?[{...campaign(state.paused?'PAUSADA':'ATIVA'),produtorId:'PROD-E2E',eventoId:EVENT}]:[],total:state.saved?1:0};
         }else throw new Error('portalRpc não previsto: '+method);
       }else if(action==='publicRpc'){
         if(method==='ctCheckoutPublicoCarregarEventoPROD')result=catalog();
-        else if(method==='ctCuponsPublicoValidarSeguroPROD'){
+        else if(method==='ctEventoPublicoCarregarPROD')result={...catalog(),menorPreco:'R$ 25,00',visual:{...catalog().visual,realizacao:'Tudo Para Sua Festa',categoria:'Samba',destaque:'30 anos da Banda Sem Razão',descricaoCompleta:'Evento especial de 30 anos.'}};
+        else if(method==='ctCuponsPublicoRegistrarAcessoSeguroPROD'){
+          state.trafficCalls=Number(state.trafficCalls||0)+1;state.lastTraffic=args[0]||{};result={sucesso:true,registrado:true};
+        }else if(method==='ctCuponsPublicoValidarSeguroPROD'){
           state.validationCalls++;
           const p=args[0]||{};result=couponResult(p.codigo,state,String(p.tipoId||''),String(p.loteId||''));
         }else if(method==='ctCheckoutPixPublicoIniciarPROD'){
@@ -157,6 +164,71 @@ test.describe('Cupons e Campanhas',()=>{
     await expect(page.locator('#campaigns')).toContainText('ATIVA');
     await expect(page.locator('#pageMsg')).toContainText('Campanha ativada com sucesso.');
     expect(state.saveCalls).toBe(1);
+  });
+
+  test('Campanha ativa oferece WhatsApp, copiar link/código e métricas de divulgação',async({page})=>{
+    const state={saved:true,paused:false,saveCalls:0,statusCalls:0,validationCalls:0,checkoutCalls:0,shareCalls:0,trafficCalls:0};
+    await page.addInitScript(()=>{
+      window.__opened='';
+      window.__copied='';
+      window.open=function(url){window.__opened=String(url||'');return {}};
+      try{Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async function(text){window.__copied=String(text||'')}}})}catch(_){}
+    });
+    await mock(page,state);await seed(page);
+    await page.goto('/cupons/?evento='+EVENT,{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#campaigns')).toContainText('Acessos pelo link');
+    await expect(page.locator('#campaigns')).toContainText('12');
+    await expect(page.locator('#campaigns')).toContainText('Conversão do link');
+    await expect(page.locator('#campaigns')).toContainText('25%');
+
+    await page.getByRole('button',{name:'WhatsApp'}).click();
+    await expect.poll(()=>state.shareCalls).toBe(1);
+    const opened=await page.evaluate(()=>window.__opened);
+    expect(decodeURIComponent(opened)).toContain('30ANOSSEMRAZAO');
+    expect(decodeURIComponent(opened)).toContain('Roda de Samba Estilo Carioca');
+    expect(decodeURIComponent(opened)).toContain('R$ 15,00');
+
+    await page.getByRole('button',{name:'Copiar link'}).click();
+    await expect.poll(()=>state.shareCalls).toBe(2);
+    const copiedLink=await page.evaluate(()=>window.__copied);
+    expect(copiedLink).toContain('/evento-v2/?evento='+encodeURIComponent(EVENT));
+    expect(copiedLink).toContain('cupom='+CODE);
+    expect(copiedLink).toContain('src=link');
+
+    await page.getByRole('button',{name:'Copiar código'}).click();
+    await expect.poll(()=>state.shareCalls).toBe(3);
+    await expect.poll(()=>page.evaluate(()=>window.__copied)).toBe(CODE);
+  });
+
+  test('Link compartilhado preserva campanha no evento e aplica cupom automaticamente no Checkout v2',async({page})=>{
+    const state={saved:true,paused:false,saveCalls:0,statusCalls:0,validationCalls:0,checkoutCalls:0,shareCalls:0,trafficCalls:0,lastCheckout:null};
+    await mock(page,state);
+    await page.goto('/evento-v2/?evento='+EVENT+'&cupom='+CODE+'&src=whatsapp',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#campaignNotice')).toBeVisible({timeout:15000});
+    await expect(page.locator('#campaignNotice')).toContainText(CODE);
+    await expect.poll(()=>state.trafficCalls).toBe(1);
+    const buy=await page.locator('#buyHero').getAttribute('href');
+    expect(buy).toContain('cupom='+CODE);
+    expect(buy).toContain('src=WHATSAPP');
+    expect(buy).toContain('csid=');
+
+    await page.goto('https://cariocaticket.com.br'+buy,{waitUntil:'domcontentloaded'});
+    await expect(page.getByText('Seus dados')).toBeVisible({timeout:15000});
+    await expect(page.locator('#couponCode')).toHaveValue(CODE);
+    await page.locator('#typeSelect').selectOption(TYPE_INDIVIDUAL);
+    await page.locator('#lotSelect').selectOption(LOT_INDIVIDUAL);
+    await expect.poll(()=>state.validationCalls).toBe(1);
+    await expect(page.locator('#promoTotal')).toHaveText(/15,00/);
+
+    await page.locator('#buyerName').fill('Cliente Link');
+    await page.locator('#buyerCpf').fill('12345678909');
+    await page.locator('#buyerWhatsapp').fill('81999990000');
+    await page.locator('#buyerEmail').fill('link@example.com');
+    await page.locator('#payButton').click();
+    await expect.poll(()=>state.checkoutCalls).toBe(1);
+    expect(state.lastCheckout.cupomCodigo).toBe(CODE);
+    expect(state.lastCheckout.campanhaOrigem).toBe('WHATSAPP');
+    expect(String(state.lastCheckout.campanhaSessaoId||'')).toMatch(/^CS-/);
   });
 
   test('Checkout valida no servidor, mostra R$25 - R$10 = R$15 e envia só o código',async({page})=>{
