@@ -85,7 +85,7 @@ requireText('fornecedor/index.html','id="logoutButton"','href="/ajuda/"','href="
 const checkin=read('checkin/index.html');
 if(/<iframe\b/i.test(checkin))failures.push('checkin/index.html: Check-in não pode voltar a ser wrapper por iframe');
 if(/github\.io/i.test(checkin))failures.push('checkin/index.html: referência github.io não permitida no Check-in oficial');
-requireText('checkin/index.html','/checkin/checkin.js','/checkin/checkin.css','id="backCentral"','href="/central/"');
+requireText('checkin/index.html','/checkin/checkin.js','/checkin/checkin.css','/manifest-checkin.webmanifest','id="backCentral"','href="/central/"');
 requireText('checkin/checkin.js','ct_checkin','credencial: credencialCheckin');
 if(!read('checkin/checkin.js').includes("STORAGE_CREDENCIAL_SESSION: 'ct_checkin_operacional_credencial_v1'")){
   failures.push('checkin/checkin.js: armazenamento de credencial operacional não protegido pelo contrato');
