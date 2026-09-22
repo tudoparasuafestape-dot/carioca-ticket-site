@@ -1,0 +1,5 @@
+const CACHE='carioca-ticket-v5';
+const FILES=['./','./index.html','./app.js','./styles.css','./painel.html','./painel.css','./painel.js','./manifest-painel.json','./carioca-ticket-icon-192.png','./carioca-ticket-icon-512.png','./carioca-ticket-icon-maskable-512.png'];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(FILES.map(f=>c.add(f).catch(()=>null)))));self.skipWaiting()});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))));self.clients.claim()});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.hostname.includes('script.google.com')||u.hostname.includes('googleusercontent.com'))return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(CACHE).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request).then(r=>r||(e.request.mode==='navigate'?caches.match('./painel.html'):Response.error()))))});
