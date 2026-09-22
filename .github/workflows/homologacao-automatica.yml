@@ -48,19 +48,25 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Aguardar publicacao do Programa Parceiro CT
+      - name: Aguardar publicacao da jornada publica candidata
         shell: bash
         run: |
-          for i in {1..48}; do
-            BODY="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/parceiro/programa/?deploy-check=1' || true)"
-            if printf '%s' "$BODY" | grep -q 'ctParceiroOnboardingConfigPublicaPROD'; then
-              echo "Programa Parceiro CT publicado."
+          for i in {1..72}; do
+            STAMP="$(date +%s)-$i"
+            HOME_BODY="$(curl -fsS --max-time 10 "https://cariocaticket.com.br/?deploy-check=$STAMP" || true)"
+            PARTNER_BODY="$(curl -fsS --max-time 10 "https://cariocaticket.com.br/parceiro/programa/?deploy-check=$STAMP" || true)"
+            HOME_OK=0
+            PARTNER_OK=0
+            if printf '%s' "$HOME_BODY" | grep -q 'id="producerPortalCta"'; then HOME_OK=1; fi
+            if printf '%s' "$PARTNER_BODY" | grep -q 'ctParceiroOnboardingConfigPublicaPROD'; then PARTNER_OK=1; fi
+            if [ "$HOME_OK" = "1" ] && [ "$PARTNER_OK" = "1" ]; then
+              echo "Jornada publica candidata propagada no dominio oficial."
               exit 0
             fi
-            echo "Aguardando GitHub Pages propagar o Programa Parceiro CT... tentativa $i/48"
+            echo "Aguardando propagacao da versao candidata... tentativa $i/72 (home=$HOME_OK parceiro=$PARTNER_OK)"
             sleep 5
           done
-          echo "::error::Programa Parceiro CT ainda nao foi publicado no dominio oficial."
+          echo "::error::A versao candidata da jornada publica nao propagou no dominio oficial."
           exit 1
 
       - name: Testar jornada publica publicada
