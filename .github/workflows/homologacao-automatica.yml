@@ -46,6 +46,21 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
+      - name: Aguardar publicacao do Programa Parceiro CT
+        shell: bash
+        run: |
+          for i in {1..48}; do
+            BODY="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/parceiro/programa/?deploy-check=1' || true)"
+            if printf '%s' "$BODY" | grep -q 'ctParceiroOnboardingConfigPublicaPROD'; then
+              echo "Programa Parceiro CT publicado."
+              exit 0
+            fi
+            echo "Aguardando GitHub Pages propagar o Programa Parceiro CT... tentativa $i/48"
+            sleep 5
+          done
+          echo "::error::Programa Parceiro CT ainda nao foi publicado no dominio oficial."
+          exit 1
+
       - name: Testar jornada publica publicada
         env:
           CT_BASE_URL: https://cariocaticket.com.br
@@ -53,9 +68,9 @@ jobs:
           CT_BRANCH_MODE: '0'
         run: |
           if [ "${{ matrix.viewport }}" = "desktop" ]; then
-            npx playwright test tests/e2e/public-journey.spec.js --project=desktop-chromium
+            npx playwright test tests/e2e/public-journey.spec.js tests/e2e/partner-public-production.spec.js --project=desktop-chromium
           else
-            npx playwright test tests/e2e/public-journey.spec.js --project=mobile-chromium
+            npx playwright test tests/e2e/public-journey.spec.js tests/e2e/partner-public-production.spec.js --project=mobile-chromium
           fi
       - name: Guardar evidencias
         if: failure()
@@ -140,9 +155,9 @@ jobs:
           CT_BRANCH_MODE: '1'
         run: |
           if [ "${{ matrix.viewport }}" = "desktop" ]; then
-            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js --project=desktop-chromium
+            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js --project=desktop-chromium
           else
-            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js --project=mobile-chromium
+            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js --project=mobile-chromium
           fi
       - name: Guardar evidencias
         if: failure()

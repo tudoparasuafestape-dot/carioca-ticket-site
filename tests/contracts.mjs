@@ -23,7 +23,14 @@ const protectedFiles = [
   'minha-carioca/conta/index.html',
   'minha-carioca/ingressos/index.html',
   'minha-carioca/acesso/index.html',
-  'minha-carioca/login/index.html'
+  'minha-carioca/login/index.html',
+  'parceiro/index.html',
+  'parceiro/programa/index.html',
+  'parceiro/admin/index.html',
+  'parceiro/ativar/index.html',
+  'parceiro/manual/index.html',
+  'parceiro/regulamento/index.html',
+  'parceiro/conduta/index.html'
 ];
 
 const errors = [];
@@ -348,6 +355,82 @@ for (const file of ['checkout/index.html', 'checkout-v2/index.html']) {
   }
 }
 
+
+const parceiroPortal = read('parceiro/index.html');
+if (parceiroPortal) {
+  if (!parceiroPortal.includes('Portal Parceiro CT')) {
+    fail('parceiro/index.html', 'Portal Parceiro CT existente foi descaracterizado');
+  }
+  if (!parceiroPortal.includes('/parceiro/programa/')) {
+    fail('parceiro/index.html', 'Portal Parceiro CT sem acesso ao novo programa publico');
+  }
+  if (!parceiroPortal.includes('ctParceiroCTLoginFirebasePROD')) {
+    fail('parceiro/index.html', 'login existente do Parceiro CT foi removido');
+  }
+}
+
+const parceiroPrograma = read('parceiro/programa/index.html');
+if (parceiroPrograma) {
+  for (const required of [
+    'Quero ser Parceiro CT',
+    'Já sou parceiro — acessar portal',
+    'ctParceiroOnboardingConfigPublicaPROD',
+    'ctParceiroOnboardingEnviarSolicitacaoPROD',
+    'accept-check',
+    'Copiar mensagem',
+    'Central de Materiais do Parceiro',
+    'id="anticipationFee"'
+  ]) {
+    if (!parceiroPrograma.includes(required)) {
+      fail('parceiro/programa/index.html', 'onboarding publico incompleto: ' + required);
+    }
+  }
+  if (/\b9,5%\b|\b9%\b|\b8,5%\b/i.test(parceiroPrograma)) {
+    fail('parceiro/programa/index.html', 'pagina publica expoe condicao comercial interna');
+  }
+  if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(parceiroPrograma)) {
+    fail('parceiro/programa/index.html', 'pagina publica usa dialogo nativo');
+  }
+}
+
+const parceiroAdmin = read('parceiro/admin/index.html');
+if (parceiroAdmin) {
+  for (const required of [
+    "ctMinhaCariocaAction','portalRpc'",
+    'ctParceiroOnboardingAdminListarPROD',
+    'ctParceiroOnboardingAdminDetalharPROD',
+    'ctParceiroOnboardingAdminDecidirPROD',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1'
+  ]) {
+    if (!parceiroAdmin.includes(required)) {
+      fail('parceiro/admin/index.html', 'backoffice Parceiro CT incompleto: ' + required);
+    }
+  }
+  if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(parceiroAdmin)) {
+    fail('parceiro/admin/index.html', 'backoffice Parceiro CT usa dialogo nativo');
+  }
+}
+
+const parceiroAtivar = read('parceiro/ativar/index.html');
+if (parceiroAtivar) {
+  for (const required of [
+    'ctParceiroOnboardingConsultarAtivacaoPROD',
+    'ctParceiroOnboardingPrepararAtivacaoPROD',
+    'ctParceiroOnboardingAtivarPROD',
+    'createUserWithEmailAndPassword',
+    'sendEmailVerification',
+    'getIdToken'
+  ]) {
+    if (!parceiroAtivar.includes(required)) {
+      fail('parceiro/ativar/index.html', 'ativacao Parceiro CT incompleta: ' + required);
+    }
+  }
+}
+
+const parceiroRegulamento = read('parceiro/regulamento/index.html');
+if (parceiroRegulamento && !parceiroRegulamento.includes('revisão jurídica')) {
+  fail('parceiro/regulamento/index.html', 'regulamento nao identifica status de revisao juridica');
+}
 
 const reembolsos = read('reembolsos/index.html');
 if (reembolsos) {
