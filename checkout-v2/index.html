@@ -453,6 +453,7 @@
       }
 
       function registrarAcessoCampanha(){
+        if(state.campanhaOrigem==='CANARIO')return;
         if(!state.cupomDoLink||!state.campanhaSessaoId)return;
         google.script.run
           .withSuccessHandler(function(){})
