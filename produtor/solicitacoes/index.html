@@ -27,7 +27,7 @@
 <body>
 <header class="top"><div class="topin">
  <div class="brand"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket"><div><b>Solicitações de Produtores</b><small>Backoffice Carioca Ticket</small></div></div>
- <nav class="nav"><a class="btn" href="/parceiro/admin/">Parceiros CT</a><a class="btn" href="/produtor/">Portal do Produtor</a></nav>
+ <nav class="nav"><a class="btn" href="/parceiro/">Portal Parceiro CT</a><a class="btn" href="/parceiro/admin/">Gestão Parceiros CT</a><a class="btn" href="/produtor/">Portal do Produtor</a><button id="logoutAdminButton" class="btn" type="button">Sair</button></nav>
 </div></header>
 
 <div id="gate" class="gate"><div class="gatebox"><img src="/assets/carioca-ticket-logo.png" alt=""><h1>Validando acesso</h1><p id="gateText">Conferindo sua sessão administrativa.</p></div></div>
@@ -137,9 +137,11 @@ async function doAction(){
  finally{state.busy=false;document.getElementById('confirmAction').disabled=false}
 }
 
+async function logoutAdmin(){if(state.busy)return;state.busy=true;var token=state.session&&state.session.token?String(state.session.token):'';try{if(token)await rpc('logoutUsuarioCT2',[token])}catch(_){ }finally{try{sessionStorage.removeItem(STORAGE);localStorage.removeItem(STORAGE)}catch(_){ }state.session=null;window.location.replace('/produtor/')}}
 document.getElementById('filterButton').addEventListener('click',load);
 document.getElementById('cancelAction').addEventListener('click',closeAction);
 document.getElementById('confirmAction').addEventListener('click',doAction);
+document.getElementById('logoutAdminButton').addEventListener('click',logoutAdmin);
 state.session=readSession();if(!state.session){document.getElementById('gateText').textContent='Entre no Portal do Produtor com uma conta administradora antes de abrir esta página.'}else load();
 }());
 </script>
