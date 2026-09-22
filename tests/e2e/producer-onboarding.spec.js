@@ -64,6 +64,10 @@ async function installRpcMock(page, state) {
         state.submitted = true;
         state.status = 'ENVIADO';
         resultado = {sucesso:true,jaExistia:false,solicitacao:requestFixture('ENVIADO')};
+      } else if (method === 'logoutUsuarioCT2') {
+        expect(String(args[0] || '')).toBe(state.userToken);
+        state.logoutCalls += 1;
+        resultado = {sucesso:true};
       } else if (method === 'ctProdutorOnboardingAdminListarPROD') {
         expect(String(args[0] || '')).toBe(state.adminToken);
         const s=state.status;
@@ -153,7 +157,8 @@ test.describe('Onboarding do Produtor indicado', () => {
       status:'',
       submitCalls:0,
       lastSubmit:null,
-      adminActions:[]
+      adminActions:[],
+      logoutCalls:0
     };
 
     await installRpcMock(page,state);
@@ -201,5 +206,41 @@ test.describe('Onboarding do Produtor indicado', () => {
     await expect(page.locator('#cActive')).toHaveText('1');
 
     expect(state.adminActions).toEqual(['INICIAR_ANALISE','APROVAR']);
+  });
+
+  test('permite sair do onboarding sem loopar de volta para a mesma sessao', async ({ page }) => {
+    const state={
+      userToken:'CT-E2E-USER',
+      adminToken:'CT-E2E-ADMIN',
+      submitted:true,
+      status:'ENVIADO',
+      submitCalls:0,
+      lastSubmit:null,
+      adminActions:[],
+      logoutCalls:0
+    };
+
+    await installRpcMock(page,state);
+
+    await page.goto('/', {waitUntil:'domcontentloaded'});
+    await page.evaluate(({storage,token}) => {
+      const value=JSON.stringify({token,expiraEm:'2099-01-01T00:00:00.000Z'});
+      sessionStorage.setItem(storage,value);
+      localStorage.setItem(storage,value);
+    }, {storage:STORAGE,token:state.userToken});
+
+    await page.goto('/produtor/solicitar/', {waitUntil:'domcontentloaded'});
+    await expect(page.locator('#logoutButton')).toBeVisible({timeout:15000});
+    await page.locator('#logoutButton').click();
+
+    await expect.poll(() => state.logoutCalls).toBe(1);
+    await page.waitForURL(/\/produtor\/?(?:\?.*)?$/, {timeout:15000});
+
+    const stored=await page.evaluate(storage => ({
+      session:sessionStorage.getItem(storage),
+      local:localStorage.getItem(storage)
+    }), STORAGE);
+    expect(stored.session).toBeNull();
+    expect(stored.local).toBeNull();
   });
 });

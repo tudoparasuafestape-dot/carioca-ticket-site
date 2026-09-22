@@ -322,6 +322,10 @@ if (produtorSolicitar) {
     'ctProdutorOnboardingEnviarPROD',
     'Indicação ',
     'Enviar para análise',
+    'id="logoutButton"',
+    "rpc('logoutUsuarioCT2'",
+    'sessionStorage.removeItem(STORAGE)',
+    'localStorage.removeItem(STORAGE)',
     '/produtor/'
   ]) {
     if (!produtorSolicitar.includes(required)) {
