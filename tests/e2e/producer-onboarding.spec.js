@@ -70,7 +70,7 @@ async function installRpcMock(page, state) {
         resultado = {sucesso:true};
       } else if (method === 'ctProdutorOnboardingAdminListarPROD') {
         expect(String(args[0] || '')).toBe(state.adminToken);
-        const s=state.status;
+        const s=(state.staleListAfterDecision&&state.adminActions.length)?state.previousStatus:state.status;
         resultado = {
           sucesso:true,autorizado:true,admin:{usuarioId:'USR-ADMIN',nome:'Administrador',perfil:'ADMINISTRADOR'},
           contagem:{
@@ -103,6 +103,7 @@ async function installRpcMock(page, state) {
       } else if (method === 'ctProdutorOnboardingAdminDecidirPROD') {
         expect(String(args[0] || '')).toBe(state.adminToken);
         const actionName=String(args[2]||'');
+        state.previousStatus=state.status;
         state.adminActions.push(actionName);
         if(actionName==='INICIAR_ANALISE'){
           state.status='EM_ANALISE';
@@ -162,7 +163,9 @@ test.describe('Onboarding do Produtor indicado', () => {
       adminActions:[],
       logoutCalls:0,
       detailCalls:0,
-      staleDetailAfterDecision:true
+      staleDetailAfterDecision:true,
+      staleListAfterDecision:true,
+      previousStatus:''
     };
 
     await installRpcMock(page,state);
@@ -202,6 +205,8 @@ test.describe('Onboarding do Produtor indicado', () => {
     await page.locator('#confirmAction').click();
     await expect.poll(() => state.status).toBe('EM_ANALISE');
     await expect(page.locator('#detailStatus')).toHaveText('EM ANÁLISE', {timeout:15000});
+    await expect(page.locator('#cSent')).toHaveText('0');
+    await expect(page.locator('#cReview')).toHaveText('1');
     await expect(page.getByRole('button',{name:'Aprovar e ativar'})).toBeVisible();
     expect(state.detailCalls).toBe(1);
 
@@ -209,6 +214,7 @@ test.describe('Onboarding do Produtor indicado', () => {
     await page.locator('#confirmAction').click();
     await expect.poll(() => state.status).toBe('ATIVO');
     await expect(page.locator('#detailStatus')).toHaveText('ATIVO', {timeout:15000});
+    await expect(page.locator('#cReview')).toHaveText('0');
     await expect(page.locator('#cActive')).toHaveText('1');
 
     expect(state.adminActions).toEqual(['INICIAR_ANALISE','APROVAR']);
