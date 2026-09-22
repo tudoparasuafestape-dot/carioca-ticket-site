@@ -125,7 +125,7 @@ async function installBackendMock(page, state) {
     await route.fulfill({
       status: 200,
       contentType: 'text/html; charset=utf-8',
-      body: '<!doctype html><html><body><script>window.top.postMessage(' + payload + ', "*");<\\/script></body></html>'
+      body: '<!doctype html><html><body><script>window.top.postMessage(' + payload + ', "*");</script></body></html>'
     });
   });
 }
