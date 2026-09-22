@@ -356,7 +356,9 @@ if (produtorSolicitacoes) {
     'REPROVAR',
     'Aprovar e ativar',
     'load({skipDetail:true})',
-    'state.selected=r.solicitacao',
+    'function reconcileDecisionState',
+    'adjustCounter(antigo,-1)',
+    'adjustCounter(novo,1)',
     'renderList();renderDetail()'
   ]) {
     if (!produtorSolicitacoes.includes(required)) {
