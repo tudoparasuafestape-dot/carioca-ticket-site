@@ -4186,7 +4186,17 @@ el.helloName.textContent =
 'Olá, ' +
 nome;
 
+var perfilGlobal =
+String(
+state.usuario &&
+state.usuario.perfil ||
+''
+)
+.trim()
+.toUpperCase();
+
 var podeGerirParceiros =
+perfilGlobal === 'ADMINISTRADOR' ||
 state.produtores.some(
 function(p){
 var perfil =
