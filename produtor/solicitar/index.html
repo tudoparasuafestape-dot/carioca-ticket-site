@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#08090c">
+<title>Cadastro de Produtor | Carioca Ticket</title>
+<link rel="icon" href="/assets/carioca-ticket-icon-192.png">
+<style>
+:root{--bg:#07080a;--card:#111319;--card2:#0c0e13;--text:#f5f1e9;--muted:#9ca0aa;--gold:#e8b33f;--gold2:#ffd66e;--border:#2a2e38;--ok:#65d59b;--bad:#ff9aa7;--warn:#f2cf72}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% -10%,rgba(232,179,63,.16),transparent 34%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{min-height:100vh}.hidden{display:none!important}
+.top{border-bottom:1px solid rgba(255,255,255,.08);background:rgba(7,8,10,.94);position:sticky;top:0;z-index:5}
+.topin{max-width:850px;margin:auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:54px;height:54px;object-fit:contain}.brand b{display:block;font-size:18px}.brand small{display:block;color:var(--muted);margin-top:2px}
+.btn{border:1px solid var(--border);background:#14171d;color:var(--text);border-radius:14px;min-height:46px;padding:0 18px;font:inherit;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.btn.gold{background:linear-gradient(135deg,#f6c84e,#dca928);color:#16120a;border-color:rgba(255,214,110,.55)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.wrap{max-width:850px;margin:auto;padding:28px 18px 60px}.hero{border:1px solid rgba(232,179,63,.34);border-radius:28px;background:linear-gradient(145deg,rgba(232,179,63,.10),rgba(17,19,25,.96) 38%);padding:28px}
+.eyebrow{color:var(--gold2);font-size:12px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.hero h1{font-size:clamp(34px,7vw,58px);line-height:1.04;margin:13px 0}.hero p{color:var(--muted);font-size:17px;line-height:1.6;margin:0;max-width:650px}
+.ref{margin-top:20px;display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(101,213,155,.25);background:rgba(101,213,155,.08);color:#9fe8bf;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800}
+.card{margin-top:20px;border:1px solid var(--border);background:var(--card);border-radius:24px;padding:24px}.card h2{margin:0 0 6px;font-size:25px}.desc{color:var(--muted);line-height:1.55;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:800;color:#d6d7db}.field input{width:100%;min-height:52px;border-radius:14px;border:1px solid var(--border);background:var(--card2);color:var(--text);padding:0 14px;font:inherit;outline:none}.field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,179,63,.09)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.message{margin-top:16px;border-radius:15px;padding:14px 15px;line-height:1.5;font-size:13px}.message.info{background:rgba(242,207,114,.08);border:1px solid rgba(242,207,114,.25);color:#f4dda1}.message.ok{background:rgba(101,213,155,.08);border:1px solid rgba(101,213,155,.25);color:#a7eac5}.message.bad{background:rgba(255,154,167,.08);border:1px solid rgba(255,154,167,.25);color:#ffb7c0}
+.statusbox{display:grid;grid-template-columns:auto 1fr;gap:15px;align-items:start}.badge{display:inline-flex;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:900;letter-spacing:.05em;background:rgba(242,207,114,.09);color:var(--warn);border:1px solid rgba(242,207,114,.2)}.badge.ok{background:rgba(101,213,155,.09);color:var(--ok);border-color:rgba(101,213,155,.2)}.statusbox h3{margin:0;font-size:21px}.statusbox p{color:var(--muted);line-height:1.55;margin:7px 0 0}
+.loading{position:fixed;inset:0;background:rgba(3,4,6,.78);backdrop-filter:blur(7px);display:grid;place-items:center;z-index:20}.loadbox{background:#101217;border:1px solid var(--border);border-radius:18px;padding:20px 24px;display:flex;align-items:center;gap:12px}.spinner{width:25px;height:25px;border:3px solid rgba(255,255,255,.12);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:650px){.topin{padding:10px 14px}.brand img{width:44px;height:44px}.brand b{font-size:15px}.wrap{padding:20px 14px 50px}.hero,.card{border-radius:22px;padding:20px}.grid{grid-template-columns:1fr}.field.full{grid-column:auto}.actions{display:grid}.actions .btn{width:100%}.statusbox{grid-template-columns:1fr}}
+</style>
+<script src="/pwa-register.js" defer></script>
+</head>
+<body>
+<header class="top"><div class="topin">
+  <div class="brand"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket"><div><b>Carioca Ticket</b><small>Cadastro de Produtor</small></div></div>
+  <a class="btn" href="/produtor/">Portal</a>
+</div></header>
+
+<main class="wrap">
+<section class="hero">
+  <div class="eyebrow">Onboarding seguro</div>
+  <h1>Complete seu cadastro de produtor</h1>
+  <p>Sua conta já foi criada. Agora precisamos dos dados da sua operação para liberar o Portal do Produtor. O acesso só é ativado após análise da Carioca Ticket.</p>
+  <div id="refBadge" class="ref hidden"></div>
+</section>
+
+<section id="statusCard" class="card hidden">
+  <div class="statusbox">
+    <span id="statusBadge" class="badge">STATUS</span>
+    <div><h3 id="statusTitle">Solicitação recebida</h3><p id="statusText"></p></div>
+  </div>
+  <div id="pendingPublic" class="message info hidden"></div>
+  <div class="actions">
+    <button id="refreshStatus" class="btn gold" type="button">Atualizar status</button>
+    <a id="goPortal" class="btn hidden" href="/produtor/">Acessar Portal do Produtor</a>
+  </div>
+</section>
+
+<section id="formCard" class="card hidden">
+  <h2>Dados do produtor</h2>
+  <div class="desc">Informe os dados da empresa, marca ou atuação profissional que utilizará a Carioca Ticket.</div>
+  <form id="producerForm">
+    <div class="grid">
+      <div class="field"><label for="nomeFantasia">Nome da empresa / marca</label><input id="nomeFantasia" required maxlength="200" autocomplete="organization"></div>
+      <div class="field"><label for="razaoSocial">Razão social (se houver)</label><input id="razaoSocial" maxlength="250" autocomplete="organization-title"></div>
+      <div class="field"><label for="cpfCnpj">CPF ou CNPJ do responsável/empresa</label><input id="cpfCnpj" required maxlength="18" inputmode="numeric" autocomplete="off"></div>
+      <div class="field"><label for="whatsapp">WhatsApp</label><input id="whatsapp" required maxlength="20" inputmode="tel" autocomplete="tel"></div>
+      <div class="field"><label for="cidade">Cidade</label><input id="cidade" required maxlength="150" autocomplete="address-level2"></div>
+      <div class="field"><label for="uf">UF</label><input id="uf" required maxlength="2" autocomplete="address-level1" placeholder="PE"></div>
+      <div class="field full"><label for="instagram">Instagram / rede profissional (opcional)</label><input id="instagram" maxlength="150" autocomplete="off" placeholder="@seuperfil"></div>
+    </div>
+    <div class="actions"><button id="submitButton" class="btn gold" type="submit">Enviar para análise</button></div>
+    <div id="formMessage" class="message hidden"></div>
+  </form>
+</section>
+</main>
+
+<div id="loading" class="loading"><div class="loadbox"><span class="spinner"></span><strong id="loadingText">Validando sua conta...</strong></div></div>
+
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1',pending={},session=null,current=null;
+
+function esc(v){return String(v==null?'':v)}
+function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){return new Promise(function(resolve,reject){var id='PRODONB-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='prodonb_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var x=document.createElement('input');x.type='hidden';x.name=k;x.value=String(v==null?'':v);form.appendChild(x)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},45000)};form.submit()})}
+window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível concluir a operação.')))});
+
+function setLoading(on,text){document.getElementById('loading').classList.toggle('hidden',on!==true);if(text)document.getElementById('loadingText').textContent=text}
+function msg(text,type){var e=document.getElementById('formMessage');e.textContent=text||'';e.className='message '+(type||'bad');e.classList.toggle('hidden',!text)}
+function humanStatus(s){return {ENVIADO:'ENVIADO',EM_ANALISE:'EM ANÁLISE',PENDENCIA:'PENDÊNCIA',REPROVADO:'REPROVADO',APROVANDO:'APROVANDO',ATIVO:'ATIVO'}[String(s||'').toUpperCase()]||String(s||'')}
+function statusCopy(s){s=String(s||'').toUpperCase();if(s==='ENVIADO')return['Solicitação recebida','Seus dados foram enviados e aguardam início da análise.'];if(s==='EM_ANALISE')return['Cadastro em análise','A Carioca Ticket está revisando os dados da sua operação.'];if(s==='PENDENCIA')return['Precisamos de um ajuste','Revise a pendência informada e reenvie seu cadastro.'];if(s==='REPROVADO')return['Cadastro não aprovado','Você pode revisar os dados e enviar uma nova análise.'];if(s==='APROVANDO')return['Concluindo liberação','A liberação está sendo processada. Atualize em alguns instantes.'];if(s==='ATIVO')return['Produtor liberado','Seu produtor já está ativo. Você pode acessar o Portal do Produtor.'];return['Complete seu cadastro','Envie os dados para análise.']}
+
+function fillForm(s){s=s||{};['nomeFantasia','razaoSocial','cpfCnpj','whatsapp','cidade','uf','instagram'].forEach(function(k){if(s[k]!=null)document.getElementById(k).value=String(s[k]||'')})}
+function render(r){
+  if(r&&r.possuiProdutor===true){location.replace('/produtor/');return}
+  var ind=r&&r.indicacao?r.indicacao:null;
+  var ref=document.getElementById('refBadge');
+  if(ind&&ind.codigoIndicacao){ref.textContent='✓ Indicação '+ind.codigoIndicacao+' preservada';ref.classList.remove('hidden')}else ref.classList.add('hidden');
+
+  current=r&&r.solicitacao?r.solicitacao:null;
+  var form=document.getElementById('formCard'),status=document.getElementById('statusCard');
+  if(!current){status.classList.add('hidden');form.classList.remove('hidden');return}
+  var s=String(current.status||'').toUpperCase(),copy=statusCopy(s);
+  document.getElementById('statusBadge').textContent=humanStatus(s);
+  document.getElementById('statusBadge').className='badge'+(s==='ATIVO'?' ok':'');
+  document.getElementById('statusTitle').textContent=copy[0];
+  document.getElementById('statusText').textContent=copy[1];
+  var p=document.getElementById('pendingPublic');
+  p.textContent=current.pendenciaPublica||'';p.classList.toggle('hidden',!current.pendenciaPublica);
+  document.getElementById('goPortal').classList.toggle('hidden',s!=='ATIVO');
+  status.classList.remove('hidden');
+
+  if(['PENDENCIA','REPROVADO'].indexOf(s)>=0){fillForm(current);form.classList.remove('hidden');document.getElementById('submitButton').textContent='Reenviar para análise'}
+  else form.classList.add('hidden');
+}
+
+async function load(){
+  session=readSession();
+  if(!session){location.replace('/produtor/');return}
+  setLoading(true,'Consultando seu cadastro...');
+  try{var r=await rpc('ctProdutorOnboardingConsultarPROD',[session.token]);if(!r||r.sucesso!==true)throw new Error('Não foi possível consultar o cadastro.');render(r)}
+  catch(e){msg(e&&e.message?e.message:String(e),'bad');document.getElementById('formCard').classList.remove('hidden')}
+  finally{setLoading(false)}
+}
+
+document.getElementById('refreshStatus').addEventListener('click',load);
+document.getElementById('producerForm').addEventListener('submit',async function(ev){
+  ev.preventDefault();msg('');
+  var data={nomeFantasia:document.getElementById('nomeFantasia').value,razaoSocial:document.getElementById('razaoSocial').value,cpfCnpj:document.getElementById('cpfCnpj').value,whatsapp:document.getElementById('whatsapp').value,cidade:document.getElementById('cidade').value,uf:String(document.getElementById('uf').value||'').toUpperCase(),instagram:document.getElementById('instagram').value};
+  var b=document.getElementById('submitButton');b.disabled=true;setLoading(true,'Enviando para análise...');
+  try{var r=await rpc('ctProdutorOnboardingEnviarPROD',[session.token,data]);if(!r||r.sucesso!==true)throw new Error('Não foi possível enviar a solicitação.');msg('Cadastro enviado para análise.','ok');await load()}
+  catch(e){var m=String(e&&e.message||e||'');if(m.indexOf('DOCUMENTO_INVALIDO')>=0)m='Informe um CPF ou CNPJ válido.';else if(m.indexOf('WHATSAPP_INVALIDO')>=0)m='Informe um WhatsApp válido.';else if(m.indexOf('JA_POSSUI_PRODUTOR')>=0){location.replace('/produtor/');return}msg(m,'bad')}
+  finally{setLoading(false);b.disabled=false}
+});
+load();
+}());
+</script>
+</body>
+</html>
