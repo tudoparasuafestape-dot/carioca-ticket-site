@@ -37,3 +37,8 @@ Somente o segundo nível autoriza tratar uma jornada como pronta para uso real.
 O arquivo `tests/journey-contracts.mjs` protege o grafo crítico de navegação.
 O arquivo `tests/e2e/navigation-journey.spec.js` valida a jornada clicável em desktop e mobile.
 Novos módulos críticos devem entrar nesses gates antes de serem considerados homologados.
+
+## Homologação pós-deploy
+
+- Auditoria sistêmica 22/09/2026: branch candidata aprovada com 49/49 testes em desktop e 49/49 em mobile.
+- Este registro é também o marcador de revalidação pós-publicação: não altera código do aplicativo.
