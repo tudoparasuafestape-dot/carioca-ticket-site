@@ -91,7 +91,20 @@
     .card-box{text-align:center}
     .secure-card-note{margin:10px auto 16px;max-width:560px;color:#475467;font-size:12px;line-height:1.5}
     .card-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
-    @media(max-width:640px){.payment-methods{grid-template-columns:1fr}}
+    .coupon-wrap{margin-top:12px;border:1px solid #e4e7ec;border-radius:14px;background:#fafafa;overflow:hidden}
+    .coupon-toggle{width:100%;min-height:44px;border:0;border-radius:0;background:transparent;color:#344054;text-align:left;padding:0 13px;font-size:12px;font-weight:850}
+    .coupon-body{padding:0 13px 13px}
+    .coupon-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+    .coupon-row input{min-height:43px;border:1px solid #d0d5dd;border-radius:11px;padding:0 11px;text-transform:uppercase;outline:none;background:#fff}
+    .coupon-row button{min-height:43px;padding:0 15px}
+    .coupon-message{margin-top:8px;font-size:11px;line-height:1.45}
+    .coupon-message.ok{color:#067647}.coupon-message.err{color:#b42318}.coupon-message.info{color:#475467}
+    .coupon-remove{display:inline-flex;margin-top:7px;border:0;background:transparent;color:#b42318;padding:0;min-height:auto;font-size:10px;text-decoration:underline}
+    .promo-breakdown{width:100%;margin-top:10px;border-top:1px solid #eaecf0;padding-top:9px}
+    .promo-line{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#475467;margin-top:5px}
+    .promo-line strong{color:#101828}.promo-line.discount strong{color:#067647}
+    .promo-line.total{font-size:13px;font-weight:900;margin-top:8px;padding-top:8px;border-top:1px dashed #d0d5dd}
+    @media(max-width:640px){.payment-methods{grid-template-columns:1fr}.coupon-row{grid-template-columns:1fr}.coupon-row button{width:100%}}
 
   </style>
   <script src="/pwa-register.js" defer></script>
@@ -252,8 +265,26 @@
         </div>
       </div>
       <div id="summary" class="ticket-summary hidden">
-        <div><small>SEU PEDIDO</small><b id="summaryTitle">—</b><div id="summaryAccess" class="help"></div></div>
-        <div style="text-align:right"><small>TOTAL</small><b id="summaryPrice">R$ 0,00</b></div>
+        <div style="min-width:0"><small>SEU PEDIDO</small><b id="summaryTitle">—</b><div id="summaryAccess" class="help"></div>
+          <div id="promoBreakdown" class="promo-breakdown hidden">
+            <div class="promo-line"><span>Valor original</span><strong id="promoOriginal">R$ 0,00</strong></div>
+            <div class="promo-line discount"><span id="promoCodeLabel">Cupom</span><strong id="promoDiscount">- R$ 0,00</strong></div>
+            <div id="promoFeeLine" class="promo-line hidden"><span>Taxa do evento</span><strong id="promoFee">R$ 0,00</strong></div>
+            <div class="promo-line total"><span>Total final</span><strong id="promoTotal">R$ 0,00</strong></div>
+          </div>
+        </div>
+        <div id="summarySimpleTotal" style="text-align:right"><small>TOTAL</small><b id="summaryPrice">R$ 0,00</b></div>
+      </div>
+      <div id="couponWrap" class="coupon-wrap hidden">
+        <button id="couponToggle" class="coupon-toggle" type="button" aria-expanded="false">Tem um cupom?</button>
+        <div id="couponBody" class="coupon-body hidden">
+          <div class="coupon-row">
+            <input id="couponCode" maxlength="40" autocomplete="off" placeholder="DIGITE SEU CUPOM" aria-label="Cupom de desconto">
+            <button id="applyCoupon" class="secondary" type="button">Aplicar</button>
+          </div>
+          <div id="couponMessage" class="coupon-message info"></div>
+          <button id="removeCoupon" class="coupon-remove hidden" type="button">Remover cupom</button>
+        </div>
       </div>
       <div id="participants"></div>
     </section>
@@ -362,13 +393,16 @@
         expiryTimer:null,
         busy:false,
         paymentMethod:'PIX',
-        emailRequired:true
+        emailRequired:true,
+        coupon:null,
+        couponBusy:false
       };
 
       var el={};
       [
         'loading','loadingTitle','loadingText','eventName','eventMeta','eventDescription','eventBack','checkoutCover','checkoutCoverImage','salePanel','buyerPanel','payActionPanel',
-        'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',
+        'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','summarySimpleTotal','promoBreakdown','promoOriginal','promoCodeLabel','promoDiscount','promoFeeLine','promoFee','promoTotal','participants',
+        'couponWrap','couponToggle','couponBody','couponCode','applyCoupon','couponMessage','removeCoupon',
         'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','buyerEmailLabel','buyerEmailHelp','marketing','paymentPix','paymentCard','payButton','payHelp',
         'pixPanel','pixStatus','qrImage','pixCode','copyButton','refreshButton','expiryText',
         'cardPanel','cardStatus','cardPaymentLink','cardRefreshButton','cardExpiryText',
@@ -573,11 +607,113 @@
         return Math.max(1,Math.min(20,isFinite(q)?q:1));
       }
 
+      function couponContextValid(){
+        if(!state.coupon||!state.type||!state.lot)return false;
+        return String(state.coupon.tipoId||'')===String(state.type.id||'') &&
+          String(state.coupon.loteId||'')===String(state.lot.id||'') &&
+          Number(state.coupon.quantidadeVendas||0)===quantity() &&
+          String(state.coupon.formaPagamento||'')===String(state.paymentMethod||'PIX');
+      }
+
+      function showCouponMessage(text,type){
+        el.couponMessage.textContent=text||'';
+        el.couponMessage.className='coupon-message '+(type||'info');
+      }
+
+      function clearCoupon(showNotice){
+        if(state.coupon){
+          state.coupon=null;
+          clearIdempotency();
+        }
+        el.removeCoupon.classList.add('hidden');
+        el.promoBreakdown.classList.add('hidden');
+        el.summarySimpleTotal.classList.remove('hidden');
+        if(showNotice){
+          showCouponMessage('O cupom foi removido. Reaplique depois de alterar ingresso, lote, quantidade ou forma de pagamento.','info');
+        }else{
+          showCouponMessage('','info');
+        }
+        updateSummary();
+      }
+
+      function invalidateCouponForChange(){
+        if(state.coupon)clearCoupon(true);
+      }
+
+      function applyCoupon(){
+        if(state.couponBusy||state.busy)return;
+        if(!state.type||!state.lot){
+          showCouponMessage('Selecione o ingresso e o lote antes de aplicar o cupom.','err');
+          return;
+        }
+        var codigo=String(el.couponCode.value||'').trim().toUpperCase();
+        if(!codigo){
+          showCouponMessage('Digite seu cupom.','err');
+          return;
+        }
+        state.couponBusy=true;
+        el.applyCoupon.disabled=true;
+        el.applyCoupon.textContent='Validando...';
+        showCouponMessage('Validando cupom com o servidor...','info');
+
+        google.script.run
+          .withSuccessHandler(function(res){
+            state.couponBusy=false;
+            el.applyCoupon.disabled=false;
+            el.applyCoupon.textContent='Aplicar';
+            if(!res||res.valido!==true||!res.beneficio){
+              state.coupon=null;
+              el.removeCoupon.classList.add('hidden');
+              showCouponMessage(res&&res.mensagem?res.mensagem:'Não foi possível aplicar este cupom.','err');
+              updateSummary();
+              return;
+            }
+            state.coupon={
+              codigo:String(res.codigo||codigo),
+              campanhaId:String(res.campanhaId||''),
+              nome:String(res.nome||''),
+              beneficio:res.beneficio,
+              tipoId:String(state.type.id||''),
+              loteId:String(state.lot.id||''),
+              quantidadeVendas:quantity(),
+              formaPagamento:String(state.paymentMethod||'PIX')
+            };
+            clearIdempotency();
+            el.couponCode.value=state.coupon.codigo;
+            el.removeCoupon.classList.remove('hidden');
+            showCouponMessage(
+              (res.mensagem||'Cupom aplicado!')+' Você ganhou '+money(Number(res.beneficio.descontoTotal||0))+' de desconto.',
+              'ok'
+            );
+            updateSummary();
+          })
+          .withFailureHandler(function(){
+            state.couponBusy=false;
+            el.applyCoupon.disabled=false;
+            el.applyCoupon.textContent='Aplicar';
+            state.coupon=null;
+            el.removeCoupon.classList.add('hidden');
+            showCouponMessage('Não foi possível validar o cupom agora. Tente novamente.','err');
+            updateSummary();
+          })
+          .ctCupomPublicoValidarPROD({
+            eventoId:state.eventId,
+            tipoId:state.type.id,
+            loteId:state.lot.id,
+            quantidadeVendas:quantity(),
+            codigo:codigo,
+            formaPagamento:state.paymentMethod,
+            compradorDocumento:onlyDigits(el.buyerCpf.value),
+            compradorWhatsapp:onlyDigits(el.buyerWhatsapp.value)
+          });
+      }
+
       function updateSummary(){
         var q=quantity();
         el.quantity.value=q;
         if(!state.type||!state.lot){
           el.summary.classList.add('hidden');
+          el.couponWrap.classList.add('hidden');
           el.participants.innerHTML='';
           return;
         }
@@ -586,12 +722,30 @@
         var accesses=q*accessPer;
         var total=q*Number(state.lot.precoNumero||0);
 
+        el.couponWrap.classList.remove('hidden');
+
         if(state.lot.quantidadeLimitada && accesses>Number(state.lot.disponiveis||0)){
           el.summaryTitle.textContent='Quantidade indisponível';
           el.summaryPrice.textContent='—';
+          el.promoBreakdown.classList.add('hidden');
+          el.summarySimpleTotal.classList.remove('hidden');
         }else{
           el.summaryTitle.textContent=q+' × '+state.type.nome+' · '+state.lot.nome;
-          el.summaryPrice.textContent=money(total);
+          if(couponContextValid()){
+            var b=state.coupon.beneficio||{};
+            el.promoOriginal.textContent=money(Number(b.subtotalOriginal||total));
+            el.promoCodeLabel.textContent='Cupom '+state.coupon.codigo;
+            el.promoDiscount.textContent='- '+money(Number(b.descontoTotal||0));
+            el.promoTotal.textContent=money(Number(b.totalFinal||0));
+            el.summaryPrice.textContent=money(Number(b.totalFinal||0));
+            el.promoFeeLine.classList.add('hidden');
+            el.promoBreakdown.classList.remove('hidden');
+            el.summarySimpleTotal.classList.add('hidden');
+          }else{
+            el.summaryPrice.textContent=money(total);
+            el.promoBreakdown.classList.add('hidden');
+            el.summarySimpleTotal.classList.remove('hidden');
+          }
         }
 
         el.summaryAccess.textContent=accesses+(accesses===1?' acesso':' acessos');
@@ -709,6 +863,7 @@
           aceitaComunicacoes:el.marketing.checked===true,
           participantes:participants(),
           formaPagamento:state.paymentMethod,
+          cupomCodigo:state.coupon&&couponContextValid()?String(state.coupon.codigo||''):'',
           idempotenciaChave:getOrCreateIdempotency()
         };
 
@@ -751,6 +906,13 @@
         if(m.indexOf('EVENTO_SEM_CAPACIDADE')>=0)return 'A capacidade disponível deste evento foi atingida.';
         if(m.indexOf('LIMITE_TENTATIVAS')>=0)return 'Foram feitas muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar novamente.';
         if(m.indexOf('DOCUMENTO_INVALIDO')>=0)return 'Confira o CPF/CNPJ informado.';
+        if(m.indexOf('CT_CUPOM_PAUSADO')>=0)return 'Esta campanha está temporariamente pausada. Remova o cupom ou tente novamente mais tarde.';
+        if(m.indexOf('CT_CUPOM_EXPIRADO')>=0)return 'Este cupom expirou. Remova o cupom para continuar.';
+        if(m.indexOf('CT_CUPOM_ESGOTADO')>=0)return 'Esta promoção atingiu o limite disponível. Remova o cupom para continuar.';
+        if(m.indexOf('CT_CUPOM_ENCERRADO')>=0)return 'Esta campanha foi encerrada. Remova o cupom para continuar.';
+        if(m.indexOf('CT_CUPOM_LIMITE_COMPRADOR')>=0)return 'Este cupom já atingiu o limite permitido para este comprador.';
+        if(m.indexOf('CT_CUPOM_INGRESSO_NAO_ELEGIVEL')>=0||m.indexOf('CT_CUPOM_LOTE_NAO_ELEGIVEL')>=0)return 'Este cupom não é válido para o ingresso selecionado.';
+        if(m.indexOf('CT_CUPOM')>=0)return 'O cupom não pôde ser aplicado. Revise a promoção e tente novamente.';
         if(m.indexOf('CHECKOUT_PUBLICO')>=0)return 'A venda online deste evento está temporariamente indisponível.';
         return 'Não foi possível concluir esta etapa agora. Nenhum ingresso será emitido sem pagamento confirmado.';
       }
@@ -906,11 +1068,14 @@
         }
       }
 
-      el.typeSelect.onchange=onType;
-      el.lotSelect.onchange=onLot;
-      el.quantity.oninput=updateSummary;
-      el.paymentPix.onchange=updatePaymentMethodUI;
-      el.paymentCard.onchange=updatePaymentMethodUI;
+      el.typeSelect.onchange=function(){invalidateCouponForChange();onType();};
+      el.lotSelect.onchange=function(){invalidateCouponForChange();onLot();};
+      el.quantity.oninput=function(){invalidateCouponForChange();updateSummary();};
+      el.paymentPix.onchange=function(){invalidateCouponForChange();updatePaymentMethodUI();};
+      el.paymentCard.onchange=function(){invalidateCouponForChange();updatePaymentMethodUI();};
+      el.couponToggle.onclick=function(){var open=el.couponBody.classList.contains('hidden');el.couponBody.classList.toggle('hidden',!open);el.couponToggle.setAttribute('aria-expanded',open?'true':'false');if(open)setTimeout(function(){el.couponCode.focus()},20);};
+      el.applyCoupon.onclick=applyCoupon;
+      el.removeCoupon.onclick=function(){clearCoupon(false);el.couponCode.value='';showCouponMessage('Cupom removido.','info');};
       el.payButton.onclick=createPayment;
       el.copyButton.onclick=copyPix;
       el.refreshButton.onclick=refresh;
