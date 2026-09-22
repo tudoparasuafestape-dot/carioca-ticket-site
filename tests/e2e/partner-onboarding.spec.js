@@ -88,7 +88,7 @@ async function installRpcMock(page, state) {
           const payload = args[0] || {};
           state.lastSubmit = payload;
           if (String(payload.email || '').includes('duplicado')) {
-            resultado = { sucesso:true, enviado:false, duplicada:true, codigo:'SOLICITACAO_EXISTENTE', mensagem:'Já existe uma solicitação em andamento ou um cadastro ativo com os dados informados. A Carioca Ticket não criou um novo cadastro.' };
+            resultado = { sucesso:true, enviado:true, duplicada:false, codigo:'SOLICITACAO_RECEBIDA', protocolo:'', mensagem:'Recebemos seus dados. Se já existir uma solicitação em andamento, ela continuará válida.' };
           } else {
             resultado = { sucesso:true, enviado:true, duplicada:false, protocolo:'PCT-20260922-E2E', mensagem:'Cadastro recebido.' };
           }
@@ -221,8 +221,9 @@ test.describe('Programa Parceiro CT', () => {
     const checks=page.locator('.accept-check');
     for(let i=0;i<5;i++) await checks.nth(i).check();
     await page.locator('#submitForm').click();
-    await expect(page.locator('#formMessage')).toContainText('não criou um novo cadastro');
-    await expect(page.locator('#successArea')).toBeHidden();
+    await expect(page.locator('#successArea')).toBeVisible({ timeout:15000 });
+    await expect(page.locator('#protocol')).toHaveText('Solicitação recebida com segurança.');
+    await expect(page.locator('body')).not.toContainText(/já existe uma solicitação|cadastro ativo com os dados/i);
     expect(state.submitCalls).toBe(1);
   });
 
