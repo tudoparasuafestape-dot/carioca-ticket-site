@@ -8,6 +8,7 @@ const protectedFiles = [
   'checkout/index.html',
   'ingresso/index.html',
   'central/index.html',
+  'financeiro/index.html',
   'saude-vendas/index.html',
   'reembolsos/index.html',
   'checkin/index.html',
@@ -367,6 +368,41 @@ if (reembolsos) {
   }
   if (/cardNumber|creditCardNumber|cvv|ccv/i.test(reembolsos)) {
     fail('reembolsos/index.html', 'Reembolsos referencia dados completos de cartao');
+  }
+}
+
+const financeiroProdutor = read('financeiro/index.html');
+if (financeiroProdutor) {
+  if (!financeiroProdutor.includes("ctMinhaCariocaAction','portalRpc'")) {
+    fail('financeiro/index.html', 'Financeiro sem ponte first-party segura');
+  }
+  if (!financeiroProdutor.includes('ctFinanceiroProdutorPainelPROD')) {
+    fail('financeiro/index.html', 'Financeiro sem painel seguro do produtor');
+  }
+  if (!financeiroProdutor.includes('ctFinanceiroProdutorSimularAntecipacaoPROD')) {
+    fail('financeiro/index.html', 'Financeiro sem simulacao de antecipacao');
+  }
+  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarAntecipacaoPROD')) {
+    fail('financeiro/index.html', 'Financeiro sem solicitacao de antecipacao');
+  }
+  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarSaquePROD')) {
+    fail('financeiro/index.html', 'Financeiro sem solicitacao de saque');
+  }
+  if (!financeiroProdutor.includes("==='ANTECIPAR'")) {
+    fail('financeiro/index.html', 'Antecipacao sem confirmacao textual de seguranca');
+  }
+  if (!financeiroProdutor.includes("==='SOLICITAR SAQUE'")) {
+    fail('financeiro/index.html', 'Saque sem confirmacao textual de seguranca');
+  }
+  if (!financeiroProdutor.includes('2,5%')) {
+    fail('financeiro/index.html', 'Taxa CT de antecipacao nao esta transparente na interface');
+  }
+  if (!financeiroProdutor.includes('Nenhuma transferência Pix/TED é executada automaticamente')) {
+    fail('financeiro/index.html', 'Saque nao informa que e apenas solicitacao interna');
+  }
+  const nativeDialogFinance = financeiroProdutor.match(/(?:window\.)?(?:alert|confirm|prompt)\s*\(/i);
+  if (nativeDialogFinance) {
+    fail('financeiro/index.html', 'dialogo nativo do navegador no fluxo financeiro', nativeDialogFinance[0]);
   }
 }
 
