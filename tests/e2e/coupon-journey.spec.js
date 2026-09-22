@@ -31,6 +31,8 @@ function campaign(status='ATIVA'){
     descontoTotal:0,receitaGerada:0,disponiveis:50,responsavelEconomico:'PRODUTOR',
     cliquesLink:12,vendasViaLink:3,sessoesConvertidasViaLink:3,conversaoLinkPercentual:25,
     compartilhamentos:5,compartilhamentosWhatsapp:2,copiasLink:2,copiasCodigo:1,
+    somenteAcesso:true,
+    observacaoPublica:'Ingresso promocional: somente acesso. Não inclui o copo oficial do evento.',
     elegibilidades:[{tipoId:TYPE_INDIVIDUAL,loteId:LOT_INDIVIDUAL}]
   };
 }
@@ -40,7 +42,7 @@ function couponResult(code, state, typeId, lotId){
   if(normalized!==CODE)return {sucesso:true,valido:false,mensagem:'Cupom não encontrado.'};
   if(state.paused)return {sucesso:true,valido:false,mensagem:'Esta campanha está temporariamente pausada.'};
   if(typeId!==TYPE_INDIVIDUAL||lotId!==LOT_INDIVIDUAL)return {sucesso:true,valido:false,mensagem:'Este cupom não é válido para o ingresso escolhido.'};
-  return {sucesso:true,valido:true,cupom:{campanhaId:'CMP-E2E-30ANOS',codigo:CODE,nome:'Lançamento Carioca Ticket — 30 anos Sem Razão',tipoBeneficio:'PRECO_PROMOCIONAL',responsavelEconomico:'PRODUTOR'},calculo:{precoOriginalUnitario:25,precoFinalUnitario:15,descontoUnitario:10,descontoTotal:10,valorOriginalTotal:25,valorFinalTotal:15,quantidadePromocional:1}};
+  return {sucesso:true,valido:true,cupom:{campanhaId:'CMP-E2E-30ANOS',codigo:CODE,nome:'Lançamento Carioca Ticket — 30 anos Sem Razão',tipoBeneficio:'PRECO_PROMOCIONAL',responsavelEconomico:'PRODUTOR',somenteAcesso:true,observacaoPublica:'Ingresso promocional: somente acesso. Não inclui o copo oficial do evento.'},calculo:{precoOriginalUnitario:25,precoFinalUnitario:15,descontoUnitario:10,descontoTotal:10,valorOriginalTotal:25,valorFinalTotal:15,quantidadePromocional:1}};
 }
 
 async function seed(page,token='CT-CUPOM-E2E-TOKEN'){
@@ -72,6 +74,8 @@ async function mock(page,state){
           expect(p.tipoIds).toEqual([TYPE_INDIVIDUAL]);
           expect(p.loteIds).toEqual([LOT_INDIVIDUAL]);
           expect(p.ativar).toBe(true);
+          expect(p.somenteAcesso).toBe(true);
+          expect(p.observacaoPublica).toContain('Não inclui o copo oficial');
           state.saved=true;state.paused=false;
           if(Number(state.delaySaveMs||0)>0)await new Promise(r=>setTimeout(r,Number(state.delaySaveMs)));
           result={sucesso:true,campanha:campaign()};
@@ -130,12 +134,15 @@ test.describe('Cupons e Campanhas',()=>{
     await page.locator('#totalLimit').fill('50');
     await page.locator('#buyerLimit').fill('2');
     await page.locator('#orderLimit').fill('2');
+    await page.locator('#onlyAccess').check();
+    await expect(page.locator('#publicNote')).toHaveValue(/Não inclui o copo oficial/);
     await expect(page.locator('#review')).toContainText('R$ 25,00');
     await expect(page.locator('#review')).toContainText('R$ 15,00');
     await page.locator('#saveActive').click();
     await expect.poll(()=>state.saveCalls).toBe(1);
     await expect(page.locator('#campaigns')).toContainText(CODE);
     await expect(page.locator('#campaigns')).toContainText('ATIVA');
+    await expect(page.locator('#campaigns')).toContainText('não inclui o copo oficial');
     await expect(page.locator('#campaigns')).not.toContainText('Casadinha');
   });
 
@@ -157,6 +164,7 @@ test.describe('Cupons e Campanhas',()=>{
     await page.locator('#benefitValue').fill('15');
     await page.locator('#typeChecks input[value="'+TYPE_INDIVIDUAL+'"]').check();
     await page.locator('#lotChecks input[value="'+LOT_INDIVIDUAL+'"]').check();
+    await page.locator('#onlyAccess').check();
     await page.locator('#saveActive').click();
     await expect.poll(()=>state.saveCalls).toBe(1);
     await expect(page.locator('#editor')).toHaveClass(/hidden/,{timeout:5000});
@@ -189,6 +197,7 @@ test.describe('Cupons e Campanhas',()=>{
     expect(String(shared&&shared.text||'')).toContain('30ANOSSEMRAZAO');
     expect(String(shared&&shared.text||'')).toContain('Roda de Samba Estilo Carioca');
     expect(String(shared&&shared.text||'')).toContain('15,00');
+    expect(String(shared&&shared.text||'')).toContain('não inclui o copo oficial');
     expect(String(shared&&shared.text||'')).toContain('cariocaticket.com.br/evento-v2/');
 
     await page.getByRole('button',{name:'Copiar link'}).click();
@@ -247,6 +256,7 @@ test.describe('Cupons e Campanhas',()=>{
     await page.locator('#couponApply').click();
     await expect.poll(()=>state.validationCalls).toBe(1);
     await expect(page.locator('#couponMessage')).toContainText('Cupom aplicado!');
+    await expect(page.locator('#couponMessage')).toContainText('Não inclui o copo oficial');
     await expect(page.locator('#promoOriginal')).toHaveText(/25,00/);
     await expect(page.locator('#promoDiscount')).toHaveText(/10,00/);
     await expect(page.locator('#promoTotal')).toHaveText(/15,00/);

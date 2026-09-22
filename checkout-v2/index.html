@@ -700,7 +700,8 @@
             state.promotion=res;
             el.couponCode.value=String(res.cupom&&res.cupom.codigo||codigo);
             el.couponMessage.className='coupon-msg ok';
-            el.couponMessage.textContent='Cupom aplicado! Você ganhou '+money(res.calculo&&res.calculo.descontoTotal||0)+' de desconto.';
+            var avisoPromo=res.cupom&&res.cupom.observacaoPublica?String(res.cupom.observacaoPublica):res.cupom&&res.cupom.somenteAcesso?'Ingresso promocional: somente acesso. Não inclui o copo oficial do evento.':'';
+            el.couponMessage.textContent='Cupom aplicado! Você ganhou '+money(res.calculo&&res.calculo.descontoTotal||0)+' de desconto.'+(avisoPromo?' '+avisoPromo:'');
             renderPromotion();
           })
           .withFailureHandler(function(){
