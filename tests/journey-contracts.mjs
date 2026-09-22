@@ -26,6 +26,42 @@ requireAll('index.html',home,[
   'Acessar Portal Parceiro CT'
 ]);
 
+const central=read('central/index.html');
+requireAll('central/index.html',central,[
+  'href="/produtor/"',
+  'id="logout"',
+  '/eventos-v2/',
+  '/vendas/',
+  '/bar/',
+  '/consulta/',
+  '/fornecedores/',
+  '/crm/',
+  '/financeiro/',
+  '/relatorios/',
+  '/comissoes/'
+]);
+
+for(const path of [
+  'vendas/index.html',
+  'bar/index.html',
+  'eventos-v2/index.html',
+  'fornecedores/index.html',
+  'crm/index.html',
+  'financeiro/index.html',
+  'relatorios/index.html',
+  'comissionado/index.html',
+  'comissoes/index.html',
+  'consulta/index.html',
+  'checkin/index.html',
+  'saude-vendas/index.html',
+  'reembolsos/index.html'
+]){
+  const html=read(path);
+  if(!/href=["']\/central\/[^"']*["']|href=["']\/central\/["']/.test(html)){
+    failures.push(path+': módulo operacional sem retorno claro à Central');
+  }
+}
+
 const produtor=read('produtor/index.html');
 requireLink('produtor/index.html',produtor,'partnerPortalLink','/parceiro/');
 requireLink('produtor/index.html',produtor,'partnerAdminLink','/parceiro/admin/');
