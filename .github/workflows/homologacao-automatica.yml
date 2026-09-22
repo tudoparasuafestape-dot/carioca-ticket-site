@@ -29,6 +29,7 @@ jobs:
         run: |
           node tests/contracts.mjs
           node tests/journey-contracts.mjs
+          node tests/full-surface-audit.mjs
   publico-producao:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     name: Publico homologado ${{ matrix.viewport }}
