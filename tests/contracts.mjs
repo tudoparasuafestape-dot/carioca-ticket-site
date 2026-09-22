@@ -301,6 +301,14 @@ if (producerPage) {
   ) {
     fail('produtor/index.html', 'Portal volta a confundir falha pos-login com falha de autenticacao');
   }
+  if (
+    !producerPage.includes('id="partnerAdminLink"') ||
+    !producerPage.includes("state.usuario &&") ||
+    !producerPage.includes("state.usuario.perfil") ||
+    !producerPage.includes("perfilGlobal === 'ADMINISTRADOR'")
+  ) {
+    fail('produtor/index.html', 'atalho Parceiros CT nao reconhece administrador global');
+  }
 }
 
 const home = read('index.html');
