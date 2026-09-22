@@ -97,7 +97,9 @@ async function installRpcMock(page, state) {
         };
       } else if (method === 'ctProdutorOnboardingAdminDetalharPROD') {
         expect(String(args[0] || '')).toBe(state.adminToken);
-        resultado = {sucesso:true,autorizado:true,admin:{perfil:'ADMINISTRADOR'},solicitacao:requestFixture(state.status)};
+        state.detailCalls=(state.detailCalls||0)+1;
+        const detalheStatus=(state.staleDetailAfterDecision&&state.status!=='ENVIADO')?'ENVIADO':state.status;
+        resultado = {sucesso:true,autorizado:true,admin:{perfil:'ADMINISTRADOR'},solicitacao:requestFixture(detalheStatus)};
       } else if (method === 'ctProdutorOnboardingAdminDecidirPROD') {
         expect(String(args[0] || '')).toBe(state.adminToken);
         const actionName=String(args[2]||'');
@@ -158,7 +160,9 @@ test.describe('Onboarding do Produtor indicado', () => {
       submitCalls:0,
       lastSubmit:null,
       adminActions:[],
-      logoutCalls:0
+      logoutCalls:0,
+      detailCalls:0,
+      staleDetailAfterDecision:true
     };
 
     await installRpcMock(page,state);
@@ -198,6 +202,8 @@ test.describe('Onboarding do Produtor indicado', () => {
     await page.locator('#confirmAction').click();
     await expect.poll(() => state.status).toBe('EM_ANALISE');
     await expect(page.locator('#detailStatus')).toHaveText('EM ANÁLISE', {timeout:15000});
+    await expect(page.getByRole('button',{name:'Aprovar e ativar'})).toBeVisible();
+    expect(state.detailCalls).toBe(1);
 
     await page.getByRole('button',{name:'Aprovar e ativar'}).click();
     await page.locator('#confirmAction').click();
@@ -206,6 +212,7 @@ test.describe('Onboarding do Produtor indicado', () => {
     await expect(page.locator('#cActive')).toHaveText('1');
 
     expect(state.adminActions).toEqual(['INICIAR_ANALISE','APROVAR']);
+    expect(state.detailCalls).toBe(1);
   });
 
   test('permite sair do onboarding sem loopar de volta para a mesma sessao', async ({ page }) => {
