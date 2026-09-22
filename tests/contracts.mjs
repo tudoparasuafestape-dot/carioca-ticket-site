@@ -29,6 +29,7 @@ const protectedFiles = [
   'parceiro/index.html',
   'parceiro/programa/index.html',
   'parceiro/admin/index.html',
+  'backoffice/index.html',
   'parceiro/ativar/index.html',
   'parceiro/manual/index.html',
   'parceiro/regulamento/index.html',
@@ -592,6 +593,38 @@ if (parceiroDados) {
   }
 }
 
+const backofficeMaster = read('backoffice/index.html');
+if (backofficeMaster) {
+  for (const required of [
+    'Backoffice Master',
+    'Visão executiva da plataforma',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctBackofficeMasterCarregarPROD',
+    'Acessos ao site',
+    'Sessões únicas',
+    'Ingressos vendidos',
+    'Receita bruta',
+    'Eventos mais acessados',
+    'Maior receita',
+    'Mais ingressos vendidos',
+    'Produtores por receita',
+    'Formas de pagamento',
+    'Origem dos acessos',
+    'Dispositivos',
+    'data-preset="7D"',
+    'data-preset="30D"',
+    'id="dateStart"',
+    'id="dateEnd"'
+  ]) {
+    if (!backofficeMaster.includes(required)) {
+      fail('backoffice/index.html', 'Backoffice Master incompleto: ' + required);
+    }
+  }
+  if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(backofficeMaster)) {
+    fail('backoffice/index.html', 'Backoffice Master usa dialogo nativo');
+  }
+}
+
 const parceiroAdmin = read('parceiro/admin/index.html');
 if (parceiroAdmin) {
   for (const required of [
@@ -615,6 +648,9 @@ if (parceiroAdmin) {
   }
   if (!parceiroAdmin.includes('/produtor/solicitacoes/')) {
     fail('parceiro/admin/index.html', 'Backoffice Parceiro CT sem acesso ao onboarding administrativo de produtores');
+  }
+  if (!parceiroAdmin.includes('/backoffice/')) {
+    fail('parceiro/admin/index.html', 'Backoffice Parceiro CT sem acesso ao Backoffice Master');
   }
   for (const required of [
     'function closeAction(force)',
