@@ -16,6 +16,16 @@ function requireLink(path, content, id, href){
   if(!block.includes('href="'+href+'"')) failures.push(path+': '+id+' não aponta para '+href);
 }
 
+const home=read('index.html');
+requireLink('index.html',home,'producerPortalCta','/produtor/');
+requireLink('index.html',home,'partnerProgramCta','/parceiro/programa/');
+requireLink('index.html',home,'partnerPortalCta','/parceiro/');
+requireAll('index.html',home,[
+  'Acessar Portal do Produtor',
+  'Programa Parceiro CT',
+  'Acessar Portal Parceiro CT'
+]);
+
 const produtor=read('produtor/index.html');
 requireLink('produtor/index.html',produtor,'partnerPortalLink','/parceiro/');
 requireLink('produtor/index.html',produtor,'partnerAdminLink','/parceiro/admin/');
