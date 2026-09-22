@@ -148,7 +148,9 @@
     @media(max-width:520px){
       .login-card{padding:24px 19px;border-radius:22px}
       .container{width:min(100% - 20px,1220px);padding-top:18px}
-      .topbar-in{width:calc(100% - 20px)}
+      .topbar-in{width:calc(100% - 20px);padding:10px 0;flex-wrap:wrap}
+      .top-actions{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+      .top-actions .ghost{min-height:42px;padding:8px 7px;font-size:11px;text-align:center}
       .hero{padding:18px}
       .hero h2{font-size:23px}
       .metrics{grid-template-columns:1fr 1fr;gap:9px}
