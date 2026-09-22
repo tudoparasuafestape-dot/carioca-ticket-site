@@ -150,6 +150,7 @@ test.describe('Canario real first-party', () => {
 
     if (/Cupom aplicado/i.test(msg)) {
       await expect(page.locator('#promoTotal')).toHaveText(/15,00/);
+      await expect(page.locator('#couponMessage')).toContainText('Não inclui o copo oficial');
     } else {
       expect(msg).toMatch(/pausada|expirou|limite disponível/i);
     }
