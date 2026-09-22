@@ -1306,7 +1306,8 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
-    await page.goto('/eventos-v2/', { waitUntil: 'domcontentloaded' });
+    await page.locator('#mEventos').click();
+    await expect(page).toHaveURL(/\/eventos-v2\//);
     await expect(page.getByRole('heading', { name: /^Eventos$/i })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute('href', '/central/');
