@@ -460,11 +460,23 @@ if (parceiroAdmin) {
   for (const required of [
     'function closeAction(force)',
     'closeAction(true)',
-    "state.busy=false;await load();await detail(selectedId)"
+    "state.busy=false;await load();await detail(selectedId)",
+    'id="activationBackdrop"',
+    'id="copyActivation"',
+    'function openActivationModal(',
+    'function formatVersion('
   ]) {
     if (!parceiroAdmin.includes(required)) {
-      fail('parceiro/admin/index.html', 'pos-decisao nao fecha/atualiza corretamente: ' + required);
+      fail('parceiro/admin/index.html', 'pos-decisao/ativacao incompleto: ' + required);
     }
+  }
+  const doActionStart = parceiroAdmin.indexOf('async function doAction()');
+  const doActionEnd = parceiroAdmin.indexOf("document.getElementById('confirmAction')", doActionStart);
+  const doActionBody = doActionStart >= 0 && doActionEnd > doActionStart
+    ? parceiroAdmin.slice(doActionStart, doActionEnd)
+    : '';
+  if (doActionBody.includes('navigator.clipboard.writeText')) {
+    fail('parceiro/admin/index.html', 'aprovacao tenta copiar link automaticamente antes de atualizar a tela');
   }
 }
 
