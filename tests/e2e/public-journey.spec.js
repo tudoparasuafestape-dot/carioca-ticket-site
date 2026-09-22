@@ -188,6 +188,40 @@ test.describe('Jornada publica protegida', () => {
     assertNoTechnicalFailures(state);
   });
 
+  test('Home torna acessos de produtor e parceiro encontráveis sem conhecer URLs', async ({ page }) => {
+    const state = installGuards(page);
+
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expectOfficialTopUrl(page, /^\/$/);
+
+    const produtor = page.locator('#producerPortalCta');
+    const programa = page.locator('#partnerProgramCta');
+    const parceiro = page.locator('#partnerPortalCta');
+
+    await expect(produtor).toBeVisible();
+    await expect(produtor).toHaveAttribute('href', '/produtor/');
+    await expect(programa).toBeVisible();
+    await expect(programa).toHaveAttribute('href', '/parceiro/programa/');
+    await expect(parceiro).toBeVisible();
+    await expect(parceiro).toHaveAttribute('href', '/parceiro/');
+
+    await produtor.click();
+    await expectOfficialTopUrl(page, /^\/produtor\/$/);
+    await expect(page.locator('#loginView')).toBeVisible({ timeout:30000 });
+
+    await page.goto('/', { waitUntil:'domcontentloaded' });
+    await page.locator('#partnerProgramCta').click();
+    await expectOfficialTopUrl(page, /^\/parceiro\/programa\/$/);
+    await expect(page.getByRole('heading', { name:/Indique produtores/i })).toBeVisible({ timeout:30000 });
+
+    await page.goto('/', { waitUntil:'domcontentloaded' });
+    await page.locator('#partnerPortalCta').click();
+    await expectOfficialTopUrl(page, /^\/parceiro\/$/);
+    await expect(page.getByRole('heading', { name:/Seu resultado em um só lugar/i })).toBeVisible({ timeout:30000 });
+
+    assertNoTechnicalFailures(state);
+  });
+
   test('Minha Carioca abre no dominio oficial e retorna aos eventos', async ({ page }) => {
     const state = installGuards(page);
 

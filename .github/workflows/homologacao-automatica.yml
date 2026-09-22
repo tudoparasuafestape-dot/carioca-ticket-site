@@ -25,8 +25,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Validar rotas e contratos protegidos
-        run: node tests/contracts.mjs
+      - name: Validar rotas, contratos e jornadas protegidas
+        run: |
+          node tests/contracts.mjs
+          node tests/journey-contracts.mjs
   publico-producao:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     name: Publico homologado ${{ matrix.viewport }}
@@ -155,9 +157,9 @@ jobs:
           CT_BRANCH_MODE: '1'
         run: |
           if [ "${{ matrix.viewport }}" = "desktop" ]; then
-            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js tests/e2e/producer-onboarding.spec.js --project=desktop-chromium
+            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js tests/e2e/producer-onboarding.spec.js tests/e2e/navigation-journey.spec.js --project=desktop-chromium
           else
-            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js tests/e2e/producer-onboarding.spec.js --project=mobile-chromium
+            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js tests/e2e/producer-onboarding.spec.js tests/e2e/navigation-journey.spec.js --project=mobile-chromium
           fi
       - name: Guardar evidencias
         if: failure()
