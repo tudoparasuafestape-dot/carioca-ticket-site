@@ -91,6 +91,16 @@ if(!read('checkin/checkin.js').includes("STORAGE_CREDENCIAL_SESSION: 'ct_checkin
   failures.push('checkin/checkin.js: armazenamento de credencial operacional não protegido pelo contrato');
 }
 
+for(const file of [
+  'parceiro/conduta/index.html',
+  'parceiro/manual/index.html',
+  'parceiro/regulamento/index.html',
+  'parceiro/regras-comerciais/index.html',
+  'parceiro/tratamento-dados/index.html'
+]){
+  requireText(file,'href="/parceiro/programa/"');
+}
+
 requireText('index.html','href="/fornecedor/"');
 requireText('ajuda/index.html','id="helpSupplierPortal"','href="/fornecedor/"');
 
