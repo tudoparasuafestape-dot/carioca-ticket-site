@@ -246,7 +246,7 @@ test.describe('Jornada completa do comprador sem cobrança real', () => {
     await page.locator('#buyerName').fill('Cliente Homologação');
     await page.locator('#buyerCpf').fill('12345678909');
     await page.locator('#buyerWhatsapp').fill('81999990000');
-    await page.locator('#buyerEmail').fill('cliente@example.invalid');
+    await page.locator('#buyerEmail').fill('cliente.homologacao@example.com');
 
     await expect(page.locator('#summaryPrice')).toHaveText(/R\$\s*25,00/);
     await page.locator('#payButton').click();
