@@ -94,6 +94,31 @@ function centralContext(token) {
   };
 }
 
+function acessosFixture() {
+  return {
+    sucesso: true,
+    produtores: [
+      {
+        id: 'PROD-E2E',
+        nomeFantasia: 'Produtor Homologacao',
+        perfil: 'ADMINISTRADOR',
+        perfisEditaveis: ['ADMINISTRADOR','FINANCEIRO','COMISSIONADO','CHECKIN_PORTARIA','BAR'],
+        usuarios: [
+          {
+            usuarioId: 'USR-E2E',
+            nome: 'Operador Homologacao',
+            email: 'homologacao@example.invalid',
+            whatsapp: '',
+            perfil: 'PRODUTOR_TITULAR',
+            statusVinculo: 'ATIVO',
+            editavel: false
+          }
+        ]
+      }
+    ]
+  };
+}
+
 function painelFixture() {
   return {
     sucesso: true,
@@ -948,6 +973,11 @@ async function installMock(page, state) {
             resultado = crmSearchFixture();
             break;
 
+          case 'ctGestaoAcessosCarregarPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            resultado = acessosFixture();
+            break;
+
           case 'ctFinanceiroEventoCarregarPROD':
             expect(String(args[0] || '')).toBe(state.token);
             expect(String(args[1] || '')).toBe(EVENT_ID);
@@ -1413,6 +1443,44 @@ test.describe('Jornada operacional autenticada', () => {
     expect(state.eventMutationCalls).toBe(0);
     expect(state.supplierMutationCalls).toBe(0);
     expect(state.commissionMutationCalls).toBe(0);
+  });
+
+  test('Central -> Usuarios e Permissoes -> Sair sem rota escondida', async ({ page }) => {
+    const state = {
+      token: 'CT-E2E-TOKEN-ACESSOS',
+      transactionCalls: 0,
+      barMutationCalls: 0,
+      eventMutationCalls: 0,
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0
+    };
+
+    await installMock(page, state);
+    await seedSession(page, state.token);
+
+    await page.goto('/central/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#mAcessos')).toHaveAttribute('aria-disabled', 'false');
+
+    await page.locator('#mAcessos').click();
+    await expect(page).toHaveURL(/\/acessos\//);
+    await expect(page.getByRole('heading', { name: /Usuários e Permissões/i })).toBeVisible();
+    await expect(page.locator('#lista')).toContainText('Operador Homologacao', { timeout: 15000 });
+    await expect(page.getByRole('link', { name: 'Central Mobile' })).toHaveAttribute('href', '/central/');
+    await expect(page.getByRole('link', { name: 'Portal do Produtor' })).toHaveAttribute('href', '/produtor/');
+    await expect(page.locator('#logoutButton')).toBeVisible();
+    await expectNoTechnicalVisibleLinks(page);
+
+    await page.locator('#logoutButton').click();
+    await expect(page).toHaveURL(/\/produtor\//, { timeout: 10000 });
+    await expect(page.locator('#loginView')).toBeVisible({ timeout: 15000 });
+
+    const stored = await page.evaluate(key => ({
+      local: localStorage.getItem(key),
+      session: sessionStorage.getItem(key)
+    }), STORAGE);
+    expect(stored.local).toBeNull();
+    expect(stored.session).toBeNull();
   });
 
   test('Comissionado -> Central -> Minhas Vendas sem acesso às vendas gerais', async ({ page }) => {
