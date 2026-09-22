@@ -391,6 +391,17 @@ if (parceiroPrograma) {
   if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(parceiroPrograma)) {
     fail('parceiro/programa/index.html', 'pagina publica usa dialogo nativo');
   }
+  for (const required of [
+    '<span id="heroCommission">1</span>%',
+    '<span id="serviceFee">10</span>%',
+    '<span id="anticipationMax">80</span>%',
+    '<span id="anticipationFee">2,5</span>%',
+    'for(var tentativa=0;tentativa<3;tentativa++)'
+  ]) {
+    if (!parceiroPrograma.includes(required)) {
+      fail('parceiro/programa/index.html', 'fallback/retry mobile ausente: ' + required);
+    }
+  }
 }
 
 const parceiroAdmin = read('parceiro/admin/index.html');
