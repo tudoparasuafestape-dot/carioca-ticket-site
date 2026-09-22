@@ -227,6 +227,31 @@ test.describe('Programa Parceiro CT', () => {
     expect(state.submitCalls).toBe(1);
   });
 
+  test('ao ler um termo volta ao ponto exato sem perder o cadastro', async ({ page }) => {
+    const state={ submitCalls:0, adminActions:0, token:'CT-E2E-ADMIN' };
+    await installRpcMock(page,state);
+    await page.goto('/parceiro/programa/', { waitUntil:'domcontentloaded' });
+    await expect(page.locator('#heroCommission')).toHaveText('1');
+    await page.getByRole('button', { name:'Quero ser Parceiro CT' }).first().click();
+    await fillStepOne(page);
+    await fillStepTwo(page);
+    await page.locator('.accept-check').first().check();
+
+    await page.getByRole('link', { name:'Regulamento do Programa de Parceiros CT' }).click();
+    await expect(page).toHaveURL(/\/parceiro\/regulamento\/\?origem=parceiro-cadastro/);
+    await expect(page.locator('#backToApplication')).toHaveText(/Voltar ao cadastro/);
+
+    await page.locator('#backToApplication').click();
+    await expect(page).toHaveURL(/\/parceiro\/programa\//);
+    await expect(page.locator('#applyBackdrop')).toBeVisible({ timeout:15000 });
+    await expect(page.locator('.form-step[data-step="2"]')).toBeVisible();
+    await expect(page.locator('#fName')).toHaveValue('Parceiro Homologação');
+    await expect(page.locator('#fEmail')).toHaveValue('parceiro@example.invalid');
+    await expect(page.locator('#fAbout')).toHaveValue('Atuo com relacionamento e produção de eventos em Pernambuco.');
+    await expect(page.locator('.accept-check').first()).toBeChecked();
+    expect(state.submitCalls).toBe(0);
+  });
+
   test('backoffice exige sessao e fluxo de aprovacao usa RPC administrativo', async ({ page }) => {
     const state={ submitCalls:0, adminActions:0, token:'CT-E2E-ADMIN' };
     await installRpcMock(page,state);

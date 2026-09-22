@@ -1,10 +1,30 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="index,follow"><meta name="theme-color" content="#080808"><link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png"><title>Manual do Parceiro Comercial | Carioca Ticket</title><style>
 :root{--bg:#070809;--panel:#111318;--line:#292d34;--gold:#d8a62d;--gold2:#f0c95d;--text:#f7f3e9;--muted:#a7abb3}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 90% 0,rgba(216,166,45,.1),transparent 32rem),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}.wrap{width:min(900px,calc(100% - 28px));margin:auto;padding:24px 0 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}.brand img{width:52px;height:42px;object-fit:contain}.btn{border:1px solid var(--line);border-radius:12px;padding:10px 13px;color:var(--text);text-decoration:none;font-size:10px;font-weight:900}.doc{border:1px solid var(--line);background:var(--panel);border-radius:22px;padding:clamp(18px,4vw,34px)}.ey{color:var(--gold2);font-weight:900;text-transform:uppercase;letter-spacing:.12em;font-size:9px}.doc h1{font-size:clamp(29px,6vw,48px);line-height:1.05;letter-spacing:-.04em;margin:8px 0 9px}.meta{color:var(--muted);font-size:10px;margin-bottom:24px}.warn{border:1px solid rgba(216,166,45,.3);background:rgba(216,166,45,.07);border-radius:14px;padding:13px;color:#eadcae;font-size:10px;margin:18px 0}.doc h2{font-size:17px;margin:24px 0 8px;color:#fff}.doc p,.doc li{font-size:11px;color:#d5d7dc}.doc ul{padding-left:19px}.doc strong{color:#fff}.foot{font-size:9px;color:#747983;text-align:center;margin-top:22px}@media(max-width:600px){.top{align-items:flex-start}.doc{border-radius:18px}}
-</style></head><body><main class="wrap"><header class="top"><a class="brand" href="/parceiro/programa/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Carioca Ticket</strong></div></a><a class="btn" href="/parceiro/programa/">← Programa Parceiro CT</a></header><article class="doc"><div class="ey">Programa Parceiro Carioca Ticket</div><h1>Manual do Parceiro Comercial</h1><div class="meta">Uso comercial • versão 1.0 • 2026</div>
+</style></head><body><main class="wrap"><header class="top"><a class="brand" href="/parceiro/programa/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Carioca Ticket</strong></div></a><a id="backToApplication" class="btn" href="/parceiro/programa/">← Programa Parceiro CT</a></header><article class="doc"><div class="ey">Programa Parceiro Carioca Ticket</div><h1>Manual do Parceiro Comercial</h1><div class="meta">Uso comercial • versão 1.0 • 2026</div>
 <h2>1. Seu papel</h2><p>O Parceiro CT abre portas para produtores e constrói relacionamento. A Carioca Ticket assume tecnologia, emissão, pagamentos, check-in e estrutura operacional dentro do escopo contratado. O foco do parceiro é <strong>prospecção, qualificação e conexão comercial</strong>.</p>
 <h2>2. Como prospectar</h2><ul><li>Registre a oportunidade antes da contratação do produtor.</li><li>Entenda frequência de eventos, público, ticket médio, forma atual de venda e principal dor.</li><li>Apresente somente recursos e condições oficialmente disponíveis.</li><li>Defina um próximo passo objetivo: reunião, simulação, proposta ou onboarding.</li></ul>
 <h2>3. Como apresentar valor</h2><p>A conversa não deve começar apenas pela taxa. Mostre o conjunto da operação: venda online, pagamentos, emissão digital, QR Code, check-in, acompanhamento e suporte. Recursos adicionais devem ser apresentados somente quando estiverem ativos e homologados.</p>
 <h2>4. Comissão</h2><p>A regra padrão do programa é <strong>1% sobre o valor nominal dos ingressos efetivamente pagos e elegíveis</strong> dos produtores vinculados à carteira do parceiro. A taxa de serviço da Carioca Ticket não integra a base. Cortesias, cancelamentos, estornos e chargebacks não geram comissão válida.</p>
 <h2>5. Conduta comercial</h2><ul><li>Não prometa desconto, taxa especial, antecipação ou prazo de repasse sem autorização.</li><li>Não ataque concorrentes; proponha avaliação ou evento piloto.</li><li>Não receba valores em nome da Carioca Ticket.</li><li>Não solicite credenciais, senhas ou tokens do produtor.</li><li>Use apenas marca e materiais oficiais.</li></ul>
-<h2>6. Regra de ouro</h2><p>Quando uma condição estiver fora do padrão ou você não souber a resposta, encaminhe para análise da Carioca Ticket antes de confirmar ao produtor.</p></article><div class="foot">Carioca Ticket • Programa de Parceiros • contato@cariocaticket.com.br</div></main></body></html>
+<h2>6. Regra de ouro</h2><p>Quando uma condição estiver fora do padrão ou você não souber a resposta, encaminhe para análise da Carioca Ticket antes de confirmar ao produtor.</p></article><div class="foot">Carioca Ticket • Programa de Parceiros • contato@cariocaticket.com.br</div></main><script>
+(function(){
+  var p=new URLSearchParams(location.search);
+  if(p.get('origem')!=='parceiro-cadastro') return;
+  var b=document.getElementById('backToApplication');
+  if(!b) return;
+  b.textContent='← Voltar ao cadastro';
+  b.href='/parceiro/programa/?retomar=1';
+  b.addEventListener('click',function(e){
+    e.preventDefault();
+    try{
+      var ref=document.referrer?new URL(document.referrer):null;
+      if(ref&&ref.origin===location.origin&&ref.pathname.indexOf('/parceiro/programa')===0&&history.length>1){
+        history.back();
+        return;
+      }
+    }catch(_){}
+    location.href='/parceiro/programa/?retomar=1';
+  });
+}());
+</script></body></html>

@@ -396,7 +396,12 @@ if (parceiroPrograma) {
     '<span id="serviceFee">10</span>%',
     '<span id="anticipationMax">80</span>%',
     '<span id="anticipationFee">2,5</span>%',
-    'for(var tentativa=0;tentativa<3;tentativa++)'
+    'for(var tentativa=0;tentativa<3;tentativa++)',
+    "CT_PARCEIRO_CADASTRO_RASCUNHO_V1",
+    "sessionStorage.setItem(DRAFT_KEY",
+    "restoreDraft()",
+    "class=\"legal-doc-link\"",
+    "origem','parceiro-cadastro"
   ]) {
     if (!parceiroPrograma.includes(required)) {
       fail('parceiro/programa/index.html', 'fallback/retry mobile ausente: ' + required);
@@ -438,9 +443,34 @@ if (parceiroAtivar) {
   }
 }
 
+const parceiroConduta = read('parceiro/conduta/index.html');
+if (parceiroConduta) {
+  for (const required of ['id="backToApplication"', "origem')!=='parceiro-cadastro'", "history.back()"]) {
+    if (!parceiroConduta.includes(required)) {
+      fail('parceiro/conduta/index.html', 'retorno ao cadastro Parceiro CT ausente: ' + required);
+    }
+  }
+}
+
+const privacidade = read('privacidade/index.html');
+if (privacidade) {
+  for (const required of ['id="partnerReturnBar"', 'id="backToApplication"', "origem')!=='parceiro-cadastro'", '/parceiro/programa/?retomar=1']) {
+    if (!privacidade.includes(required)) {
+      fail('privacidade/index.html', 'retorno ao cadastro Parceiro CT ausente: ' + required);
+    }
+  }
+}
+
 const parceiroRegulamento = read('parceiro/regulamento/index.html');
-if (parceiroRegulamento && !parceiroRegulamento.includes('revisão jurídica')) {
-  fail('parceiro/regulamento/index.html', 'regulamento nao identifica status de revisao juridica');
+if (parceiroRegulamento) {
+  if (!parceiroRegulamento.includes('revisão jurídica')) {
+    fail('parceiro/regulamento/index.html', 'regulamento nao identifica status de revisao juridica');
+  }
+  for (const required of ['id="backToApplication"', "origem')!=='parceiro-cadastro'", "history.back()"]) {
+    if (!parceiroRegulamento.includes(required)) {
+      fail('parceiro/regulamento/index.html', 'retorno ao cadastro Parceiro CT ausente: ' + required);
+    }
+  }
 }
 
 const reembolsos = read('reembolsos/index.html');
