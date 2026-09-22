@@ -216,7 +216,7 @@ async function requestAnticipation(){
   try{
     var r=await rpc('ctFinanceiroProdutorSolicitarAntecipacaoPROD',[String(state.session.token),state.eventId,state.paymentId,String(anticipationConfirm.value||''),acceptFee.checked===true]);
     if(!r||r.sucesso!==true)throw new Error('A antecipação não foi registrada.');
-    closeModal();toast(r.mensagem||'Antecipação solicitada.');await load();
+    closeModal();toast(r.mensagem||'Antecipação solicitada.');state.busy=false;await load();
   }catch(e){toast(e&&e.message?e.message:String(e))}
   finally{state.busy=false;executeAnticipation.textContent='Solicitar antecipação';updateAnticipationButton()}
 }
@@ -236,14 +236,14 @@ async function requestWithdraw(){
     var confirm=String(document.getElementById('withdrawConfirm').value||'');
     var r=await rpc('ctFinanceiroProdutorSolicitarSaquePROD',[String(state.session.token),state.eventId,value,confirm]);
     if(!r||r.sucesso!==true)throw new Error('A solicitação não foi registrada.');
-    document.getElementById('withdrawValue').value='';document.getElementById('withdrawConfirm').value='';toast(r.mensagem||'Solicitação registrada.');await load();
+    document.getElementById('withdrawValue').value='';document.getElementById('withdrawConfirm').value='';toast(r.mensagem||'Solicitação registrada.');state.busy=false;await load();
   }catch(e){toast(e&&e.message?e.message:String(e))}
   finally{state.busy=false;document.getElementById('withdrawButton').textContent='Registrar solicitação';updateWithdrawButton()}
 }
 
 async function cancelWithdraw(id){
   if(!id||state.busy)return;state.busy=true;
-  try{var r=await rpc('ctFinanceiroProdutorCancelarSaquePROD',[String(state.session.token),state.eventId,id]);if(!r||r.sucesso!==true)throw new Error('Não foi possível cancelar a solicitação.');toast(r.mensagem||'Solicitação cancelada.');await load()}catch(e){toast(e&&e.message?e.message:String(e))}finally{state.busy=false}
+  try{var r=await rpc('ctFinanceiroProdutorCancelarSaquePROD',[String(state.session.token),state.eventId,id]);if(!r||r.sucesso!==true)throw new Error('Não foi possível cancelar a solicitação.');toast(r.mensagem||'Solicitação cancelada.');state.busy=false;await load()}catch(e){toast(e&&e.message?e.message:String(e))}finally{state.busy=false}
 }
 
 function closeModal(){modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');state.simulation=null;state.paymentId=''}
