@@ -192,6 +192,7 @@ async function seedSession(page, token = 'TOKEN-QA-NAO-REAL') {
 
 async function installGatewayMock(page, options = {}) {
   const token = options.token || 'TOKEN-QA-NAO-REAL';
+  let selectedAdminEvent = EVENT_ACTIVE;
 
   await page.route('https://script.google.com/**', async route => {
     const request = route.request();
@@ -260,6 +261,37 @@ async function installGatewayMock(page, options = {}) {
           } else {
             resultado = consultaResult('VALIDO');
           }
+        } else if (method === 'ctEventosOperacionalListarSeguraPROD') {
+          const eventos = catalogFixture().eventos.map(ev => ({
+            ...ev,
+            ativo: String(ev.id) === String(selectedAdminEvent),
+            publicacao: {
+              publicado: String(ev.id) === String(EVENT_ACTIVE),
+              prontoPublicar: String(ev.id) === String(EVENT_ACTIVE),
+              pendencias: [],
+              checkoutUrl: '/checkout/?evento=' + encodeURIComponent(ev.id)
+            }
+          }));
+          resultado = {
+            sucesso: true,
+            autenticado: true,
+            autorizado: true,
+            eventos,
+            total: eventos.length,
+            eventoAtivo: eventos.find(ev => ev.id === selectedAdminEvent) || null,
+            eventoSelecionado: eventos.find(ev => ev.id === selectedAdminEvent) || null,
+            publicados: 1,
+            listagemRapida: true
+          };
+        } else if (method === 'ctEventosOperacionalSelecionarSeguraPROD') {
+          expect(String(args[0] || '')).toBe(token);
+          selectedAdminEvent = String(args[1] || '');
+          resultado = {
+            sucesso: true,
+            autenticado: true,
+            autorizado: true,
+            mensagem: 'Evento selecionado para gestão.'
+          };
         } else if (method === 'logoutUsuarioCT2') {
           resultado = { sucesso: true };
         } else {
@@ -367,6 +399,37 @@ test.describe('Matriz crítica de homologação', () => {
 
     await page.waitForTimeout(1800);
     await expect(page.locator('#dashboard')).toHaveClass(/hidden/);
+  });
+
+  test('Eventos seleciona contexto com RPC seguro e confirmação CT', async ({ page }) => {
+    await installGatewayMock(page);
+    await seedSession(page);
+
+    let nativeDialog = false;
+    page.on('dialog', async dialog => {
+      nativeDialog = true;
+      await dialog.dismiss();
+    });
+
+    await page.goto('/eventos-v2/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#conteudo')).not.toHaveClass(/oculto/, { timeout: 15000 });
+    await expect(page.locator('#listaEventos')).toContainText('Roda de Samba Estilo Carioca');
+    await expect(page.locator('#listaEventos')).toContainText('Evento de Teste Lento');
+
+    const card = page.locator('.evento-card').filter({ hasText: 'Evento de Teste Lento' });
+    await expect(card).toBeVisible();
+    await card.getByRole('button', { name: 'Selecionar para gestão' }).click();
+
+    await expect(page.locator('#ctConfirmDialog')).toBeVisible();
+    await expect(page.locator('#ctConfirmText')).toContainText('selecionar este evento');
+    await page.locator('#ctConfirmOk').click();
+
+    await expect(page.locator('#eventoAtivoNome')).toHaveText('Evento de Teste Lento', {
+      timeout: 15000
+    });
+    await expect(page.locator('#ctToast')).toContainText('Evento selecionado para gestão');
+    expect(nativeDialog).toBe(false);
+    await expect(page.locator('body')).not.toContainText(EVENT_SLOW);
   });
 
   test('Consulta aplica matriz VÁLIDO, PENDENTE, CANCELADO e acesso negado', async ({ page }) => {
