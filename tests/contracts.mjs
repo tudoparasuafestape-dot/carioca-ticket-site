@@ -593,6 +593,34 @@ if (parceiroDados) {
   }
 }
 
+const analyticsAsset = fs.existsSync(path.join(root,'assets/ct-analytics.js'))
+  ? fs.readFileSync(path.join(root,'assets/ct-analytics.js'),'utf8')
+  : '';
+if (!analyticsAsset) {
+  fail('assets/ct-analytics.js','analytics público ausente');
+} else {
+  for (const required of [
+    'CT_ANALYTICS_SESSION_V1',
+    'ctBackofficeMasterRegistrarAcessoPublicoPROD',
+    'navigator.webdriver',
+    "host!=='cariocaticket.com.br'",
+    "pagina:pg",
+    "eventoId:",
+    "sessaoId:"
+  ]) {
+    if (!analyticsAsset.includes(required)) fail('assets/ct-analytics.js','analytics incompleto: '+required);
+  }
+  for (const forbidden of ['compradorEmail','compradorCpf','compradorWhatsapp','buyerEmail','buyerCpf']) {
+    if (analyticsAsset.includes(forbidden)) fail('assets/ct-analytics.js','analytics tenta coletar PII: '+forbidden);
+  }
+}
+for (const file of ['index.html','eventos-v2/index.html','evento-v2/index.html','checkout-v2/index.html','evento/index.html','checkout/index.html']) {
+  const html=read(file);
+  if (html && !html.includes('/assets/ct-analytics.js')) {
+    fail(file,'página pública sem instrumentação do Analytics Master');
+  }
+}
+
 const backofficeMaster = read('backoffice/index.html');
 if (backofficeMaster) {
   for (const required of [
