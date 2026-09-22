@@ -98,7 +98,14 @@ async function installRpcMock(page, state) {
           throw new Error('Método público não previsto no E2E: ' + method);
         }
       } else if (action === 'portalRpc') {
-        if (method === 'ctParceiroOnboardingAdminListarPROD') {
+        if (method === 'ctProdutorOnboardingAdminListarPROD') {
+          expect(String(args[0] || '')).toBe(state.token);
+          resultado = {
+            sucesso:true,autorizado:true,
+            contagem:{ENVIADO:1,EM_ANALISE:0,PENDENCIA:0,REPROVADO:0,APROVANDO:0,ATIVO:0},
+            itens:[],total:0
+          };
+        } else if (method === 'ctParceiroOnboardingAdminListarPROD') {
           expect(String(args[0] || '')).toBe(state.token);
           resultado = adminListFixture(state.adminStatus || 'ENVIADO');
         } else if (method === 'ctParceiroOnboardingAdminDetalharPROD') {
@@ -278,6 +285,8 @@ test.describe('Programa Parceiro CT', () => {
 
     await page.goto('/parceiro/admin/', { waitUntil:'domcontentloaded' });
     await expect(page.locator('#app')).toBeVisible({ timeout:15000 });
+    await expect(page.locator('#producerRequestsBadge')).toBeVisible({ timeout:15000 });
+    await expect(page.locator('#producerRequestsBadge')).toHaveText('1');
     await expect(page.locator('#list')).toContainText('Parceiro Homologação');
     await page.locator('.item').first().click();
     await expect(page.locator('#detail')).toContainText('529.***.***-25');
