@@ -274,6 +274,10 @@
             <button id="couponApply" class="secondary" type="button">APLICAR</button>
           </div>
           <div id="couponMessage" class="coupon-msg"></div>
+          <div id="couponReplace" class="promo-summary hidden">
+            <div class="promo-line"><span>Este pedido já possui um cupom aplicado. Deseja substituir?</span></div>
+            <div class="actions"><button id="couponReplaceNo" class="secondary" type="button">MANTER ATUAL</button><button id="couponReplaceYes" class="secondary" type="button">SUBSTITUIR</button></div>
+          </div>
           <div id="promoSummary" class="promo-summary hidden">
             <div class="promo-line"><span>Valor original</span><span id="promoOriginal">R$ 0,00</span></div>
             <div class="promo-line discount"><span id="promoLabel">Cupom</span><span id="promoDiscount">- R$ 0,00</span></div>
@@ -398,7 +402,7 @@
       [
         'loading','loadingTitle','loadingText','eventName','eventMeta','eventDescription','eventBack','checkoutCover','checkoutCoverImage','salePanel','buyerPanel','payActionPanel',
         'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',
-        'couponBox','couponToggle','couponArea','couponCode','couponApply','couponMessage','promoSummary','promoOriginal','promoLabel','promoDiscount','promoTotal','couponRemove',
+        'couponBox','couponToggle','couponArea','couponCode','couponApply','couponMessage','couponReplace','couponReplaceNo','couponReplaceYes','promoSummary','promoOriginal','promoLabel','promoDiscount','promoTotal','couponRemove',
         'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','buyerEmailLabel','buyerEmailHelp','marketing','paymentPix','paymentCard','payButton','payHelp',
         'pixPanel','pixStatus','qrImage','pixCode','copyButton','refreshButton','expiryText',
         'cardPanel','cardStatus','cardPaymentLink','cardRefreshButton','cardExpiryText',
@@ -606,6 +610,7 @@
       function clearCoupon(silent){
         state.promotion=null;
         el.promoSummary.classList.add('hidden');
+        el.couponReplace.classList.add('hidden');
         el.couponMessage.className='coupon-msg';
         if(!silent)el.couponMessage.textContent='Cupom removido.';
         else el.couponMessage.textContent='';
@@ -625,6 +630,13 @@
       function applyCoupon(){
         if(state.couponBusy)return;
         var codigo=String(el.couponCode.value||'').trim();
+        var atual=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'';
+        if(atual && codigo.toUpperCase()!==atual.toUpperCase()){
+          el.couponReplace.classList.remove('hidden');
+          el.couponMessage.className='coupon-msg';
+          el.couponMessage.textContent='';
+          return;
+        }
         if(!codigo){el.couponMessage.className='coupon-msg err';el.couponMessage.textContent='Digite seu cupom.';return;}
         if(!state.type||!state.lot){el.couponMessage.className='coupon-msg err';el.couponMessage.textContent='Selecione o ingresso e o lote primeiro.';return;}
         state.couponBusy=true;el.couponApply.disabled=true;el.couponApply.textContent='VALIDANDO...';
@@ -1007,6 +1019,8 @@
       el.paymentCard.onchange=function(){clearCoupon(true);updatePaymentMethodUI();updateSummary();};
       el.couponToggle.onclick=function(){el.couponArea.classList.toggle('hidden');if(!el.couponArea.classList.contains('hidden'))el.couponCode.focus();};
       el.couponApply.onclick=applyCoupon;
+      el.couponReplaceNo.onclick=function(){el.couponReplace.classList.add('hidden');el.couponCode.value=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'';};
+      el.couponReplaceYes.onclick=function(){state.promotion=null;el.couponReplace.classList.add('hidden');applyCoupon();};
       el.couponRemove.onclick=function(){el.couponCode.value='';clearCoupon(false);updateSummary();};
       el.payButton.onclick=createPayment;
       el.copyButton.onclick=copyPix;
