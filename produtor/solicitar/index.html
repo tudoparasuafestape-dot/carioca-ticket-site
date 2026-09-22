@@ -31,7 +31,7 @@ body{min-height:100vh}.hidden{display:none!important}
 <body>
 <header class="top"><div class="topin">
   <div class="brand"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket"><div><b>Carioca Ticket</b><small>Cadastro de Produtor</small></div></div>
-  <a class="btn" href="/produtor/">Portal</a>
+  <button id="logoutButton" class="btn" type="button">Sair</button>
 </div></header>
 
 <main class="wrap">
@@ -83,6 +83,7 @@ var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1',pending={},session=null,current
 
 function esc(v){return String(v==null?'':v)}
 function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
+function clearSession(){try{sessionStorage.removeItem(STORAGE)}catch(_){}try{localStorage.removeItem(STORAGE)}catch(_){}}
 function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
 function rpc(method,args){return new Promise(function(resolve,reject){var id='PRODONB-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='prodonb_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var x=document.createElement('input');x.type='hidden';x.name=k;x.value=String(v==null?'':v);form.appendChild(x)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},45000)};form.submit()})}
 window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível concluir a operação.')))});
@@ -125,6 +126,23 @@ async function load(){
   finally{setLoading(false)}
 }
 
+async function logout(){
+  var atual=session||readSession(),token=atual&&atual.token?String(atual.token):'';
+  clearSession();session=null;current=null;
+  var b=document.getElementById('logoutButton');if(b)b.disabled=true;
+  setLoading(true,'Saindo...');
+  try{
+    if(token){
+      await Promise.race([
+        rpc('logoutUsuarioCT2',[token]),
+        new Promise(function(resolve){setTimeout(resolve,3500)})
+      ]);
+    }
+  }catch(_){}
+  location.replace('/produtor/');
+}
+
+document.getElementById('logoutButton').addEventListener('click',logout);
 document.getElementById('refreshStatus').addEventListener('click',load);
 document.getElementById('producerForm').addEventListener('submit',async function(ev){
   ev.preventDefault();msg('');
