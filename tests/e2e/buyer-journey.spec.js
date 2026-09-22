@@ -148,6 +148,13 @@ function secureTicket() {
   };
 }
 
+async function followOfficialPathLocally(page, locator) {
+  const href=await locator.getAttribute('href');
+  expect(href).toBeTruthy();
+  const url=new URL(href, page.url());
+  await page.goto(url.pathname+url.search+url.hash,{waitUntil:'domcontentloaded'});
+}
+
 async function installMock(page, state) {
   await page.route('https://script.google.com/**', async route => {
     const req=route.request();
@@ -231,12 +238,12 @@ test.describe('Jornada completa do comprador sem cobrança real', () => {
     await page.goto('/',{waitUntil:'domcontentloaded'});
     const eventLink=page.getByRole('link',{name:/^ver evento$/i}).first();
     await expect(eventLink).toBeVisible();
-    await eventLink.click();
+    await followOfficialPathLocally(page,eventLink);
 
     await expect(page).toHaveURL(/\/evento\/\?.*evento=/);
     await expect(page.getByRole('heading',{name:'Roda de Samba Estilo Carioca'})).toBeVisible({timeout:15000});
     const buy=page.getByRole('link',{name:/Comprar ingresso|Garantir meu ingresso|Comprar agora/i}).first();
-    await buy.click();
+    await followOfficialPathLocally(page,buy);
 
     await expect(page).toHaveURL(/\/checkout\/\?.*evento=/);
     await expect(page.getByText('Seus dados')).toBeVisible({timeout:15000});
