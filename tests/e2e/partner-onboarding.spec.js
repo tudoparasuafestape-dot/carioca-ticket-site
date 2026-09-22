@@ -285,6 +285,7 @@ test.describe('Programa Parceiro CT', () => {
     await expect(page.locator('#actionBackdrop')).toBeVisible();
     await page.locator('#confirmAction').click();
     await expect.poll(() => state.adminActions).toBe(1);
+    await expect(page.locator('#actionBackdrop')).toBeHidden({ timeout:15000 });
   });
 
   test('ativacao com token invalido permanece bloqueada', async ({ page }) => {
