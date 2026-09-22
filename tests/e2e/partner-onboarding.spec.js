@@ -98,13 +98,11 @@ async function installRpcMock(page, state) {
           throw new Error('Método público não previsto no E2E: ' + method);
         }
       } else if (action === 'portalRpc') {
-        if (method === 'ctProdutorOnboardingAdminListarPROD') {
+        if (method === 'ctProdutorOnboardingAdminContarPendentesPROD') {
           expect(String(args[0] || '')).toBe(state.token);
-          resultado = {
-            sucesso:true,autorizado:true,
-            contagem:{ENVIADO:1,EM_ANALISE:0,PENDENCIA:0,REPROVADO:0,APROVANDO:0,ATIVO:0},
-            itens:[],total:0
-          };
+          state.producerBadgeCalls=(state.producerBadgeCalls||0)+1;
+          resultado = {sucesso:true,autorizado:true,total:1,contagem:{ENVIADO:1,EM_ANALISE:0,PENDENCIA:0}};
+
         } else if (method === 'ctParceiroOnboardingAdminListarPROD') {
           expect(String(args[0] || '')).toBe(state.token);
           resultado = adminListFixture(state.adminStatus || 'ENVIADO');
@@ -168,7 +166,7 @@ test.describe('Programa Parceiro CT', () => {
   test.skip(!BRANCH_MODE, 'Fluxo mutável roda na branch com backend simulado.');
 
   test('pagina publica apresenta programa e preserva Portal Parceiro existente', async ({ page }) => {
-    const state={ submitCalls:0, adminActions:0, token:'CT-E2E-ADMIN' };
+    const state={ submitCalls:0, adminActions:0, token:'CT-E2E-ADMIN', producerBadgeCalls:0 };
     await installRpcMock(page,state);
     await page.goto('/parceiro/programa/', { waitUntil:'domcontentloaded' });
     await expect(page.getByRole('heading', { name:/Indique produtores/i })).toBeVisible();
@@ -287,6 +285,7 @@ test.describe('Programa Parceiro CT', () => {
     await expect(page.locator('#app')).toBeVisible({ timeout:15000 });
     await expect(page.locator('#producerRequestsBadge')).toBeVisible({ timeout:15000 });
     await expect(page.locator('#producerRequestsBadge')).toHaveText('1');
+    await expect.poll(() => state.producerBadgeCalls).toBeGreaterThan(0);
     await expect(page.locator('#list')).toContainText('Parceiro Homologação');
     await page.locator('.item').first().click();
     await expect(page.locator('#detail')).toContainText('529.***.***-25');
