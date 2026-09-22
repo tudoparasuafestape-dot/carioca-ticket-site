@@ -26,6 +26,11 @@ requireAll('index.html',home,[
   'Acessar Portal Parceiro CT'
 ]);
 
+const ajuda=read('ajuda/index.html');
+requireLink('ajuda/index.html',ajuda,'helpProducerPortal','/produtor/');
+requireLink('ajuda/index.html',ajuda,'helpPartnerPortal','/parceiro/');
+requireLink('ajuda/index.html',ajuda,'helpPartnerProgram','/parceiro/programa/');
+
 const central=read('central/index.html');
 requireAll('central/index.html',central,[
   'href="/produtor/"',
