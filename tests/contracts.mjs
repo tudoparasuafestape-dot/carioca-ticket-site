@@ -459,6 +459,14 @@ for (const file of ['checkout/index.html', 'checkout-v2/index.html']) {
   if (!html.includes("state.emailRequired&&!email")) {
     fail(file, 'checkout sem fallback seguro para exigir e-mail antes do WhatsApp estar pronto');
   }
+
+  if (!html.includes(String.raw`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`)) {
+    fail(file, 'validação de e-mail não aceita formato padrão');
+  }
+
+  if (html.includes(String.raw`/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/`)) {
+    fail(file, 'regex de e-mail voltou a ser duplamente escapada');
+  }
 }
 
 
