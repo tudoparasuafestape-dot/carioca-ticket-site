@@ -57,7 +57,7 @@
     .top-brand{display:flex;align-items:center;gap:12px}.top-logo{width:44px;height:44px;object-fit:contain}
     .top-title{font-size:14px;font-weight:950}.top-sub{font-size:10px;color:var(--muted);margin-top:2px}
     .top-actions{display:flex;align-items:center;gap:10px}.user-pill{font-size:11px;color:#d7dae2;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .ghost{border:1px solid var(--border);background:rgba(232,179,75,.06);color:var(--gold2);border-radius:12px;padding:10px 13px;font-weight:850}
+    .ghost{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:1px solid var(--border);background:rgba(232,179,75,.06);color:var(--gold2);border-radius:12px;padding:10px 13px;font-weight:850;cursor:pointer}
 
     .container{width:min(1220px,calc(100% - 28px));margin:auto;padding:28px 0 56px}
     .hero{background:linear-gradient(135deg,rgba(232,179,75,.14),rgba(232,179,75,.03)),var(--card);
@@ -92,7 +92,7 @@
     .spinner{width:25px;height:25px;border:3px solid rgba(255,255,255,.12);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     @media(max-width:860px){.hero{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.contract-grid{grid-template-columns:1fr}.user-pill{display:none}}
-    @media(max-width:520px){.login-card{padding:24px 19px;border-radius:22px}.container{width:min(100% - 20px,1220px);padding-top:18px}.topbar-in{width:calc(100% - 20px)}.hero{padding:18px}.hero h2{font-size:23px}.metrics{grid-template-columns:1fr 1fr;gap:9px}.metric{padding:14px;min-height:104px}.metric strong{font-size:20px}}
+    @media(max-width:520px){.login-card{padding:24px 19px;border-radius:22px}.container{width:min(100% - 20px,1220px);padding-top:18px}.topbar-in{width:calc(100% - 20px);padding:10px 0;flex-wrap:wrap}.top-actions{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.top-actions .ghost{min-height:42px;padding:8px 7px;font-size:11px;text-align:center}.hero{padding:18px}.hero h2{font-size:23px}.metrics{grid-template-columns:1fr 1fr;gap:9px}.metric{padding:14px;min-height:104px}.metric strong{font-size:20px}}
   </style>
 </head>
 <body>
@@ -195,9 +195,9 @@
 <div class="shell">
   <section id="loginView" class="login-view">
     <div class="login-card">
-      <div class="brand">
-        <img class="brand-logo" src="https://cariocaticket.com.br/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
-      </div>
+      <a class="brand" href="/" aria-label="Voltar para a Carioca Ticket">
+        <img class="brand-logo" src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+      </a>
       <div class="eyebrow">Portal do Fornecedor</div>
       <h1>Suas contratações em um só lugar.</h1>
       <p class="lead">Acompanhe eventos, serviços contratados e situação dos pagamentos com segurança.</p>
@@ -256,7 +256,7 @@
       </form>
 
       <div id="loginMessage" class="message"></div>
-      <div class="secure-note">Fornecedor é um perfil externo. Esta conta não concede acesso à Central operacional da Carioca Ticket.</div>
+      <div class="secure-note">Fornecedor é um perfil externo. Esta conta não concede acesso à Central operacional da Carioca Ticket.<br><a href="/ajuda/" style="color:var(--gold2)">Precisa de ajuda?</a></div>
     </div>
   </section>
 
@@ -269,6 +269,7 @@
         </div>
         <div class="top-actions">
           <span id="topUser" class="user-pill"></span>
+          <a class="ghost" href="/ajuda/">Ajuda</a>
           <button id="refreshButton" class="ghost" type="button">Atualizar</button>
           <button id="logoutButton" class="ghost" type="button">Sair</button>
         </div>

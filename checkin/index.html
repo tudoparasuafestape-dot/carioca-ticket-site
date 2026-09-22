@@ -3,63 +3,75 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <link rel="manifest" href="/manifest-produtor.webmanifest">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
-<meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#080b10">
-  <title>Check-in Carioca | Carioca Ticket</title>
+  <meta name="theme-color" content="#111111">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="manifest" href="/manifest-checkin.webmanifest">
+  <link rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
-<style>
-    *{box-sizing:border-box}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b10}
-    body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    #loading{position:fixed;inset:0;z-index:3;display:grid;place-items:center;background:#080b10;color:#fff;transition:opacity .2s ease}
-    #loading.hide{opacity:0;pointer-events:none}
-    .card{width:min(90vw,440px);padding:28px 24px;border:1px solid rgba(241,182,64,.35);border-radius:22px;background:linear-gradient(180deg,#11151b,#0b0e13);text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.35)}
-    .brand{font-size:12px;font-weight:800;letter-spacing:.2em;color:#f1b640;text-transform:uppercase}
-    h1{font-size:24px;margin:10px 0 8px}
-    p{margin:0;color:#b9c0ca;line-height:1.45}
-    .loader{width:40px;height:40px;margin:22px auto 0;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:#f1b640;animation:spin .8s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    iframe{display:block;width:100%;height:100%;border:0;background:#fff}
-    .fallback{display:none;position:fixed;right:14px;bottom:14px;z-index:4;text-decoration:none;font-size:12px;font-weight:700;color:#111;background:#f1b640;padding:10px 12px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25)}.fallback.show{display:inline-block}
-  </style>
+  <title>Check-in Carioca | Carioca Ticket</title>
+  <link rel="stylesheet" href="/checkin/checkin.css">
   <script src="/pwa-register.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
+  <script src="/checkin/checkin.js" defer></script>
 </head>
 <body>
-  <div id="loading">
-    <div class="card">
-      <div class="brand">Carioca Ticket</div>
-      <h1>Check-in Carioca</h1>
-      <p>Carregando acesso oficial…</p>
-      <div class="loader" aria-hidden="true"></div>
+  <main class="app">
+    <a id="backCentral" class="btn btn-preto" href="/central/" style="display:inline-flex;width:auto;min-height:44px;margin:0 0 8px;text-decoration:none;align-items:center;justify-content:center;padding:0 14px">← Central Mobile</a>
+
+    <header class="topo">
+      <div>
+        <p class="marca">CARIOCA TICKET · PORTARIA</p>
+        <h1>Check-in Carioca</h1>
+      </div>
+      <button id="btnConfig" class="icone-btn" type="button" aria-label="Configuração">⚙</button>
+    </header>
+
+    <section id="avisoConfig" class="aviso-config oculto">
+      <strong>Conexão indisponível</strong>
+      <p>O leitor precisa da conexão oficial da Carioca Ticket.</p>
+      <button id="btnAbrirConfig" class="btn btn-dourado" type="button">Verificar conexão</button>
+    </section>
+
+    <section class="card">
+      <div class="card-titulo">
+        <h2>Leitor de ingresso</h2>
+        <span id="statusConexao" class="badge badge-off">Verificando</span>
+      </div>
+
+      <div id="reader" class="reader" aria-label="Leitor de QR Code"></div>
+      <p id="statusCamera" class="texto-auxiliar">Toque em “Iniciar câmera” para começar.</p>
+
+      <button id="btnIniciar" class="btn btn-verde" type="button">Iniciar câmera</button>
+      <button id="btnParar" class="btn btn-vermelho oculto" type="button">Parar câmera</button>
+
+      <div class="divisor">OU DIGITE O CÓDIGO</div>
+      <input id="codigoManual" class="campo" type="text" inputmode="text" autocomplete="off" placeholder="CT-20260922-123">
+      <button id="btnValidar" class="btn btn-preto" type="button">Validar código</button>
+      <button id="btnInstalar" class="btn btn-dourado oculto" type="button">Instalar Check-in Carioca</button>
+
+      <section id="resultado" class="resultado oculto" aria-live="assertive">
+        <div id="resultadoIcone" class="resultado-icone"></div>
+        <h2 id="resultadoTitulo"></h2>
+        <p id="resultadoMensagem"></p>
+        <div id="resultadoDados" class="resultado-dados"></div>
+      </section>
+    </section>
+
+    <footer>Abra sempre o Check-in pela Central Mobile para receber uma autorização válida.</footer>
+  </main>
+
+  <dialog id="modalConfig">
+    <div class="modal-conteudo">
+      <div class="modal-topo">
+        <h2>Conexão Carioca Ticket</h2>
+        <button class="icone-btn" type="button" aria-label="Fechar" onclick="document.getElementById('modalConfig').close()">×</button>
+      </div>
+      <label for="apiUrl">Conexão oficial</label>
+      <input id="apiUrl" class="campo" type="text" readonly>
+      <button id="btnTestarConexao" class="btn btn-preto" type="button">Testar conexão</button>
+      <button id="btnSalvarConfig" class="btn btn-dourado" type="button">Usar conexão oficial</button>
+      <p id="mensagemConfig" class="mensagem-config"></p>
     </div>
-  </div>
-  <iframe id="app" title="Check-in Carioca" allow="camera *; microphone *; fullscreen *; clipboard-read *; clipboard-write *" allowfullscreen></iframe>
-  <a id="fallback" class="fallback" href="/central/">Voltar à Central Mobile</a>
-  <script>
-    const p=new URLSearchParams(location.search);
-   if(!p.has('v'))p.set('v','2.1.7');
-   const q=p.toString();
-   const destino='https://tudoparasuafestape-dot.github.io/carioca-ticket-checkin/'+(q?'?'+q:'')+location.hash;
-    const frame=document.getElementById('app');
-    const loading=document.getElementById('loading');
-    const fallback=document.getElementById('fallback');
-    frame.src=destino;
-    fallback.href="/central/";
-    let carregou=false;
-    frame.addEventListener('load',()=>{
-      carregou=true;
-      loading.classList.add('hide');
-    });
-    setTimeout(()=>{
-      if(!carregou){
-        loading.classList.add('hide');
-        fallback.classList.add('show');
-      }
-    },7000);
-  </script>
+  </dialog>
 </body>
 </html>
