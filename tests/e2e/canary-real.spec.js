@@ -113,6 +113,51 @@ test.describe('Canario real first-party', () => {
     await expect(page.locator('#payButton')).toBeVisible();
   });
 
+  test('Link real da campanha chega ao checkout e tenta aplicar o cupom sem cobranca', async ({ page }) => {
+    await page.goto('/evento-v2/?evento=' + encodeURIComponent(EVENT_ID) + '&cupom=30ANOSSEMRAZAO&src=canario', {
+      waitUntil: 'domcontentloaded'
+    });
+    await expectFirstParty(page, '/evento-v2/');
+
+    await expect(page.locator('#campaignNotice')).toBeVisible({ timeout: 25000 });
+    await expect(page.locator('#campaignNotice')).toContainText('30ANOSSEMRAZAO');
+
+    const comprar = page.locator('#buyHero');
+    const href = await comprar.getAttribute('href');
+    expect(href || '').toContain('cupom=30ANOSSEMRAZAO');
+    expect(href || '').toContain('src=CANARIO');
+    expect(href || '').toContain('csid=');
+
+    await comprar.click();
+    await expectFirstParty(page, '/checkout-v2/');
+    await expect(page.locator('#couponCode')).toHaveValue('30ANOSSEMRAZAO', { timeout: 25000 });
+
+    await page.locator('#typeSelect').selectOption('TIPO-EBD1F87D');
+    await expect.poll(
+      () => page.locator('#lotSelect option').count(),
+      { timeout: 15000 }
+    ).toBeGreaterThan(1);
+    await page.locator('#lotSelect').selectOption('LOTE-E2D1C48C');
+
+    await expect.poll(async () => {
+      const msg = String(await page.locator('#couponMessage').textContent() || '');
+      const promoVisible = await page.locator('#promoSummary').isVisible();
+      return promoVisible || /pausada|expirou|limite disponível|Cupom aplicado/i.test(msg);
+    }, { timeout: 30000 }).toBe(true);
+
+    const msg = String(await page.locator('#couponMessage').textContent() || '');
+    console.log('CT_CANARIO_CAMPANHA_RESULTADO=' + msg.replace(/\s+/g, ' ').trim());
+
+    if (/Cupom aplicado/i.test(msg)) {
+      await expect(page.locator('#promoTotal')).toHaveText(/15,00/);
+    } else {
+      expect(msg).toMatch(/pausada|expirou|limite disponível/i);
+    }
+
+    // Não informa comprador e nunca inicia pagamento.
+    await expect(page.locator('#payButton')).toBeVisible();
+  });
+
   test('Checkout v2 carrega catalogo real sem criar cobranca', async ({ page }) => {
     const iniciou = Date.now();
     await page.goto('/checkout-v2/?evento=' + encodeURIComponent(EVENT_ID), {

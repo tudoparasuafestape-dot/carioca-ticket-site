@@ -388,7 +388,11 @@
         paymentMethod:'PIX',
         emailRequired:true,
         promotion:null,
-        couponBusy:false
+        couponBusy:false,
+        cupomDoLink:'',
+        campanhaOrigem:'',
+        campanhaSessaoId:'',
+        autoCupomDispensado:false
       };
 
       var el={};
@@ -437,6 +441,34 @@
         }else{
           cb({parameter:{}});
         }
+      }
+
+      function campanhaSessao(codigo){
+        var key='CT_CAMPANHA_SESSAO_'+state.eventId+'_'+String(codigo||'').toUpperCase();
+        try{
+          var existente=sessionStorage.getItem(key);if(existente)return existente;
+          var novo='CS-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+          sessionStorage.setItem(key,novo);return novo;
+        }catch(_){return 'CS-'+String(Date.now())+'-'+Math.random().toString(36).slice(2)}
+      }
+
+      function registrarAcessoCampanha(){
+        if(state.campanhaOrigem==='CANARIO')return;
+        if(!state.cupomDoLink||!state.campanhaSessaoId)return;
+        google.script.run
+          .withSuccessHandler(function(){})
+          .withFailureHandler(function(){})
+          .ctCuponsPublicoRegistrarAcessoSeguroPROD({
+            eventoId:state.eventId,
+            codigo:state.cupomDoLink,
+            sessaoId:state.campanhaSessaoId,
+            origem:state.campanhaOrigem||'DIRETO'
+          });
+      }
+
+      function queryCampanha(){
+        if(!state.cupomDoLink)return'';
+        return '&cupom='+encodeURIComponent(state.cupomDoLink)+'&src='+encodeURIComponent(state.campanhaOrigem||'direto')+'&csid='+encodeURIComponent(state.campanhaSessaoId||'');
       }
 
       function storageKey(){return 'CT_CHECKOUT_RECOVERY_'+state.eventId;}
@@ -494,6 +526,10 @@
       function start(){
         getLocation(function(loc){
           state.eventId=String((loc.parameter&&loc.parameter.evento)||'').trim();
+          state.cupomDoLink=String((loc.parameter&&loc.parameter.cupom)||'').trim().toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9_-]/g,'').substring(0,80);
+          state.campanhaOrigem=String((loc.parameter&&loc.parameter.src)||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').substring(0,60);
+          state.campanhaSessaoId=String((loc.parameter&&loc.parameter.csid)||'').trim().replace(/[^A-Za-z0-9._:-]/g,'').substring(0,120);
+          if(state.cupomDoLink&&!state.campanhaSessaoId)state.campanhaSessaoId=campanhaSessao(state.cupomDoLink);
           if(!state.eventId){
             showClosed('O link de compra não informou qual evento deve ser aberto.');
             return;
@@ -512,6 +548,7 @@
             }
             state.catalog=res;
             renderCatalog();
+            registrarAcessoCampanha();
             var recovery=readRecovery();
             if(recovery&&recovery.pedidoId&&recovery.token){
               recoverOrder(recovery);
@@ -551,7 +588,7 @@
         el.eventName.textContent=e.nome||'Comprar ingressos';
         el.eventMeta.textContent=[e.data,e.horario,e.local,[e.cidade,e.uf].filter(Boolean).join(' / ')].filter(Boolean).join(' · ');
         el.eventDescription.textContent=visual.descricaoCurta||'Escolha seu ingresso e finalize sua compra com segurança.';
-        el.eventBack.href='/evento-v2/?evento='+encodeURIComponent(state.eventId);
+        el.eventBack.href='/evento-v2/?evento='+encodeURIComponent(state.eventId)+queryCampanha();
 
         if(visual.capaUrl){
           el.checkoutCoverImage.src=visual.capaUrl;
@@ -569,6 +606,13 @@
         if(!(state.catalog.tipos||[]).length){
           showClosed('Não há ingressos disponíveis para venda online neste momento.');
           return;
+        }
+
+        if(state.cupomDoLink){
+          el.couponArea.classList.remove('hidden');
+          el.couponCode.value=state.cupomDoLink;
+          el.couponMessage.className='coupon-msg ok';
+          el.couponMessage.textContent='Cupom '+state.cupomDoLink+' recebido. Selecione o ingresso e o lote participante para aplicar automaticamente.';
         }
       }
 
@@ -593,6 +637,17 @@
       function onLot(){
         state.lot=state.type?(state.type.lotes||[]).find(function(l){return l.id===el.lotSelect.value;})||null:null;
         updateSummary();
+        maybeApplyCampaignCoupon();
+      }
+
+      function maybeApplyCampaignCoupon(){
+        if(!state.cupomDoLink||state.autoCupomDispensado||!state.type||!state.lot||state.couponBusy)return;
+        var atual=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||'').toUpperCase():'';
+        if(atual===state.cupomDoLink)return;
+        var digitado=String(el.couponCode.value||'').trim().toUpperCase().replace(/\s+/g,'');
+        if(digitado&&digitado!==state.cupomDoLink)return;
+        el.couponCode.value=state.cupomDoLink;
+        applyCoupon();
       }
 
       function quantity(){
@@ -804,6 +859,8 @@
           participantes:participants(),
           formaPagamento:state.paymentMethod,
           cupomCodigo:state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'',
+          campanhaOrigem:state.promotion&&state.promotion.cupom&&String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink?state.campanhaOrigem:'',
+          campanhaSessaoId:state.promotion&&state.promotion.cupom&&String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink?state.campanhaSessaoId:'',
           idempotenciaChave:getOrCreateIdempotency()
         };
 
@@ -1007,14 +1064,14 @@
 
       el.typeSelect.onchange=function(){clearCoupon(true);onType();};
       el.lotSelect.onchange=function(){clearCoupon(true);onLot();};
-      el.quantity.oninput=function(){clearCoupon(true);updateSummary();};
-      el.paymentPix.onchange=function(){clearCoupon(true);updatePaymentMethodUI();updateSummary();};
-      el.paymentCard.onchange=function(){clearCoupon(true);updatePaymentMethodUI();updateSummary();};
+      el.quantity.oninput=function(){clearCoupon(true);updateSummary();maybeApplyCampaignCoupon();};
+      el.paymentPix.onchange=function(){clearCoupon(true);updatePaymentMethodUI();updateSummary();maybeApplyCampaignCoupon();};
+      el.paymentCard.onchange=function(){clearCoupon(true);updatePaymentMethodUI();updateSummary();maybeApplyCampaignCoupon();};
       el.couponToggle.onclick=function(){el.couponArea.classList.toggle('hidden');if(!el.couponArea.classList.contains('hidden'))el.couponCode.focus();};
       el.couponApply.onclick=applyCoupon;
       el.couponReplaceNo.onclick=function(){el.couponReplace.classList.add('hidden');el.couponCode.value=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'';};
-      el.couponReplaceYes.onclick=function(){state.promotion=null;el.couponReplace.classList.add('hidden');applyCoupon();};
-      el.couponRemove.onclick=function(){el.couponCode.value='';clearCoupon(false);updateSummary();};
+      el.couponReplaceYes.onclick=function(){if(state.cupomDoLink&&String(el.couponCode.value||'').trim().toUpperCase()!==state.cupomDoLink)state.autoCupomDispensado=true;state.promotion=null;el.couponReplace.classList.add('hidden');applyCoupon();};
+      el.couponRemove.onclick=function(){if(state.cupomDoLink)state.autoCupomDispensado=true;el.couponCode.value='';clearCoupon(false);updateSummary();};
       el.payButton.onclick=createPayment;
       el.copyButton.onclick=copyPix;
       el.refreshButton.onclick=refresh;
