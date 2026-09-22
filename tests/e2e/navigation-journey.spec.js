@@ -67,6 +67,11 @@ async function installMock(page,state){
   });
 }
 
+async function expectNoHorizontalOverflow(page){
+  const overflow=await page.evaluate(()=>Math.max(0,document.documentElement.scrollWidth-document.documentElement.clientWidth));
+  expect(overflow).toBeLessThanOrEqual(2);
+}
+
 async function seedSession(page,token){
   await page.goto('/',{waitUntil:'domcontentloaded'});
   await page.evaluate(({key,token})=>{
@@ -92,6 +97,7 @@ test.describe('Gate de jornada e navegação por perfil',()=>{
     await expect(page.locator('#partnerAdminLink')).toBeVisible();
     await expect(page.locator('#partnerAdminLink')).toHaveText('Gestão Parceiros CT');
     await expect(page.locator('#partnerAdminLink')).toHaveAttribute('href','/parceiro/admin/');
+    await expectNoHorizontalOverflow(page);
 
     await page.locator('#partnerAdminLink').click();
     await expect(page).toHaveURL(/\/parceiro\/admin\//);
@@ -99,11 +105,13 @@ test.describe('Gate de jornada e navegação por perfil',()=>{
     await expect(page.locator('#partnerPortalLink')).toHaveAttribute('href','/parceiro/');
     await expect(page.locator('#producerRequestsLink')).toHaveAttribute('href','/produtor/solicitacoes/');
     await expect(page.locator('#logoutAdminButton')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
 
     await page.locator('#partnerPortalLink').click();
     await expect(page).toHaveURL(/\/parceiro\/$/);
     await expect(page.getByRole('heading',{name:/Seu resultado em um só lugar/i})).toBeVisible();
     await expect(page.getByRole('link',{name:/Conheça o programa/i})).toHaveAttribute('href','/parceiro/programa/');
+    await expectNoHorizontalOverflow(page);
   });
 
   test('backoffice permite sair sem depender de outra tela',async({page})=>{
@@ -131,5 +139,6 @@ test.describe('Gate de jornada e navegação por perfil',()=>{
     await expect(page.getByRole('link',{name:'Gestão Parceiros CT'})).toHaveAttribute('href','/parceiro/admin/');
     await expect(page.getByRole('link',{name:'Portal do Produtor'})).toHaveAttribute('href','/produtor/');
     await expect(page.locator('#logoutAdminButton')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
   });
 });
