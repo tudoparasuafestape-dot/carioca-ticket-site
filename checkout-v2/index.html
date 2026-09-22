@@ -391,7 +391,8 @@
         couponBusy:false,
         cupomDoLink:'',
         campanhaOrigem:'',
-        campanhaSessaoId:''
+        campanhaSessaoId:'',
+        autoCupomDispensado:false
       };
 
       var el={};
@@ -639,9 +640,11 @@
       }
 
       function maybeApplyCampaignCoupon(){
-        if(!state.cupomDoLink||!state.type||!state.lot||state.couponBusy)return;
+        if(!state.cupomDoLink||state.autoCupomDispensado||!state.type||!state.lot||state.couponBusy)return;
         var atual=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||'').toUpperCase():'';
         if(atual===state.cupomDoLink)return;
+        var digitado=String(el.couponCode.value||'').trim().toUpperCase().replace(/\s+/g,'');
+        if(digitado&&digitado!==state.cupomDoLink)return;
         el.couponCode.value=state.cupomDoLink;
         applyCoupon();
       }
@@ -1066,8 +1069,8 @@
       el.couponToggle.onclick=function(){el.couponArea.classList.toggle('hidden');if(!el.couponArea.classList.contains('hidden'))el.couponCode.focus();};
       el.couponApply.onclick=applyCoupon;
       el.couponReplaceNo.onclick=function(){el.couponReplace.classList.add('hidden');el.couponCode.value=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'';};
-      el.couponReplaceYes.onclick=function(){state.promotion=null;el.couponReplace.classList.add('hidden');applyCoupon();};
-      el.couponRemove.onclick=function(){el.couponCode.value='';clearCoupon(false);updateSummary();};
+      el.couponReplaceYes.onclick=function(){if(state.cupomDoLink&&String(el.couponCode.value||'').trim().toUpperCase()!==state.cupomDoLink)state.autoCupomDispensado=true;state.promotion=null;el.couponReplace.classList.add('hidden');applyCoupon();};
+      el.couponRemove.onclick=function(){if(state.cupomDoLink)state.autoCupomDispensado=true;el.couponCode.value='';clearCoupon(false);updateSummary();};
       el.payButton.onclick=createPayment;
       el.copyButton.onclick=copyPix;
       el.refreshButton.onclick=refresh;
