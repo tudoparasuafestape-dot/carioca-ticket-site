@@ -166,12 +166,12 @@ test.describe('Cupons e Campanhas',()=>{
     expect(state.saveCalls).toBe(1);
   });
 
-  test('Campanha ativa oferece WhatsApp, copiar link/código e métricas de divulgação',async({page})=>{
+  test('Campanha ativa usa compartilhamento nativo, copiar link/código e métricas de divulgação',async({page})=>{
     const state={saved:true,paused:false,saveCalls:0,statusCalls:0,validationCalls:0,checkoutCalls:0,shareCalls:0,trafficCalls:0};
     await page.addInitScript(()=>{
-      window.__opened='';
+      window.__shared=null;
       window.__copied='';
-      window.open=function(url){window.__opened=String(url||'');return {}};
+      try{Object.defineProperty(navigator,'share',{configurable:true,value:async function(data){window.__shared=data||{};}})}catch(_){}
       try{Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async function(text){window.__copied=String(text||'')}}})}catch(_){}
     });
     await mock(page,state);await seed(page);
@@ -181,12 +181,15 @@ test.describe('Cupons e Campanhas',()=>{
     await expect(page.locator('#campaigns')).toContainText('Conversão do link');
     await expect(page.locator('#campaigns')).toContainText('25%');
 
-    await page.getByRole('button',{name:'WhatsApp'}).click();
+    await page.getByRole('button',{name:'Compartilhar'}).click();
     await expect.poll(()=>state.shareCalls).toBe(1);
-    const opened=await page.evaluate(()=>window.__opened);
-    expect(decodeURIComponent(opened)).toContain('30ANOSSEMRAZAO');
-    expect(decodeURIComponent(opened)).toContain('Roda de Samba Estilo Carioca');
-    expect(decodeURIComponent(opened)).toContain('15,00');
+    expect(state.lastShare&&state.lastShare.acao).toBe('COMPARTILHAR');
+    const shared=await page.evaluate(()=>window.__shared);
+    expect(String(shared&&shared.title||'')).toContain('Lançamento Carioca Ticket');
+    expect(String(shared&&shared.text||'')).toContain('30ANOSSEMRAZAO');
+    expect(String(shared&&shared.text||'')).toContain('Roda de Samba Estilo Carioca');
+    expect(String(shared&&shared.text||'')).toContain('15,00');
+    expect(String(shared&&shared.text||'')).toContain('cariocaticket.com.br/evento-v2/');
 
     await page.getByRole('button',{name:'Copiar link'}).click();
     await expect.poll(()=>state.shareCalls).toBe(2);
