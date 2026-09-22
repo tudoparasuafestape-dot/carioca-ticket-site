@@ -224,8 +224,7 @@ for (const file of [
   'reembolsos/index.html',
   'financeiro/index.html',
   'relatorios/index.html',
-  'acessos/index.html',
-  'checkin/index.html'
+  'acessos/index.html'
 ]) {
   const html = read(file);
   if (!html) continue;
@@ -238,6 +237,36 @@ for (const file of [
   }
   if (!html.includes('/pwa-register.js')) {
     fail(file, 'area administrativa sem registro PWA');
+  }
+}
+
+const checkinManifest = read('manifest-checkin.webmanifest');
+if (checkinManifest) {
+  try {
+    const parsedCheckin = JSON.parse(checkinManifest);
+    if (
+      parsedCheckin.id !== '/checkin/' ||
+      parsedCheckin.start_url !== '/checkin/' ||
+      parsedCheckin.scope !== '/checkin/' ||
+      parsedCheckin.display !== 'standalone' ||
+      parsedCheckin.name !== 'Carioca Ticket Check-in'
+    ) {
+      fail('manifest-checkin.webmanifest', 'identidade/start_url/scope do PWA de Check-in incorretos');
+    }
+  } catch (error) {
+    fail('manifest-checkin.webmanifest', 'JSON inválido');
+  }
+}
+const checkinPagePwa = read('checkin/index.html');
+if (checkinPagePwa) {
+  if (!checkinPagePwa.includes('rel="manifest" href="/manifest-checkin.webmanifest"')) {
+    fail('checkin/index.html', 'Check-in sem manifesto PWA próprio');
+  }
+  if (!checkinPagePwa.includes('carioca-ticket-icon-192.png')) {
+    fail('checkin/index.html', 'Check-in sem ícone oficial');
+  }
+  if (!checkinPagePwa.includes('/pwa-register.js')) {
+    fail('checkin/index.html', 'Check-in sem registro PWA base');
   }
 }
 
