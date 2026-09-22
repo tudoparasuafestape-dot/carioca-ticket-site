@@ -33,7 +33,7 @@
     h1{margin:7px 0 5px;font-size:28px;line-height:1.1}
     .topo p{margin:0;color:#C7CBD0;font-size:13px}
     .actions-top{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
-    .btn-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border-radius:12px;text-decoration:none;font-weight:800;font-size:13px;border:1px solid rgba(255,255,255,.14);color:#fff;background:rgba(255,255,255,.06)}
+    .btn-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border-radius:12px;text-decoration:none;font-weight:800;font-size:13px;border:1px solid rgba(255,255,255,.14);color:#fff;background:rgba(255,255,255,.06);cursor:pointer}
     main{padding-top:18px}
     .panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(16,24,40,.06)}
     .panel + .panel{margin-top:14px}
@@ -185,8 +185,9 @@
       <h1>Usuários e Permissões</h1>
       <p>Gerencie o perfil operacional das pessoas vinculadas ao seu produtor.</p>
       <div class="actions-top">
-        <a class="btn-link" href="https://cariocaticket.com.br/central/" target="_top">Central Mobile</a>
-        <a class="btn-link" href="https://cariocaticket.com.br/produtor/" target="_top">Portal do Produtor</a>
+        <a class="btn-link" href="/central/" target="_top">Central Mobile</a>
+        <a class="btn-link" href="/produtor/" target="_top">Portal do Produtor</a>
+        <button id="logoutButton" class="btn-link" type="button">Sair</button>
       </div>
     </div>
   </header>
@@ -1082,6 +1083,26 @@
             select.value
           );
       }
+
+      function sairGestaoAcessos(){
+        var atual=token;
+        try{sessionStorage.removeItem(SESSION_KEY)}catch(_){}
+        try{localStorage.removeItem(SESSION_KEY)}catch(_){}
+        token='';
+        dados=null;
+        if(atual){
+          google.script.run
+            .withSuccessHandler(function(){ window.location.replace('/produtor/'); })
+            .withFailureHandler(function(){ window.location.replace('/produtor/'); })
+            .logoutUsuarioCT2(atual);
+          setTimeout(function(){ window.location.replace('/produtor/'); },1200);
+          return;
+        }
+        window.location.replace('/produtor/');
+      }
+
+      var logoutButton=document.getElementById('logoutButton');
+      if(logoutButton)logoutButton.addEventListener('click',sairGestaoAcessos);
 
       iniciarGestaoAcessos();
     })();
