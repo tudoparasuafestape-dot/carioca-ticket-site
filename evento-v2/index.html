@@ -510,6 +510,7 @@
       }
 
       function registrarAcessoCampanha(){
+        if(state.campanhaOrigem==='CANARIO')return;
         if(!state.cupomCodigo||!state.campanhaSessaoId)return;
         google.script.run
           .withSuccessHandler(function(){})
