@@ -1396,6 +1396,14 @@ target="_top"
 >
 Gestão Parceiros CT
 </a>
+<a
+id="backofficeMasterLink"
+class="ghost hidden"
+href="/backoffice/"
+target="_top"
+>
+Backoffice Master
+</a>
 <button
 id="changeEmailButton"
 class="ghost"
@@ -2082,6 +2090,7 @@ function iniciar(){
 'accessManagementLink',
 'partnerPortalLink',
 'partnerAdminLink',
+'backofficeMasterLink',
 'changeEmailButton',
 'emailModalBackdrop',
 'emailModalClose',
@@ -4257,6 +4266,11 @@ perfil === 'ADMINISTRADOR'
 );
 
 el.partnerAdminLink.classList.toggle(
+'hidden',
+!podeGerirParceiros
+);
+
+el.backofficeMasterLink.classList.toggle(
 'hidden',
 !podeGerirParceiros
 );
