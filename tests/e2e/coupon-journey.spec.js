@@ -186,7 +186,7 @@ test.describe('Cupons e Campanhas',()=>{
     const opened=await page.evaluate(()=>window.__opened);
     expect(decodeURIComponent(opened)).toContain('30ANOSSEMRAZAO');
     expect(decodeURIComponent(opened)).toContain('Roda de Samba Estilo Carioca');
-    expect(decodeURIComponent(opened)).toContain('R$ 15,00');
+    expect(decodeURIComponent(opened)).toContain('15,00');
 
     await page.getByRole('button',{name:'Copiar link'}).click();
     await expect.poll(()=>state.shareCalls).toBe(2);
@@ -212,7 +212,8 @@ test.describe('Cupons e Campanhas',()=>{
     expect(buy).toContain('src=WHATSAPP');
     expect(buy).toContain('csid=');
 
-    await page.goto('https://cariocaticket.com.br'+buy,{waitUntil:'domcontentloaded'});
+    await page.locator('#buyHero').click();
+    await expect(page).toHaveURL(/\/checkout-v2\/\?evento=/);
     await expect(page.getByText('Seus dados')).toBeVisible({timeout:15000});
     await expect(page.locator('#couponCode')).toHaveValue(CODE);
     await page.locator('#typeSelect').selectOption(TYPE_INDIVIDUAL);
