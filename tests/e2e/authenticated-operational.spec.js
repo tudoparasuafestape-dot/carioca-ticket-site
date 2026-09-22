@@ -521,6 +521,48 @@ function financeiroFixture() {
   };
 }
 
+function financeiroProdutorFixture() {
+  const f = financeiroFixture();
+  return {
+    sucesso: true,
+    autenticado: true,
+    autorizado: true,
+    somenteLeitura: false,
+    podeMovimentar: true,
+    perfil: 'ADMINISTRADOR',
+    evento: f.evento,
+    resumo: {
+      receitaConfirmadaNumero: 90,
+      receitaConfirmada: 'R$ 90,00',
+      recebidoEventoNumero: 65,
+      recebidoEvento: 'R$ 65,00',
+      aReceberEventoNumero: 25,
+      aReceberEvento: 'R$ 25,00',
+      saldoContaAsaasDisponivel: true,
+      saldoContaAsaasNumero: 180,
+      saldoContaAsaas: 'R$ 180,00',
+      saldoContaEscopo: 'CONTA_ASAAS_PRODUTOR',
+      saquesReservadosNumero: 0,
+      saquesReservados: 'R$ 0,00',
+      taxasCtPendentesNumero: 0,
+      taxasCtPendentes: 'R$ 0,00'
+    },
+    politica: {
+      taxaAntecipacaoCtPercentual: 2.5,
+      taxaAntecipacaoModo: 'LEDGER_CT',
+      saqueModo: 'SOLICITACAO_INTERNA',
+      saqueMovimentaDinheiroAutomaticamente: false,
+      saldoContaIncluiTodosEventos: true
+    },
+    antecipacoesElegiveis: [],
+    historico: [],
+    diagnostico: { saldoErro: '' },
+    atualizadoEm: '22/09/2026 00:30:00',
+    versaoModulo: '1.0.0'
+  };
+}
+
+
 function relatoriosFixture() {
   const f = financeiroFixture();
   return {
@@ -912,6 +954,18 @@ async function installMock(page, state) {
             resultado = financeiroFixture();
             break;
 
+          case 'ctFinanceiroProdutorPainelPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = financeiroProdutorFixture();
+            break;
+
+          case 'ctFinanceiroProdutorSimularAntecipacaoPROD':
+          case 'ctFinanceiroProdutorSolicitarAntecipacaoPROD':
+          case 'ctFinanceiroProdutorSolicitarSaquePROD':
+          case 'ctFinanceiroProdutorCancelarSaquePROD':
+            throw new Error('Teste de navegacao nao deve movimentar o financeiro.');
+
           case 'ctRelatoriosEventoCarregarPROD':
             expect(String(args[0] || '')).toBe(state.token);
             expect(String(args[1] || '')).toBe(EVENT_ID);
@@ -1298,11 +1352,15 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page).toHaveURL(/\/financeiro\/\?evento=/);
     await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#revenue')).toHaveText('R$ 90,00');
-    await expect(page.locator('#sales')).toHaveText('3');
-    await expect(page.getByRole('link', { name: /Central Mobile/i })).toHaveAttribute('href', '/central/');
+    await expect(page.locator('#received')).toHaveText('R$ 65,00');
+    await expect(page.locator('#receivable')).toHaveText('R$ 25,00');
+    await expect(page.locator('#asaasBalance')).toHaveText('R$ 180,00');
+    await expect(page.getByRole('link', { name: /Central$/i })).toHaveAttribute('href', '/central/');
+    await expect(page.locator('body')).toContainText(/taxa CT 2,5%/i);
+    await expect(page.locator('body')).toContainText(/Nenhuma transferência Pix\/TED é executada automaticamente/i);
     await expectNoTechnicalVisibleLinks(page);
 
-    await page.getByRole('link', { name: /Central Mobile/i }).click();
+    await page.getByRole('link', { name: /Central$/i }).click();
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
