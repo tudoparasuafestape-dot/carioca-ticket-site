@@ -71,7 +71,8 @@ function toast(m){var t=document.getElementById('toast');t.textContent=String(m|
 function badgeClass(s){s=String(s||'').toUpperCase();if(s==='ATIVO')return'ok';if(s==='REPROVADO')return'bad';return''}
 function human(s){return String(s||'').replace('EM_ANALISE','EM ANÁLISE').replace('PENDENCIA','PENDÊNCIA')}
 
-async function load(){
+async function load(options){
+ options=options||{};
  if(state.busy)return;state.busy=true;
  try{
   var f={status:document.getElementById('statusFilter').value,termo:document.getElementById('search').value};
@@ -80,7 +81,7 @@ async function load(){
   state.list=Array.isArray(r.itens)?r.itens:[];
   var c=r.contagem||{};document.getElementById('cSent').textContent=c.ENVIADO||0;document.getElementById('cReview').textContent=c.EM_ANALISE||0;document.getElementById('cPending').textContent=c.PENDENCIA||0;document.getElementById('cRejected').textContent=c.REPROVADO||0;document.getElementById('cActive').textContent=c.ATIVO||0;
   renderList();document.getElementById('gate').classList.add('hidden');document.getElementById('app').classList.remove('hidden');
-  if(state.selected&&state.selected.solicitacaoId)await detail(state.selected.solicitacaoId,true);
+  if(!options.skipDetail&&state.selected&&state.selected.solicitacaoId)await detail(state.selected.solicitacaoId,true);
  }catch(e){if(document.getElementById('app').classList.contains('hidden')){document.getElementById('gateText').textContent=e&&e.message?e.message:String(e)}else toast(e&&e.message?e.message:String(e))}
  finally{state.busy=false}
 }
@@ -113,7 +114,17 @@ async function doAction(){
  if(state.action==='SOLICITAR_PENDENCIA'&&pub.length<3){toast('Informe a pendência para o produtor.');return}
  if(state.action==='REPROVAR'&&note.length<3){toast('Informe a justificativa interna.');return}
  var id=state.selected.solicitacaoId;state.busy=true;document.getElementById('confirmAction').disabled=true;
- try{var r=await rpc('ctProdutorOnboardingAdminDecidirPROD',[state.session.token,id,state.action,{observacaoInterna:note,pendenciaPublica:pub}]);if(!r||r.sucesso!==true)throw new Error('A decisão não foi concluída.');document.getElementById('actionBackdrop').classList.add('hidden');state.action='';state.busy=false;await load();await detail(id,false);toast(r.produtorId?'Produtor ativado e vínculo comercial processado.':'Ação concluída com auditoria.')}
+ try{var r=await rpc('ctProdutorOnboardingAdminDecidirPROD',[state.session.token,id,state.action,{observacaoInterna:note,pendenciaPublica:pub}]);if(!r||r.sucesso!==true)throw new Error('A decisão não foi concluída.');
+  document.getElementById('actionBackdrop').classList.add('hidden');state.action='';
+  if(r.solicitacao){
+    state.selected=r.solicitacao;
+    state.list=state.list.map(function(x){if(String(x.solicitacaoId||'')!==String(id))return x;var novo=Object.assign({},x);novo.status=String(r.solicitacao.status||x.status||'');novo.atualizadoEm=String(r.solicitacao.atualizadoEm||x.atualizadoEm||'');return novo});
+    renderList();renderDetail();
+  }
+  state.busy=false;
+  await load({skipDetail:true});
+  if(r.solicitacao){state.selected=r.solicitacao;renderList();renderDetail()}
+  toast(r.produtorId?'Produtor ativado e vínculo comercial processado.':'Ação concluída com auditoria.')}
  catch(e){toast(e&&e.message?e.message:String(e))}
  finally{state.busy=false;document.getElementById('confirmAction').disabled=false}
 }
