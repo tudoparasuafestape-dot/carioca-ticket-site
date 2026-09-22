@@ -3351,9 +3351,32 @@ if(
 resposta.token
 ){
 
-encerrarSessaoServidorSilencioso(
-resposta.token
+state.token =
+String(
+resposta.token ||
+''
 );
+
+state.usuario =
+resposta.usuario ||
+null;
+
+state.produtores =
+[];
+
+salvarSessao(
+state.token,
+resposta.expiraEm ||
+''
+);
+
+await sairFirebaseSilencioso();
+
+window.location.replace(
+'/produtor/solicitar/'
+);
+
+return;
 }
 
 await sairFirebaseSilencioso();
@@ -4099,14 +4122,24 @@ false
 if(
 !r ||
 r.autenticado !==
-true ||
-r.autorizado !==
 true
 ){
 
 limparSessaoLocal();
 
 mostrarLogin();
+
+return;
+}
+
+if(
+r.autorizado !==
+true
+){
+
+window.location.replace(
+'/produtor/solicitar/'
+);
 
 return;
 }
