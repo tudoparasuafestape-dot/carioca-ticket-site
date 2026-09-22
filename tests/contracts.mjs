@@ -14,6 +14,8 @@ const protectedFiles = [
   'checkin/index.html',
   'consulta/index.html',
   'produtor/index.html',
+  'produtor/solicitar/index.html',
+  'produtor/solicitacoes/index.html',
   'produtor-v2/index.html',
   'acessos-v2/index.html',
   'eventos-v2/index.html',
@@ -311,6 +313,62 @@ if (producerPage) {
   }
 }
 
+const produtorSolicitar = read('produtor/solicitar/index.html');
+if (produtorSolicitar) {
+  for (const required of [
+    "ctMinhaCariocaAction','portalRpc'",
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctProdutorOnboardingConsultarPROD',
+    'ctProdutorOnboardingEnviarPROD',
+    'Indicação ',
+    'Enviar para análise',
+    '/produtor/'
+  ]) {
+    if (!produtorSolicitar.includes(required)) {
+      fail('produtor/solicitar/index.html', 'onboarding self-service incompleto: ' + required);
+    }
+  }
+  if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(produtorSolicitar)) {
+    fail('produtor/solicitar/index.html', 'onboarding de produtor usa dialogo nativo');
+  }
+  const submitStart = produtorSolicitar.indexOf("document.getElementById('producerForm').addEventListener");
+  const submitBody = submitStart >= 0 ? produtorSolicitar.slice(submitStart) : '';
+  if (/codigoIndicacao\s*:/.test(submitBody)) {
+    fail('produtor/solicitar/index.html', 'browser tenta enviar codigo de indicacao no onboarding; atribuicao deve ser server-side');
+  }
+}
+
+const produtorSolicitacoes = read('produtor/solicitacoes/index.html');
+if (produtorSolicitacoes) {
+  for (const required of [
+    "ctMinhaCariocaAction','portalRpc'",
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctProdutorOnboardingAdminListarPROD',
+    'ctProdutorOnboardingAdminDetalharPROD',
+    'ctProdutorOnboardingAdminDecidirPROD',
+    'INICIAR_ANALISE',
+    'SOLICITAR_PENDENCIA',
+    'APROVAR',
+    'REPROVAR',
+    'Aprovar e ativar'
+  ]) {
+    if (!produtorSolicitacoes.includes(required)) {
+      fail('produtor/solicitacoes/index.html', 'backoffice de produtores incompleto: ' + required);
+    }
+  }
+  if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(produtorSolicitacoes)) {
+    fail('produtor/solicitacoes/index.html', 'backoffice de produtores usa dialogo nativo');
+  }
+}
+
+if (producerPage) {
+  const onboardingRedirects =
+    (producerPage.match(/\/produtor\/solicitar\//g) || []).length;
+  if (onboardingRedirects < 2) {
+    fail('produtor/index.html', 'conta autenticada sem produtor nao e encaminhada ao onboarding no login e restore');
+  }
+}
+
 const home = read('index.html');
 if (home) {
   if (!/href=["'][^"']*\/evento\//i.test(home)) {
@@ -456,6 +514,9 @@ if (parceiroAdmin) {
   }
   if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(parceiroAdmin)) {
     fail('parceiro/admin/index.html', 'backoffice Parceiro CT usa dialogo nativo');
+  }
+  if (!parceiroAdmin.includes('/produtor/solicitacoes/')) {
+    fail('parceiro/admin/index.html', 'Backoffice Parceiro CT sem acesso ao onboarding administrativo de produtores');
   }
   for (const required of [
     'function closeAction(force)',
