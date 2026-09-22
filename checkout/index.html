@@ -283,6 +283,13 @@
             <button id="applyCoupon" class="secondary" type="button">Aplicar</button>
           </div>
           <div id="couponMessage" class="coupon-message info"></div>
+          <div id="replaceCouponArea" class="hidden" style="margin-top:8px;padding:10px;border:1px solid #f0dca7;border-radius:11px;background:#fff9e8">
+            <div style="font-size:11px;color:#5b4308">Este pedido já possui um cupom aplicado. Deseja substituir?</div>
+            <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap">
+              <button id="replaceCouponConfirm" class="secondary" type="button">Substituir cupom</button>
+              <button id="replaceCouponCancel" class="secondary" type="button">Manter atual</button>
+            </div>
+          </div>
           <button id="removeCoupon" class="coupon-remove hidden" type="button">Remover cupom</button>
         </div>
       </div>
@@ -402,7 +409,7 @@
       [
         'loading','loadingTitle','loadingText','eventName','eventMeta','eventDescription','eventBack','checkoutCover','checkoutCoverImage','salePanel','buyerPanel','payActionPanel',
         'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','summarySimpleTotal','promoBreakdown','promoOriginal','promoCodeLabel','promoDiscount','promoFeeLine','promoFee','promoTotal','participants',
-        'couponWrap','couponToggle','couponBody','couponCode','applyCoupon','couponMessage','removeCoupon',
+        'couponWrap','couponToggle','couponBody','couponCode','applyCoupon','couponMessage','replaceCouponArea','replaceCouponConfirm','replaceCouponCancel','removeCoupon',
         'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','buyerEmailLabel','buyerEmailHelp','marketing','paymentPix','paymentCard','payButton','payHelp',
         'pixPanel','pixStatus','qrImage','pixCode','copyButton','refreshButton','expiryText',
         'cardPanel','cardStatus','cardPaymentLink','cardRefreshButton','cardExpiryText',
@@ -626,6 +633,7 @@
           clearIdempotency();
         }
         el.removeCoupon.classList.add('hidden');
+        el.replaceCouponArea.classList.add('hidden');
         el.promoBreakdown.classList.add('hidden');
         el.summarySimpleTotal.classList.remove('hidden');
         if(showNotice){
@@ -640,7 +648,7 @@
         if(state.coupon)clearCoupon(true);
       }
 
-      function applyCoupon(){
+      function applyCoupon(forceReplace){
         if(state.couponBusy||state.busy)return;
         if(!state.type||!state.lot){
           showCouponMessage('Selecione o ingresso e o lote antes de aplicar o cupom.','err');
@@ -651,6 +659,24 @@
           showCouponMessage('Digite seu cupom.','err');
           return;
         }
+
+        if(
+          state.coupon &&
+          String(state.coupon.codigo||'')!==codigo &&
+          forceReplace!==true
+        ){
+          el.replaceCouponArea.classList.remove('hidden');
+          showCouponMessage('Há outro cupom aplicado neste pedido.','info');
+          return;
+        }
+
+        el.replaceCouponArea.classList.add('hidden');
+
+        if(forceReplace===true&&state.coupon){
+          state.coupon=null;
+          clearIdempotency();
+        }
+
         state.couponBusy=true;
         el.applyCoupon.disabled=true;
         el.applyCoupon.textContent='Validando...';
@@ -736,9 +762,11 @@
             el.promoOriginal.textContent=money(Number(b.subtotalOriginal||total));
             el.promoCodeLabel.textContent='Cupom '+state.coupon.codigo;
             el.promoDiscount.textContent='- '+money(Number(b.descontoTotal||0));
+            var taxa=Number(b.taxaEvento||0);
             el.promoTotal.textContent=money(Number(b.totalFinal||0));
             el.summaryPrice.textContent=money(Number(b.totalFinal||0));
-            el.promoFeeLine.classList.add('hidden');
+            el.promoFee.textContent=money(taxa);
+            el.promoFeeLine.classList.toggle('hidden',!(taxa>0));
             el.promoBreakdown.classList.remove('hidden');
             el.summarySimpleTotal.classList.add('hidden');
           }else{
@@ -1074,7 +1102,13 @@
       el.paymentPix.onchange=function(){invalidateCouponForChange();updatePaymentMethodUI();};
       el.paymentCard.onchange=function(){invalidateCouponForChange();updatePaymentMethodUI();};
       el.couponToggle.onclick=function(){var open=el.couponBody.classList.contains('hidden');el.couponBody.classList.toggle('hidden',!open);el.couponToggle.setAttribute('aria-expanded',open?'true':'false');if(open)setTimeout(function(){el.couponCode.focus()},20);};
-      el.applyCoupon.onclick=applyCoupon;
+      el.applyCoupon.onclick=function(){applyCoupon(false);};
+      el.replaceCouponConfirm.onclick=function(){applyCoupon(true);};
+      el.replaceCouponCancel.onclick=function(){
+        el.replaceCouponArea.classList.add('hidden');
+        if(state.coupon)el.couponCode.value=state.coupon.codigo;
+        showCouponMessage(state.coupon?'Cupom '+state.coupon.codigo+' mantido.':'','info');
+      };
       el.removeCoupon.onclick=function(){clearCoupon(false);el.couponCode.value='';showCouponMessage('Cupom removido.','info');};
       el.payButton.onclick=createPayment;
       el.copyButton.onclick=copyPix;
