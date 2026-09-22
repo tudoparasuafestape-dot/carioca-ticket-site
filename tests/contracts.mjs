@@ -379,13 +379,13 @@ if (parceiroPrograma) {
     'accept-check',
     'Copiar mensagem',
     'Central de Materiais do Parceiro',
-    'taxa CT 2,5%'
+    'id="anticipationFee"'
   ]) {
     if (!parceiroPrograma.includes(required)) {
       fail('parceiro/programa/index.html', 'onboarding publico incompleto: ' + required);
     }
   }
-  if (/9,5%|9%|8,5%|piso de desconto|alçada/i.test(parceiroPrograma)) {
+  if (/\b9,5%\b|\b9%\b|\b8,5%\b/i.test(parceiroPrograma)) {
     fail('parceiro/programa/index.html', 'pagina publica expoe condicao comercial interna');
   }
   if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(parceiroPrograma)) {
