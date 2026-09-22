@@ -635,6 +635,31 @@
       transform:scale(.98);
     }
 
+    .ct-nav-row {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .ct-nav-row .ct-nav-voltar {
+      margin-bottom:0;
+    }
+
+    .ct-nav-cupons {
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:8px 11px;
+      border-radius:10px;
+      color:#111;
+      background:linear-gradient(135deg,#f1c652,#d9a72e);
+      border:0;
+      font-size:12px;
+      font-weight:900;
+      text-decoration:none;
+    }
+
   
     .participantes-box {
       margin: 18px 0;
@@ -847,6 +872,7 @@
 
   <main class="app">
     <header class="cabecalho">
+      <div class="ct-nav-row">
       <a
         class="ct-nav-voltar"
         href="/central/"
@@ -854,6 +880,15 @@
       >
         ← Voltar para a Central
       </a>
+      <a
+        id="cuponsCampanhasLink"
+        class="ct-nav-cupons"
+        href="/cupons/"
+        target="_top"
+      >
+        Cupons & Campanhas
+      </a>
+      </div>
 
       <div class="marca">
         <div class="marca-texto">
@@ -1325,6 +1360,13 @@
                 ''
               ).trim();
 
+            var linkCupons=document.getElementById('cuponsCampanhasLink');
+            if(linkCupons){
+              linkCupons.href=eventoIdSolicitado
+                ? '/cupons/?evento='+encodeURIComponent(eventoIdSolicitado)
+                : '/cupons/';
+            }
+
             if (!eventoIdSolicitado) {
               mostrarCarregamento(false);
               mostrarErroInicial(
@@ -1352,6 +1394,13 @@
           ).trim();
       } catch (erroUrl) {
         eventoIdSolicitado = '';
+      }
+
+      var linkCuponsFallback=document.getElementById('cuponsCampanhasLink');
+      if(linkCuponsFallback){
+        linkCuponsFallback.href=eventoIdSolicitado
+          ? '/cupons/?evento='+encodeURIComponent(eventoIdSolicitado)
+          : '/cupons/';
       }
 
       if (!eventoIdSolicitado) {

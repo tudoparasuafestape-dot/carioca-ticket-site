@@ -509,6 +509,26 @@ font-size:22px;
 font-weight:900;
 margin-bottom:8px
 }
+.event-actions{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+margin-top:14px
+}
+.event-action-link{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-height:42px;
+padding:0 13px;
+border-radius:12px;
+border:1px solid rgba(232,179,75,.35);
+background:rgba(232,179,75,.08);
+color:var(--gold2);
+font-size:11px;
+font-weight:900;
+text-decoration:none
+}
 .event-meta{
 display:flex;
 flex-wrap:wrap;
@@ -1489,6 +1509,9 @@ Evento
 <span id="eventLocation">
 </span>
 </div>
+<div class="event-actions">
+<a id="couponCampaignsLink" class="event-action-link hidden" href="/cupons/" target="_top">Cupons & Campanhas</a>
+</div>
 </div>
 <section class="metrics">
 <div class="metric gold">
@@ -2096,6 +2119,7 @@ function iniciar(){
 'eventDate',
 'eventTime',
 'eventLocation',
+'couponCampaignsLink',
 'metricRevenue',
 'metricTickets',
 'metricPresent',
@@ -4806,6 +4830,7 @@ if(
 ){
 state.eventoAtual = null;
 el.refreshButton.disabled = true;
+if(el.couponCampaignsLink){el.couponCampaignsLink.classList.add('hidden');el.couponCampaignsLink.href='/cupons/';}
 el.eventPickerTitle.textContent = 'Selecione um evento';
 el.eventPickerMeta.textContent = '';
 el.dashboard.classList.add('hidden');
@@ -4841,6 +4866,13 @@ String(state.eventoAtual.status||'').trim()
 ].filter(Boolean).join(' • ');
 
 renderizarListaSeletorEvento();
+
+if(el.couponCampaignsLink){
+  var perfilCampanha=String(state.produtorAtual&&state.produtorAtual.perfil||'').trim().toUpperCase();
+  var podeGerirCampanhas=perfilCampanha==='PRODUTOR_TITULAR'||perfilCampanha==='ADMINISTRADOR';
+  el.couponCampaignsLink.href='/cupons/?evento='+encodeURIComponent(String(state.eventoAtual.id||''));
+  el.couponCampaignsLink.classList.toggle('hidden',!podeGerirCampanhas);
+}
 
 carregarPainel(true);
 }
@@ -5904,6 +5936,11 @@ null;
 
 state.eventoAtual =
 null;
+
+if(el.couponCampaignsLink){
+el.couponCampaignsLink.classList.add('hidden');
+el.couponCampaignsLink.href='/cupons/';
+}
 
 state.painelEmAndamento =
 false;
