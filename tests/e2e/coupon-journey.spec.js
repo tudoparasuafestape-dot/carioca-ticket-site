@@ -70,7 +70,9 @@ async function mock(page,state){
           expect(p.tipoIds).toEqual([TYPE_INDIVIDUAL]);
           expect(p.loteIds).toEqual([LOT_INDIVIDUAL]);
           expect(p.ativar).toBe(true);
-          state.saved=true;state.paused=false;result={sucesso:true,campanha:campaign()};
+          state.saved=true;state.paused=false;
+          if(Number(state.delaySaveMs||0)>0)await new Promise(r=>setTimeout(r,Number(state.delaySaveMs)));
+          result={sucesso:true,campanha:campaign()};
         }else if(method==='ctCuponsCampanhasAlterarStatusPROD'){
           state.statusCalls++;state.paused=String(args[3]||'')==='PAUSAR';result={sucesso:true,campanha:campaign(state.paused?'PAUSADA':'ATIVA')};
         }else if(method==='ctCuponsCampanhasAdminListarPROD'){
@@ -128,6 +130,33 @@ test.describe('Cupons e Campanhas',()=>{
     await expect(page.locator('#campaigns')).toContainText(CODE);
     await expect(page.locator('#campaigns')).toContainText('ATIVA');
     await expect(page.locator('#campaigns')).not.toContainText('Casadinha');
+  });
+
+  test('Timeout após gravação é reconciliado como sucesso sem duplicar campanha',async({page})=>{
+    const state={saved:false,paused:false,saveCalls:0,statusCalls:0,validationCalls:0,checkoutCalls:0,pauseBeforePay:false,delaySaveMs:500};
+    await page.addInitScript(()=>{
+      const originalSetTimeout=window.setTimeout.bind(window);
+      window.setTimeout=function(fn,ms,...args){
+        return originalSetTimeout(fn,Number(ms)===45000?100:ms,...args);
+      };
+    });
+    await mock(page,state);await seed(page);
+    await page.goto('/cupons/?evento='+EVENT,{waitUntil:'domcontentloaded'});
+    await expect(page.getByRole('heading',{name:'Roda de Samba Estilo Carioca'})).toBeVisible({timeout:15000});
+    await page.locator('#newCampaign').click();
+    await page.locator('#name').fill('Lançamento Carioca Ticket — 30 anos Sem Razão');
+    await page.locator('#code').fill(CODE);
+    await page.locator('#benefit').selectOption('PRECO_PROMOCIONAL');
+    await page.locator('#benefitValue').fill('15');
+    await page.locator('#typeChecks input[value="'+TYPE_INDIVIDUAL+'"]').check();
+    await page.locator('#lotChecks input[value="'+LOT_INDIVIDUAL+'"]').check();
+    await page.locator('#saveActive').click();
+    await expect.poll(()=>state.saveCalls).toBe(1);
+    await expect(page.locator('#editor')).toHaveClass(/hidden/,{timeout:5000});
+    await expect(page.locator('#campaigns')).toContainText(CODE);
+    await expect(page.locator('#campaigns')).toContainText('ATIVA');
+    await expect(page.locator('#pageMsg')).toContainText('Campanha ativada com sucesso.');
+    expect(state.saveCalls).toBe(1);
   });
 
   test('Checkout valida no servidor, mostra R$25 - R$10 = R$15 e envia só o código',async({page})=>{
