@@ -369,10 +369,6 @@ if (producerPage) {
   }
 }
 
-if (parceiroAdmin && !parceiroAdmin.includes('/produtor/solicitacoes/')) {
-  fail('parceiro/admin/index.html', 'Backoffice Parceiro CT sem acesso ao onboarding administrativo de produtores');
-}
-
 const home = read('index.html');
 if (home) {
   if (!/href=["'][^"']*\/evento\//i.test(home)) {
@@ -518,6 +514,9 @@ if (parceiroAdmin) {
   }
   if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(parceiroAdmin)) {
     fail('parceiro/admin/index.html', 'backoffice Parceiro CT usa dialogo nativo');
+  }
+  if (!parceiroAdmin.includes('/produtor/solicitacoes/')) {
+    fail('parceiro/admin/index.html', 'Backoffice Parceiro CT sem acesso ao onboarding administrativo de produtores');
   }
   for (const required of [
     'function closeAction(force)',
