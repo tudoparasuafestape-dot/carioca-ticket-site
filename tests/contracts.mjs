@@ -354,7 +354,10 @@ if (produtorSolicitacoes) {
     'SOLICITAR_PENDENCIA',
     'APROVAR',
     'REPROVAR',
-    'Aprovar e ativar'
+    'Aprovar e ativar',
+    'load({skipDetail:true})',
+    'state.selected=r.solicitacao',
+    'renderList();renderDetail()'
   ]) {
     if (!produtorSolicitacoes.includes(required)) {
       fail('produtor/solicitacoes/index.html', 'backoffice de produtores incompleto: ' + required);
