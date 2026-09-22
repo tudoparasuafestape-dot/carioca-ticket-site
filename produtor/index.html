@@ -1380,6 +1380,14 @@ aria-disabled="true"
 >
 Usuários
 </a>
+<a
+id="partnerAdminLink"
+class="ghost hidden"
+href="/parceiro/admin/"
+target="_top"
+>
+Parceiros CT
+</a>
 <button
 id="changeEmailButton"
 class="ghost"
@@ -2064,6 +2072,7 @@ function iniciar(){
 'refreshButton',
 'centralMobileLink',
 'accessManagementLink',
+'partnerAdminLink',
 'changeEmailButton',
 'emailModalBackdrop',
 'emailModalClose',
@@ -4176,6 +4185,30 @@ nome;
 el.helloName.textContent =
 'Olá, ' +
 nome;
+
+var podeGerirParceiros =
+state.produtores.some(
+function(p){
+var perfil =
+String(
+p &&
+p.perfil ||
+''
+)
+.trim()
+.toUpperCase();
+
+return (
+perfil === 'ADMINISTRADOR' ||
+perfil === 'PRODUTOR_TITULAR'
+);
+}
+);
+
+el.partnerAdminLink.classList.toggle(
+'hidden',
+!podeGerirParceiros
+);
 
 preencherProdutores();
 
