@@ -13,6 +13,12 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+  <div id="partnerReturnBar" style="display:none;background:#111318;border-bottom:1px solid #2b2f37;padding:10px 14px;position:sticky;top:0;z-index:1000">
+    <div class="shell" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <strong style="font-size:12px">Cadastro Parceiro CT</strong>
+      <a id="backToApplication" class="nav-cta" href="/parceiro/programa/?retomar=1" style="margin:0">← Voltar ao cadastro</a>
+    </div>
+  </div>
   <header class="topbar">
     <div class="shell nav">
       <a class="brand" href="/" aria-label="Carioca Ticket">
@@ -55,5 +61,26 @@
     </div>
     <div class="shell footer-bottom">© 2026 Carioca Ticket. Todos os direitos reservados.</div>
   </footer>
+<script>
+(function(){
+  var p=new URLSearchParams(location.search);
+  if(p.get('origem')!=='parceiro-cadastro') return;
+  var bar=document.getElementById('partnerReturnBar');
+  var b=document.getElementById('backToApplication');
+  if(bar) bar.style.display='block';
+  if(!b) return;
+  b.addEventListener('click',function(e){
+    e.preventDefault();
+    try{
+      var ref=document.referrer?new URL(document.referrer):null;
+      if(ref&&ref.origin===location.origin&&ref.pathname.indexOf('/parceiro/programa')===0&&history.length>1){
+        history.back();
+        return;
+      }
+    }catch(_){}
+    location.href='/parceiro/programa/?retomar=1';
+  });
+}());
+</script>
 </body>
 </html>
