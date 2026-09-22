@@ -134,9 +134,11 @@ async function installRpcMock(page, state) {
 
 async function setSession(page, token) {
   await page.addInitScript(({storage,token}) => {
-    const value=JSON.stringify({token,expiraEm:'2099-01-01T00:00:00.000Z'});
-    sessionStorage.setItem(storage,value);
-    localStorage.setItem(storage,value);
+    if (!sessionStorage.getItem(storage) && !localStorage.getItem(storage)) {
+      const value=JSON.stringify({token,expiraEm:'2099-01-01T00:00:00.000Z'});
+      sessionStorage.setItem(storage,value);
+      localStorage.setItem(storage,value);
+    }
   }, {storage:STORAGE,token});
 }
 
