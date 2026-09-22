@@ -73,6 +73,46 @@ test.describe('Canario real first-party', () => {
     await expect(comprar).toHaveAttribute('href', /\/checkout-v2\/\?evento=/);
   });
 
+  test('Cupom canario consulta o motor real sem criar pedido ou cobranca', async ({ page }) => {
+    await page.goto('/checkout-v2/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+    await expectFirstParty(page, '/checkout-v2/');
+
+    await expect(page.getByRole('heading', { name: 'Roda de Samba Estilo Carioca' })).toBeVisible({
+      timeout: 25000
+    });
+
+    const typeSelect = page.locator('#typeSelect');
+    const lotSelect = page.locator('#lotSelect');
+
+    await expect.poll(
+      () => typeSelect.locator('option').count(),
+      { timeout: 30000 }
+    ).toBeGreaterThan(1);
+
+    await typeSelect.selectOption('TIPO-EBD1F87D');
+
+    await expect.poll(
+      () => lotSelect.locator('option').count(),
+      { timeout: 15000 }
+    ).toBeGreaterThan(1);
+
+    await lotSelect.selectOption('LOTE-E2D1C48C');
+    await page.locator('#couponToggle').click();
+    await page.locator('#couponCode').fill('CTCANARIOINEXISTENTE');
+    await page.locator('#couponApply').click();
+
+    await expect(page.locator('#couponMessage')).toHaveText(
+      'Cupom não encontrado.',
+      { timeout: 30000 }
+    );
+    await expect(page.locator('#promoSummary')).toHaveClass(/hidden/);
+
+    // Este canario para aqui: nao preenche comprador e nunca clica em pagar.
+    await expect(page.locator('#payButton')).toBeVisible();
+  });
+
   test('Checkout v2 carrega catalogo real sem criar cobranca', async ({ page }) => {
     const iniciou = Date.now();
     await page.goto('/checkout-v2/?evento=' + encodeURIComponent(EVENT_ID), {
