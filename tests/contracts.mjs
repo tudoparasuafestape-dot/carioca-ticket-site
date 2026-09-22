@@ -512,8 +512,10 @@ if (parceiroAdmin) {
     'ctParceiroOnboardingAdminDecidirPROD',
     'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
     'id="producerRequestsBadge"',
-    'ctProdutorOnboardingAdminListarPROD',
-    'function refreshProducerRequestsBadge()'
+    'ctProdutorOnboardingAdminContarPendentesPROD',
+    'function refreshProducerRequestsBadge()',
+    "addEventListener('pageshow'",
+    '60000'
   ]) {
     if (!parceiroAdmin.includes(required)) {
       fail('parceiro/admin/index.html', 'backoffice Parceiro CT incompleto: ' + required);
