@@ -1,0 +1,31 @@
+{
+  "id": "/checkin/",
+  "name": "Carioca Ticket Check-in",
+  "short_name": "CT Check-in",
+  "description": "Check-in operacional da Carioca Ticket.",
+  "start_url": "/checkin/",
+  "scope": "/checkin/",
+  "display": "standalone",
+  "background_color": "#080b10",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "/assets/carioca-ticket-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/carioca-ticket-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/carioca-ticket-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
