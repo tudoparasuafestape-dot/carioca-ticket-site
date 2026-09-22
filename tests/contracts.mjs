@@ -460,11 +460,13 @@ if (parceiroAdmin) {
   for (const required of [
     'function closeAction(force)',
     'closeAction(true)',
-    "state.busy=false;await load();await detail(selectedId)",
+    "state.busy=false;await load();",
     'id="activationBackdrop"',
     'id="copyActivation"',
     'function openActivationModal(',
-    'function formatVersion('
+    'function formatVersion(',
+    "var selectedId=state.selected&&state.selected.solicitacaoId",
+    "ctParceiroOnboardingAdminDetalharPROD',[state.session.token,selectedId]"
   ]) {
     if (!parceiroAdmin.includes(required)) {
       fail('parceiro/admin/index.html', 'pos-decisao/ativacao incompleto: ' + required);
