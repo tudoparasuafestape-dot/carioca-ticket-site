@@ -30,7 +30,9 @@ const protectedFiles = [
   'parceiro/ativar/index.html',
   'parceiro/manual/index.html',
   'parceiro/regulamento/index.html',
-  'parceiro/conduta/index.html'
+  'parceiro/conduta/index.html',
+  'parceiro/regras-comerciais/index.html',
+  'parceiro/tratamento-dados/index.html'
 ];
 
 const errors = [];
@@ -401,10 +403,32 @@ if (parceiroPrograma) {
     "sessionStorage.setItem(DRAFT_KEY",
     "restoreDraft()",
     "class=\"legal-doc-link\"",
-    "origem','parceiro-cadastro"
+    'id="legalViewerBackdrop"',
+    'id="closeLegalViewer"',
+    'function openLegalViewer(',
+    "if(id==='REGRAS_COMERCIAIS')return'/parceiro/regras-comerciais/'",
+    "if(id==='TRATAMENTO_DADOS_PROGRAMA')return'/parceiro/tratamento-dados/'"
   ]) {
     if (!parceiroPrograma.includes(required)) {
       fail('parceiro/programa/index.html', 'fallback/retry mobile ausente: ' + required);
+    }
+  }
+}
+
+const parceiroRegras = read('parceiro/regras-comerciais/index.html');
+if (parceiroRegras) {
+  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','2,5%']) {
+    if (!parceiroRegras.includes(required)) {
+      fail('parceiro/regras-comerciais/index.html', 'documento comercial incompleto: ' + required);
+    }
+  }
+}
+
+const parceiroDados = read('parceiro/tratamento-dados/index.html');
+if (parceiroDados) {
+  for (const required of ['Tratamento de dados no Programa Parceiro CT','Dados do cadastro','Finalidades','contato@cariocaticket.com.br']) {
+    if (!parceiroDados.includes(required)) {
+      fail('parceiro/tratamento-dados/index.html', 'documento de dados incompleto: ' + required);
     }
   }
 }

@@ -227,7 +227,7 @@ test.describe('Programa Parceiro CT', () => {
     expect(state.submitCalls).toBe(1);
   });
 
-  test('ao ler um termo volta ao ponto exato sem perder o cadastro', async ({ page }) => {
+  test('os tres ultimos termos abrem dentro do cadastro e preservam tudo', async ({ page }) => {
     const state={ submitCalls:0, adminActions:0, token:'CT-E2E-ADMIN' };
     await installRpcMock(page,state);
     await page.goto('/parceiro/programa/', { waitUntil:'domcontentloaded' });
@@ -235,20 +235,30 @@ test.describe('Programa Parceiro CT', () => {
     await page.getByRole('button', { name:'Quero ser Parceiro CT' }).first().click();
     await fillStepOne(page);
     await fillStepTwo(page);
+
     await page.locator('.accept-check').first().check();
+    const originalUrl=page.url();
 
-    await page.getByRole('link', { name:'Regulamento do Programa de Parceiros CT' }).click();
-    await expect(page).toHaveURL(/\/parceiro\/regulamento\/\?origem=parceiro-cadastro/);
-    await expect(page.locator('#backToApplication')).toHaveText(/Voltar ao cadastro/);
+    const links=[
+      { name:'Política de Privacidade', frame:/\/privacidade\// },
+      { name:'Regras comerciais', frame:/\/parceiro\/regras-comerciais\// },
+      { name:'Tratamento de dados', frame:/\/parceiro\/tratamento-dados\// }
+    ];
 
-    await page.locator('#backToApplication').click();
-    await expect(page).toHaveURL(/\/parceiro\/programa\//);
-    await expect(page.locator('#applyBackdrop')).toBeVisible({ timeout:15000 });
-    await expect(page.locator('.form-step[data-step="2"]')).toBeVisible();
-    await expect(page.locator('#fName')).toHaveValue('Parceiro Homologação');
-    await expect(page.locator('#fEmail')).toHaveValue('parceiro@example.invalid');
-    await expect(page.locator('#fAbout')).toHaveValue('Atuo com relacionamento e produção de eventos em Pernambuco.');
-    await expect(page.locator('.accept-check').first()).toBeChecked();
+    for (const item of links) {
+      await page.getByRole('link', { name:item.name }).click();
+      await expect(page.locator('#legalViewerBackdrop')).toBeVisible();
+      await expect(page).toHaveURL(originalUrl);
+      await expect(page.locator('#legalViewerFrame')).toHaveAttribute('src',item.frame);
+      await page.getByRole('button', { name:'← Voltar ao cadastro' }).click();
+      await expect(page.locator('#legalViewerBackdrop')).toBeHidden();
+      await expect(page.locator('#applyBackdrop')).toBeVisible();
+      await expect(page.locator('.form-step[data-step="2"]')).toBeVisible();
+      await expect(page.locator('#fName')).toHaveValue('Parceiro Homologação');
+      await expect(page.locator('#fEmail')).toHaveValue('parceiro@example.invalid');
+      await expect(page.locator('#fAbout')).toHaveValue('Atuo com relacionamento e produção de eventos em Pernambuco.');
+      await expect(page.locator('.accept-check').first()).toBeChecked();
+    }
     expect(state.submitCalls).toBe(0);
   });
 
