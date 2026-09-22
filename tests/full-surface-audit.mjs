@@ -61,7 +61,8 @@ const operational=[
   'vendas/index.html','bar/index.html','eventos-v2/index.html','fornecedores/index.html',
   'crm/index.html','financeiro/index.html','relatorios/index.html','comissionado/index.html',
   'comissoes/index.html','consulta/index.html','checkin/index.html','saude-vendas/index.html',
-  'reembolsos/index.html'
+  'reembolsos/index.html',
+  'cupons/index.html'
 ];
 for(const file of operational){
   if(!fs.existsSync(path.join(root,file))){failures.push(file+': superfície operacional ausente');continue}
@@ -100,6 +101,12 @@ for(const file of [
 ]){
   requireText(file,'href="/parceiro/programa/"');
 }
+
+requireText('central/index.html','id="mCupons"','/cupons/?evento=');
+requireText('checkout/index.html','id="couponToggle"','ctCuponsPublicoValidarSeguroPROD','cupomCodigo','REMOVER CUPOM');
+requireText('checkout-v2/index.html','id="couponToggle"','ctCuponsPublicoValidarSeguroPROD','cupomCodigo','REMOVER CUPOM');
+requireText('cupons/index.html','+ CRIAR NOVA CAMPANHA','PAUSAR','REATIVAR','ENCERRAR','href="/central/"');
+requireText('cupons/admin/index.html','ctCuponsCampanhasAdminListarPROD','ctCuponsCampanhasAdminAlterarStatusPROD');
 
 requireText('index.html','href="/fornecedor/"');
 requireText('ajuda/index.html','id="helpSupplierPortal"','href="/fornecedor/"');

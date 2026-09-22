@@ -91,6 +91,17 @@
     .card-box{text-align:center}
     .secure-card-note{margin:10px auto 16px;max-width:560px;color:#475467;font-size:12px;line-height:1.5}
     .card-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+    .coupon-box{margin-top:14px;border:1px dashed #d8bf77;border-radius:14px;background:#fffdf7;padding:13px}
+    .coupon-toggle{border:0;background:transparent;padding:0;min-height:auto;color:#7a5b0b;font-weight:900;font-size:13px}
+    .coupon-entry{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:11px}
+    .coupon-entry input{width:100%;border:1px solid #d0d5dd;border-radius:11px;padding:11px 12px;text-transform:uppercase}
+    .coupon-entry button{min-height:43px}
+    .coupon-msg{font-size:12px;line-height:1.45;margin-top:9px}
+    .coupon-msg.ok{color:#067647}.coupon-msg.err{color:#b42318}
+    .promo-summary{display:grid;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #eee}
+    .promo-line{display:flex;justify-content:space-between;gap:12px;font-size:12px}
+    .promo-line.discount{color:#067647;font-weight:800}.promo-line.total{font-size:14px;font-weight:900}
+    .coupon-remove{border:0;background:transparent;color:#b42318;padding:0;min-height:auto;font-size:11px;font-weight:900;text-decoration:underline}
     @media(max-width:640px){.payment-methods{grid-template-columns:1fr}}
 
   </style>
@@ -255,6 +266,26 @@
         <div><small>SEU PEDIDO</small><b id="summaryTitle">—</b><div id="summaryAccess" class="help"></div></div>
         <div style="text-align:right"><small>TOTAL</small><b id="summaryPrice">R$ 0,00</b></div>
       </div>
+      <div id="couponBox" class="coupon-box">
+        <button id="couponToggle" class="coupon-toggle" type="button">Tem um cupom?</button>
+        <div id="couponArea" class="hidden">
+          <div class="coupon-entry">
+            <input id="couponCode" maxlength="80" autocomplete="off" placeholder="Digite seu cupom">
+            <button id="couponApply" class="secondary" type="button">APLICAR</button>
+          </div>
+          <div id="couponMessage" class="coupon-msg"></div>
+          <div id="couponReplace" class="promo-summary hidden">
+            <div class="promo-line"><span>Este pedido já possui um cupom aplicado. Deseja substituir?</span></div>
+            <div class="actions"><button id="couponReplaceNo" class="secondary" type="button">MANTER ATUAL</button><button id="couponReplaceYes" class="secondary" type="button">SUBSTITUIR</button></div>
+          </div>
+          <div id="promoSummary" class="promo-summary hidden">
+            <div class="promo-line"><span>Valor original</span><span id="promoOriginal">R$ 0,00</span></div>
+            <div class="promo-line discount"><span id="promoLabel">Cupom</span><span id="promoDiscount">- R$ 0,00</span></div>
+            <div class="promo-line total"><span>Total com promoção</span><span id="promoTotal">R$ 0,00</span></div>
+            <button id="couponRemove" class="coupon-remove" type="button">REMOVER CUPOM</button>
+          </div>
+        </div>
+      </div>
       <div id="participants"></div>
     </section>
 
@@ -362,13 +393,16 @@
         expiryTimer:null,
         busy:false,
         paymentMethod:'PIX',
-        emailRequired:true
+        emailRequired:true,
+        promotion:null,
+        couponBusy:false
       };
 
       var el={};
       [
         'loading','loadingTitle','loadingText','eventName','eventMeta','eventDescription','eventBack','checkoutCover','checkoutCoverImage','salePanel','buyerPanel','payActionPanel',
         'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',
+        'couponBox','couponToggle','couponArea','couponCode','couponApply','couponMessage','couponReplace','couponReplaceNo','couponReplaceYes','promoSummary','promoOriginal','promoLabel','promoDiscount','promoTotal','couponRemove',
         'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','buyerEmailLabel','buyerEmailHelp','marketing','paymentPix','paymentCard','payButton','payHelp',
         'pixPanel','pixStatus','qrImage','pixCode','copyButton','refreshButton','expiryText',
         'cardPanel','cardStatus','cardPaymentLink','cardRefreshButton','cardExpiryText',
@@ -573,6 +607,70 @@
         return Math.max(1,Math.min(20,isFinite(q)?q:1));
       }
 
+      function clearCoupon(silent){
+        state.promotion=null;
+        el.promoSummary.classList.add('hidden');
+        el.couponReplace.classList.add('hidden');
+        el.couponMessage.className='coupon-msg';
+        if(!silent)el.couponMessage.textContent='Cupom removido.';
+        else el.couponMessage.textContent='';
+      }
+
+      function renderPromotion(){
+        if(!state.promotion||!state.promotion.calculo){el.promoSummary.classList.add('hidden');return;}
+        var p=state.promotion,c=p.calculo||{};
+        el.promoOriginal.textContent=money(c.valorOriginalTotal||0);
+        el.promoDiscount.textContent='- '+money(c.descontoTotal||0);
+        el.promoTotal.textContent=money(c.valorFinalTotal||0);
+        el.promoLabel.textContent='Cupom '+String(p.cupom&&p.cupom.codigo||el.couponCode.value||'');
+        el.summaryPrice.textContent=money(c.valorFinalTotal||0);
+        el.promoSummary.classList.remove('hidden');
+      }
+
+      function applyCoupon(){
+        if(state.couponBusy)return;
+        var codigo=String(el.couponCode.value||'').trim();
+        var atual=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'';
+        if(atual && codigo.toUpperCase()!==atual.toUpperCase()){
+          el.couponReplace.classList.remove('hidden');
+          el.couponMessage.className='coupon-msg';
+          el.couponMessage.textContent='';
+          return;
+        }
+        if(!codigo){el.couponMessage.className='coupon-msg err';el.couponMessage.textContent='Digite seu cupom.';return;}
+        if(!state.type||!state.lot){el.couponMessage.className='coupon-msg err';el.couponMessage.textContent='Selecione o ingresso e o lote primeiro.';return;}
+        state.couponBusy=true;el.couponApply.disabled=true;el.couponApply.textContent='VALIDANDO...';
+        google.script.run
+          .withSuccessHandler(function(res){
+            state.couponBusy=false;el.couponApply.disabled=false;el.couponApply.textContent='APLICAR';
+            if(!res||res.sucesso!==true||res.valido!==true){
+              state.promotion=null;el.promoSummary.classList.add('hidden');
+              el.couponMessage.className='coupon-msg err';
+              el.couponMessage.textContent=res&&res.mensagem?res.mensagem:'Não foi possível aplicar este cupom.';
+              updateSummary();return;
+            }
+            state.promotion=res;
+            el.couponCode.value=String(res.cupom&&res.cupom.codigo||codigo);
+            el.couponMessage.className='coupon-msg ok';
+            el.couponMessage.textContent='Cupom aplicado! Você ganhou '+money(res.calculo&&res.calculo.descontoTotal||0)+' de desconto.';
+            renderPromotion();
+          })
+          .withFailureHandler(function(){
+            state.couponBusy=false;el.couponApply.disabled=false;el.couponApply.textContent='APLICAR';
+            state.promotion=null;el.promoSummary.classList.add('hidden');
+            el.couponMessage.className='coupon-msg err';el.couponMessage.textContent='Não foi possível validar o cupom agora.';
+            updateSummary();
+          })
+          .ctCuponsPublicoValidarSeguroPROD({
+            eventoId:state.eventId,
+            tipoId:state.type.id,
+            loteId:state.lot.id,
+            quantidade:quantity(),
+            codigo:codigo,
+            formaPagamento:state.paymentMethod
+          });
+      }
+
       function updateSummary(){
         var q=quantity();
         el.quantity.value=q;
@@ -591,11 +689,14 @@
           el.summaryPrice.textContent='—';
         }else{
           el.summaryTitle.textContent=q+' × '+state.type.nome+' · '+state.lot.nome;
-          el.summaryPrice.textContent=money(total);
+          el.summaryPrice.textContent=state.promotion&&state.promotion.calculo
+            ?money(state.promotion.calculo.valorFinalTotal||0)
+            :money(total);
         }
 
         el.summaryAccess.textContent=accesses+(accesses===1?' acesso':' acessos');
         el.summary.classList.remove('hidden');
+        renderPromotion();
         renderParticipants(Math.max(0,accesses-1));
       }
 
@@ -709,6 +810,7 @@
           aceitaComunicacoes:el.marketing.checked===true,
           participantes:participants(),
           formaPagamento:state.paymentMethod,
+          cupomCodigo:state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'',
           idempotenciaChave:getOrCreateIdempotency()
         };
 
@@ -751,6 +853,10 @@
         if(m.indexOf('EVENTO_SEM_CAPACIDADE')>=0)return 'A capacidade disponível deste evento foi atingida.';
         if(m.indexOf('LIMITE_TENTATIVAS')>=0)return 'Foram feitas muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar novamente.';
         if(m.indexOf('DOCUMENTO_INVALIDO')>=0)return 'Confira o CPF/CNPJ informado.';
+        if(m.indexOf('CT_CUPONS_PAUSADO')>=0)return 'Esta campanha está temporariamente pausada.';
+        if(m.indexOf('CT_CUPONS_EXPIRADO')>=0)return 'Este cupom expirou.';
+        if(m.indexOf('CT_CUPONS_ESGOTADO')>=0)return 'Esta promoção atingiu o limite disponível.';
+        if(m.indexOf('CT_CUPONS_')>=0)return 'O cupom não pôde ser aplicado. Revise a promoção e tente novamente.';
         if(m.indexOf('CHECKOUT_PUBLICO')>=0)return 'A venda online deste evento está temporariamente indisponível.';
         return 'Não foi possível concluir esta etapa agora. Nenhum ingresso será emitido sem pagamento confirmado.';
       }
@@ -906,11 +1012,16 @@
         }
       }
 
-      el.typeSelect.onchange=onType;
-      el.lotSelect.onchange=onLot;
-      el.quantity.oninput=updateSummary;
-      el.paymentPix.onchange=updatePaymentMethodUI;
-      el.paymentCard.onchange=updatePaymentMethodUI;
+      el.typeSelect.onchange=function(){clearCoupon(true);onType();};
+      el.lotSelect.onchange=function(){clearCoupon(true);onLot();};
+      el.quantity.oninput=function(){clearCoupon(true);updateSummary();};
+      el.paymentPix.onchange=function(){clearCoupon(true);updatePaymentMethodUI();updateSummary();};
+      el.paymentCard.onchange=function(){clearCoupon(true);updatePaymentMethodUI();updateSummary();};
+      el.couponToggle.onclick=function(){el.couponArea.classList.toggle('hidden');if(!el.couponArea.classList.contains('hidden'))el.couponCode.focus();};
+      el.couponApply.onclick=applyCoupon;
+      el.couponReplaceNo.onclick=function(){el.couponReplace.classList.add('hidden');el.couponCode.value=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'';};
+      el.couponReplaceYes.onclick=function(){state.promotion=null;el.couponReplace.classList.add('hidden');applyCoupon();};
+      el.couponRemove.onclick=function(){el.couponCode.value='';clearCoupon(false);updateSummary();};
       el.payButton.onclick=createPayment;
       el.copyButton.onclick=copyPix;
       el.refreshButton.onclick=refresh;

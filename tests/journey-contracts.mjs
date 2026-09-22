@@ -43,7 +43,8 @@ requireAll('central/index.html',central,[
   '/crm/',
   '/financeiro/',
   '/relatorios/',
-  '/comissoes/'
+  '/comissoes/',
+  '/cupons/'
 ]);
 
 for(const path of [
@@ -66,6 +67,26 @@ for(const path of [
     failures.push(path+': módulo operacional sem retorno claro à Central');
   }
 }
+
+const cupons=read('cupons/index.html');
+requireAll('cupons/index.html',cupons,[
+  'Cupons & Campanhas',
+  'href="/central/"',
+  '+ CRIAR NOVA CAMPANHA',
+  'ctCuponsCampanhasListarPROD',
+  'ctCuponsCampanhasSalvarPROD',
+  'ctCuponsCampanhasAlterarStatusPROD',
+  'PRECO_PROMOCIONAL'
+]);
+
+const cuponsAdmin=read('cupons/admin/index.html');
+requireAll('cupons/admin/index.html',cuponsAdmin,[
+  'Campanhas promocionais',
+  'ctCuponsCampanhasAdminListarPROD',
+  'ctCuponsCampanhasAdminAlterarStatusPROD',
+  'href="/parceiro/admin/"',
+  'href="/produtor/"'
+]);
 
 const produtor=read('produtor/index.html');
 requireLink('produtor/index.html',produtor,'partnerPortalLink','/parceiro/');

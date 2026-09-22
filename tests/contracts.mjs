@@ -470,6 +470,53 @@ for (const file of ['checkout/index.html', 'checkout-v2/index.html']) {
 }
 
 
+for (const file of ['checkout/index.html','checkout-v2/index.html']) {
+  const html=read(file);
+  if (!html) continue;
+  for (const required of [
+    'id="couponToggle"',
+    'id="couponCode"',
+    'id="couponApply"',
+    'id="couponRemove"',
+    'id="couponReplace"',
+    'ctCuponsPublicoValidarSeguroPROD',
+    'cupomCodigo:state.promotion',
+    'REMOVER CUPOM'
+  ]) {
+    if (!html.includes(required)) fail(file,'checkout promocional incompleto: '+required);
+  }
+  if (html.includes('precoPromocional:state.promotion') ||
+      html.includes('desconto:state.promotion') ||
+      html.includes('valorTotal:state.promotion')) {
+    fail(file,'checkout envia valor promocional calculado pelo navegador');
+  }
+}
+
+const cuponsProdutor=read('cupons/index.html');
+if (cuponsProdutor) {
+  for (const required of [
+    'Cupons & Campanhas',
+    '+ CRIAR NOVA CAMPANHA',
+    'PRECO_PROMOCIONAL',
+    'PERCENTUAL',
+    'VALOR_FIXO',
+    'ctCuponsCampanhasListarPROD',
+    'ctCuponsCampanhasSalvarPROD',
+    'ctCuponsCampanhasAlterarStatusPROD',
+    'PAUSAR','REATIVAR','ENCERRAR',
+    'href="/central/"'
+  ]) {
+    if (!cuponsProdutor.includes(required)) fail('cupons/index.html','gestão de campanhas incompleta: '+required);
+  }
+}
+
+const cuponsAdmin=read('cupons/admin/index.html');
+if (cuponsAdmin) {
+  for (const required of ['ctCuponsCampanhasAdminListarPROD','ctCuponsCampanhasAdminAlterarStatusPROD','Pausar','Encerrar']) {
+    if (!cuponsAdmin.includes(required)) fail('cupons/admin/index.html','backoffice de campanhas incompleto: '+required);
+  }
+}
+
 const parceiroPortal = read('parceiro/index.html');
 if (parceiroPortal) {
   if (!parceiroPortal.includes('Portal Parceiro CT')) {
