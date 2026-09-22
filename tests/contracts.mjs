@@ -457,6 +457,15 @@ if (parceiroAdmin) {
   if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(parceiroAdmin)) {
     fail('parceiro/admin/index.html', 'backoffice Parceiro CT usa dialogo nativo');
   }
+  for (const required of [
+    'function closeAction(force)',
+    'closeAction(true)',
+    "state.busy=false;await load();await detail(selectedId)"
+  ]) {
+    if (!parceiroAdmin.includes(required)) {
+      fail('parceiro/admin/index.html', 'pos-decisao nao fecha/atualiza corretamente: ' + required);
+    }
+  }
 }
 
 const parceiroAtivar = read('parceiro/ativar/index.html');
