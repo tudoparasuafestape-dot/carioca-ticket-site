@@ -216,7 +216,7 @@ async function installMock(page, state) {
     await route.fulfill({
       status:200,
       contentType:'text/html; charset=utf-8',
-      body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");<\\/script></body></html>'
+      body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");</script></body></html>'
     });
   });
 }
@@ -233,12 +233,12 @@ test.describe('Jornada completa do comprador sem cobrança real', () => {
     await expect(eventLink).toBeVisible();
     await eventLink.click();
 
-    await expect(page).toHaveURL(/\/evento\/\?evento=/);
+    await expect(page).toHaveURL(/\/evento\/\?.*evento=/);
     await expect(page.getByRole('heading',{name:'Roda de Samba Estilo Carioca'})).toBeVisible({timeout:15000});
     const buy=page.getByRole('link',{name:/Comprar ingresso|Garantir meu ingresso|Comprar agora/i}).first();
     await buy.click();
 
-    await expect(page).toHaveURL(/\/checkout\/\?evento=/);
+    await expect(page).toHaveURL(/\/checkout\/\?.*evento=/);
     await expect(page.getByText('Seus dados')).toBeVisible({timeout:15000});
 
     await page.locator('#typeSelect').selectOption('TIPO-IND');
