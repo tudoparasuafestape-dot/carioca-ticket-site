@@ -1944,6 +1944,21 @@
             '</div>' +
 
             '<div class="evento-info-item">' +
+              '<strong>Termo do evento</strong>' +
+              '<span>' +
+                (
+                  eventoLegado
+                    ? 'LEGADO'
+                    : (
+                        termoEventoAceito
+                          ? 'ACEITO'
+                          : 'PENDENTE'
+                      )
+                ) +
+              '</span>' +
+            '</div>' +
+
+            '<div class="evento-info-item">' +
               '<strong>Vendas online</strong>' +
               '<span>' +
                 (
