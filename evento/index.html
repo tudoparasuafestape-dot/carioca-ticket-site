@@ -158,6 +158,26 @@
       border:1px solid rgba(255,214,109,.3);box-shadow:0 14px 40px rgba(0,0,0,.28);
       font-size:12px;font-weight:850;white-space:nowrap
     }
+    .share-menu-backdrop{
+      position:fixed;z-index:84;inset:0;background:rgba(0,0,0,.48);backdrop-filter:blur(4px)
+    }
+    .share-menu{
+      position:fixed;z-index:85;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);
+      width:min(420px,calc(100% - 28px));padding:16px;border-radius:22px;
+      background:#111820;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 70px rgba(0,0,0,.45)
+    }
+    .share-menu-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .share-menu-head strong{font-size:16px}
+    .share-menu-head button{
+      border:0;background:rgba(255,255,255,.07);color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px
+    }
+    .share-menu-actions{display:grid;gap:10px}
+    .share-option{
+      width:100%;min-height:52px;border-radius:15px;padding:0 15px;display:flex;align-items:center;gap:11px;
+      border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.055);color:#fff;font-weight:900;cursor:pointer;text-align:left
+    }
+    .share-option:hover{background:rgba(217,166,46,.11);border-color:rgba(255,214,109,.35)}
+    .share-option small{display:block;color:#aeb5bf;font-weight:600;margin-top:2px}
     .trust{
       display:flex;flex-wrap:wrap;gap:9px;margin-top:13px;color:#a9b0bb;font-size:11px
     }
@@ -502,6 +522,24 @@
 
   <div id="shareToast" class="share-toast hidden" role="status" aria-live="polite">Link copiado!</div>
 
+  <div id="shareMenuBackdrop" class="share-menu-backdrop hidden" aria-hidden="true"></div>
+  <div id="shareMenu" class="share-menu hidden" role="dialog" aria-modal="true" aria-labelledby="shareMenuTitle">
+    <div class="share-menu-head">
+      <strong id="shareMenuTitle">Compartilhar evento</strong>
+      <button id="shareMenuClose" type="button" aria-label="Fechar">×</button>
+    </div>
+    <div class="share-menu-actions">
+      <button id="shareNativeAction" class="share-option" type="button">
+        <span>↗</span>
+        <span>Compartilhar…<small>WhatsApp, Instagram e outros apps</small></span>
+      </button>
+      <button id="copyLinkAction" class="share-option" type="button">
+        <span>🔗</span>
+        <span>Copiar link<small>Ideal para colar no Story ou em uma mensagem</small></span>
+      </button>
+    </div>
+  </div>
+
   <footer class="footer">
     Carioca Ticket · Compra segura · Ingresso digital · QR Code
   </footer>
@@ -568,12 +606,28 @@
         });
       }
 
-      async function compartilharEvento(){
+      function abrirMenuCompartilhamento(){
+        var menu=$('shareMenu');
+        var backdrop=$('shareMenuBackdrop');
+        if(menu)menu.classList.remove('hidden');
+        if(backdrop)backdrop.classList.remove('hidden');
+      }
+
+      function fecharMenuCompartilhamento(){
+        var menu=$('shareMenu');
+        var backdrop=$('shareMenuBackdrop');
+        if(menu)menu.classList.add('hidden');
+        if(backdrop)backdrop.classList.add('hidden');
+      }
+
+      async function compartilharNativo(){
         var e=state.data&&state.data.evento||{};
         var url=linkCanonicoEvento();
         var detalhes=[e.data,e.local,e.cidade].filter(Boolean).join(' · ');
         var titulo=(e.nome||'Evento')+' · Carioca Ticket';
         var texto='Confira '+(e.nome||'este evento')+(detalhes?' — '+detalhes:'')+' na Carioca Ticket.';
+
+        fecharMenuCompartilhamento();
 
         if(navigator.share){
           try{
@@ -592,14 +646,42 @@
         }
       }
 
+      async function copiarLinkDireto(){
+        var url=linkCanonicoEvento();
+        fecharMenuCompartilhamento();
+        try{
+          await copiarLinkCompartilhamento(url);
+          mostrarShareToast('Link do evento copiado!');
+        }catch(_){
+          mostrarShareToast('Use a barra do navegador para copiar o link.');
+        }
+      }
+
       function configurarCompartilhamento(){
         var url=linkCanonicoEvento();
+
         ['shareHero','shareMobile'].forEach(function(id){
           var btn=$(id);
           if(!btn)return;
           btn.dataset.shareUrl=url;
-          btn.onclick=compartilharEvento;
+          btn.onclick=abrirMenuCompartilhamento;
         });
+
+        var nativeAction=$('shareNativeAction');
+        var copyAction=$('copyLinkAction');
+        var closeAction=$('shareMenuClose');
+        var backdrop=$('shareMenuBackdrop');
+
+        if(nativeAction){
+          nativeAction.dataset.shareUrl=url;
+          nativeAction.onclick=compartilharNativo;
+        }
+        if(copyAction){
+          copyAction.dataset.shareUrl=url;
+          copyAction.onclick=copiarLinkDireto;
+        }
+        if(closeAction)closeAction.onclick=fecharMenuCompartilhamento;
+        if(backdrop)backdrop.onclick=fecharMenuCompartilhamento;
       }
 
       function showError(msg){
