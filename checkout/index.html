@@ -962,7 +962,42 @@
         clearIdempotency();
       }
 
-      function refresh(){
+      /*
+       * P0 PERFORMANCE:
+       * - polling frequente consulta SOMENTE o estado local;
+       * - reconciliação externa com Asaas é fallback espaçado;
+       * - webhook continua sendo o caminho principal de confirmação.
+       *
+       * Isso evita que cada aba de checkout aberta faça chamada ao Asaas
+       * e adquira ScriptLock a cada poucos segundos.
+       */
+      function refreshLocal(){
+        if(!state.order||!state.queryToken||state.busy)return;
+
+        var statusAntes=String(state.order.status||'').toUpperCase();
+
+        google.script.run
+          .withSuccessHandler(function(res){
+            if(!res||res.sucesso!==true||!res.pedido)return;
+
+            var statusDepois=String(res.pedido.status||'').toUpperCase();
+            state.order=res.pedido;
+
+            if(
+              statusDepois!==statusAntes ||
+              ['CONCLUIDO','EXPIRADO','CANCELADO','FALHA'].indexOf(statusDepois)>=0
+            ){
+              renderOrder(res);
+            }
+          })
+          .withFailureHandler(function(){})
+          .ctCheckoutPixPublicoStatusLocalPROD(
+            state.order.pedidoId,
+            state.queryToken
+          );
+      }
+
+      function reconcile(){
         if(!state.order||!state.queryToken||state.busy)return;
         state.busy=true;
         el.refreshButton.disabled=true;el.refreshButton.textContent='Atualizando...';
@@ -979,14 +1014,31 @@
             el.refreshButton.disabled=false;el.refreshButton.textContent='Atualizar pagamento';
             el.cardRefreshButton.disabled=false;el.cardRefreshButton.textContent='Atualizar pagamento';
           })
-          .ctCheckoutPixPublicoReconciliarPROD(state.order.pedidoId,state.queryToken);
+          .ctCheckoutPixPublicoReconciliarPROD(
+            state.order.pedidoId,
+            state.queryToken
+          );
       }
 
       function startPolling(){
-        if(state.polling)return;
-        state.polling=setInterval(refresh,4000);
+        if(!state.polling){
+          state.polling=setInterval(refreshLocal,4000);
+        }
+        if(!state.reconcilePolling){
+          state.reconcilePolling=setInterval(reconcile,30000);
+        }
       }
-      function stopPolling(){if(state.polling){clearInterval(state.polling);state.polling=null;}}
+
+      function stopPolling(){
+        if(state.polling){
+          clearInterval(state.polling);
+          state.polling=null;
+        }
+        if(state.reconcilePolling){
+          clearInterval(state.reconcilePolling);
+          state.reconcilePolling=null;
+        }
+      }
 
       function startExpiry(){
         if(state.expiryTimer)clearInterval(state.expiryTimer);
@@ -998,7 +1050,7 @@
           var texto=sec>0?'Reserva válida por aproximadamente '+min+':'+String(s).padStart(2,'0'):'Reserva expirada. Atualizando...';
           el.expiryText.textContent=texto;
           el.cardExpiryText.textContent=texto;
-          if(sec<=0)refresh();
+          if(sec<=0)reconcile();
         }
         tick();state.expiryTimer=setInterval(tick,1000);
       }
@@ -1025,8 +1077,8 @@
       el.couponRemove.onclick=function(){el.couponCode.value='';clearCoupon(false);updateSummary();};
       el.payButton.onclick=createPayment;
       el.copyButton.onclick=copyPix;
-      el.refreshButton.onclick=refresh;
-      el.cardRefreshButton.onclick=refresh;
+      el.refreshButton.onclick=reconcile;
+      el.cardRefreshButton.onclick=reconcile;
 
       window.addEventListener('focus',function(){
         if(state.order&&state.queryToken&&!state.busy){
