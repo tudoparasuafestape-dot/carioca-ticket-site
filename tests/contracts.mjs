@@ -30,6 +30,7 @@ const protectedFiles = [
   'parceiro/programa/index.html',
   'parceiro/admin/index.html',
   'backoffice/index.html',
+  'backoffice/governanca/index.html',
   'parceiro/ativar/index.html',
   'parceiro/manual/index.html',
   'parceiro/regulamento/index.html',
@@ -621,6 +622,49 @@ for (const file of ['index.html','eventos-v2/index.html','evento-v2/index.html',
   }
 }
 
+const governancaMaster = read('backoffice/governanca/index.html');
+if (governancaMaster) {
+  for (const required of [
+    'Governança & Publicação',
+    'Quem pode publicar e por quê',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctGovernancaPublicacaoAdminListarPROD',
+    'ctGovernancaPublicacaoAdminEventosPROD',
+    'ctGovernancaPublicacaoAdminAtualizarProdutorPROD',
+    'ctGovernancaPublicacaoAdminAtualizarEventoPROD',
+    'NOVO',
+    'EM_VALIDACAO',
+    'VERIFICADO',
+    'CONFIAVEL',
+    'RESTRITO',
+    'BLOQUEADO',
+    'Termo evento',
+    'Autorizar publicação'
+  ]) {
+    if (!governancaMaster.includes(required)) {
+      fail('backoffice/governanca/index.html', 'governança incompleta: ' + required);
+    }
+  }
+  if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(governancaMaster)) {
+    fail('backoffice/governanca/index.html', 'governança usa diálogo nativo');
+  }
+}
+
+const eventosGovernanca = read('eventos-v2/index.html');
+if (eventosGovernanca) {
+  for (const required of [
+    'ctGatePublicacaoAceitarTermoEventoPROD',
+    'Aceitar termo do evento',
+    'Termo do evento',
+    'PENDENTE',
+    'ACEITO'
+  ]) {
+    if (!eventosGovernanca.includes(required)) {
+      fail('eventos-v2/index.html', 'gate de publicação do produtor incompleto: ' + required);
+    }
+  }
+}
+
 const backofficeMaster = read('backoffice/index.html');
 if (backofficeMaster) {
   for (const required of [
@@ -642,7 +686,8 @@ if (backofficeMaster) {
     'data-preset="7D"',
     'data-preset="30D"',
     'id="dateStart"',
-    'id="dateEnd"'
+    'id="dateEnd"',
+    'href="/backoffice/governanca/"'
   ]) {
     if (!backofficeMaster.includes(required)) {
       fail('backoffice/index.html', 'Backoffice Master incompleto: ' + required);
