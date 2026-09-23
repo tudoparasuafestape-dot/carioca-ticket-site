@@ -64,7 +64,10 @@ button,input,select{font:inherit}.hidden{display:none!important}
 <div class="status"><small>Configuração interna Sandbox</small><b id="sandboxConfig">—</b></div>
 <div class="status"><small>Tipo do titular</small><b id="personType">—</b></div>
 <div class="status"><small>Pronto para criar</small><b id="readyCreate">—</b></div>
-<div class="status"><small>Status Asaas</small><b id="asaasStatus">Ainda não consultado</b></div>
+<div class="status"><small>Asaas · Comercial</small><b id="asaasCommercial">Ainda não consultado</b></div>
+<div class="status"><small>Asaas · Conta bancária</small><b id="asaasBank">Ainda não consultado</b></div>
+<div class="status"><small>Asaas · Documentação</small><b id="asaasDocs">Ainda não consultado</b></div>
+<div class="status"><small>Asaas · Aprovação geral</small><b id="asaasGeneral">Ainda não consultado</b></div>
 </div>
 <div id="missing" class="missing"></div>
 </section>
@@ -159,8 +162,13 @@ async function checkReadiness(){
     var r=await rpc('ctContaCariocaPayBaasP4BProntidaoPROD',[state.session.token,selectedId(),overrides()]);
     if(!r||r.sucesso!==true)throw new Error('Falha ao verificar a prontidão.');
     renderReadiness(r);
-    if(r.prontoParaProvisionar)setMsg('Cadastro pronto para provisionamento Sandbox.','ok');
-    else setMsg('Revise os campos pendentes antes de criar a subconta.','error');
+    if(r.prontoParaProvisionar){
+      setMsg('Cadastro pronto para provisionamento Sandbox.','ok');
+    }else if(r.subcontaProvisionada===true){
+      setMsg('Subconta Sandbox já provisionada. Consulte os status cadastrais do Asaas.','ok');
+    }else{
+      setMsg('Revise os campos pendentes antes de criar a subconta.','error');
+    }
   }catch(e){setMsg(e&&e.message?e.message:String(e),'error')}
   finally{setBusy(false)}
 }
@@ -192,14 +200,27 @@ async function checkStatus(){
     var r=await rpc('ctContaCariocaPayBaasP4BConsultarStatusPROD',[state.session.token,selectedId()]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível consultar o status Sandbox.');
     if(r.apiKeyExposta===true)throw new Error('Gate de segurança violado.');
-    var general=r.status&&r.status.general||'DESCONHECIDO';
-    $('asaasStatus').textContent=general;
-    $('asaasStatus').className=r.status&&r.status.aprovado?'ok':'warn';
+    var st=r.status||{};
+    var commercial=st.commercialInfo||'DESCONHECIDO';
+    var bank=st.bankAccountInfo||'DESCONHECIDO';
+    var docs=st.documentation||'DESCONHECIDO';
+    var general=st.general||'DESCONHECIDO';
+
+    [['asaasCommercial',commercial],['asaasBank',bank],['asaasDocs',docs],['asaasGeneral',general]].forEach(function(par){
+      $(par[0]).textContent=par[1];
+      $(par[0]).className=par[1]==='APPROVED'?'ok':'warn';
+    });
   }catch(e){setMsg(e&&e.message?e.message:String(e),'error')}
   finally{setBusy(false)}
 }
 
-$('producer').addEventListener('change',function(){state.readiness=null;['dataReady','parentSecret','sandboxConfig','personType','readyCreate'].forEach(function(id){$(id).textContent='—';$(id).className=''});$('asaasStatus').textContent='Ainda não consultado';$('missing').innerHTML='';refreshButtons()});
+$('producer').addEventListener('change',function(){
+  state.readiness=null;
+  ['dataReady','parentSecret','sandboxConfig','personType','readyCreate'].forEach(function(id){$(id).textContent='—';$(id).className=''});
+  ['asaasCommercial','asaasBank','asaasDocs','asaasGeneral'].forEach(function(id){$(id).textContent='Ainda não consultado';$(id).className=''});
+  $('missing').innerHTML='';
+  refreshButtons();
+});
 $('incomeValue').addEventListener('input',function(){state.readiness=null;refreshButtons()});
 $('companyType').addEventListener('change',function(){state.readiness=null;refreshButtons()});
 $('birthDate').addEventListener('change',function(){state.readiness=null;refreshButtons()});
