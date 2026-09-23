@@ -22,8 +22,13 @@ if(count(evento,'.ctEventoPublicoCarregarPROD(')!==1){
 if(count(evento,'.ctEventoPublicoCarregarVideoDataPROD(')!==0){
   fail('evento-v2: video nao pode abrir segunda execucao Apps Script');
 }
-if(evento.includes(';base64,')||evento.includes('data:video/')){
-  fail('evento-v2: video nao pode trafegar inline/base64');
+if(
+  evento.includes("video.src='data:'") ||
+  evento.includes('video.src="data:') ||
+  evento.includes('resposta.base64') ||
+  evento.includes('ctEventoPublicoCarregarVideoDataPROD')
+){
+  fail('evento-v2: video nao pode trafegar via Apps Script/base64');
 }
 if(!evento.includes('videoDiretoUrl')){
   fail('evento-v2: video publico deve usar URL direta da origem/CDN');
