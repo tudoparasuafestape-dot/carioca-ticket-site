@@ -112,7 +112,7 @@ async function instalarBackendFake(page, contadores) {
       body:
         '<!doctype html><html><body><script>' +
         'window.top.postMessage(' + payload + ', "*");' +
-        '<\\/script></body></html>'
+        '<\/script></body></html>'
     });
   });
 }
