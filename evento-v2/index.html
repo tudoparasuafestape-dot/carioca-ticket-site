@@ -72,25 +72,6 @@
       box-shadow:0 30px 80px rgba(0,0,0,.38);
     }
     .cover img{width:100%;height:100%;min-height:520px;object-fit:cover;display:block}
-    .cover-video{position:absolute;inset:0;width:100%;height:100%;min-height:520px;object-fit:contain;background:#050607;display:block;z-index:2}
-    .cover-video-embed{position:absolute;inset:0;width:100%;height:100%;min-height:520px;border:0;background:#050607;z-index:3;display:block}
-    .media-intro{position:absolute;inset:0;z-index:4;background:#050607;overflow:hidden;transition:opacity .5s ease,visibility .5s ease}
-    .media-intro img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.72)}
-    .media-intro::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.24) 55%,rgba(0,0,0,.72))}
-    .media-intro-copy{position:absolute;z-index:2;left:18px;right:18px;bottom:18px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px}
-    .media-intro-copy small{display:block;color:var(--gold2);font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
-    .media-intro-copy strong{display:block;margin-top:5px;font-size:18px;line-height:1.2;color:#fff}
-    .media-intro-pill{flex:0 0 auto;padding:8px 11px;border-radius:999px;background:rgba(7,9,12,.74);border:1px solid rgba(255,255,255,.13);color:#fff;font-size:10px;font-weight:900;backdrop-filter:blur(10px)}
-    .media-intro.fade-out{opacity:0;visibility:hidden;pointer-events:none}
-    .cover-video-poster{position:absolute;inset:0;width:100%;height:100%;min-height:520px;object-fit:cover;filter:blur(18px) brightness(.45);transform:scale(1.06);opacity:.48;z-index:1}
-    .video-control{
-      position:absolute;z-index:5;right:16px;bottom:16px;
-      min-height:42px;padding:0 14px;border:1px solid rgba(255,255,255,.16);border-radius:999px;
-      background:rgba(5,6,7,.78);backdrop-filter:blur(12px);color:#fff;font-size:11px;font-weight:900;
-      cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.28)
-    }
-    .video-control:hover{background:rgba(20,24,29,.9)}
-    .video-control.hidden{display:none!important}
     .cover-fallback{
       position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:38px;
       background:
@@ -198,7 +179,7 @@
     .error{max-width:560px;margin:90px auto;padding:26px;border-radius:24px;background:#131820;border:1px solid rgba(255,255,255,.08);text-align:center}
     @media(max-width:860px){
       .hero-grid,.content-grid{grid-template-columns:1fr}
-      .cover{min-height:390px}.cover img,.cover-video,.cover-video-poster,.cover-video-embed{min-height:390px}
+      .cover{min-height:390px}.cover img{min-height:390px}
       .event-copy{padding-top:0}
       .side-card{position:static}
       .mobile-buy{display:block}
@@ -210,7 +191,7 @@
       .top-security{display:none}
       .customer-link{min-height:34px;padding:0 10px;font-size:9px}
       .hero{padding-top:18px}
-      .cover{min-height:340px;border-radius:24px}.cover img,.cover-video,.cover-video-poster,.cover-video-embed{min-height:340px}
+      .cover{min-height:340px;border-radius:24px}.cover img{min-height:340px}
       h1{font-size:38px}
       .lead{font-size:14px}
       .meta{grid-template-columns:1fr}
@@ -365,33 +346,7 @@
               <span id="fallbackEventHighlight">Ingresso oficial e compra segura</span>
             </div>
           </div>
-          <img id="coverVideoPoster" class="cover-video-poster hidden" alt="">
-          <video
-            id="coverVideo"
-            class="cover-video hidden"
-            playsinline
-            preload="metadata"
-            muted
-          ></video>
-          <iframe
-            id="coverVideoEmbed"
-            class="cover-video-embed hidden"
-            title="Vídeo oficial do evento"
-            allow="autoplay; fullscreen"
-            allowfullscreen
-          ></iframe>
-          <div id="mediaIntro" class="media-intro hidden">
-            <img id="mediaIntroImage" alt="">
-            <div class="media-intro-copy">
-              <div>
-                <small>Vídeo oficial</small>
-                <strong id="mediaIntroTitle">Roda de Samba Estilo Carioca</strong>
-              </div>
-              <span class="media-intro-pill">▶ Em instantes</span>
-            </div>
-          </div>
-          <img id="coverImage" class="hidden" alt="Foto oficial do evento">
-          <button id="videoControl" class="video-control hidden" type="button">🔊 Ativar som</button>
+          <img id="coverImage" class="hidden" alt="Foto oficial do evento" loading="eager" decoding="async">
           <div class="cover-shade"></div>
         </div>
 
@@ -557,7 +512,6 @@
         $('eventName').textContent=e.nome||'Evento';
         $('fallbackEventName').textContent=e.nome||'Evento';
         $('fallbackEventHighlight').textContent=v.destaque||'Ingresso oficial e compra segura';
-        $('mediaIntroTitle').textContent=e.nome||'Evento';
         $('shortDescription').textContent=v.descricaoCurta||'Garanta seu ingresso pela Carioca Ticket.';
         $('dateTime').textContent=[e.data,e.horario].filter(Boolean).join(' · ')||'A confirmar';
         $('venue').textContent=[e.local,e.endereco].filter(Boolean).join(' · ')||'A confirmar';
@@ -609,228 +563,28 @@
       }
 
       function configurarMidiaPrincipal(v){
-        var tipo=String(v.midiaTipo||'IMAGEM').toUpperCase();
-        var video=$('coverVideo');
-        var embed=$('coverVideoEmbed');
-        var poster=$('coverVideoPoster');
         var imagem=$('coverImage');
         var fallback=$('coverFallback');
-        var controle=$('videoControl');
-        var intro=$('mediaIntro');
-        var introImage=$('mediaIntroImage');
+        var imagemUrl=String(
+          v.capaUrl||
+          v.posterUrl||
+          ''
+        ).trim();
 
-        function limparVideo(){
-          try{ video.pause(); }catch(e){}
-          video.removeAttribute('src');
-          try{ video.load(); }catch(e){}
-          video.classList.add('hidden');
-
-          embed.removeAttribute('src');
-          embed.classList.add('hidden');
-
-          controle.classList.add('hidden');
-        }
-
-        function prepararIntro(){
-          if(v.posterUrl){
-            introImage.src=v.posterUrl;
-          }
-
-          intro.classList.remove('hidden');
-          intro.classList.remove('fade-out');
+        /*
+         * REGRA OFICIAL DE PRODUTO:
+         * a mídia principal do evento é sempre uma imagem estática.
+         * Não há player, autoplay, embed ou carregamento de vídeo.
+         */
+        if(imagemUrl){
+          imagem.src=imagemUrl;
+          imagem.classList.remove('hidden');
           fallback.classList.add('hidden');
-        }
-
-        function esconderIntro(){
-          window.setTimeout(function(){
-            intro.classList.add('fade-out');
-          },450);
-        }
-
-        function mostrarImagem(){
-          limparVideo();
-          poster.classList.add('hidden');
-          intro.classList.add('hidden');
-
-          var imagemUrl=v.capaUrl||v.posterUrl||'';
-          if(imagemUrl){
-            imagem.src=imagemUrl;
-            imagem.classList.remove('hidden');
-            fallback.classList.add('hidden');
-          }else{
-            imagem.classList.add('hidden');
-            fallback.classList.remove('hidden');
-          }
-        }
-
-        if(tipo!=='VIDEO'){
-          mostrarImagem();
-          return;
-        }
-
-        imagem.classList.add('hidden');
-
-        if(v.posterUrl){
-          poster.src=v.posterUrl;
-          poster.classList.remove('hidden');
         }else{
-          poster.classList.add('hidden');
+          imagem.removeAttribute('src');
+          imagem.classList.add('hidden');
+          fallback.classList.remove('hidden');
         }
-
-        prepararIntro();
-
-        /*
-         * Preferência: player nativo alimentado pelo backend.
-         * Isso elimina totalmente os controles visuais do Google Drive
-         * da experiência do cliente.
-         */
-        if(v.videoInternoDisponivel){
-          google.script.run
-            .withSuccessHandler(function(resposta){
-              if(
-                !resposta ||
-                resposta.sucesso!==true ||
-                !resposta.base64
-              ){
-                mostrarImagem();
-                return;
-              }
-
-              limparVideo();
-
-              video.muted=true;
-              video.autoplay=true;
-              video.loop=true;
-              video.playsInline=true;
-              video.poster=v.posterUrl||v.capaUrl||'';
-              video.src='data:'+
-                (resposta.mimeType||'video/mp4')+
-                ';base64,'+
-                resposta.base64;
-
-              video.classList.remove('hidden');
-              fallback.classList.add('hidden');
-              controle.classList.remove('hidden');
-              controle.textContent='🔊 Ativar som';
-
-              video.oncanplay=function(){
-                var tentativa=video.play();
-
-                if(
-                  tentativa &&
-                  typeof tentativa.catch==='function'
-                ){
-                  tentativa.catch(function(){});
-                }
-
-                esconderIntro();
-              };
-
-              video.onerror=function(){
-                mostrarImagem();
-              };
-
-              controle.onclick=function(){
-                if(video.muted){
-                  video.muted=false;
-                  controle.textContent='🔇 Silenciar';
-
-                  var tocar=video.play();
-
-                  if(
-                    tocar &&
-                    typeof tocar.catch==='function'
-                  ){
-                    tocar.catch(function(){});
-                  }
-
-                }else{
-                  video.muted=true;
-                  controle.textContent='🔊 Ativar som';
-                }
-              };
-            })
-            .withFailureHandler(function(){
-              mostrarImagem();
-            })
-            .ctEventoPublicoCarregarVideoDataPROD(
-              state.eventoId
-            );
-
-          return;
-        }
-
-        /*
-         * Compatibilidade para outros eventos que ainda usem embed.
-         * O evento atual já usa o player nativo acima.
-         */
-        if(v.videoEmbedUrl){
-          limparVideo();
-
-          embed.onload=function(){
-            window.setTimeout(function(){
-              intro.classList.add('fade-out');
-            },3200);
-          };
-
-          embed.src=v.videoEmbedUrl;
-          embed.classList.remove('hidden');
-          fallback.classList.add('hidden');
-          return;
-        }
-
-        if(!v.videoUrl){
-          mostrarImagem();
-          return;
-        }
-
-        video.muted=true;
-        video.autoplay=v.autoplayVideo!==false;
-        video.loop=v.loopVideo!==false;
-        video.playsInline=true;
-        video.poster=v.posterUrl||v.capaUrl||'';
-        video.src=v.videoUrl;
-        video.classList.remove('hidden');
-        fallback.classList.add('hidden');
-        controle.classList.remove('hidden');
-        controle.textContent='🔊 Ativar som';
-
-        video.onerror=function(){
-          mostrarImagem();
-        };
-
-        video.oncanplay=function(){
-          esconderIntro();
-        };
-
-        var tentativa=video.play();
-
-        if(
-          tentativa &&
-          typeof tentativa.catch==='function'
-        ){
-          tentativa.catch(function(){});
-        }
-
-        controle.onclick=function(){
-          if(video.muted){
-            video.muted=false;
-            controle.textContent='🔇 Silenciar';
-
-            var tocar=video.play();
-
-            if(
-              tocar &&
-              typeof tocar.catch==='function'
-            ){
-              tocar.catch(function(){});
-            }
-
-          }else{
-            video.muted=true;
-            controle.textContent='🔊 Ativar som';
-          }
-        };
       }
 
       function load(){

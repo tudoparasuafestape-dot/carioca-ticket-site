@@ -61,6 +61,32 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
   }
 }
 
+
+// REGRA DE PRODUTO — mídia principal do evento é sempre imagem estática.
+// A página pública não pode carregar player, iframe, autoplay ou endpoint
+// de vídeo na capa principal.
+for(const path of ['evento/index.html','evento-v2/index.html']){
+  const evento=read(path);
+  requireAll(path,evento,[
+    'id="coverImage"',
+    'function configurarMidiaPrincipal(v){',
+    "var imagem=$('coverImage');"
+  ]);
+  for(const proibido of [
+    '<video',
+    'coverVideoEmbed',
+    'videoControl',
+    'ctEventoPublicoCarregarVideoDataPROD',
+    'videoInternoDisponivel',
+    'videoEmbedUrl',
+    'videoUrl'
+  ]){
+    if(evento.includes(proibido)){
+      failures.push(path+': mídia principal voltou a permitir vídeo -> '+proibido);
+    }
+  }
+}
+
 const ajuda=read('ajuda/index.html');
 requireLink('ajuda/index.html',ajuda,'helpProducerPortal','/produtor/');
 requireLink('ajuda/index.html',ajuda,'helpPartnerPortal','/parceiro/');
