@@ -828,6 +828,9 @@
       case 'ctEventosCadastroSeguroCriarPROD':
         return {method:'ctEventosOperacionalCriarSeguraPROD',args:[token,args[0]||{}]};
 
+      case 'ctGatePublicacaoAceitarTermoEventoPROD':
+        return {method:'ctGatePublicacaoAceitarTermoEventoPROD',args:[token,String(args[0]||'')]};
+
       default:
         throw new Error('CT_EVENTOS_RPC_METODO_NAO_AUTORIZADO');
     }
@@ -1746,6 +1749,43 @@
           ''
         );
 
+      const governancaPublicacao =
+        publicacao.governancaRisco ||
+        {};
+
+      const eventoLegado =
+        governancaPublicacao.legado ===
+          true;
+
+      const termoEventoAceito =
+        eventoLegado ||
+        (
+          governancaPublicacao.termoEvento &&
+          governancaPublicacao.termoEvento.aceito ===
+            true
+        );
+
+      const botaoTermoEvento =
+        (
+          !publicado &&
+          !eventoLegado &&
+          !termoEventoAceito
+        )
+          ? (
+              '<button ' +
+                'class="botao botao-secundario" ' +
+                'type="button" ' +
+                'onclick="aceitarTermoPublicacaoEvento(\'' +
+                  escaparAtributo(
+                    evento.id
+                  ) +
+                '\')"' +
+              '>' +
+                'Aceitar termo do evento' +
+              '</button>'
+            )
+          : '';
+
       const botaoPublicacao =
         publicado
           ? (
@@ -1929,6 +1969,7 @@
 
           '<div class="evento-acoes">' +
             botaoAtivar +
+            botaoTermoEvento +
             botaoPublicacao +
             botoesCheckout +
             botoesStatus +
@@ -2051,6 +2092,57 @@
           }
         )
         .selecionarEventoAtivo(
+          eventoId
+        );
+    }
+
+
+    function aceitarTermoPublicacaoEvento(
+      eventoId
+    ) {
+      alterarCarregamento(
+        true
+      );
+
+      google.script.run
+        .withSuccessHandler(
+          function(resposta) {
+            alterarCarregamento(
+              false
+            );
+
+            if (
+              !resposta ||
+              resposta.sucesso !== true
+            ) {
+              mostrarErro(
+                'Não foi possível registrar o aceite do evento.'
+              );
+              return;
+            }
+
+            alert(
+              resposta.jaAceito === true
+                ? 'O termo deste evento já estava aceito.'
+                : 'Termo do evento aceito. A publicação continuará sujeita à análise da Carioca Ticket.'
+            );
+
+            carregarEventos();
+          }
+        )
+        .withFailureHandler(
+          function(erro) {
+            alterarCarregamento(
+              false
+            );
+
+            mostrarErro(
+              erro.message ||
+              'Não foi possível registrar o aceite do evento.'
+            );
+          }
+        )
+        .ctGatePublicacaoAceitarTermoEventoPROD(
           eventoId
         );
     }
