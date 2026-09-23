@@ -43,8 +43,8 @@ button,input,select{font:inherit}.hidden{display:none!important}
 <div class="grid">
 <div class="field wide"><label for="producer">Produtor ativo</label><select id="producer"><option value="">Carregando produtores…</option></select></div>
 <div class="field"><label for="incomeValue">Faturamento / renda mensal de teste</label><input id="incomeValue" inputmode="decimal" placeholder="Ex.: 25000"></div>
-<div class="field"><label for="companyType">Tipo de empresa (PJ, opcional)</label><select id="companyType"><option value="">Não informar</option><option value="MEI">MEI</option><option value="LIMITED">Sociedade limitada</option><option value="INDIVIDUAL">Empresário individual</option><option value="ASSOCIATION">Associação</option></select></div>
-<div class="field"><label for="birthDate">Data de nascimento (PF, se necessário)</label><input id="birthDate" type="date"></div>
+<div class="field"><label for="companyType">Tipo de empresa (PJ, obrigatório)</label><select id="companyType"><option value="">Não informar</option><option value="MEI">MEI</option><option value="LIMITED">Sociedade limitada</option><option value="INDIVIDUAL">Empresário individual</option><option value="ASSOCIATION">Associação</option></select></div>
+<div class="field"><label for="birthDate">Data de nascimento (PF, obrigatória)</label><input id="birthDate" type="date"></div>
 <div class="field"><label for="cpfCnpj">CPF/CNPJ do titular</label><input id="cpfCnpj" inputmode="numeric" autocomplete="off" placeholder="Somente para a homologação Sandbox"></div>
 <div class="field wide"><label for="address">Endereço</label><input id="address" autocomplete="off" placeholder="Rua / avenida"></div>
 <div class="field"><label for="addressNumber">Número</label><input id="addressNumber" autocomplete="off" placeholder="Ex.: 82"></div>
@@ -124,7 +124,19 @@ function renderReadiness(r){
   $('personType').textContent=r.produtor&&r.produtor.tipoPessoa||'—';
   setFlag('readyCreate',!!r.prontoParaProvisionar,'Sim','Não');
   var miss=Array.isArray(r.faltas)?r.faltas:[];
-  $('missing').innerHTML=miss.length?miss.map(function(x){return'<span class="pill">'+String(x).replace(/[<>]/g,'')+'</span>'}).join(''):'<span class="pill">Nenhum campo obrigatório pendente</span>';
+  var nomesCampos={
+    cpfCnpj:'CPF/CNPJ',
+    email:'E-mail',
+    mobilePhone:'Celular',
+    incomeValue:'Faturamento / renda mensal',
+    address:'Endereço',
+    addressNumber:'Número',
+    province:'Bairro',
+    postalCode:'CEP',
+    companyType:'Tipo de empresa',
+    birthDate:'Data de nascimento'
+  };
+  $('missing').innerHTML=miss.length?miss.map(function(x){return'<span class="pill">'+String(nomesCampos[x]||x).replace(/[<>]/g,'')+'</span>'}).join(''):'<span class="pill">Nenhum campo obrigatório pendente</span>';
   refreshButtons();
 }
 
