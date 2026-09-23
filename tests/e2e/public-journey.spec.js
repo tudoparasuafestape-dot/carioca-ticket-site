@@ -161,6 +161,16 @@ test.describe('Jornada publica protegida', () => {
     await expect(page.locator('body')).not.toContainText('\\n');
     await expectNoForbiddenVisibleLinks(page);
 
+    const eventoIdAtual = new URL(page.url()).searchParams.get('evento');
+    expect(eventoIdAtual).toBeTruthy();
+
+    const compartilharEvento = page.locator('#shareHero');
+    await expect(compartilharEvento).toBeVisible();
+    await expect(compartilharEvento).toHaveAttribute(
+      'data-share-url',
+      'https://' + EXPECTED_HOST + '/evento/?evento=' + encodeURIComponent(eventoIdAtual)
+    );
+
     const comprar = page.getByRole('link', {
       name: /comprar ingresso|garantir meu ingresso|comprar agora/i
     }).first();

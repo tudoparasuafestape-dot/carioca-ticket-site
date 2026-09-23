@@ -143,6 +143,21 @@
       box-shadow:0 14px 38px rgba(217,166,46,.2);transition:.18s;
     }
     .cta:hover{transform:translateY(-1px);box-shadow:0 18px 46px rgba(217,166,46,.28)}
+    .hero-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .share-btn{
+      min-height:56px;border-radius:17px;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+      border:1px solid rgba(255,214,109,.34);background:rgba(255,255,255,.055);color:#fff;font-weight:900;
+      cursor:pointer;transition:.18s;white-space:nowrap
+    }
+    .share-btn:hover{transform:translateY(-1px);background:rgba(217,166,46,.12);border-color:rgba(255,214,109,.55)}
+    .share-btn:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
+    .share-icon{width:18px;height:18px;display:block}
+    .share-toast{
+      position:fixed;z-index:90;left:50%;bottom:92px;transform:translateX(-50%);
+      padding:11px 15px;border-radius:999px;background:#111820;color:#fff;
+      border:1px solid rgba(255,214,109,.3);box-shadow:0 14px 40px rgba(0,0,0,.28);
+      font-size:12px;font-weight:850;white-space:nowrap
+    }
     .trust{
       display:flex;flex-wrap:wrap;gap:9px;margin-top:13px;color:#a9b0bb;font-size:11px
     }
@@ -194,7 +209,10 @@
       display:none;position:fixed;z-index:50;left:0;right:0;bottom:0;padding:12px 16px max(12px,env(safe-area-inset-bottom));
       background:rgba(7,9,12,.92);backdrop-filter:blur(18px);border-top:1px solid rgba(255,255,255,.09)
     }
+    .mobile-buy-inner{width:min(680px,100%);margin:auto;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
     .mobile-buy .cta{width:100%}
+    .mobile-buy .share-btn{min-height:56px;padding:0 15px;background:rgba(255,255,255,.07)}
+    .mobile-buy .share-label{display:none}
     .loading{position:fixed;z-index:100;inset:0;display:grid;place-items:center;background:#07090c}
     .spinner{width:46px;height:46px;border:4px solid rgba(255,255,255,.1);border-top-color:var(--gold2);border-radius:50%;animation:spin .8s linear infinite;margin:auto auto 15px}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -219,6 +237,9 @@
       .lead{font-size:14px}
       .meta{grid-template-columns:1fr}
       .price-line{align-items:flex-start;flex-direction:column}
+      .hero-actions{width:100%}
+      .hero-actions .cta{flex:1 1 auto}
+      .hero-actions .share-btn{flex:0 0 auto}
       .content{border-radius:28px 28px 0 0;padding-top:30px}
       .section{padding:19px;border-radius:20px}
       .journey{grid-template-columns:1fr}
@@ -390,7 +411,13 @@
               <small>Ingressos a partir de</small>
               <strong id="startingPrice">Consulte</strong>
             </div>
-            <a id="buyHero" class="cta" href="#">Comprar ingresso →</a>
+            <div class="hero-actions">
+              <a id="buyHero" class="cta" href="#">Comprar ingresso →</a>
+              <button id="shareHero" class="share-btn" type="button" aria-label="Compartilhar este evento">
+                <svg class="share-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18 16a3 3 0 0 0-2.39 1.19L8.91 13.7a3.14 3.14 0 0 0 0-3.4l6.7-3.49A3 3 0 1 0 15 5a3.2 3.2 0 0 0 .09.7L8.4 9.19a3 3 0 1 0 0 5.62l6.69 3.49A3.2 3.2 0 0 0 15 19a3 3 0 1 0 3-3Z"/></svg>
+                <span>Compartilhar</span>
+              </button>
+            </div>
           </div>
 
           <div class="trust">
@@ -464,8 +491,16 @@
   </section>
 
   <div id="mobileBuy" class="mobile-buy hidden">
-    <a id="buyMobile" class="cta" href="#">Comprar ingresso</a>
+    <div class="mobile-buy-inner">
+      <a id="buyMobile" class="cta" href="#">Comprar ingresso</a>
+      <button id="shareMobile" class="share-btn" type="button" aria-label="Compartilhar este evento" title="Compartilhar">
+        <svg class="share-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18 16a3 3 0 0 0-2.39 1.19L8.91 13.7a3.14 3.14 0 0 0 0-3.4l6.7-3.49A3 3 0 1 0 15 5a3.2 3.2 0 0 0 .09.7L8.4 9.19a3 3 0 1 0 0 5.62l6.69 3.49A3.2 3.2 0 0 0 15 19a3 3 0 1 0 3-3Z"/></svg>
+        <span class="share-label">Compartilhar</span>
+      </button>
+    </div>
   </div>
+
+  <div id="shareToast" class="share-toast hidden" role="status" aria-live="polite">Link copiado!</div>
 
   <footer class="footer">
     Carioca Ticket · Compra segura · Ingresso digital · QR Code
@@ -475,7 +510,7 @@
     (function(){
       'use strict';
 
-      var state={eventoId:'',data:null};
+      var state={eventoId:'',data:null,shareToastTimer:null};
       var $=function(id){return document.getElementById(id);};
 
       function esc(v){
@@ -489,6 +524,82 @@
 
       function money(v){
         return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+      }
+
+      function linkCanonicoEvento(){
+        var base=window.location.origin+window.location.pathname;
+        return base+'?evento='+encodeURIComponent(state.eventoId);
+      }
+
+      function mostrarShareToast(msg){
+        var toast=$('shareToast');
+        if(!toast)return;
+        toast.textContent=msg||'Link copiado!';
+        toast.classList.remove('hidden');
+        clearTimeout(state.shareToastTimer);
+        state.shareToastTimer=setTimeout(function(){
+          toast.classList.add('hidden');
+        },2200);
+      }
+
+      function copiarLinkCompartilhamento(url){
+        if(navigator.clipboard&&window.isSecureContext){
+          return navigator.clipboard.writeText(url);
+        }
+
+        return new Promise(function(resolve,reject){
+          var input=document.createElement('textarea');
+          input.value=url;
+          input.setAttribute('readonly','');
+          input.style.position='fixed';
+          input.style.opacity='0';
+          document.body.appendChild(input);
+          input.select();
+          input.setSelectionRange(0,input.value.length);
+          try{
+            var ok=document.execCommand('copy');
+            input.remove();
+            if(ok)resolve();
+            else reject(new Error('CT_SHARE_COPY_FAILED'));
+          }catch(err){
+            input.remove();
+            reject(err);
+          }
+        });
+      }
+
+      async function compartilharEvento(){
+        var e=state.data&&state.data.evento||{};
+        var url=linkCanonicoEvento();
+        var detalhes=[e.data,e.local,e.cidade].filter(Boolean).join(' · ');
+        var titulo=(e.nome||'Evento')+' · Carioca Ticket';
+        var texto='Confira '+(e.nome||'este evento')+(detalhes?' — '+detalhes:'')+' na Carioca Ticket.';
+
+        if(navigator.share){
+          try{
+            await navigator.share({title:titulo,text:texto,url:url});
+            return;
+          }catch(err){
+            if(err&&err.name==='AbortError')return;
+          }
+        }
+
+        try{
+          await copiarLinkCompartilhamento(url);
+          mostrarShareToast('Link do evento copiado!');
+        }catch(_){
+          mostrarShareToast('Use a barra do navegador para copiar o link.');
+        }
+      }
+
+      function configurarCompartilhamento(){
+        var url=linkCanonicoEvento();
+        ['shareHero','shareMobile'].forEach(function(id){
+          var btn=$(id);
+          if(!btn)return;
+          btn.dataset.shareUrl=url;
+          btn.onclick=compartilharEvento;
+        });
       }
 
       function showError(msg){
@@ -519,6 +630,7 @@
         $('startingPrice').textContent=res.menorPreco||'Consulte';
 
         configurarMidiaPrincipal(v);
+        configurarCompartilhamento();
 
         var buy='/checkout/?evento='+encodeURIComponent(state.eventoId);
         ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){$(id).href=buy;});
