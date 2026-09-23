@@ -98,10 +98,16 @@ for(const path of ['evento/index.html','evento-v2/index.html']){
     'id="shareMobile"',
     'function linkCanonicoEvento(){',
     "return base+'?evento='+encodeURIComponent(state.eventoId);",
-    'async function compartilharEvento(){',
+    'id="shareMenu"',
+    'id="shareNativeAction"',
+    'id="copyLinkAction"',
+    'function abrirMenuCompartilhamento(){',
+    'async function compartilharNativo(){',
+    'async function copiarLinkDireto(){',
     'navigator.share',
     'navigator.clipboard.writeText(url)',
     "btn.dataset.shareUrl=url",
+    "copyAction.dataset.shareUrl=url",
     "mostrarShareToast('Link do evento copiado!')"
   ]);
   const shareStart=evento.indexOf('function linkCanonicoEvento(){');
