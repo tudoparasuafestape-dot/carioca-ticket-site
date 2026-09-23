@@ -311,18 +311,25 @@ if (producerPage) {
   }
   if (
     !producerPage.includes('id="brandLogoDesktop"') ||
-    !producerPage.includes("ctMarcaOficialObterDataUriPROD") ||
-    !producerPage.includes("'DESKTOP'") ||
-    !producerPage.includes("'MOBILE'")
-  ) {
-    fail('produtor/index.html', 'Portal do Produtor sem carregamento da identidade visual oficial');
-  }
-  if (
     !producerPage.includes('src="/assets/carioca-ticket-logo.png"') ||
-    !producerPage.includes('data-brand-source="fallback"') ||
-    !producerPage.includes("'/assets/carioca-ticket-icon-192.png'")
+    !producerPage.includes("'/assets/carioca-ticket-logo.png'") ||
+    !producerPage.includes("'/assets/carioca-ticket-icon-192.png'") ||
+    !producerPage.includes("'data-brand-source',\n'static'")
   ) {
-    fail('produtor/index.html', 'Portal do Produtor sem fallback oficial resiliente');
+    fail('produtor/index.html', 'Portal do Produtor sem identidade visual oficial estatica');
+  }
+
+  const marcaInicio = producerPage.indexOf('function carregarMarcaOficial(){');
+  const marcaFim = producerPage.indexOf('function registrarFalhaMarcaOficial', marcaInicio);
+  const marcaBloco = marcaInicio >= 0 && marcaFim > marcaInicio
+    ? producerPage.slice(marcaInicio, marcaFim)
+    : '';
+
+  if (
+    marcaBloco.includes('ctMarcaOficialObterDataUriPROD') ||
+    marcaBloco.includes('google.script.run')
+  ) {
+    fail('produtor/index.html', 'Portal voltou a depender de RPC/Drive para carregar a marca oficial');
   }
 }
 

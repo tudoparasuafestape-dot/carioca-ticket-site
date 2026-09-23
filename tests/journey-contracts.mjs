@@ -159,6 +159,32 @@ requireAll('produtor/index.html',produtor,[
   'id="logoutButton"'
 ]);
 
+
+// PERFORMANCE P0 — o Portal do Produtor não pode depender de RPC/Drive
+// para renderizar a identidade visual na tela de login.
+{
+  const produtorMarca=read('produtor/index.html');
+  requireAll('produtor/index.html',produtorMarca,[
+    '/assets/carioca-ticket-logo.png',
+    '/assets/carioca-ticket-icon-192.png',
+    "'data-brand-source',\n'static'"
+  ]);
+  const marcaFnStart=produtorMarca.indexOf('function carregarMarcaOficial(){');
+  const marcaFnEnd=produtorMarca.indexOf('function registrarFalhaMarcaOficial',marcaFnStart);
+  const marcaFn=marcaFnStart>=0&&marcaFnEnd>marcaFnStart
+    ? produtorMarca.slice(marcaFnStart,marcaFnEnd)
+    : '';
+  for(const proibido of [
+    'ctMarcaOficialObterDataUriPROD',
+    'google.script.run',
+    'data-brand-source\',\n\'backend'
+  ]){
+    if(marcaFn.includes(proibido)){
+      failures.push('produtor/index.html: marca oficial estática voltou a depender do backend -> '+proibido);
+    }
+  }
+}
+
 const parceiroAdmin=read('parceiro/admin/index.html');
 requireLink('parceiro/admin/index.html',parceiroAdmin,'partnerPortalLink','/parceiro/');
 requireLink('parceiro/admin/index.html',parceiroAdmin,'producerRequestsLink','/produtor/solicitacoes/');

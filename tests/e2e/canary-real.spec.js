@@ -25,7 +25,7 @@ test.describe('Canario real first-party', () => {
     expect(Date.now() - iniciou).toBeLessThan(25000);
   });
 
-  test('Portal oficial carrega a marca real do backend sem alerta visual', async ({ page }) => {
+  test('Portal oficial carrega a marca estatica sem RPC de branding', async ({ page }) => {
     const iniciou = Date.now();
     await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
     await expectFirstParty(page, '/produtor/');
@@ -37,7 +37,7 @@ test.describe('Canario real first-party', () => {
     await expect.poll(
       () => page.locator('#brandLogoDesktop').getAttribute('data-brand-source'),
       { timeout: 30000 }
-    ).toBe('backend');
+    ).toBe('static');
 
     const logo = await page.locator('#brandLogoDesktop').evaluate(img => ({
       src: img.getAttribute('src') || '',
