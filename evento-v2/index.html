@@ -680,82 +680,64 @@
         prepararIntro();
 
         /*
-         * Preferência: player nativo alimentado pelo backend.
-         * Isso elimina totalmente os controles visuais do Google Drive
-         * da experiência do cliente.
+         * P0 PERFORMANCE:
+         * mídia pública nunca passa pelo Apps Script.
+         * O catálogo traz somente a URL e o navegador baixa o vídeo
+         * diretamente da origem, sem segunda execução do backend e
+         * sem transportar Base64 pela aplicação.
          */
-        if(v.videoInternoDisponivel){
-          google.script.run
-            .withSuccessHandler(function(resposta){
+        if(v.videoInternoDisponivel&&v.videoDiretoUrl){
+          limparVideo();
+
+          video.muted=true;
+          video.autoplay=true;
+          video.loop=true;
+          video.playsInline=true;
+          video.poster=v.posterUrl||v.capaUrl||'';
+          video.preload='metadata';
+          video.src=v.videoDiretoUrl;
+
+          video.classList.remove('hidden');
+          fallback.classList.add('hidden');
+          controle.classList.remove('hidden');
+          controle.textContent='🔊 Ativar som';
+
+          video.oncanplay=function(){
+            var tentativa=video.play();
+
+            if(
+              tentativa &&
+              typeof tentativa.catch==='function'
+            ){
+              tentativa.catch(function(){});
+            }
+
+            esconderIntro();
+          };
+
+          video.onerror=function(){
+            mostrarImagem();
+          };
+
+          controle.onclick=function(){
+            if(video.muted){
+              video.muted=false;
+              controle.textContent='🔇 Silenciar';
+
+              var tocar=video.play();
+
               if(
-                !resposta ||
-                resposta.sucesso!==true ||
-                !resposta.base64
+                tocar &&
+                typeof tocar.catch==='function'
               ){
-                mostrarImagem();
-                return;
+                tocar.catch(function(){});
               }
 
-              limparVideo();
-
+            }else{
               video.muted=true;
-              video.autoplay=true;
-              video.loop=true;
-              video.playsInline=true;
-              video.poster=v.posterUrl||v.capaUrl||'';
-              video.src='data:'+
-                (resposta.mimeType||'video/mp4')+
-                ';base64,'+
-                resposta.base64;
-
-              video.classList.remove('hidden');
-              fallback.classList.add('hidden');
-              controle.classList.remove('hidden');
               controle.textContent='🔊 Ativar som';
-
-              video.oncanplay=function(){
-                var tentativa=video.play();
-
-                if(
-                  tentativa &&
-                  typeof tentativa.catch==='function'
-                ){
-                  tentativa.catch(function(){});
-                }
-
-                esconderIntro();
-              };
-
-              video.onerror=function(){
-                mostrarImagem();
-              };
-
-              controle.onclick=function(){
-                if(video.muted){
-                  video.muted=false;
-                  controle.textContent='🔇 Silenciar';
-
-                  var tocar=video.play();
-
-                  if(
-                    tocar &&
-                    typeof tocar.catch==='function'
-                  ){
-                    tocar.catch(function(){});
-                  }
-
-                }else{
-                  video.muted=true;
-                  controle.textContent='🔊 Ativar som';
-                }
-              };
-            })
-            .withFailureHandler(function(){
-              mostrarImagem();
-            })
-            .ctEventoPublicoCarregarVideoDataPROD(
-              state.eventoId
-            );
+            }
+          };
 
           return;
         }
