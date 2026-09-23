@@ -39,6 +39,9 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
     'function reconcile(){',
     'ctCheckoutPixPublicoReconciliarPROD',
     'setInterval(reconcile,30000)',
+    'reconcilePolling:null',
+    'function stopExpiry(){',
+    'if(sec<=0&&!state.expiryReconciled)',
     'el.refreshButton.onclick=reconcile',
     'el.cardRefreshButton.onclick=reconcile'
   ]);
