@@ -76,6 +76,9 @@ a{color:inherit}.hidden{display:none!important}.shell{width:min(1440px,calc(100%
     <article class="stat"><span>Ticket médio</span><strong id="kAverage">R$ 0,00</strong><small>receita / venda</small></article>
     <article class="stat"><span>Pedidos</span><strong id="kOrders">0</strong><small>checkout público</small></article>
     <article class="stat"><span>Pedidos pagos</span><strong id="kPaid">0</strong><small>pago ou concluído</small></article>
+    <article class="stat"><span>Pedidos cancelados</span><strong id="kCancelled">0</strong><small>cancelamentos no período</small></article>
+    <article class="stat"><span>Pedidos expirados</span><strong id="kExpired">0</strong><small>reservas expiradas no período</small></article>
+    <article class="stat"><span>Desconto líquido</span><strong id="kDiscount">R$ 0,00</strong><small>cupons após reversões</small></article>
     <article class="stat"><span>Produtores ativos</span><strong id="kProducers">0</strong><small id="kProducersMeta">—</small></article>
     <article class="stat"><span>Eventos ativos</span><strong id="kEvents">0</strong><small id="kEventsMeta">—</small></article>
     <article class="stat"><span>Online confirmado</span><strong id="kOnline">R$ 0,00</strong><small>pagamentos públicos confirmados</small></article>
@@ -103,11 +106,27 @@ a{color:inherit}.hidden{display:none!important}.shell{width:min(1440px,calc(100%
       <div class="kv"><span>Confirmados</span><strong id="pConfirmed">0</strong></div>
       <div class="kv"><span>Valor confirmado</span><strong id="pConfirmedValue">R$ 0,00</strong></div>
       <div class="kv"><span>Pendentes</span><strong id="pPending">0</strong></div>
+      <div class="kv"><span>Cancelados</span><strong id="pCancelled">0</strong></div>
+      <div class="kv"><span>Falhas</span><strong id="pFailed">0</strong></div>
       <div class="kv"><span>Estornados</span><strong id="pRefunded">0</strong></div>
       <div class="kv"><span>Valor estornado</span><strong id="pRefundedValue">R$ 0,00</strong></div>
       <div class="kv"><span>Chargebacks</span><strong id="pChargeback">0</strong></div>
       <div class="kv"><span>Reembolsos</span><strong id="pReimburse">0</strong></div>
+      <div class="kv"><span>Valor reembolsado</span><strong id="pReimburseValue">R$ 0,00</strong></div>
     </aside>
+  </section>
+
+  <section class="panel" style="margin-bottom:14px">
+    <div class="head"><div><h2>Cupons e descontos</h2><p>Promoções efetivamente utilizadas no período e reversões pós-venda.</p></div></div>
+    <div class="kv"><span>Campanhas com uso</span><strong id="promoCampaigns">0</strong></div>
+    <div class="kv"><span>Pedidos com promoção</span><strong id="promoOrders">0</strong></div>
+    <div class="kv"><span>Acessos promocionais ativos</span><strong id="promoUses">0</strong></div>
+    <div class="kv"><span>Acessos reembolsados</span><strong id="promoRefunded">0</strong></div>
+    <div class="kv"><span>Acessos em chargeback</span><strong id="promoChargeback">0</strong></div>
+    <div class="kv"><span>Desconto concedido</span><strong id="promoGranted">R$ 0,00</strong></div>
+    <div class="kv"><span>Desconto revertido</span><strong id="promoReverted">R$ 0,00</strong></div>
+    <div class="kv"><span>Desconto líquido</span><strong id="promoNet">R$ 0,00</strong></div>
+    <div class="kv"><span>Receita promocional líquida</span><strong id="promoRevenue">R$ 0,00</strong></div>
   </section>
 
   <section class="grid3">
@@ -177,13 +196,14 @@ function renderTrend(list){
 }
 function render(r){
   state.data=r;
-  var x=r.resumo||{},f=r.funil||{},p=r.plataforma||{},fin=r.financeiro||{},on=fin.online||{},rank=r.rankings||{},an=r.analytics||{};
+  var x=r.resumo||{},f=r.funil||{},p=r.plataforma||{},fin=r.financeiro||{},on=fin.online||{},promo=fin.promocoes||{},rank=r.rankings||{},an=r.analytics||{};
   $('adminLabel').textContent=(r.admin&&r.admin.nome?r.admin.nome+' · ':'')+(r.admin&&r.admin.perfil||'ADMINISTRADOR');
   $('periodMeta').textContent='Período: '+dateLabel(r.periodo&&r.periodo.inicio)+' a '+dateLabel(r.periodo&&r.periodo.fim)+' · Atualizado '+new Date(r.geradoEm||Date.now()).toLocaleString('pt-BR');
   $('dateStart').value=r.periodo&&r.periodo.inicio||'';$('dateEnd').value=r.periodo&&r.periodo.fim||'';
-  setText('kViews',num(x.acessos));setText('kSessions',num(x.sessoes));setText('kTickets',num(x.ingressos));setText('kRevenue',money(x.receitaBruta));setText('kAverage',money(x.ticketMedio));setText('kOrders',num(x.pedidos));setText('kPaid',num(x.pedidosPagos));setText('kProducers',num(p.produtoresAtivos));setText('kProducersMeta',num(p.produtoresTotal)+' cadastrados');setText('kEvents',num(p.eventosAtivos));setText('kEventsMeta',num(p.eventosTotal)+' cadastrados');setText('kOnline',money(on.totalConfirmado));
+  setText('kViews',num(x.acessos));setText('kSessions',num(x.sessoes));setText('kTickets',num(x.ingressos));setText('kRevenue',money(x.receitaBruta));setText('kAverage',money(x.ticketMedio));setText('kOrders',num(x.pedidos));setText('kPaid',num(x.pedidosPagos));setText('kCancelled',num(x.pedidosCancelados));setText('kExpired',num(x.pedidosExpirados));setText('kDiscount',money(promo.descontoLiquido));setText('kProducers',num(p.produtoresAtivos));setText('kProducersMeta',num(p.produtoresTotal)+' cadastrados');setText('kEvents',num(p.eventosAtivos));setText('kEventsMeta',num(p.eventosTotal)+' cadastrados');setText('kOnline',money(on.totalConfirmado));
   setText('fHome',num(f.home));setText('fEvents',num(f.eventos));setText('fEvent',num(f.evento));setText('fCheckout',num(f.checkout));setText('fOrders',num(f.pedidos));setText('fPaid',num(f.pagos));setText('fConvEvent',f.evento?pct(f.conversaoEventoPedido)+' viraram pedido':'—');setText('fConvPaid',f.pedidos?pct(f.conversaoPedidoPago)+' dos pedidos pagos':'—');
-  setText('pConfirmed',num(on.confirmado));setText('pConfirmedValue',money(on.totalConfirmado));setText('pPending',num(on.pendente));setText('pRefunded',num(on.estornado));setText('pRefundedValue',money(on.totalEstornado));setText('pChargeback',num(on.chargeback));setText('pReimburse',num(on.reembolso));
+  setText('pConfirmed',num(on.confirmado));setText('pConfirmedValue',money(on.totalConfirmado));setText('pPending',num(on.pendente));setText('pCancelled',num(on.cancelado));setText('pFailed',num(on.falha));setText('pRefunded',num(on.estornado));setText('pRefundedValue',money(on.totalEstornado));setText('pChargeback',num(on.chargeback));setText('pReimburse',num(on.reembolso));setText('pReimburseValue',money(on.totalReembolsado));
+  setText('promoCampaigns',num(promo.campanhas));setText('promoOrders',num(promo.pedidos));setText('promoUses',num(promo.usosLiquidos));setText('promoRefunded',num(promo.reembolsados));setText('promoChargeback',num(promo.chargebacks));setText('promoGranted',money(promo.descontoConcedido));setText('promoReverted',money(promo.descontoRevertido));setText('promoNet',money(promo.descontoLiquido));setText('promoRevenue',money(promo.receitaPromocionalLiquida));
   setText('trendTotal',num(x.acessos));renderTrend(r.serieDiaria);
   $('rankAccess').innerHTML=rankTable(rank.eventosMaisAcessados,'acessos',num);
   $('rankRevenue').innerHTML=rankTable(rank.eventosMaiorReceita,'receita',money);
