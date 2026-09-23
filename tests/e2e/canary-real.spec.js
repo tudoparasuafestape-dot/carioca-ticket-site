@@ -53,6 +53,31 @@ test.describe('Canario real first-party', () => {
   });
 
 
+  test('Backoffice Master real existe e nega sessao invalida sem expor dados', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      const value = JSON.stringify({
+        token: 'CT-CANARIO-TOKEN-INVALIDO',
+        expiraEm: '2099-01-01T00:00:00.000Z'
+      });
+      sessionStorage.setItem('CT_PORTAL_PRODUTOR_PROD_SESSION_V1', value);
+      localStorage.setItem('CT_PORTAL_PRODUTOR_PROD_SESSION_V1', value);
+    });
+
+    await page.goto('/backoffice/', { waitUntil: 'domcontentloaded' });
+    await expectFirstParty(page, '/backoffice/');
+
+    await expect(page.getByRole('heading', { name: 'Acesso restrito' })).toBeVisible({
+      timeout: 30000
+    });
+
+    const mensagem = await page.locator('#gateMessage').textContent();
+    expect(String(mensagem || '')).not.toContain('CT_PORTAL_RPC_METODO_NAO_AUTORIZADO');
+    expect(String(mensagem || '')).not.toContain('ctBackofficeMasterCarregarPROD');
+    await expect(page.locator('#app')).toHaveClass(/hidden/);
+  });
+
+
   test('Evento v2 carrega o evento real e aponta para Checkout v2', async ({ page }) => {
     const iniciou = Date.now();
     await page.goto('/evento-v2/?evento=' + encodeURIComponent(EVENT_ID), {
