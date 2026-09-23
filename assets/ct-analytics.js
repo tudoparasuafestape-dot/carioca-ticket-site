@@ -7,7 +7,7 @@ Versao: 1.0.0
 REGRAS:
 - Nunca bloqueia renderizacao, navegacao, checkout ou venda.
 - Dispara somente depois do load e em janela ociosa/atrasada.
-- Sem await, fetch sincronizado, XHR, ScriptLock ou dependencia de resposta.
+- Sem espera de resposta, chamadas sincronas ou dependencia do motor transacional.
 - Sem PII: nao envia nome, telefone, e-mail, CPF ou dados do comprador.
 ====================================================================================================
 */
