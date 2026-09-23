@@ -1,12 +1,11 @@
 const { test, expect } = require('@playwright/test');
 
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
-const EXPECTED_HOST = process.env.CT_EXPECTED_HOST || 'cariocaticket.com.br';
 
 async function expectFirstParty(page, pathname) {
   await expect.poll(() => {
     try { return new URL(page.url()).hostname; } catch (_) { return ''; }
-  }, { timeout: 30000 }).toBe(EXPECTED_HOST);
+  }, { timeout: 30000 }).toBe('cariocaticket.com.br');
 
   await expect.poll(() => {
     try { return new URL(page.url()).pathname; } catch (_) { return ''; }
