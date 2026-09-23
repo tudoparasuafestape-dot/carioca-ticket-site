@@ -14,6 +14,7 @@ const protectedFiles = [
   'checkin/index.html',
   'consulta/index.html',
   'produtor/index.html',
+  'produtor/financeiro/index.html',
   'produtor/solicitar/index.html',
   'produtor/solicitacoes/index.html',
   'produtor-v2/index.html',
@@ -220,6 +221,7 @@ if (producerManifest) {
 
 for (const file of [
   'produtor/index.html',
+  'produtor/financeiro/index.html',
   'central/index.html',
   'saude-vendas/index.html',
   'reembolsos/index.html',
@@ -268,6 +270,54 @@ if (checkinPagePwa) {
   }
   if (!checkinPagePwa.includes('/pwa-register.js')) {
     fail('checkin/index.html', 'Check-in sem registro PWA base');
+  }
+}
+
+const contaCariocaPayPage = read('produtor/financeiro/index.html');
+if (contaCariocaPayPage) {
+  for (const required of [
+    '<title>Conta Carioca Pay | Portal do Produtor</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctPortalProdutorRestaurarSessaoIsoladaPROD',
+    'ctContaCariocaPayPortalResumoPROD',
+    'Vendas confirmadas',
+    'Saldo operacional conciliado',
+    'Disponível para solicitar antecipação',
+    'Pagamentos planejados',
+    'Portaria / Smart App',
+    'Bar / Smart App',
+    'Patrocínios',
+    'Capital próprio',
+    'Regras de antecipação',
+    '80%',
+    '20%',
+    '3,49%',
+    'D+3 úteis',
+    'movimentação real desabilitada',
+    'disabled><b>Solicitar antecipação',
+    'disabled><b>Registrar patrocínio',
+    'disabled><b>Planejar pagamento',
+    'disabled><b>Adicionar saldo'
+  ]) {
+    if (!contaCariocaPayPage.includes(required)) {
+      fail('produtor/financeiro/index.html', 'Conta Carioca Pay incompleta: ' + required);
+    }
+  }
+
+  if (
+    !contaCariocaPayPage.includes('rel="manifest" href="/manifest-produtor.webmanifest"') ||
+    !contaCariocaPayPage.includes('/pwa-register.js')
+  ) {
+    fail('produtor/financeiro/index.html', 'Conta Carioca Pay sem PWA oficial do produtor');
+  }
+
+  if (
+    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
+    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAportePROD'") ||
+    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'") ||
+    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
+  ) {
+    fail('produtor/financeiro/index.html', 'UI P2 nao pode disparar mutacoes antes da P3 Master');
   }
 }
 
