@@ -45,6 +45,9 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
   if(checkout.includes('setInterval(refresh,4000)')){
     failures.push(path+': reconciliação Asaas voltou ao polling de 4s');
   }
+  if(/\brefresh\(\);/.test(checkout)){
+    failures.push(path+': chamada residual para refresh legado');
+  }
   const localStart=checkout.indexOf('function refreshLocal(){');
   const reconcileStart=checkout.indexOf('function reconcile(){',localStart);
   const localBlock=localStart>=0&&reconcileStart>localStart
