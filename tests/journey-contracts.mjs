@@ -87,6 +87,53 @@ for(const path of ['evento/index.html','evento-v2/index.html']){
   }
 }
 
+
+// ANALYTICS MASTER — telemetria pública deve ser estritamente best-effort.
+// Nunca pode bloquear a jornada nem depender de resposta do backend.
+{
+  const analytics=read('assets/ct-analytics.js');
+  requireAll('assets/ct-analytics.js',analytics,[
+    "window.addEventListener('load',schedule,{once:true})",
+    'window.requestIdleCallback(function(){send()},{timeout:2500})',
+    'ctAnalyticsMasterRegistrarLotePublicoPROD',
+    "add('ctMinhaCariocaAction','publicRpc')",
+    'form.submit()',
+    '},2500);',
+    'pagina:pagina',
+    'sessaoId:sessao',
+    'eventoId:eventoId',
+    'origem:source()',
+    'referrerHost:referrerHost()',
+    'dispositivo:device()'
+  ]);
+
+  for(const proibido of [
+    'fetch(',
+    'XMLHttpRequest',
+    'sendBeacon(',
+    'await ',
+    'ScriptLock'
+  ]){
+    if(analytics.includes(proibido)){
+      failures.push('assets/ct-analytics.js: analytics público voltou a usar caminho bloqueante/indevido -> '+proibido);
+    }
+  }
+
+  for(const path of [
+    'index.html',
+    'eventos-v2/index.html',
+    'evento/index.html',
+    'evento-v2/index.html',
+    'checkout/index.html',
+    'checkout-v2/index.html'
+  ]){
+    const pagina=read(path);
+    if(!pagina.includes('/assets/ct-analytics.js?v=20260923a')){
+      failures.push(path+': coletor Analytics Master seguro/versionado ausente');
+    }
+  }
+}
+
 const ajuda=read('ajuda/index.html');
 requireLink('ajuda/index.html',ajuda,'helpProducerPortal','/produtor/');
 requireLink('ajuda/index.html',ajuda,'helpPartnerPortal','/parceiro/');
