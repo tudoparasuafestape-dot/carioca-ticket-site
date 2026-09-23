@@ -1381,6 +1381,14 @@ aria-disabled="true"
 Usuários
 </a>
 <a
+id="cariocaPayLink"
+class="ghost hidden"
+href="/produtor/carioca-pay/"
+target="_top"
+>
+Conta Carioca Pay
+</a>
+<a
 id="partnerPortalLink"
 class="ghost"
 href="/parceiro/"
@@ -2088,6 +2096,7 @@ function iniciar(){
 'refreshButton',
 'centralMobileLink',
 'accessManagementLink',
+'cariocaPayLink',
 'partnerPortalLink',
 'partnerAdminLink',
 'backofficeMasterLink',
@@ -4145,6 +4154,34 @@ el.partnerAdminLink.classList.toggle(
 el.backofficeMasterLink.classList.toggle(
 'hidden',
 !podeGerirParceiros
+);
+
+var podeFinanceiro =
+perfilGlobal === 'ADMINISTRADOR' ||
+perfilGlobal === 'PRODUTOR_TITULAR' ||
+perfilGlobal === 'FINANCEIRO' ||
+state.produtores.some(
+function(p){
+var perfil =
+String(
+p &&
+p.perfil ||
+''
+)
+.trim()
+.toUpperCase();
+
+return (
+perfil === 'ADMINISTRADOR' ||
+perfil === 'PRODUTOR_TITULAR' ||
+perfil === 'FINANCEIRO'
+);
+}
+);
+
+el.cariocaPayLink.classList.toggle(
+'hidden',
+!podeFinanceiro
 );
 
 preencherProdutores();

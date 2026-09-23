@@ -14,6 +14,7 @@ const protectedFiles = [
   'checkin/index.html',
   'consulta/index.html',
   'produtor/index.html',
+  'produtor/carioca-pay/index.html',
   'produtor/financeiro/index.html',
   'produtor/solicitar/index.html',
   'produtor/solicitacoes/index.html',
@@ -33,6 +34,7 @@ const protectedFiles = [
   'backoffice/index.html',
   'backoffice/carioca-pay/index.html',
   'backoffice/carioca-pay/baas-sandbox/index.html',
+  'backoffice/carioca-pay/saldo-extrato/index.html',
   'parceiro/ativar/index.html',
   'parceiro/manual/index.html',
   'parceiro/regulamento/index.html',
@@ -461,7 +463,83 @@ if (contaCariocaPayBaasPage) {
   }
 }
 
+const contaCariocaPaySaldoMasterPage = read('backoffice/carioca-pay/saldo-extrato/index.html');
+if (contaCariocaPaySaldoMasterPage) {
+  for (const required of [
+    '<title>Saldo e Extrato | Conta Carioca Pay</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctContaCariocaPayBaasP4BListarProdutoresPROD',
+    'ctContaCariocaPayP5MasterResumoPROD',
+    'Saldo disponível · Asaas',
+    'Fonte autoritativa da subconta Sandbox',
+    'Ledger · Entradas',
+    'Ledger · Saídas',
+    'Ledger · Saldo operacional',
+    'SANDBOX • somente leitura',
+    'somenteLeitura!==true',
+    'movimentouDinheiro===true',
+    'apiKeyExposta===true'
+  ]) {
+    if (!contaCariocaPaySaldoMasterPage.includes(required)) {
+      fail('backoffice/carioca-pay/saldo-extrato/index.html', 'Saldo/Extrato Master incompleto: ' + required);
+    }
+  }
+
+  if (
+    contaCariocaPaySaldoMasterPage.includes('/transfers') ||
+    contaCariocaPaySaldoMasterPage.includes('ctAsaasProvider') ||
+    contaCariocaPaySaldoMasterPage.includes('CT_SECRET_') ||
+    /window\.(?:alert|confirm|prompt)\s*\(/i.test(contaCariocaPaySaldoMasterPage)
+  ) {
+    fail('backoffice/carioca-pay/saldo-extrato/index.html', 'Saldo/Extrato Master contem acao/detalhe proibido');
+  }
+}
+
+const contaCariocaPayProdutorPage = read('produtor/carioca-pay/index.html');
+if (contaCariocaPayProdutorPage) {
+  for (const required of [
+    '<title>Conta Carioca Pay | Portal do Produtor</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctPortalProdutorRestaurarSessaoPROD',
+    'ctContaCariocaPayP5ProdutorResumoPROD',
+    'Saldo disponível · Asaas',
+    'Fonte autoritativa',
+    'Ledger · Entradas',
+    'Ledger · Saídas',
+    'Ledger · Saldo operacional',
+    'SANDBOX • somente leitura',
+    "r.ator!=='PRODUTOR'",
+    'somenteLeitura!==true',
+    'movimentouDinheiro===true',
+    'apiKeyExposta===true'
+  ]) {
+    if (!contaCariocaPayProdutorPage.includes(required)) {
+      fail('produtor/carioca-pay/index.html', 'Conta Carioca Pay do produtor incompleta: ' + required);
+    }
+  }
+
+  if (
+    contaCariocaPayProdutorPage.includes('/transfers') ||
+    contaCariocaPayProdutorPage.includes('ctAsaasProvider') ||
+    contaCariocaPayProdutorPage.includes('CT_SECRET_') ||
+    /window\.(?:alert|confirm|prompt)\s*\(/i.test(contaCariocaPayProdutorPage)
+  ) {
+    fail('produtor/carioca-pay/index.html', 'Conta Carioca Pay do produtor contem acao/detalhe proibido');
+  }
+}
+
 const producerPage = read('produtor/index.html');
+if (producerPage) {
+  if (
+    !producerPage.includes('id="cariocaPayLink"') ||
+    !producerPage.includes('href="/produtor/carioca-pay/"') ||
+    !producerPage.includes("perfil === 'PRODUTOR_TITULAR'") ||
+    !producerPage.includes("perfil === 'FINANCEIRO'")
+  ) {
+    fail('produtor/index.html', 'Portal sem acesso protegido à Conta Carioca Pay');
+  }
+}
+
 if (producerPage && !producerPage.includes('ctPortalProdutorCarregarCatalogoEventosPROD')) {
   fail('produtor/index.html', 'Portal sem catalogo leve pos-login');
 }

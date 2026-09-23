@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Conta Carioca Pay | Portal do Produtor</title>
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+<link rel="manifest" href="/manifest-produtor.webmanifest">
+<script src="/pwa-register.js" defer></script>
+<style>
+:root{--bg:#090b0f;--card:#11151c;--card2:#171c24;--border:#29313c;--gold:#e8b34b;--gold2:#f3cb72;--text:#f4f4f4;--muted:#9ca5b3;--ok:#55c789;--bad:#ef6464}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#090b0f,#06080b 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}.hidden{display:none!important}
+.top{border-bottom:1px solid var(--border);background:rgba(9,11,15,.94);position:sticky;top:0;z-index:10}.topin,.wrap{width:min(1120px,calc(100% - 26px));margin:auto}.topin{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none}.brand img{width:40px;height:40px}.brand small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.btn{min-height:42px;border:1px solid var(--border);border-radius:11px;background:var(--card2);color:var(--text);padding:0 13px;font-weight:850;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn.gold{border-color:rgba(232,179,75,.45);background:rgba(232,179,75,.1);color:var(--gold2)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.wrap{padding:26px 0 60px}.hero{border:1px solid rgba(232,179,75,.25);border-radius:21px;padding:22px;background:linear-gradient(135deg,rgba(232,179,75,.1),var(--card) 45%);margin-bottom:14px}.hero h1{margin:7px 0 8px;font-size:clamp(28px,5vw,44px)}.hero p{margin:0;color:var(--muted);line-height:1.5}.ey{font-size:10px;letter-spacing:.12em;color:var(--gold2);font-weight:900;text-transform:uppercase}.sandbox{display:inline-flex;margin-top:12px;border:1px solid rgba(101,167,255,.3);background:rgba(101,167,255,.08);color:#b7d7ff;padding:7px 10px;border-radius:999px;font-size:10px;font-weight:850}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:13px}.card h2{margin:0 0 13px;font-size:17px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.field label{display:block;color:var(--muted);font-size:10px;font-weight:850;text-transform:uppercase;margin-bottom:6px}.field input,.field select{width:100%;min-height:46px;border:1px solid var(--border);background:#0c1016;color:var(--text);border-radius:11px;padding:0 11px}.wide{grid-column:span 2}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.metric{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:14px}.metric small{color:var(--muted);font-size:9px;text-transform:uppercase}.metric b{display:block;font-size:24px;margin-top:8px}.metric.gold b{color:var(--gold2)}.metric .note{font-size:9px;color:var(--muted);margin-top:5px}
+.message{display:none;padding:11px 13px;border-radius:11px;margin-bottom:13px;font-size:11px}.message.show{display:block}.message.ok{border:1px solid rgba(85,199,137,.3);background:rgba(85,199,137,.08);color:#b7f2d1}.message.error{border:1px solid rgba(239,100,100,.3);background:rgba(239,100,100,.08);color:#ffb8b8}
+.tablewrap{overflow:auto;border:1px solid var(--border);border-radius:13px}.table{width:100%;border-collapse:collapse;min-width:830px}.table th,.table td{text-align:left;padding:11px;border-bottom:1px solid var(--border);font-size:11px}.table th{color:var(--muted);font-size:9px;text-transform:uppercase;background:#0e1218}.value.pos{color:#b7f2d1}.value.neg{color:#ffb8b8}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.meta{color:var(--muted);font-size:10px;margin-top:10px}.empty{padding:22px;color:var(--muted);text-align:center;font-size:11px}
+.gate{min-height:75vh;display:grid;place-items:center}.gatebox{text-align:center;width:min(470px,calc(100% - 24px));background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px}.gatebox p{color:var(--muted)}
+@media(max-width:800px){.grid,.metrics{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}.topin{padding:10px 0;flex-direction:column;align-items:flex-start}.topin .btn{width:100%}}@media(max-width:520px){.grid,.metrics{grid-template-columns:1fr}.wide{grid-column:auto}}
+</style>
+</head>
+<body>
+<section id="gate" class="gate"><div class="gatebox"><h1>Conta Carioca Pay</h1><p id="gateText">Restaurando sua sessão…</p><a class="btn" href="/produtor/">Voltar ao Portal</a></div></section>
+<div id="app" class="hidden">
+<header class="top"><div class="topin"><a class="brand" href="/produtor/"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket"><div><b>Conta Carioca Pay</b><small>Portal do Produtor</small></div></a><a class="btn" href="/produtor/">Voltar ao Portal</a></div></header>
+<main class="wrap">
+<section class="hero"><div class="ey">Financeiro</div><h1>Seu saldo e extrato</h1><p>Acompanhe o saldo disponível e as movimentações da sua Conta Carioca Pay. Nesta fase, a consulta está conectada ao Asaas Sandbox e é somente leitura.</p><div class="sandbox">SANDBOX • somente leitura</div></section>
+<div id="message" class="message"></div>
+<section class="card"><h2>Consulta</h2><div class="grid">
+<div class="field wide"><label for="producer">Produtor</label><select id="producer"><option value="">Carregando…</option></select></div>
+<div class="field"><label for="startDate">Data inicial</label><input id="startDate" type="date"></div>
+<div class="field"><label for="finishDate">Data final</label><input id="finishDate" type="date"></div>
+<div class="field"><label for="limit">Lançamentos</label><select id="limit"><option>10</option><option selected>20</option><option>50</option><option>100</option></select></div>
+<div class="field"><label for="order">Ordenação</label><select id="order"><option value="desc" selected>Mais recentes</option><option value="asc">Mais antigos</option></select></div>
+</div><div class="actions"><button id="refresh" class="btn gold" type="button">Atualizar</button></div></section>
+<section class="card"><h2>Visão financeira</h2><div class="metrics">
+<div class="metric gold"><small>Saldo disponível · Asaas</small><b id="balance">R$ —</b><div class="note">Fonte autoritativa</div></div>
+<div class="metric"><small>Ledger · Entradas</small><b id="ledgerIn">R$ —</b><div class="note">Referência interna</div></div>
+<div class="metric"><small>Ledger · Saídas</small><b id="ledgerOut">R$ —</b><div class="note">Referência interna</div></div>
+<div class="metric"><small>Ledger · Saldo operacional</small><b id="ledgerBalance">R$ —</b><div class="note">Não substitui o saldo do Asaas</div></div>
+</div></section>
+<section class="card"><h2>Extrato</h2><div id="tableWrap" class="tablewrap"><div class="empty">Selecione um produtor para consultar.</div></div><div class="actions"><button id="prev" class="btn" type="button" disabled>Anterior</button><button id="next" class="btn" type="button" disabled>Próxima</button></div><div id="meta" class="meta"></div></section>
+</main></div>
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec',STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1',pending={},state={session:null,offset:0,last:null};
+function $(id){return document.getElementById(id)}function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){return new Promise(function(resolve,reject){var id='CCPP5P-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='ccpp5p_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var x=document.createElement('input');x.type='hidden';x.name=k;x.value=String(v==null?'':v);form.appendChild(x)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A consulta demorou mais do que o esperado.'))},45000)};form.submit()})}
+window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível concluir a consulta.')))});
+function msg(t,type){$('message').textContent=String(t||'');$('message').className='message'+(t?' show '+(type||''):'')}function filters(){return{offset:state.offset,limit:Number($('limit').value||20),order:$('order').value,startDate:$('startDate').value,finishDate:$('finishDate').value}}
+function buttons(on){$('refresh').disabled=!!on;$('producer').disabled=!!on;$('prev').disabled=!!on||!state.last||state.offset<=0;$('next').disabled=!!on||!state.last||!state.last.extrato||state.last.extrato.hasMore!==true}
+function render(data){state.last=data;$('balance').textContent=money(data.saldo&&data.saldo.saldoDisponivel);var l=data.ledgerInterno||{};$('ledgerIn').textContent=l.disponivel?money(l.totalEntradas):'—';$('ledgerOut').textContent=l.disponivel?money(l.totalSaidas):'—';$('ledgerBalance').textContent=l.disponivel?money(l.saldoOperacional):'—';var ex=data.extrato||{},rows=Array.isArray(ex.data)?ex.data:[];if(!rows.length){$('tableWrap').innerHTML='<div class="empty">Nenhuma movimentação encontrada.</div>'}else{var h='<table class="table"><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Saldo após</th><th>Referência</th></tr></thead><tbody>';rows.forEach(function(x){var ref=x.paymentId||x.transferId||x.anticipationId||x.billId||x.invoiceId||x.id||'—',cls=Number(x.value||0)<0?'neg':'pos';h+='<tr><td>'+esc(x.date||'—')+'</td><td>'+esc(x.type||'—')+'</td><td>'+esc(x.description||'—')+'</td><td class="value '+cls+'">'+money(x.value)+'</td><td>'+money(x.balance)+'</td><td>'+esc(ref)+'</td></tr>'});h+='</tbody></table>';$('tableWrap').innerHTML=h}$('meta').textContent='Offset '+Number(ex.offset||0)+' · '+rows.length+' exibidos'+(ex.totalCount?' · '+Number(ex.totalCount)+' no total':'')+' · Sandbox';buttons(false)}
+async function restore(){try{var r=await rpc('ctPortalProdutorRestaurarSessaoPROD',[state.session.token]);if(!r||r.sucesso!==true||r.autenticado!==true||r.autorizado!==true)throw new Error('Sessão do produtor inválida.');var list=Array.isArray(r.produtores)?r.produtores:[];$('producer').innerHTML='<option value="">Selecione um produtor</option>'+list.map(function(p){return'<option value="'+esc(p.produtorId||p.id)+'">'+esc(p.nomeFantasia||p.responsavelNome||p.produtorId||p.id)+'</option>'}).join('');$('gate').classList.add('hidden');$('app').classList.remove('hidden')}catch(e){$('gateText').textContent=e&&e.message?e.message:String(e)}}
+async function load(reset){var id=String($('producer').value||'').trim();if(!id){msg('Selecione um produtor.','error');return}if(reset)state.offset=0;buttons(true);msg('');try{var r=await rpc('ctContaCariocaPayP5ProdutorResumoPROD',[state.session.token,id,filters()]);if(!r||r.sucesso!==true||r.autorizado!==true||r.ator!=='PRODUTOR'||r.somenteLeitura!==true||r.movimentouDinheiro===true||r.apiKeyExposta===true)throw new Error('Gate de segurança da consulta não foi atendido.');render(r);msg('Saldo e extrato atualizados.','ok')}catch(e){msg(e&&e.message?e.message:String(e),'error');buttons(false)}}
+$('refresh').addEventListener('click',function(){load(true)});$('producer').addEventListener('change',function(){state.offset=0;state.last=null;if($('producer').value)load(true)});$('prev').addEventListener('click',function(){state.offset=Math.max(0,state.offset-Number($('limit').value||20));load(false)});$('next').addEventListener('click',function(){state.offset+=Number($('limit').value||20);load(false)});['startDate','finishDate','limit','order'].forEach(function(id){$(id).addEventListener('change',function(){state.offset=0})});
+state.session=readSession();if(!state.session){$('gateText').textContent='Sua sessão expirou. Entre novamente no Portal do Produtor.'}else restore();
+}());
+</script>
+</body>
+</html>
