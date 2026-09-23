@@ -383,7 +383,9 @@
         order:null,
         queryToken:'',
         polling:null,
+        reconcilePolling:null,
         expiryTimer:null,
+        expiryReconciled:false,
         busy:false,
         paymentMethod:'PIX',
         emailRequired:true,
@@ -937,11 +939,11 @@
         updatePaymentMethodUI();
 
         if(status==='CONCLUIDO'){
-          stopPolling();renderSuccess(res.ingressos||[]);return;
+          stopPolling();stopExpiry();renderSuccess(res.ingressos||[]);return;
         }
 
         if(['EXPIRADO','CANCELADO','FALHA'].indexOf(status)>=0){
-          stopPolling();clearRecovery();clearIdempotency();
+          stopPolling();stopExpiry();clearRecovery();clearIdempotency();
           el.pixPanel.classList.add('hidden');el.cardPanel.classList.add('hidden');
           el.salePanel.classList.remove('hidden');el.buyerPanel.classList.remove('hidden');el.payActionPanel.classList.remove('hidden');
           modal('Pedido encerrado',status==='EXPIRADO'?'O tempo de reserva terminou. Você pode gerar um novo pedido.':'Este pedido não está mais disponível. Você pode tentar novamente.');
@@ -1090,19 +1092,46 @@
         }
       }
 
+      function stopExpiry(){
+        if(state.expiryTimer){
+          clearInterval(state.expiryTimer);
+          state.expiryTimer=null;
+        }
+      }
+
       function startExpiry(){
-        if(state.expiryTimer)clearInterval(state.expiryTimer);
+        stopExpiry();
+        state.expiryReconciled=false;
+
         function tick(){
           var exp=state.order&&state.order.expiraEm?new Date(state.order.expiraEm):null;
-          if(!exp||isNaN(exp.getTime())){el.expiryText.textContent='';return;}
+          if(!exp||isNaN(exp.getTime())){
+            el.expiryText.textContent='';
+            el.cardExpiryText.textContent='';
+            return;
+          }
+
           var sec=Math.max(0,Math.floor((exp.getTime()-Date.now())/1000));
           var min=Math.floor(sec/60),s=sec%60;
-          var texto=sec>0?'Reserva válida por aproximadamente '+min+':'+String(s).padStart(2,'0'):'Reserva expirada. Atualizando...';
+          var texto=sec>0
+            ?'Reserva válida por aproximadamente '+min+':'+String(s).padStart(2,'0')
+            :'Reserva expirada. Atualizando...';
+
           el.expiryText.textContent=texto;
           el.cardExpiryText.textContent=texto;
-          if(sec<=0)reconcile();
+
+          if(sec<=0&&!state.expiryReconciled){
+            state.expiryReconciled=true;
+            stopExpiry();
+            reconcile();
+          }
         }
-        tick();state.expiryTimer=setInterval(tick,1000);
+
+        tick();
+
+        if(!state.expiryReconciled){
+          state.expiryTimer=setInterval(tick,1000);
+        }
       }
 
       function copyPix(){
@@ -1142,7 +1171,7 @@
         }
       });
 
-      window.addEventListener('beforeunload',stopPolling);
+      window.addEventListener('beforeunload',function(){stopPolling();stopExpiry();});
 
       updatePaymentMethodUI();
       start();
