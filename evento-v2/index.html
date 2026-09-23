@@ -512,15 +512,35 @@
       function registrarAcessoCampanha(){
         if(state.campanhaOrigem==='CANARIO')return;
         if(!state.cupomCodigo||!state.campanhaSessaoId)return;
-        google.script.run
-          .withSuccessHandler(function(){})
-          .withFailureHandler(function(){})
-          .ctCuponsPublicoRegistrarAcessoSeguroPROD({
-            eventoId:state.eventoId,
-            codigo:state.cupomCodigo,
-            sessaoId:state.campanhaSessaoId,
-            origem:state.campanhaOrigem||'DIRETO'
-          });
+
+        var chave='CT_CAMPANHA_ACESSO_REGISTRADO_'+state.eventoId+'_'+state.campanhaSessaoId;
+        try{
+          if(sessionStorage.getItem(chave)==='DONE')return;
+        }catch(_){}
+
+        /*
+         * Telemetria nunca compete com a chamada crítica da página.
+         * Só executa depois que o conteúdo principal já foi entregue.
+         */
+        window.setTimeout(function(){
+          try{
+            if(sessionStorage.getItem(chave)==='DONE')return;
+          }catch(_){}
+
+          google.script.run
+            .withSuccessHandler(function(res){
+              if(res&&res.sucesso===true){
+                try{sessionStorage.setItem(chave,'DONE')}catch(_){}
+              }
+            })
+            .withFailureHandler(function(){})
+            .ctCuponsPublicoRegistrarAcessoSeguroPROD({
+              eventoId:state.eventoId,
+              codigo:state.cupomCodigo,
+              sessaoId:state.campanhaSessaoId,
+              origem:state.campanhaOrigem||'DIRETO'
+            });
+        },900);
       }
 
       function queryCampanha(){
