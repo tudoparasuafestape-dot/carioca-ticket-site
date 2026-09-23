@@ -83,6 +83,11 @@ async function instalarBackendFake(page, contadores) {
     let resultado;
     if (metodo === 'ctCheckoutPublicoCarregarEventoPROD') {
       resultado = catalogo();
+    } else if (metodo === 'ctCheckoutPixPublicoIniciarPROD') {
+      resultado = {
+        ...pedidoPendente(),
+        consultaToken: 'TOKEN-P0-POLLING'
+      };
     } else if (
       metodo === 'ctCheckoutPixPublicoConsultarPROD' ||
       metodo === 'ctCheckoutPixPublicoStatusLocalPROD' ||
@@ -119,31 +124,38 @@ for (const rota of ['/checkout/', '/checkout-v2/']) {
     const chamadas = {};
     await instalarBackendFake(page, chamadas);
 
-    // Semeia o recovery já dentro da origem local usada pela branch.
-    // addInitScript em about:blank não garante localStorage da origem de destino.
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await page.evaluate(({ key, pedidoId }) => {
-      localStorage.setItem(key, JSON.stringify({
-        pedidoId,
-        token: 'TOKEN-P0-POLLING'
-      }));
-    }, {
-      key: 'CT_CHECKOUT_RECOVERY_' + EVENT_ID,
-      pedidoId: PEDIDO_ID
-    });
-
     await page.goto(rota + '?evento=' + encodeURIComponent(EVENT_ID), {
       waitUntil: 'domcontentloaded'
     });
 
-    await expect(page.locator('#pixStatus')).toContainText(/Aguardando pagamento|Aguardando confirmação do PIX/i, {
-      timeout: 15000
+    await expect(page.getByRole('heading', { name: 'Roda de Samba Estilo Carioca' })).toBeVisible({
+      timeout: 10000
     });
 
+    await page.locator('#typeSelect').selectOption('TIPO-IND');
+    await page.locator('#lotSelect').selectOption('LOTE-1');
+
+    await page.locator('#buyerName').fill('Cliente Teste');
+    await page.locator('#buyerCpf').fill('12345678901');
+    await page.locator('#buyerWhatsapp').fill('81999999999');
+
+    const participantNames = page.locator('#participants [data-name]');
+    const participantCount = await participantNames.count();
+    for (let i = 0; i < participantCount; i++) {
+      await participantNames.nth(i).fill('Participante Teste ' + (i + 1));
+    }
+
+    // A chamada abaixo é interceptada pelo backend fake deste teste.
+    // Nenhum pedido ou cobrança real é criado.
+    await page.locator('#payButton').click();
+
     await expect.poll(
-      () => chamadas.ctCheckoutPixPublicoConsultarPROD || 0,
+      () => chamadas.ctCheckoutPixPublicoIniciarPROD || 0,
       { timeout: 5000 }
     ).toBe(1);
+
+    await expect(page.locator('#pixPanel')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#pixStatus')).toContainText(/Aguardando confirmação do PIX/i);
 
     // Dois ciclos locais (4s e 8s). A reconciliação externa periódica é 30s.
     await page.waitForTimeout(9000);
