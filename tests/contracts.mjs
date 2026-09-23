@@ -14,6 +14,7 @@ const protectedFiles = [
   'checkin/index.html',
   'consulta/index.html',
   'produtor/index.html',
+  'produtor/financeiro/index.html',
   'produtor/solicitar/index.html',
   'produtor/solicitacoes/index.html',
   'produtor-v2/index.html',
@@ -30,6 +31,7 @@ const protectedFiles = [
   'parceiro/programa/index.html',
   'parceiro/admin/index.html',
   'backoffice/index.html',
+  'backoffice/carioca-pay/index.html',
   'parceiro/ativar/index.html',
   'parceiro/manual/index.html',
   'parceiro/regulamento/index.html',
@@ -220,6 +222,8 @@ if (producerManifest) {
 
 for (const file of [
   'produtor/index.html',
+  'produtor/financeiro/index.html',
+  'backoffice/carioca-pay/index.html',
   'central/index.html',
   'saude-vendas/index.html',
   'reembolsos/index.html',
@@ -268,6 +272,109 @@ if (checkinPagePwa) {
   }
   if (!checkinPagePwa.includes('/pwa-register.js')) {
     fail('checkin/index.html', 'Check-in sem registro PWA base');
+  }
+}
+
+const contaCariocaPayPage = read('produtor/financeiro/index.html');
+if (contaCariocaPayPage) {
+  for (const required of [
+    '<title>Conta Carioca Pay | Portal do Produtor</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctPortalProdutorRestaurarSessaoIsoladaPROD',
+    'ctContaCariocaPayPortalResumoPROD',
+    'Vendas confirmadas',
+    'Saldo operacional conciliado',
+    'Disponível para solicitar antecipação',
+    'Pagamentos planejados',
+    'Portaria / Smart App',
+    'Bar / Smart App',
+    'Patrocínios',
+    'Capital próprio',
+    'Regras de antecipação',
+    '80%',
+    '20%',
+    '3,49%',
+    'D+3 úteis',
+    'movimentação real desabilitada',
+    'disabled><b>Solicitar antecipação',
+    'disabled><b>Registrar patrocínio',
+    'disabled><b>Planejar pagamento',
+    'disabled><b>Adicionar saldo'
+  ]) {
+    if (!contaCariocaPayPage.includes(required)) {
+      fail('produtor/financeiro/index.html', 'Conta Carioca Pay incompleta: ' + required);
+    }
+  }
+
+  if (
+    !contaCariocaPayPage.includes('rel="manifest" href="/manifest-produtor.webmanifest"') ||
+    !contaCariocaPayPage.includes('/pwa-register.js')
+  ) {
+    fail('produtor/financeiro/index.html', 'Conta Carioca Pay sem PWA oficial do produtor');
+  }
+
+  if (
+    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
+    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAportePROD'") ||
+    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'") ||
+    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
+  ) {
+    fail('produtor/financeiro/index.html', 'UI P2 nao pode disparar mutacoes antes da P3 Master');
+  }
+}
+
+const contaCariocaPayMasterPage = read('backoffice/carioca-pay/index.html');
+if (contaCariocaPayMasterPage) {
+  for (const required of [
+    '<title>Conta Carioca Pay | Backoffice Master</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctContaCariocaPayMasterContarPendentesPROD',
+    'ctContaCariocaPayMasterListarPROD',
+    'ctContaCariocaPayMasterDetalharPROD',
+    'ctContaCariocaPayMasterDecidirPROD',
+    'SOLICITADA',
+    'EM_ANALISE',
+    'APROVADA_MASTER',
+    'RECUSADA',
+    'Iniciar análise',
+    'Aprovar',
+    'Recusar',
+    'Aprovar nesta tela <b>não envia dinheiro</b>',
+    'providerAcionado===true',
+    'movimentouDinheiro===true',
+    'transferenciaCriada===true',
+    'P4 / sandbox'
+  ]) {
+    if (!contaCariocaPayMasterPage.includes(required)) {
+      fail('backoffice/carioca-pay/index.html', 'Backoffice Master Carioca Pay incompleto: ' + required);
+    }
+  }
+
+  if (
+    !contaCariocaPayMasterPage.includes('rel="manifest" href="/manifest-produtor.webmanifest"') ||
+    !contaCariocaPayMasterPage.includes('/pwa-register.js')
+  ) {
+    fail('backoffice/carioca-pay/index.html', 'Backoffice Carioca Pay sem PWA oficial');
+  }
+
+  if (
+    /window\.(?:alert|confirm|prompt)\s*\(/i.test(contaCariocaPayMasterPage)
+  ) {
+    fail('backoffice/carioca-pay/index.html', 'Backoffice Carioca Pay usa dialogo nativo');
+  }
+
+  if (
+    contaCariocaPayMasterPage.includes('ctAsaasProvider') ||
+    contaCariocaPayMasterPage.includes('/transfers') ||
+    contaCariocaPayMasterPage.includes('UrlFetchApp')
+  ) {
+    fail('backoffice/carioca-pay/index.html', 'UI Master nao pode acionar provider diretamente');
+  }
+
+  if (
+    !contaCariocaPayMasterPage.includes("state.action==='RECUSAR'&&reason.length<3")
+  ) {
+    fail('backoffice/carioca-pay/index.html', 'recusa sem motivo obrigatorio');
   }
 }
 
