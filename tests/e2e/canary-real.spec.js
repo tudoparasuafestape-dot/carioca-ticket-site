@@ -53,7 +53,7 @@ test.describe('Canario real first-party', () => {
   });
 
 
-  test('Evento v2 carrega o evento real e aponta para Checkout v2', async ({ page }) => {
+  test('Evento v2 carrega o evento real, permite compartilhar e aponta para Checkout v2', async ({ page }) => {
     const iniciou = Date.now();
     await page.goto('/evento-v2/?evento=' + encodeURIComponent(EVENT_ID), {
       waitUntil: 'domcontentloaded'
@@ -71,6 +71,19 @@ test.describe('Canario real first-party', () => {
 
     await expect(comprar).toBeVisible();
     await expect(comprar).toHaveAttribute('href', /\/checkout-v2\/\?evento=/);
+
+    const compartilharHero = page.locator('#shareHero');
+    const compartilharMobile = page.locator('#shareMobile');
+
+    await expect(compartilharHero).toBeVisible();
+    await expect(compartilharHero).toHaveAttribute(
+      'data-share-url',
+      'https://cariocaticket.com.br/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
+    );
+    await expect(compartilharMobile).toHaveAttribute(
+      'data-share-url',
+      'https://cariocaticket.com.br/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
+    );
   });
 
   test('Cupom canario consulta o motor real sem criar pedido ou cobranca', async ({ page }) => {
