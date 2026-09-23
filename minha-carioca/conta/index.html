@@ -38,7 +38,7 @@ label{display:block;margin:0 0 8px;font-size:13px;font-weight:800}input{width:10
 (function(){
 'use strict';
 var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
-var STORE='ct_mc_account_v6',REQ='ct_mc_req_v6',ID='ct_mc_id_v6',app=document.getElementById('app');
+var STORE='ct_mc_account_v6',REQ='ct_mc_req_v6',ID='ct_mc_id_v6',PURCHASE_STORE='CT_MINHA_CARIOCA_COMPRAS_V1',RECOVERY_PREFIX='CT_CHECKOUT_RECOVERY_',app=document.getElementById('app');
 
 function e(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=String(text);return n}
 var pendingPosts={};
@@ -84,10 +84,51 @@ function restore(token){post('consultarSessao',{token:String(token||'')})}
 function base(title,lead){app.innerHTML='';app.append(e('div','ey','Área do cliente'),e('h1','',title),e('p','lead',lead))}
 function security(){var s=e('div','sec');s.append(e('strong','','Seus ingressos continuam protegidos'),e('p','','Informar telefone ou e-mail não libera ingressos. O acesso só acontece depois da confirmação do código recebido.'));app.append(s)}
 
+function comprasSegurasDoAparelho(){
+var out=[],seen={};
+function add(item){
+  item=item||{};
+  var pedido=String(item.pedidoId||'').trim(),token=String(item.token||'').trim();
+  if(!pedido||!token||seen[pedido])return;
+  seen[pedido]=true;
+  out.push({pedidoId:pedido,token:token,eventoNome:String(item.eventoNome||'').trim(),atualizadoEm:String(item.atualizadoEm||'').trim()});
+}
+try{
+  var list=JSON.parse(localStorage.getItem(PURCHASE_STORE)||'[]');
+  if(Array.isArray(list))list.forEach(add);
+}catch(_){}
+try{
+  for(var i=0;i<localStorage.length;i++){
+    var key=String(localStorage.key(i)||'');
+    if(key.indexOf(RECOVERY_PREFIX)!==0)continue;
+    try{add(JSON.parse(localStorage.getItem(key)||'null'))}catch(_){}
+  }
+}catch(_){}
+return out.slice(0,5);
+}
+
+function deviceRecovery(){
+var compras=comprasSegurasDoAparelho();
+if(!compras.length)return;
+var box=e('div','sec');
+box.append(
+  e('strong','','Compra segura encontrada neste aparelho'),
+  e('p','','Você pode abrir os ingressos salvos neste navegador sem esperar pelo código de e-mail ou WhatsApp.')
+);
+compras.forEach(function(item,idx){
+  var row=e('div','row'),info=e('div');
+  info.append(e('span','small',item.eventoNome||('Compra recente '+(idx+1))),e('span','purchase-id',item.pedidoId));
+  var a=e('a','open','Abrir meus ingressos');
+  a.href='/minha-carioca/ingressos/?v=20260923-1940&pedido='+encodeURIComponent(item.pedidoId)+'&token='+encodeURIComponent(item.token);
+  row.append(info,a);box.append(row);
+});
+app.append(box);
+}
+
 function login(msg){
 base('Minha Carioca','Entre para acessar seus ingressos e compras com segurança.');
 var l=e('label','','WhatsApp ou e-mail'),i=document.createElement('input'),b=e('button','btn','Continuar'),h=e('p','help','Use preferencialmente seu WhatsApp. O código será enviado pelo canal seguro disponível na sua conta.'),m=e('p','msg',msg||'');
-i.placeholder='Seu e-mail ou WhatsApp cadastrado';i.value=sessionStorage.getItem(ID)||'';b.type='button';app.append(l,i,b,h,m);security();
+i.placeholder='Seu e-mail ou WhatsApp cadastrado';i.value=sessionStorage.getItem(ID)||'';b.type='button';app.append(l,i,b,h,m);deviceRecovery();security();
 function go(){var v=String(i.value||'').trim();if(!v){m.textContent='Informe seu e-mail ou WhatsApp.';return}sessionStorage.setItem(ID,v);b.disabled=true;b.textContent='Enviando…';post('solicitarCodigo',{identificador:v})}
 b.onclick=go;i.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();go()}};setTimeout(function(){i.focus()},0)
 }
@@ -95,7 +136,7 @@ b.onclick=go;i.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();g
 function otp(req,msg){
 base('Digite o código','Enviamos um código de 6 dígitos pelo canal seguro disponível na sua conta.');
 var l=e('label','','Código de acesso'),i=document.createElement('input'),b=e('button','btn','Confirmar código'),m=e('p','msg ok',msg||''),h=e('p','help','O código expira em 5 minutos. Para solicitar outro, volte aos eventos e entre novamente.');
-i.className='code';i.inputMode='numeric';i.autocomplete='one-time-code';i.maxLength=6;i.placeholder='000000';b.type='button';app.append(l,i,b,m,h);security();
+i.className='code';i.inputMode='numeric';i.autocomplete='one-time-code';i.maxLength=6;i.placeholder='000000';b.type='button';app.append(l,i,b,m,h);deviceRecovery();security();
 function go(){var v=String(i.value||'').replace(/\D/g,'').slice(0,6);if(v.length!==6){m.className='msg';m.textContent='Digite os 6 números do código.';return}b.disabled=true;b.textContent='Validando…';post('validarCodigo',{requestId:req,codigo:v})}
 b.onclick=go;i.oninput=function(){this.value=this.value.replace(/\D/g,'').slice(0,6)};i.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();go()}};setTimeout(function(){i.focus()},0)
 }
