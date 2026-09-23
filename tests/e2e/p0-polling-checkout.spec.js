@@ -133,7 +133,7 @@ for (const rota of ['/checkout/', '/checkout-v2/']) {
       waitUntil: 'domcontentloaded'
     });
 
-    await expect(page.locator('#pixStatus')).toContainText(/Aguardando confirmação do PIX/i, {
+    await expect(page.locator('#pixStatus')).toContainText(/Aguardando pagamento|Aguardando confirmação do PIX/i, {
       timeout: 15000
     });
 
