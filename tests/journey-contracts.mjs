@@ -91,6 +91,7 @@ requireAll('cupons/admin/index.html',cuponsAdmin,[
 const produtor=read('produtor/index.html');
 requireLink('produtor/index.html',produtor,'partnerPortalLink','/parceiro/');
 requireLink('produtor/index.html',produtor,'partnerAdminLink','/parceiro/admin/');
+requireLink('produtor/index.html',produtor,'backofficeMasterLink','/backoffice/');
 requireAll('produtor/index.html',produtor,[
   'Portal Parceiro CT',
   'Gestão Parceiros CT',
@@ -100,6 +101,7 @@ requireAll('produtor/index.html',produtor,[
 const parceiroAdmin=read('parceiro/admin/index.html');
 requireLink('parceiro/admin/index.html',parceiroAdmin,'partnerPortalLink','/parceiro/');
 requireLink('parceiro/admin/index.html',parceiroAdmin,'producerRequestsLink','/produtor/solicitacoes/');
+if(!parceiroAdmin.includes('href="/backoffice/"')) failures.push('parceiro/admin/index.html: sem acesso ao Backoffice Master');
 requireAll('parceiro/admin/index.html',parceiroAdmin,[
   'href="/produtor/"',
   'id="logoutAdminButton"',

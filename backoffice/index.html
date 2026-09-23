@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Backoffice Master | Carioca Ticket</title>
+<link rel="icon" href="/assets/carioca-ticket-icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+<style>
+:root{--bg:#08090c;--card:#111319;--card2:#171a21;--line:#292d36;--text:#f8f3e8;--muted:#989da7;--gold:#d5a536;--gold2:#f1c95a;--green:#64d68d;--red:#ff7979;--blue:#80adff}
+*{box-sizing:border-box}html,body{margin:0;background:radial-gradient(circle at 80% -10%,rgba(213,165,54,.14),transparent 30%),var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
+a{color:inherit}.hidden{display:none!important}.shell{width:min(1440px,calc(100% - 28px));margin:auto;padding:22px 0 54px}
+.top{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px}.brand{display:flex;gap:12px;align-items:center;text-decoration:none}.brand img{width:46px;height:46px;object-fit:contain}.brand strong{display:block;font-size:17px}.brand span{display:block;color:var(--muted);font-size:11px;margin-top:3px}.nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn,.preset{min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);font-weight:800;padding:0 14px;cursor:pointer}.btn.gold,.preset.on{border:0;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#111}.btn:disabled{opacity:.55;cursor:not-allowed}
+.hero{border:1px solid rgba(213,165,54,.22);border-radius:22px;padding:22px;background:linear-gradient(135deg,rgba(213,165,54,.08),rgba(255,255,255,.015));margin-bottom:16px}.ey{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--gold2);font-weight:900}.hero h1{margin:8px 0 6px;font-size:clamp(26px,4vw,42px)}.hero p{margin:0;color:var(--muted);max-width:850px;line-height:1.55}.meta{margin-top:12px;color:var(--muted);font-size:12px}
+.filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--card);margin-bottom:16px}.filters .group{display:flex;gap:8px;flex-wrap:wrap}.field{display:grid;gap:5px}.field label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:900}.field input{height:42px;border:1px solid var(--line);border-radius:11px;background:#0b0c10;color:var(--text);padding:0 12px;font:inherit}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:16px}.stat{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:15px}.stat span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:850}.stat strong{display:block;margin-top:7px;font-size:24px}.stat small{display:block;margin-top:4px;color:var(--muted);font-size:10px}
+.grid2{display:grid;grid-template-columns:1.25fr .75fr;gap:14px;margin-bottom:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}.panel{border:1px solid var(--line);border-radius:18px;background:var(--card);padding:16px;min-width:0}.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:13px}.head h2{font-size:16px;margin:0}.head p{font-size:11px;color:var(--muted);margin:4px 0 0}
+.funnel{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.step{padding:13px;border:1px solid var(--line);border-radius:13px;background:var(--card2)}.step span{color:var(--muted);font-size:10px;display:block}.step b{font-size:19px;display:block;margin-top:5px}.step em{font-style:normal;color:var(--gold2);font-size:10px}
+.chart{display:flex;align-items:end;gap:5px;min-height:190px;padding:14px 4px 2px;overflow-x:auto}.bar-wrap{min-width:34px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:end;height:180px}.bar{width:70%;min-width:12px;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,var(--gold2),var(--gold));min-height:2px}.bar-wrap small{font-size:9px;color:var(--muted);margin-top:6px;white-space:nowrap}
+.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:620px}.table th,.table td{padding:10px 8px;border-bottom:1px solid var(--line);font-size:11px;text-align:left}.table th{color:var(--muted);text-transform:uppercase;font-size:9px;letter-spacing:.05em}.table td.num,.table th.num{text-align:right}.rank{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:8px;background:rgba(213,165,54,.11);color:var(--gold2);font-weight:900}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.kv:last-child{border-bottom:0}.kv span{color:var(--muted);font-size:11px}.kv strong{font-size:12px;text-align:right}
+.empty{padding:20px;border:1px dashed var(--line);border-radius:13px;color:var(--muted);text-align:center;font-size:12px}.notice{border:1px solid rgba(128,173,255,.24);background:rgba(128,173,255,.06);color:#cddcff;border-radius:13px;padding:11px 13px;font-size:11px;line-height:1.45;margin-bottom:14px}
+.gate{min-height:70vh;display:grid;place-items:center;padding:24px}.gate-card{width:min(520px,100%);border:1px solid var(--line);background:var(--card);border-radius:20px;padding:24px;text-align:center}.gate-card p{color:var(--muted);line-height:1.5}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1a1d24;border:1px solid var(--line);border-radius:12px;padding:12px 16px;z-index:30;box-shadow:0 14px 40px rgba(0,0,0,.35);font-size:12px}
+@media(max-width:1080px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2,.grid3{grid-template-columns:1fr}.funnel{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:680px){.shell{width:min(100% - 18px,1440px);padding-top:12px}.top{align-items:flex-start}.nav{max-width:52%}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat strong{font-size:21px}.funnel{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{align-items:stretch}.filters .group{width:100%}.preset{flex:1}.field{flex:1;min-width:140px}.btn{width:100%}}
+</style>
+</head>
+<body>
+<section id="gate" class="gate">
+  <div class="gate-card">
+    <div id="gateLoading"><h1>Carioca Ticket</h1><p>Validando acesso ao Backoffice Master…</p></div>
+    <div id="gateDenied" class="hidden"><h1>Acesso restrito</h1><p id="gateMessage">Entre com uma conta administradora da plataforma.</p><p><a class="btn" href="/produtor/">Voltar ao Portal</a></p></div>
+  </div>
+</section>
+
+<main id="app" class="shell hidden">
+  <header class="top">
+    <a class="brand" href="/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Backoffice Master</strong><span id="adminLabel">Administração da plataforma</span></div></a>
+    <nav class="nav">
+      <a class="btn" href="/parceiro/admin/">Parceiros</a>
+      <a class="btn" href="/cupons/admin/">Cupons</a>
+      <a class="btn" href="/produtor/solicitacoes/">Produtores</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="ey">Carioca Ticket · Master BI</div>
+    <h1>Visão executiva da plataforma</h1>
+    <p>Acessos, conversão, vendas, ingressos, receita, produtores e eventos em uma única leitura. Os dados de navegação são anonimizados e não incluem dados pessoais do comprador.</p>
+    <div id="periodMeta" class="meta">—</div>
+  </section>
+
+  <section class="filters">
+    <div class="group">
+      <button class="preset" data-preset="HOJE" type="button">Hoje</button>
+      <button class="preset on" data-preset="7D" type="button">7 dias</button>
+      <button class="preset" data-preset="30D" type="button">30 dias</button>
+      <button class="preset" data-preset="MES" type="button">Este mês</button>
+    </div>
+    <div class="field"><label>Início</label><input id="dateStart" type="date"></div>
+    <div class="field"><label>Fim</label><input id="dateEnd" type="date"></div>
+    <button id="applyCustom" class="btn gold" type="button">Aplicar período</button>
+    <button id="refresh" class="btn" type="button">Atualizar</button>
+  </section>
+
+  <div class="notice">Os indicadores de acesso começam a contar a partir da ativação do Analytics Master. Dados financeiros e de vendas usam o histórico já existente da plataforma.</div>
+
+  <section class="stats">
+    <article class="stat"><span>Acessos ao site</span><strong id="kViews">0</strong><small>page views no período</small></article>
+    <article class="stat"><span>Sessões únicas</span><strong id="kSessions">0</strong><small>sessões técnicas anonimizadas</small></article>
+    <article class="stat"><span>Ingressos vendidos</span><strong id="kTickets">0</strong><small>quantidade de acessos vendidos</small></article>
+    <article class="stat"><span>Receita bruta</span><strong id="kRevenue">R$ 0,00</strong><small>vendas registradas no período</small></article>
+    <article class="stat"><span>Ticket médio</span><strong id="kAverage">R$ 0,00</strong><small>receita / venda</small></article>
+    <article class="stat"><span>Pedidos</span><strong id="kOrders">0</strong><small>checkout público</small></article>
+    <article class="stat"><span>Pedidos pagos</span><strong id="kPaid">0</strong><small>pago ou concluído</small></article>
+    <article class="stat"><span>Produtores ativos</span><strong id="kProducers">0</strong><small id="kProducersMeta">—</small></article>
+    <article class="stat"><span>Eventos ativos</span><strong id="kEvents">0</strong><small id="kEventsMeta">—</small></article>
+    <article class="stat"><span>Online confirmado</span><strong id="kOnline">R$ 0,00</strong><small>pagamentos públicos confirmados</small></article>
+  </section>
+
+  <section class="panel" style="margin-bottom:14px">
+    <div class="head"><div><h2>Funil da plataforma</h2><p>Da audiência ao pagamento confirmado.</p></div></div>
+    <div class="funnel">
+      <div class="step"><span>Home</span><b id="fHome">0</b></div>
+      <div class="step"><span>Eventos</span><b id="fEvents">0</b></div>
+      <div class="step"><span>Página do evento</span><b id="fEvent">0</b><em id="fConvEvent">—</em></div>
+      <div class="step"><span>Checkout</span><b id="fCheckout">0</b></div>
+      <div class="step"><span>Pedidos</span><b id="fOrders">0</b></div>
+      <div class="step"><span>Pagos</span><b id="fPaid">0</b><em id="fConvPaid">—</em></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <article class="panel">
+      <div class="head"><div><h2>Evolução diária</h2><p>Acessos por dia no período selecionado.</p></div><strong id="trendTotal">0</strong></div>
+      <div id="trend" class="chart"></div>
+    </article>
+    <aside class="panel">
+      <div class="head"><div><h2>Financeiro online</h2><p>Estado dos pagamentos públicos.</p></div></div>
+      <div class="kv"><span>Confirmados</span><strong id="pConfirmed">0</strong></div>
+      <div class="kv"><span>Valor confirmado</span><strong id="pConfirmedValue">R$ 0,00</strong></div>
+      <div class="kv"><span>Pendentes</span><strong id="pPending">0</strong></div>
+      <div class="kv"><span>Estornados</span><strong id="pRefunded">0</strong></div>
+      <div class="kv"><span>Valor estornado</span><strong id="pRefundedValue">R$ 0,00</strong></div>
+      <div class="kv"><span>Chargebacks</span><strong id="pChargeback">0</strong></div>
+      <div class="kv"><span>Reembolsos</span><strong id="pReimburse">0</strong></div>
+    </aside>
+  </section>
+
+  <section class="grid3">
+    <article class="panel"><div class="head"><div><h2>Eventos mais acessados</h2><p>Ranking por page views vinculadas ao evento.</p></div></div><div id="rankAccess" class="table-wrap"></div></article>
+    <article class="panel"><div class="head"><div><h2>Maior receita</h2><p>Ranking por receita bruta registrada.</p></div></div><div id="rankRevenue" class="table-wrap"></div></article>
+    <article class="panel"><div class="head"><div><h2>Mais ingressos vendidos</h2><p>Ranking por quantidade de acessos vendidos.</p></div></div><div id="rankTickets" class="table-wrap"></div></article>
+  </section>
+
+  <section class="grid2">
+    <article class="panel"><div class="head"><div><h2>Produtores por receita</h2><p>Visão consolidada dos produtores no período.</p></div></div><div id="rankProducers" class="table-wrap"></div></article>
+    <article class="panel"><div class="head"><div><h2>Formas de pagamento</h2><p>Receita registrada nas vendas por forma de pagamento.</p></div></div><div id="paymentMethods" class="table-wrap"></div></article>
+  </section>
+
+  <section class="grid2">
+    <article class="panel"><div class="head"><div><h2>Origem dos acessos</h2><p>Fonte declarada ou referrer normalizado.</p></div></div><div id="sources"></div></article>
+    <article class="panel"><div class="head"><div><h2>Dispositivos</h2><p>Classificação agregada por largura de tela.</p></div></div><div id="devices"></div></article>
+  </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var pending={},state={session:null,preset:'7D',busy:false,data:null};
+function $(id){return document.getElementById(id)}
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function num(v){return Number(v||0).toLocaleString('pt-BR')}
+function pct(v){return Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2})+'%'}
+function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){return new Promise(function(resolve,reject){var id='CTMASTER-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='ctmaster_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A consulta demorou mais do que o esperado.'))},60000)};form.submit()})}
+window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível consultar o Backoffice Master.')))});
+function deny(msg){$('gateLoading').classList.add('hidden');$('gateDenied').classList.remove('hidden');$('gateMessage').textContent=msg||'Acesso restrito.'}
+function toast(msg){$('toast').textContent=String(msg||'');$('toast').classList.remove('hidden');setTimeout(function(){$('toast').classList.add('hidden')},4200)}
+function dateLabel(s){if(!s)return'—';var p=String(s).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:s}
+function setText(id,v){$(id).textContent=v}
+function rankTable(items,metric,formatter){
+  items=Array.isArray(items)?items:[];
+  if(!items.length)return'<div class="empty">Sem dados no período.</div>';
+  return'<table class="table"><thead><tr><th>#</th><th>Evento</th><th>Produtor</th><th class="num">Resultado</th></tr></thead><tbody>'+items.slice(0,10).map(function(x,i){return'<tr><td><span class="rank">'+(i+1)+'</span></td><td><b>'+esc(x.eventoNome||x.eventoId)+'</b></td><td>'+esc(x.produtorNome||'—')+'</td><td class="num"><b>'+formatter(Number(x[metric]||0))+'</b></td></tr>'}).join('')+'</tbody></table>'
+}
+function producerTable(items){
+  items=Array.isArray(items)?items:[];
+  if(!items.length)return'<div class="empty">Sem dados no período.</div>';
+  return'<table class="table"><thead><tr><th>#</th><th>Produtor</th><th class="num">Receita</th><th class="num">Ingressos</th></tr></thead><tbody>'+items.map(function(x,i){return'<tr><td><span class="rank">'+(i+1)+'</span></td><td><b>'+esc(x.produtorNome||x.produtorId)+'</b></td><td class="num">'+money(x.receita)+'</td><td class="num">'+num(x.ingressos)+'</td></tr>'}).join('')+'</tbody></table>'
+}
+function methodTable(items){
+  items=Array.isArray(items)?items:[];
+  if(!items.length)return'<div class="empty">Sem vendas no período.</div>';
+  return'<table class="table"><thead><tr><th>Forma</th><th class="num">Vendas</th><th class="num">Valor</th></tr></thead><tbody>'+items.map(function(x){return'<tr><td><b>'+esc(x.forma||'OUTRO')+'</b></td><td class="num">'+num(x.vendas)+'</td><td class="num">'+money(x.valor)+'</td></tr>'}).join('')+'</tbody></table>'
+}
+function kvList(obj){
+  var entries=Object.keys(obj||{}).map(function(k){return[k,Number(obj[k]||0)]}).sort(function(a,b){return b[1]-a[1]});
+  if(!entries.length)return'<div class="empty">Sem dados no período.</div>';
+  return entries.slice(0,12).map(function(x){return'<div class="kv"><span>'+esc(x[0])+'</span><strong>'+num(x[1])+'</strong></div>'}).join('')
+}
+function renderTrend(list){
+  list=Array.isArray(list)?list:[];
+  var box=$('trend');box.innerHTML='';
+  if(!list.length){box.innerHTML='<div class="empty" style="width:100%">Sem acessos registrados neste período.</div>';return}
+  var max=Math.max.apply(null,list.map(function(x){return Number(x.acessos||0)}).concat([1]));
+  list.forEach(function(x){var w=document.createElement('div');w.className='bar-wrap';var b=document.createElement('div');b.className='bar';b.style.height=Math.max(2,Math.round(Number(x.acessos||0)/max*150))+'px';b.title=dateLabel(x.dia)+' · '+num(x.acessos)+' acessos';var s=document.createElement('small');s.textContent=x.dia.slice(5).split('-').reverse().join('/');w.append(b,s);box.appendChild(w)})
+}
+function render(r){
+  state.data=r;
+  var x=r.resumo||{},f=r.funil||{},p=r.plataforma||{},fin=r.financeiro||{},on=fin.online||{},rank=r.rankings||{},an=r.analytics||{};
+  $('adminLabel').textContent=(r.admin&&r.admin.nome?r.admin.nome+' · ':'')+(r.admin&&r.admin.perfil||'ADMINISTRADOR');
+  $('periodMeta').textContent='Período: '+dateLabel(r.periodo&&r.periodo.inicio)+' a '+dateLabel(r.periodo&&r.periodo.fim)+' · Atualizado '+new Date(r.geradoEm||Date.now()).toLocaleString('pt-BR');
+  $('dateStart').value=r.periodo&&r.periodo.inicio||'';$('dateEnd').value=r.periodo&&r.periodo.fim||'';
+  setText('kViews',num(x.acessos));setText('kSessions',num(x.sessoes));setText('kTickets',num(x.ingressos));setText('kRevenue',money(x.receitaBruta));setText('kAverage',money(x.ticketMedio));setText('kOrders',num(x.pedidos));setText('kPaid',num(x.pedidosPagos));setText('kProducers',num(p.produtoresAtivos));setText('kProducersMeta',num(p.produtoresTotal)+' cadastrados');setText('kEvents',num(p.eventosAtivos));setText('kEventsMeta',num(p.eventosTotal)+' cadastrados');setText('kOnline',money(on.totalConfirmado));
+  setText('fHome',num(f.home));setText('fEvents',num(f.eventos));setText('fEvent',num(f.evento));setText('fCheckout',num(f.checkout));setText('fOrders',num(f.pedidos));setText('fPaid',num(f.pagos));setText('fConvEvent',f.evento?pct(f.conversaoEventoPedido)+' viraram pedido':'—');setText('fConvPaid',f.pedidos?pct(f.conversaoPedidoPago)+' dos pedidos pagos':'—');
+  setText('pConfirmed',num(on.confirmado));setText('pConfirmedValue',money(on.totalConfirmado));setText('pPending',num(on.pendente));setText('pRefunded',num(on.estornado));setText('pRefundedValue',money(on.totalEstornado));setText('pChargeback',num(on.chargeback));setText('pReimburse',num(on.reembolso));
+  setText('trendTotal',num(x.acessos));renderTrend(r.serieDiaria);
+  $('rankAccess').innerHTML=rankTable(rank.eventosMaisAcessados,'acessos',num);
+  $('rankRevenue').innerHTML=rankTable(rank.eventosMaiorReceita,'receita',money);
+  $('rankTickets').innerHTML=rankTable(rank.eventosMaisIngressos,'ingressos',num);
+  $('rankProducers').innerHTML=producerTable(rank.produtoresMaiorReceita);
+  $('paymentMethods').innerHTML=methodTable(fin.vendasPorForma);
+  $('sources').innerHTML=kvList(an.porOrigem);$('devices').innerHTML=kvList(an.porDispositivo);
+}
+async function load(filters){
+  if(state.busy)return;state.busy=true;$('refresh').disabled=true;$('applyCustom').disabled=true;
+  try{
+    var r=await rpc('ctBackofficeMasterCarregarPROD',[String(state.session.token),filters||{preset:state.preset}]);
+    if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Seu perfil não está autorizado para o Backoffice Master.');
+    render(r);$('gate').classList.add('hidden');$('app').classList.remove('hidden');
+  }catch(e){
+    if($('app').classList.contains('hidden'))deny(e&&e.message?e.message:String(e));else toast(e&&e.message?e.message:String(e));
+  }finally{state.busy=false;$('refresh').disabled=false;$('applyCustom').disabled=false}
+}
+document.querySelectorAll('[data-preset]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('[data-preset]').forEach(function(x){x.classList.remove('on')});b.classList.add('on');state.preset=String(b.dataset.preset||'7D');load({preset:state.preset})})});
+$('applyCustom').addEventListener('click',function(){document.querySelectorAll('[data-preset]').forEach(function(x){x.classList.remove('on')});load({inicio:$('dateStart').value,fim:$('dateEnd').value})});
+$('refresh').addEventListener('click',function(){var a=$('dateStart').value,b=$('dateEnd').value;if(a&&b)load({inicio:a,fim:b});else load({preset:state.preset})});
+state.session=readSession();if(!state.session)deny('Entre no Portal do Produtor antes de abrir o Backoffice Master.');else load({preset:'7D'});
+}());
+</script>
+</body>
+</html>

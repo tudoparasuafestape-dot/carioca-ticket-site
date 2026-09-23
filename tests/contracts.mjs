@@ -29,6 +29,7 @@ const protectedFiles = [
   'parceiro/index.html',
   'parceiro/programa/index.html',
   'parceiro/admin/index.html',
+  'backoffice/index.html',
   'parceiro/ativar/index.html',
   'parceiro/manual/index.html',
   'parceiro/regulamento/index.html',
@@ -592,6 +593,66 @@ if (parceiroDados) {
   }
 }
 
+const analyticsAsset = fs.existsSync(path.join(root,'assets/ct-analytics.js'))
+  ? fs.readFileSync(path.join(root,'assets/ct-analytics.js'),'utf8')
+  : '';
+if (!analyticsAsset) {
+  fail('assets/ct-analytics.js','analytics público ausente');
+} else {
+  for (const required of [
+    'CT_ANALYTICS_SESSION_V1',
+    'ctBackofficeMasterRegistrarAcessoPublicoPROD',
+    'navigator.webdriver',
+    "host!=='cariocaticket.com.br'",
+    "pagina:pg",
+    "eventoId:",
+    "sessaoId:"
+  ]) {
+    if (!analyticsAsset.includes(required)) fail('assets/ct-analytics.js','analytics incompleto: '+required);
+  }
+  for (const forbidden of ['compradorEmail','compradorCpf','compradorWhatsapp','buyerEmail','buyerCpf']) {
+    if (analyticsAsset.includes(forbidden)) fail('assets/ct-analytics.js','analytics tenta coletar PII: '+forbidden);
+  }
+}
+for (const file of ['index.html','eventos-v2/index.html','evento-v2/index.html','checkout-v2/index.html','evento/index.html','checkout/index.html']) {
+  const html=read(file);
+  if (html && !html.includes('/assets/ct-analytics.js')) {
+    fail(file,'página pública sem instrumentação do Analytics Master');
+  }
+}
+
+const backofficeMaster = read('backoffice/index.html');
+if (backofficeMaster) {
+  for (const required of [
+    'Backoffice Master',
+    'Visão executiva da plataforma',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctBackofficeMasterCarregarPROD',
+    'Acessos ao site',
+    'Sessões únicas',
+    'Ingressos vendidos',
+    'Receita bruta',
+    'Eventos mais acessados',
+    'Maior receita',
+    'Mais ingressos vendidos',
+    'Produtores por receita',
+    'Formas de pagamento',
+    'Origem dos acessos',
+    'Dispositivos',
+    'data-preset="7D"',
+    'data-preset="30D"',
+    'id="dateStart"',
+    'id="dateEnd"'
+  ]) {
+    if (!backofficeMaster.includes(required)) {
+      fail('backoffice/index.html', 'Backoffice Master incompleto: ' + required);
+    }
+  }
+  if (/window\.(?:alert|confirm|prompt)\s*\(/i.test(backofficeMaster)) {
+    fail('backoffice/index.html', 'Backoffice Master usa dialogo nativo');
+  }
+}
+
 const parceiroAdmin = read('parceiro/admin/index.html');
 if (parceiroAdmin) {
   for (const required of [
@@ -615,6 +676,9 @@ if (parceiroAdmin) {
   }
   if (!parceiroAdmin.includes('/produtor/solicitacoes/')) {
     fail('parceiro/admin/index.html', 'Backoffice Parceiro CT sem acesso ao onboarding administrativo de produtores');
+  }
+  if (!parceiroAdmin.includes('/backoffice/')) {
+    fail('parceiro/admin/index.html', 'Backoffice Parceiro CT sem acesso ao Backoffice Master');
   }
   for (const required of [
     'function closeAction(force)',
