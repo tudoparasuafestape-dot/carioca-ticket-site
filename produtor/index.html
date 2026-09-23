@@ -2963,43 +2963,12 @@ false;
 
 function carregarMarcaOficial(){
 
-if(
-typeof google ===
-'undefined' ||
-!google.script ||
-!google.script.run
-){
-
-registrarFalhaMarcaOficial(
-'Integração do Google Apps Script indisponível.'
-);
-
-return;
-}
-
-google.script.run
-.withSuccessHandler(
-function(uri){
-
-uri =
-String(
-uri || ''
-);
-
-if(
-uri.indexOf(
-'data:image/'
-) !==
-0
-){
-
-registrarFalhaMarcaOficial(
-'A logo oficial de desktop não foi retornada em formato válido.'
-);
-
-return;
-}
-
+/*
+ * PERFORMANCE P0:
+ * a identidade visual oficial já está publicada no próprio domínio.
+ * Não consulta Apps Script nem Google Drive para renderizar a tela de login.
+ * Isso elimina duas RPCs públicas e um possível cold start de Drive/cache.
+ */
 el.brandLogoDesktop.onerror =
 function(){
 
@@ -3009,10 +2978,18 @@ null;
 el.brandLogoDesktop.src =
 '/assets/carioca-ticket-logo.png';
 
+registrarFalhaMarcaOficial(
+'A logo oficial local não pôde ser exibida.'
+);
+};
+
+el.brandLogoDesktop.src =
+'/assets/carioca-ticket-logo.png';
+
 el.brandLogoDesktop
 .setAttribute(
 'data-brand-source',
-'fallback'
+'static'
 );
 
 el.brandLogoDesktop
@@ -3021,18 +2998,33 @@ el.brandLogoDesktop
 'hidden'
 );
 
+el.topLogoMobile.onerror =
+function(){
+
+el.topLogoMobile.onerror =
+null;
+
+el.topLogoMobile.src =
+'/assets/carioca-ticket-icon-192.png';
+
 registrarFalhaMarcaOficial(
-'A logo dinâmica de desktop não pôde ser exibida; fallback oficial mantido.'
+'O símbolo oficial local não pôde ser exibido.'
 );
 };
 
-el.brandLogoDesktop.src =
-uri;
+el.topLogoMobile.src =
+'/assets/carioca-ticket-icon-192.png';
 
-el.brandLogoDesktop
+el.topLogoMobile
 .setAttribute(
 'data-brand-source',
-'backend'
+'static'
+);
+
+el.topLogoMobile
+.classList
+.remove(
+'hidden'
 );
 
 if(
@@ -3044,126 +3036,6 @@ el.brandLogoError
 'hidden'
 );
 }
-
-el.brandLogoDesktop
-.classList
-.remove(
-'hidden'
-);
-}
-)
-.withFailureHandler(
-function(erro){
-
-registrarFalhaMarcaOficial(
-'Falha ao carregar a logo oficial de desktop.'
-);
-
-if(
-window.console &&
-typeof window.console.error ===
-'function'
-){
-
-window.console.error(
-'Carioca Ticket | marca oficial DESKTOP',
-erro
-);
-}
-}
-)
-.ctMarcaOficialObterDataUriPROD(
-'DESKTOP'
-);
-
-google.script.run
-.withSuccessHandler(
-function(uri){
-
-uri =
-String(
-uri || ''
-);
-
-if(
-uri.indexOf(
-'data:image/'
-) !==
-0
-){
-
-registrarFalhaMarcaOficial(
-'O símbolo oficial mobile não foi retornado em formato válido.'
-);
-
-return;
-}
-
-el.topLogoMobile.onerror =
-function(){
-
-el.topLogoMobile.onerror =
-null;
-
-el.topLogoMobile.src =
-'/assets/carioca-ticket-icon-192.png';
-
-el.topLogoMobile
-.setAttribute(
-'data-brand-source',
-'fallback'
-);
-
-el.topLogoMobile
-.classList
-.remove(
-'hidden'
-);
-
-registrarFalhaMarcaOficial(
-'O símbolo dinâmico mobile não pôde ser exibido; fallback oficial mantido.'
-);
-};
-
-el.topLogoMobile.src =
-uri;
-
-el.topLogoMobile
-.setAttribute(
-'data-brand-source',
-'backend'
-);
-
-el.topLogoMobile
-.classList
-.remove(
-'hidden'
-);
-}
-)
-.withFailureHandler(
-function(erro){
-
-registrarFalhaMarcaOficial(
-'Falha ao carregar o símbolo oficial mobile.'
-);
-
-if(
-window.console &&
-typeof window.console.error ===
-'function'
-){
-
-window.console.error(
-'Carioca Ticket | marca oficial MOBILE',
-erro
-);
-}
-}
-)
-.ctMarcaOficialObterDataUriPROD(
-'MOBILE'
-);
 }
 
 function registrarFalhaMarcaOficial(
