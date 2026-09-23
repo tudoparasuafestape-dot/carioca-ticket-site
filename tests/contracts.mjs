@@ -32,6 +32,7 @@ const protectedFiles = [
   'parceiro/admin/index.html',
   'backoffice/index.html',
   'backoffice/carioca-pay/index.html',
+  'backoffice/carioca-pay/baas-sandbox/index.html',
   'parceiro/ativar/index.html',
   'parceiro/manual/index.html',
   'parceiro/regulamento/index.html',
@@ -375,6 +376,51 @@ if (contaCariocaPayMasterPage) {
     !contaCariocaPayMasterPage.includes("state.action==='RECUSAR'&&reason.length<3")
   ) {
     fail('backoffice/carioca-pay/index.html', 'recusa sem motivo obrigatorio');
+  }
+}
+
+const contaCariocaPayBaasPage = read('backoffice/carioca-pay/baas-sandbox/index.html');
+if (contaCariocaPayBaasPage) {
+  for (const required of [
+    '<title>BaaS Sandbox | Conta Carioca Pay</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctContaCariocaPayBaasP4BListarProdutoresPROD',
+    'ctContaCariocaPayBaasP4BProntidaoPROD',
+    'ctContaCariocaPayBaasP4BCriarSubcontaPROD',
+    'ctContaCariocaPayBaasP4BConsultarStatusPROD',
+    'CRIAR SANDBOX',
+    'SANDBOX • sem dinheiro real',
+    'apiKeyExposta===true',
+    "r.ambienteProvider&&r.ambienteProvider!=='SANDBOX'",
+    'Faturamento / renda mensal de teste',
+    'BaaS Sandbox'
+  ]) {
+    if (!contaCariocaPayBaasPage.includes(required)) {
+      fail('backoffice/carioca-pay/baas-sandbox/index.html', 'Console BaaS Sandbox incompleto: ' + required);
+    }
+  }
+
+  if (
+    /window\.(?:alert|confirm|prompt)\s*\(/i.test(contaCariocaPayBaasPage)
+  ) {
+    fail('backoffice/carioca-pay/baas-sandbox/index.html', 'Console BaaS Sandbox usa dialogo nativo');
+  }
+
+  if (
+    contaCariocaPayBaasPage.includes('CT_SECRET_') ||
+    contaCariocaPayBaasPage.includes('$aact_') ||
+    contaCariocaPayBaasPage.includes('ctAsaasProvider') ||
+    contaCariocaPayBaasPage.includes('/transfers') ||
+    contaCariocaPayBaasPage.includes('UrlFetchApp')
+  ) {
+    fail('backoffice/carioca-pay/baas-sandbox/index.html', 'Console BaaS Sandbox expoe detalhe interno ou provider direto');
+  }
+
+  if (
+    !contaCariocaPayBaasPage.includes('rel="manifest" href="/manifest-produtor.webmanifest"') ||
+    !contaCariocaPayBaasPage.includes('/pwa-register.js')
+  ) {
+    fail('backoffice/carioca-pay/baas-sandbox/index.html', 'Console BaaS Sandbox sem PWA oficial');
   }
 }
 
