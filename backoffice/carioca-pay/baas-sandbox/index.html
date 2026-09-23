@@ -220,6 +220,10 @@ $('producer').addEventListener('change',function(){
   ['asaasCommercial','asaasBank','asaasDocs','asaasGeneral'].forEach(function(id){$(id).textContent='Ainda não consultado';$(id).className=''});
   $('missing').innerHTML='';
   refreshButtons();
+
+  if(selectedId()){
+    checkReadiness();
+  }
 });
 $('incomeValue').addEventListener('input',function(){state.readiness=null;refreshButtons()});
 $('companyType').addEventListener('change',function(){state.readiness=null;refreshButtons()});
