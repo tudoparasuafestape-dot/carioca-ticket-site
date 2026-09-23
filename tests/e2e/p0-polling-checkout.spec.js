@@ -119,7 +119,10 @@ for (const rota of ['/checkout/', '/checkout-v2/']) {
     const chamadas = {};
     await instalarBackendFake(page, chamadas);
 
-    await page.addInitScript(({ key, pedidoId }) => {
+    // Semeia o recovery já dentro da origem local usada pela branch.
+    // addInitScript em about:blank não garante localStorage da origem de destino.
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(({ key, pedidoId }) => {
       localStorage.setItem(key, JSON.stringify({
         pedidoId,
         token: 'TOKEN-P0-POLLING'
