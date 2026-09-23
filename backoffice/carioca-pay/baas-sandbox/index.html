@@ -79,9 +79,19 @@ button,input,select{font:inherit}.hidden{display:none!important}
 </section>
 
 <section class="card">
-<h2>4. Segurança</h2>
+<h2>4. Aprovação Sandbox</h2>
+<div class="warning">Esta aprovação é uma <b>simulação exclusiva do Asaas Sandbox</b>. Ela não representa aprovação cadastral ou regulatória em Produção e não movimenta dinheiro.</div>
+<div class="grid" style="margin-top:12px">
+  <div class="field wide"><label for="approvalConfirmation">Confirmação para aprovar</label><input id="approvalConfirmation" autocomplete="off" placeholder="Digite APROVAR SANDBOX"></div>
+</div>
+<div class="actions"><button id="approveButton" class="btn gold" type="button" disabled>Aprovar subconta Sandbox</button></div>
+<div id="approvalResult" class="result hidden"></div>
+</section>
+
+<section class="card">
+<h2>5. Segurança</h2>
 <div class="warning">
-A criação usa somente o <b>Asaas Sandbox</b>. A API Key da subconta é capturada no backend e guardada no cofre do Apps Script; ela nunca é exibida nesta tela. A criação não realiza Pix, transferência, antecipação ou repasse.
+A criação e a aprovação usam somente o <b>Asaas Sandbox</b>. A API Key da subconta fica guardada no cofre do Apps Script e nunca é exibida nesta tela. Nenhuma dessas ações realiza Pix, transferência, antecipação ou repasse.
 </div>
 <div id="result" class="result hidden"></div>
 </section>
@@ -94,7 +104,7 @@ A criação usa somente o <b>Asaas Sandbox</b>. A API Key da subconta é captura
 var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 var pending={};
-var state={session:null,producers:[],readiness:null,busy:false};
+var state={session:null,producers:[],readiness:null,lastStatus:null,busy:false};
 
 function $(id){return document.getElementById(id)}
 function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
@@ -116,13 +126,17 @@ function overrides(){return{
   province:String($('province').value||'').trim(),
   postalCode:String($('postalCode').value||'').replace(/\D/g,'')
 }}
-function setBusy(on){state.busy=!!on;[$('checkButton'),$('createButton'),$('statusButton'),$('documentsButton')].forEach(function(b){if(b)b.dataset.was=b.disabled?'1':'0'});$('checkButton').disabled=!!on;if(on){$('createButton').disabled=true;$('statusButton').disabled=true;$('documentsButton').disabled=true}else refreshButtons()}
+function setBusy(on){state.busy=!!on;[$('checkButton'),$('createButton'),$('statusButton'),$('documentsButton'),$('approveButton')].forEach(function(b){if(b)b.dataset.was=b.disabled?'1':'0'});$('checkButton').disabled=!!on;if(on){$('createButton').disabled=true;$('statusButton').disabled=true;$('documentsButton').disabled=true;$('approveButton').disabled=true}else refreshButtons()}
 
 function refreshButtons(){
   var r=state.readiness||{};
+  var st=state.lastStatus||{};
+  var statusConhecido=!!String(st.general||'').trim();
+  var jaAprovada=String(st.general||'').trim().toUpperCase()==='APPROVED';
   $('createButton').disabled=!(r.prontoParaProvisionar===true&&$('confirmation').value.trim()==='CRIAR SANDBOX');
   $('statusButton').disabled=!(r.jaPossuiConfiguracaoSandbox===true);
   $('documentsButton').disabled=!(r.subcontaProvisionada===true);
+  $('approveButton').disabled=!(r.subcontaProvisionada===true&&statusConhecido&&!jaAprovada&&$('approvalConfirmation').value.trim()==='APROVAR SANDBOX');
 }
 
 function renderReadiness(r){
@@ -200,6 +214,22 @@ async function createAccount(){
   finally{setBusy(false)}
 }
 
+function renderStatus(st){
+  st=st||{};
+  state.lastStatus=st;
+  var commercial=st.commercialInfo||'DESCONHECIDO';
+  var bank=st.bankAccountInfo||'DESCONHECIDO';
+  var docs=st.documentation||'DESCONHECIDO';
+  var general=st.general||'DESCONHECIDO';
+
+  [['asaasCommercial',commercial],['asaasBank',bank],['asaasDocs',docs],['asaasGeneral',general]].forEach(function(par){
+    $(par[0]).textContent=par[1];
+    $(par[0]).className=par[1]==='APPROVED'?'ok':'warn';
+  });
+
+  refreshButtons();
+}
+
 async function checkStatus(){
   if(!selectedId())return;
   setBusy(true);
@@ -207,18 +237,65 @@ async function checkStatus(){
     var r=await rpc('ctContaCariocaPayBaasP4BConsultarStatusPROD',[state.session.token,selectedId()]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível consultar o status Sandbox.');
     if(r.apiKeyExposta===true)throw new Error('Gate de segurança violado.');
-    var st=r.status||{};
-    var commercial=st.commercialInfo||'DESCONHECIDO';
-    var bank=st.bankAccountInfo||'DESCONHECIDO';
-    var docs=st.documentation||'DESCONHECIDO';
-    var general=st.general||'DESCONHECIDO';
-
-    [['asaasCommercial',commercial],['asaasBank',bank],['asaasDocs',docs],['asaasGeneral',general]].forEach(function(par){
-      $(par[0]).textContent=par[1];
-      $(par[0]).className=par[1]==='APPROVED'?'ok':'warn';
-    });
+    renderStatus(r.status||{});
   }catch(e){setMsg(e&&e.message?e.message:String(e),'error')}
   finally{setBusy(false)}
+}
+
+async function approveSandbox(){
+  if(!selectedId()){setMsg('Selecione um produtor.','error');return}
+  var rdy=state.readiness||{};
+  var st=state.lastStatus||{};
+
+  if(rdy.subcontaProvisionada!==true){
+    setMsg('A subconta Sandbox ainda não está provisionada.','error');
+    return;
+  }
+
+  if(String(st.general||'').trim().toUpperCase()==='APPROVED'){
+    setMsg('A subconta Sandbox já está aprovada.','ok');
+    return;
+  }
+
+  if($('approvalConfirmation').value.trim()!=='APROVAR SANDBOX'){
+    setMsg('Digite APROVAR SANDBOX para confirmar a simulação.','error');
+    return;
+  }
+
+  setBusy(true);setMsg('');
+  try{
+    var r=await rpc('ctContaCariocaPayBaasP4DAprovarSandboxPROD',[
+      state.session.token,
+      selectedId(),
+      $('approvalConfirmation').value.trim()
+    ]);
+
+    if(!r||r.sucesso!==true)throw new Error('Não foi possível aprovar a subconta Sandbox.');
+    if(r.apiKeyExposta===true)throw new Error('Gate de segurança violado: credencial exposta.');
+    if(r.ambienteProvider&&r.ambienteProvider!=='SANDBOX')throw new Error('Gate de segurança violado: ambiente inesperado.');
+    if(r.movimentouDinheiro===true)throw new Error('Gate de segurança violado: movimentação financeira inesperada.');
+
+    renderStatus(r.statusDepois||{});
+    $('approvalConfirmation').value='';
+
+    var box=$('approvalResult');
+    box.classList.remove('hidden');
+
+    if(r.jaEstavaAprovado===true){
+      box.textContent='A subconta já estava APPROVED. Nenhuma nova aprovação foi enviada.';
+      setMsg('Subconta Sandbox já aprovada.','ok');
+    }else if(r.aprovadoAgora===true){
+      box.textContent='Aprovação Sandbox concluída. O status geral retornou APPROVED.';
+      setMsg('Subconta aprovada no Sandbox.','ok');
+    }else{
+      box.textContent='A solicitação de aprovação Sandbox foi processada. Consulte os status exibidos para acompanhar o resultado.';
+      setMsg('Aprovação Sandbox processada; status atualizado.','ok');
+    }
+  }catch(e){
+    setMsg(e&&e.message?e.message:String(e),'error');
+  }finally{
+    setBusy(false);
+  }
 }
 
 async function checkDocuments(){
@@ -289,6 +366,7 @@ async function checkDocuments(){
 
 $('producer').addEventListener('change',function(){
   state.readiness=null;
+  state.lastStatus=null;
   ['dataReady','parentSecret','sandboxConfig','personType','readyCreate'].forEach(function(id){$(id).textContent='—';$(id).className=''});
   ['asaasCommercial','asaasBank','asaasDocs','asaasGeneral'].forEach(function(id){$(id).textContent='Ainda não consultado';$(id).className=''});
   $('missing').innerHTML='';
@@ -309,6 +387,8 @@ $('checkButton').addEventListener('click',checkReadiness);
 $('createButton').addEventListener('click',createAccount);
 $('statusButton').addEventListener('click',checkStatus);
 $('documentsButton').addEventListener('click',checkDocuments);
+$('approveButton').addEventListener('click',approveSandbox);
+$('approvalConfirmation').addEventListener('input',refreshButtons);
 
 state.session=readSession();
 if(!state.session){$('gateText').textContent='Entre no Portal do Produtor com uma conta administradora antes de abrir esta página.'}
