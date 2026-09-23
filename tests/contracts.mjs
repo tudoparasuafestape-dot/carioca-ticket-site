@@ -1171,6 +1171,25 @@ if (ingresso && !/Voltar para Minha Carioca/i.test(ingresso)) {
   fail('ingresso/index.html', 'ingresso sem retorno para Minha Carioca');
 }
 
+const minhaCariocaContaRecovery = read('minha-carioca/conta/index.html');
+if (minhaCariocaContaRecovery) {
+  for (const required of [
+    'CT_MINHA_CARIOCA_COMPRAS_V1',
+    'CT_CHECKOUT_RECOVERY_',
+    'function comprasSegurasDoAparelho()',
+    'function deviceRecovery()',
+    'Compra segura encontrada neste aparelho',
+    '/minha-carioca/ingressos/?v=20260923-1940&pedido='
+  ]) {
+    if (!minhaCariocaContaRecovery.includes(required)) {
+      fail('minha-carioca/conta/index.html', 'recuperacao segura no mesmo aparelho incompleta: ' + required);
+    }
+  }
+  if (!minhaCariocaContaRecovery.includes('pedidoId:pedido,token:token')) {
+    fail('minha-carioca/conta/index.html', 'recuperacao no aparelho sem exigir pedido + token');
+  }
+}
+
 if (errors.length) {
   console.error('\n❌ CONTRATOS DE REGRESSAO FALHARAM\n');
   for (const e of errors) {
