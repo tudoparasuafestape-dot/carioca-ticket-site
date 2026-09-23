@@ -393,6 +393,15 @@ if (contaCariocaPayBaasPage) {
     'apiKeyExposta===true',
     "r.ambienteProvider&&r.ambienteProvider!=='SANDBOX'",
     'Faturamento / renda mensal de teste',
+    'CPF/CNPJ do titular',
+    'Endereço',
+    'Número',
+    'Bairro',
+    'CEP',
+    "cpfCnpj:String($('cpfCnpj').value||'').replace(/\\D/g,'')",
+    "postalCode:String($('postalCode').value||'').replace(/\\D/g,'')",
+    'Configuração interna Sandbox',
+    "r.jaPossuiConfiguracaoSandbox?'Preparada':'Ainda não preparada'",
     'BaaS Sandbox'
   ]) {
     if (!contaCariocaPayBaasPage.includes(required)) {
