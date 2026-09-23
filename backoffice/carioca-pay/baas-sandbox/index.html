@@ -53,7 +53,7 @@ button,input,select{font:inherit}.hidden{display:none!important}
 <div class="field"><label for="confirmation">Confirmação para criar</label><input id="confirmation" autocomplete="off" placeholder="Digite CRIAR SANDBOX"></div>
 <div class="wide warning">Os dados acima são enviados somente ao backend protegido para esta homologação BaaS. Não envie CPF/CNPJ pelo chat e não exponha chaves de API nesta tela.</div>
 </div>
-<div class="actions"><button id="checkButton" class="btn gold" type="button">Verificar prontidão</button><button id="createButton" class="btn gold" type="button" disabled>Criar subconta Sandbox</button><button id="statusButton" class="btn" type="button" disabled>Consultar status</button></div>
+<div class="actions"><button id="checkButton" class="btn gold" type="button">Verificar prontidão</button><button id="createButton" class="btn gold" type="button" disabled>Criar subconta Sandbox</button><button id="statusButton" class="btn" type="button" disabled>Consultar status</button><button id="documentsButton" class="btn" type="button" disabled>Consultar onboarding</button></div>
 </section>
 
 <section class="card">
@@ -73,7 +73,13 @@ button,input,select{font:inherit}.hidden{display:none!important}
 </section>
 
 <section class="card">
-<h2>3. Segurança</h2>
+<h2>3. Onboarding Asaas</h2>
+<div class="warning">Depois que a subconta é provisionada, consulte aqui os documentos solicitados pelo Asaas. Quando houver um <b>onboardingUrl</b>, o titular deve usar o link oficial retornado pelo próprio Asaas.</div>
+<div id="documentsResult" class="result hidden"></div>
+</section>
+
+<section class="card">
+<h2>4. Segurança</h2>
 <div class="warning">
 A criação usa somente o <b>Asaas Sandbox</b>. A API Key da subconta é capturada no backend e guardada no cofre do Apps Script; ela nunca é exibida nesta tela. A criação não realiza Pix, transferência, antecipação ou repasse.
 </div>
@@ -110,12 +116,13 @@ function overrides(){return{
   province:String($('province').value||'').trim(),
   postalCode:String($('postalCode').value||'').replace(/\D/g,'')
 }}
-function setBusy(on){state.busy=!!on;[$('checkButton'),$('createButton'),$('statusButton')].forEach(function(b){if(b)b.dataset.was=b.disabled?'1':'0'});$('checkButton').disabled=!!on;if(on){$('createButton').disabled=true;$('statusButton').disabled=true}else refreshButtons()}
+function setBusy(on){state.busy=!!on;[$('checkButton'),$('createButton'),$('statusButton'),$('documentsButton')].forEach(function(b){if(b)b.dataset.was=b.disabled?'1':'0'});$('checkButton').disabled=!!on;if(on){$('createButton').disabled=true;$('statusButton').disabled=true;$('documentsButton').disabled=true}else refreshButtons()}
 
 function refreshButtons(){
   var r=state.readiness||{};
   $('createButton').disabled=!(r.prontoParaProvisionar===true&&$('confirmation').value.trim()==='CRIAR SANDBOX');
   $('statusButton').disabled=!(r.jaPossuiConfiguracaoSandbox===true);
+  $('documentsButton').disabled=!(r.subcontaProvisionada===true);
 }
 
 function renderReadiness(r){
@@ -214,6 +221,72 @@ async function checkStatus(){
   finally{setBusy(false)}
 }
 
+async function checkDocuments(){
+  if(!selectedId())return;
+  setBusy(true);setMsg('');
+  try{
+    var r=await rpc('ctContaCariocaPayBaasP4BConsultarDocumentosPROD',[state.session.token,selectedId()]);
+    if(!r||r.sucesso!==true)throw new Error('Não foi possível consultar o onboarding Sandbox.');
+    if(r.apiKeyExposta===true)throw new Error('Gate de segurança violado.');
+    if(r.ambienteProvider&&r.ambienteProvider!=='SANDBOX')throw new Error('Gate de segurança violado: ambiente inesperado.');
+
+    var box=$('documentsResult');
+    box.innerHTML='';
+    box.classList.remove('hidden');
+
+    var docs=Array.isArray(r.documentos)?r.documentos:[];
+    if(!docs.length){
+      var empty=document.createElement('div');
+      empty.textContent='Nenhum documento pendente retornado pelo Asaas.';
+      box.appendChild(empty);
+      return;
+    }
+
+    docs.forEach(function(doc,index){
+      var wrap=document.createElement('div');
+      wrap.style.padding='10px 0';
+      if(index>0)wrap.style.borderTop='1px solid var(--border)';
+
+      var title=document.createElement('b');
+      title.textContent=doc.title||doc.description||doc.type||('Documento '+(index+1));
+      wrap.appendChild(title);
+
+      var meta=document.createElement('div');
+      meta.style.marginTop='5px';
+      meta.textContent='Status: '+String(doc.status||'DESCONHECIDO')+(doc.type?' · Tipo: '+doc.type:'');
+      wrap.appendChild(meta);
+
+      if(doc.description){
+        var desc=document.createElement('div');
+        desc.style.marginTop='5px';
+        desc.textContent=String(doc.description);
+        wrap.appendChild(desc);
+      }
+
+      if(doc.possuiOnboardingUrl===true&&/^https:\/\//i.test(String(doc.onboardingUrl||''))){
+        var link=document.createElement('a');
+        link.className='btn gold';
+        link.href=String(doc.onboardingUrl);
+        link.target='_blank';
+        link.rel='noopener noreferrer';
+        link.textContent='Abrir onboarding oficial';
+        link.style.display='inline-flex';
+        link.style.alignItems='center';
+        link.style.marginTop='8px';
+        wrap.appendChild(link);
+      }else{
+        var note=document.createElement('div');
+        note.style.marginTop='6px';
+        note.textContent='Sem link externo: este item deve seguir o método de envio indicado pelo Asaas.';
+        wrap.appendChild(note);
+      }
+
+      box.appendChild(wrap);
+    });
+  }catch(e){setMsg(e&&e.message?e.message:String(e),'error')}
+  finally{setBusy(false)}
+}
+
 $('producer').addEventListener('change',function(){
   state.readiness=null;
   ['dataReady','parentSecret','sandboxConfig','personType','readyCreate'].forEach(function(id){$(id).textContent='—';$(id).className=''});
@@ -235,6 +308,7 @@ $('confirmation').addEventListener('input',refreshButtons);
 $('checkButton').addEventListener('click',checkReadiness);
 $('createButton').addEventListener('click',createAccount);
 $('statusButton').addEventListener('click',checkStatus);
+$('documentsButton').addEventListener('click',checkDocuments);
 
 state.session=readSession();
 if(!state.session){$('gateText').textContent='Entre no Portal do Produtor com uma conta administradora antes de abrir esta página.'}
