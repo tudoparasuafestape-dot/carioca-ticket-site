@@ -88,6 +88,35 @@ for(const path of ['evento/index.html','evento-v2/index.html']){
 }
 
 
+// COMPARTILHAMENTO DE EVENTO — todo evento público deve permitir
+// compartilhar facilmente no mobile e copiar o link no fallback desktop.
+// O link compartilhado deve ser canônico e não carregar cupom/src/csid.
+for(const path of ['evento/index.html','evento-v2/index.html']){
+  const evento=read(path);
+  requireAll(path,evento,[
+    'id="shareHero"',
+    'id="shareMobile"',
+    'function linkCanonicoEvento(){',
+    "return base+'?evento='+encodeURIComponent(state.eventoId);",
+    'async function compartilharEvento(){',
+    'navigator.share',
+    'navigator.clipboard.writeText(url)',
+    "btn.dataset.shareUrl=url",
+    "mostrarShareToast('Link do evento copiado!')"
+  ]);
+  const shareStart=evento.indexOf('function linkCanonicoEvento(){');
+  const shareEnd=evento.indexOf('function showError(msg){',shareStart);
+  const shareBlock=shareStart>=0&&shareEnd>shareStart
+    ? evento.slice(shareStart,shareEnd)
+    : '';
+  for(const proibido of ['cupomCodigo','campanhaOrigem','campanhaSessaoId','csid=','src=']){
+    if(shareBlock.includes(proibido)){
+      failures.push(path+': link compartilhado voltou a carregar parametro de campanha -> '+proibido);
+    }
+  }
+}
+
+
 // ANALYTICS MASTER — telemetria pública deve ser estritamente best-effort.
 // Nunca pode bloquear a jornada nem depender de resposta do backend.
 {
