@@ -422,6 +422,14 @@ if (contaCariocaPayBaasPage) {
     'bankAccountInfo',
     'documentation',
     'general',
+    'Aprovação Sandbox',
+    'APROVAR SANDBOX',
+    'ctContaCariocaPayBaasP4DAprovarSandboxPROD',
+    'Aprovar subconta Sandbox',
+    'simulação exclusiva do Asaas Sandbox',
+    'movimentouDinheiro===true',
+    'jaEstavaAprovado===true',
+    'aprovadoAgora===true',
     'BaaS Sandbox'
   ]) {
     if (!contaCariocaPayBaasPage.includes(required)) {
