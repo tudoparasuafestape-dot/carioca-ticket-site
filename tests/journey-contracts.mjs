@@ -26,6 +26,35 @@ requireAll('index.html',home,[
   'Acessar Portal Parceiro CT'
 ]);
 
+
+// P0 PERFORMANCE — checkout não pode reconciliar com Asaas a cada ciclo curto.
+// Polling frequente observa apenas o ledger local; Asaas fica como fallback
+// espaçado/manual enquanto o webhook segue como caminho principal.
+for(const path of ['checkout/index.html','checkout-v2/index.html']){
+  const checkout=read(path);
+  requireAll(path,checkout,[
+    'function refreshLocal(){',
+    'ctCheckoutPixPublicoStatusLocalPROD',
+    'setInterval(refreshLocal,4000)',
+    'function reconcile(){',
+    'ctCheckoutPixPublicoReconciliarPROD',
+    'setInterval(reconcile,30000)',
+    'el.refreshButton.onclick=reconcile',
+    'el.cardRefreshButton.onclick=reconcile'
+  ]);
+  if(checkout.includes('setInterval(refresh,4000)')){
+    failures.push(path+': reconciliação Asaas voltou ao polling de 4s');
+  }
+  const localStart=checkout.indexOf('function refreshLocal(){');
+  const reconcileStart=checkout.indexOf('function reconcile(){',localStart);
+  const localBlock=localStart>=0&&reconcileStart>localStart
+    ? checkout.slice(localStart,reconcileStart)
+    : '';
+  if(localBlock.includes('ctCheckoutPixPublicoReconciliarPROD')){
+    failures.push(path+': polling local não pode chamar reconciliação externa');
+  }
+}
+
 const ajuda=read('ajuda/index.html');
 requireLink('ajuda/index.html',ajuda,'helpProducerPortal','/produtor/');
 requireLink('ajuda/index.html',ajuda,'helpPartnerPortal','/parceiro/');
