@@ -178,6 +178,10 @@ test.describe('Jornada publica protegida', () => {
       'https://' + EXPECTED_HOST + '/evento/?evento=' + encodeURIComponent(eventoIdAtual)
     );
 
+    await page.locator('#shareMenuClose').click();
+    await expect(page.locator('#shareMenu')).toBeHidden();
+    await expect(page.locator('#shareMenuBackdrop')).toBeHidden();
+
     const comprar = page.getByRole('link', {
       name: /comprar ingresso|garantir meu ingresso|comprar agora/i
     }).first();
