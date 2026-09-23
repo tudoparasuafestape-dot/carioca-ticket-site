@@ -45,7 +45,7 @@ test.describe('Canario real first-party', () => {
       height: img.naturalHeight
     }));
 
-    expect(logo.src.startsWith('data:image/')).toBe(true);
+    expect(logo.src).toBe('/assets/carioca-ticket-logo.png');
     expect(logo.width).toBeGreaterThan(0);
     expect(logo.height).toBeGreaterThan(0);
     await expect(page.locator('#brandLogoError')).toBeHidden();
