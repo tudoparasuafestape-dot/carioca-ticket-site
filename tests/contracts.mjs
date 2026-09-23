@@ -406,6 +406,15 @@ if (contaCariocaPayBaasPage) {
     "postalCode:String($('postalCode').value||'').replace(/\\D/g,'')",
     'Configuração interna Sandbox',
     "r.jaPossuiConfiguracaoSandbox?'Preparada':'Ainda não preparada'",
+    'Subconta Sandbox já provisionada. Consulte os status cadastrais do Asaas.',
+    'Asaas · Comercial',
+    'Asaas · Conta bancária',
+    'Asaas · Documentação',
+    'Asaas · Aprovação geral',
+    'commercialInfo',
+    'bankAccountInfo',
+    'documentation',
+    'general',
     'BaaS Sandbox'
   ]) {
     if (!contaCariocaPayBaasPage.includes(required)) {
