@@ -140,7 +140,10 @@ for (const rota of ['/checkout/', '/checkout-v2/']) {
       timeout: 15000
     });
 
-    expect(chamadas.ctCheckoutPixPublicoConsultarPROD || 0).toBe(1);
+    await expect.poll(
+      () => chamadas.ctCheckoutPixPublicoConsultarPROD || 0,
+      { timeout: 5000 }
+    ).toBe(1);
 
     // Dois ciclos locais (4s e 8s). A reconciliação externa periódica é 30s.
     await page.waitForTimeout(9000);
