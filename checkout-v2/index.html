@@ -383,7 +383,9 @@
         order:null,
         queryToken:'',
         polling:null,
+        reconcilePolling:null,
         expiryTimer:null,
+        expiryReconciled:false,
         busy:false,
         paymentMethod:'PIX',
         emailRequired:true,
@@ -937,11 +939,11 @@
         updatePaymentMethodUI();
 
         if(status==='CONCLUIDO'){
-          stopPolling();renderSuccess(res.ingressos||[]);return;
+          stopPolling();stopExpiry();renderSuccess(res.ingressos||[]);return;
         }
 
         if(['EXPIRADO','CANCELADO','FALHA'].indexOf(status)>=0){
-          stopPolling();clearRecovery();clearIdempotency();
+          stopPolling();stopExpiry();clearRecovery();clearIdempotency();
           el.pixPanel.classList.add('hidden');el.cardPanel.classList.add('hidden');
           el.salePanel.classList.remove('hidden');el.buyerPanel.classList.remove('hidden');el.payActionPanel.classList.remove('hidden');
           modal('Pedido encerrado',status==='EXPIRADO'?'O tempo de reserva terminou. Você pode gerar um novo pedido.':'Este pedido não está mais disponível. Você pode tentar novamente.');
@@ -1012,7 +1014,42 @@
         clearIdempotency();
       }
 
-      function refresh(){
+      /*
+       * P0 PERFORMANCE:
+       * - polling frequente consulta SOMENTE o estado local;
+       * - reconciliação externa com Asaas é fallback espaçado;
+       * - webhook continua sendo o caminho principal de confirmação.
+       *
+       * Isso evita que cada aba de checkout aberta faça chamada ao Asaas
+       * e adquira ScriptLock a cada poucos segundos.
+       */
+      function refreshLocal(){
+        if(!state.order||!state.queryToken||state.busy)return;
+
+        var statusAntes=String(state.order.status||'').toUpperCase();
+
+        google.script.run
+          .withSuccessHandler(function(res){
+            if(!res||res.sucesso!==true||!res.pedido)return;
+
+            var statusDepois=String(res.pedido.status||'').toUpperCase();
+            state.order=res.pedido;
+
+            if(
+              statusDepois!==statusAntes ||
+              ['CONCLUIDO','EXPIRADO','CANCELADO','FALHA'].indexOf(statusDepois)>=0
+            ){
+              renderOrder(res);
+            }
+          })
+          .withFailureHandler(function(){})
+          .ctCheckoutPixPublicoStatusLocalPROD(
+            state.order.pedidoId,
+            state.queryToken
+          );
+      }
+
+      function reconcile(){
         if(!state.order||!state.queryToken||state.busy)return;
         state.busy=true;
         el.refreshButton.disabled=true;el.refreshButton.textContent='Atualizando...';
@@ -1029,28 +1066,72 @@
             el.refreshButton.disabled=false;el.refreshButton.textContent='Atualizar pagamento';
             el.cardRefreshButton.disabled=false;el.cardRefreshButton.textContent='Atualizar pagamento';
           })
-          .ctCheckoutPixPublicoReconciliarPROD(state.order.pedidoId,state.queryToken);
+          .ctCheckoutPixPublicoReconciliarPROD(
+            state.order.pedidoId,
+            state.queryToken
+          );
       }
 
       function startPolling(){
-        if(state.polling)return;
-        state.polling=setInterval(refresh,4000);
+        if(!state.polling){
+          state.polling=setInterval(refreshLocal,4000);
+        }
+        if(!state.reconcilePolling){
+          state.reconcilePolling=setInterval(reconcile,30000);
+        }
       }
-      function stopPolling(){if(state.polling){clearInterval(state.polling);state.polling=null;}}
+
+      function stopPolling(){
+        if(state.polling){
+          clearInterval(state.polling);
+          state.polling=null;
+        }
+        if(state.reconcilePolling){
+          clearInterval(state.reconcilePolling);
+          state.reconcilePolling=null;
+        }
+      }
+
+      function stopExpiry(){
+        if(state.expiryTimer){
+          clearInterval(state.expiryTimer);
+          state.expiryTimer=null;
+        }
+      }
 
       function startExpiry(){
-        if(state.expiryTimer)clearInterval(state.expiryTimer);
+        stopExpiry();
+        state.expiryReconciled=false;
+
         function tick(){
           var exp=state.order&&state.order.expiraEm?new Date(state.order.expiraEm):null;
-          if(!exp||isNaN(exp.getTime())){el.expiryText.textContent='';return;}
+          if(!exp||isNaN(exp.getTime())){
+            el.expiryText.textContent='';
+            el.cardExpiryText.textContent='';
+            return;
+          }
+
           var sec=Math.max(0,Math.floor((exp.getTime()-Date.now())/1000));
           var min=Math.floor(sec/60),s=sec%60;
-          var texto=sec>0?'Reserva válida por aproximadamente '+min+':'+String(s).padStart(2,'0'):'Reserva expirada. Atualizando...';
+          var texto=sec>0
+            ?'Reserva válida por aproximadamente '+min+':'+String(s).padStart(2,'0')
+            :'Reserva expirada. Atualizando...';
+
           el.expiryText.textContent=texto;
           el.cardExpiryText.textContent=texto;
-          if(sec<=0)refresh();
+
+          if(sec<=0&&!state.expiryReconciled){
+            state.expiryReconciled=true;
+            stopExpiry();
+            reconcile();
+          }
         }
-        tick();state.expiryTimer=setInterval(tick,1000);
+
+        tick();
+
+        if(!state.expiryReconciled){
+          state.expiryTimer=setInterval(tick,1000);
+        }
       }
 
       function copyPix(){
@@ -1075,22 +1156,22 @@
       el.couponRemove.onclick=function(){if(state.cupomDoLink)state.autoCupomDispensado=true;el.couponCode.value='';clearCoupon(false);updateSummary();};
       el.payButton.onclick=createPayment;
       el.copyButton.onclick=copyPix;
-      el.refreshButton.onclick=refresh;
-      el.cardRefreshButton.onclick=refresh;
+      el.refreshButton.onclick=reconcile;
+      el.cardRefreshButton.onclick=reconcile;
 
       window.addEventListener('focus',function(){
         if(state.order&&state.queryToken&&!state.busy){
-          refresh();
+          reconcile();
         }
       });
 
       document.addEventListener('visibilitychange',function(){
         if(document.visibilityState==='visible'&&state.order&&state.queryToken&&!state.busy){
-          refresh();
+          reconcile();
         }
       });
 
-      window.addEventListener('beforeunload',stopPolling);
+      window.addEventListener('beforeunload',function(){stopPolling();stopExpiry();});
 
       updatePaymentMethodUI();
       start();
