@@ -407,6 +407,8 @@ if (contaCariocaPayBaasPage) {
     'Configuração interna Sandbox',
     "r.jaPossuiConfiguracaoSandbox?'Preparada':'Ainda não preparada'",
     'Subconta Sandbox já provisionada. Consulte os status cadastrais do Asaas.',
+    'if(selectedId()){',
+    'checkReadiness();',
     'Asaas · Comercial',
     'Asaas · Conta bancária',
     'Asaas · Documentação',
