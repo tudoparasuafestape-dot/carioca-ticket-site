@@ -84,6 +84,18 @@ test.describe('Canario real first-party', () => {
       'data-share-url',
       'https://cariocaticket.com.br/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
     );
+
+    await compartilharHero.click();
+    await expect(page.locator('#shareMenu')).toBeVisible();
+
+    const copiarLink = page.locator('#copyLinkAction');
+    await expect(copiarLink).toBeVisible();
+    await expect(copiarLink).toHaveAttribute(
+      'data-share-url',
+      'https://cariocaticket.com.br/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
+    );
+
+    await expect(page.locator('#shareNativeAction')).toBeVisible();
   });
 
   test('Cupom canario consulta o motor real sem criar pedido ou cobranca', async ({ page }) => {
