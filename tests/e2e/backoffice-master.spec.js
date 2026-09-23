@@ -8,11 +8,12 @@ function fixture(filters={}) {
     sucesso:true,autorizado:true,
     admin:{usuarioId:'USR-ADMIN-E2E',nome:'Administrador Master',perfil:'ADMINISTRADOR'},
     periodo:{inicio:filters.inicio||'2026-09-16',fim:filters.fim||'2026-09-22',dias:7},
-    resumo:{acessos:1240,sessoes:730,pedidos:84,pedidosPagos:67,pedidosAguardando:8,pedidosFalha:9,vendas:72,ingressos:91,receitaBruta:6840,ticketMedio:95},
+    resumo:{acessos:1240,sessoes:730,pedidos:84,pedidosPagos:67,pedidosAguardando:8,pedidosFalha:9,pedidosCancelados:3,pedidosExpirados:4,pedidosFalhasTecnicas:2,vendas:72,ingressos:91,receitaBruta:6840,ticketMedio:95},
     funil:{home:1240,eventos:920,evento:780,checkout:260,pedidos:84,pagos:67,conversaoEventoPedido:10.77,conversaoPedidoPago:79.76},
     financeiro:{
       vendasPorForma:[{forma:'PIX',valor:4200,vendas:45},{forma:'CREDIT_CARD',valor:2640,vendas:27}],
-      online:{confirmado:67,pendente:8,estornado:2,chargeback:1,reembolso:1,totalConfirmado:6350,totalEstornado:180}
+      online:{confirmado:67,pendente:8,cancelado:3,falha:2,estornado:2,chargeback:1,reembolso:1,totalConfirmado:6350,totalEstornado:180,totalReembolsado:120},
+      promocoes:{ativo:true,campanhas:2,pedidos:6,usos:8,usosLiquidos:6,reembolsados:1,chargebacks:1,descontoConcedido:80,descontoRevertido:20,descontoLiquido:60,receitaPromocionalBruta:120,receitaPromocionalRevertida:30,receitaPromocionalLiquida:90}
     },
     analytics:{porPagina:{HOME:1240,EVENTOS:920,EVENTO:780,CHECKOUT:260},porOrigem:{DIRETO:600,WHATSAPP:420,INSTAGRAM:220},porDispositivo:{MOBILE:900,DESKTOP:280,TABLET:60}},
     plataforma:{produtoresTotal:8,produtoresAtivos:6,eventosTotal:19,eventosAtivos:7},
@@ -41,7 +42,7 @@ function fixture(filters={}) {
       ],
       produtoresMaisIngressos:[]
     },
-    geradoEm:'2026-09-22T23:50:00.000Z',versaoModulo:'1.0.0'
+    geradoEm:'2026-09-22T23:50:00.000Z',versaoModulo:'1.1.0'
   };
 }
 
@@ -88,6 +89,16 @@ test.describe('Backoffice Master BI',()=>{
     await expect(page.locator('#kSessions')).toHaveText('730');
     await expect(page.locator('#kRevenue')).toContainText('6.840,00');
     await expect(page.locator('#kTickets')).toHaveText('91');
+    await expect(page.locator('#kCancelled')).toHaveText('3');
+    await expect(page.locator('#kExpired')).toHaveText('4');
+    await expect(page.locator('#kDiscount')).toContainText('60,00');
+    await expect(page.locator('#pReimburse')).toHaveText('1');
+    await expect(page.locator('#pReimburseValue')).toContainText('120,00');
+    await expect(page.locator('#promoCampaigns')).toHaveText('2');
+    await expect(page.locator('#promoOrders')).toHaveText('6');
+    await expect(page.locator('#promoUses')).toHaveText('6');
+    await expect(page.locator('#promoNet')).toContainText('60,00');
+    await expect(page.locator('#promoRevenue')).toContainText('90,00');
     await expect(page.locator('#rankAccess')).toContainText('Roda de Samba Estilo Carioca');
     await expect(page.locator('#rankProducers')).toContainText('Tudo Para Sua Festa');
     await expect(page.locator('#paymentMethods')).toContainText('PIX');
