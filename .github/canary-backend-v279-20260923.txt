@@ -1,0 +1,1 @@
+Canario limpo pós-deploy backend Apps Script v279. Nenhuma alteração funcional no site.
