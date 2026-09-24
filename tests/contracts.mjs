@@ -1255,7 +1255,7 @@ if (produtorOnboardingPage) {
 const eventosGovernancaMasterPage = read('backoffice/eventos/index.html');
 if (eventosGovernancaMasterPage) {
   for (const required of [
-    '<title>Aprovação de Eventos | Backoffice Master</title>',
+    '<title>Aprovação de Eventos | Backoffice Master | Carioca Ticket</title>',
     'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
     'ctEventosGovernancaMasterContarPendentesPROD',
     'ctEventosGovernancaMasterListarPROD',
