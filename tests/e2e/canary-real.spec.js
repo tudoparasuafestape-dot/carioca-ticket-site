@@ -210,4 +210,51 @@ test.describe('Canario real first-party', () => {
     await expect(page.locator('#payButton')).toBeVisible();
     await expect(page.locator('#eventBack')).toHaveAttribute('href', /\/evento-v2\/\?evento=/);
   });
+
+  test('Evento legado real aponta para o Checkout legado', async ({ page }) => {
+    await page.goto('/evento/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+    await expectFirstParty(page, '/evento/');
+
+    await expect(page.getByRole('heading', { name: 'Roda de Samba Estilo Carioca' })).toBeVisible({
+      timeout: 25000
+    });
+
+    const comprar = page.getByRole('link', {
+      name: /Comprar ingresso|Garantir meu ingresso|Comprar agora/i
+    }).first();
+
+    await expect(comprar).toBeVisible();
+    await expect(comprar).toHaveAttribute('href', /\/checkout\/\?evento=/);
+  });
+
+  test('Checkout legado real carrega catálogo sem criar cobrança', async ({ page }) => {
+    const iniciou = Date.now();
+
+    await page.goto('/checkout/?evento=' + encodeURIComponent(EVENT_ID), {
+      waitUntil: 'domcontentloaded'
+    });
+    await expectFirstParty(page, '/checkout/');
+
+    await expect(page.getByRole('heading', { name: 'Roda de Samba Estilo Carioca' })).toBeVisible({
+      timeout: 25000
+    });
+
+    await expect(page.getByText('Seus dados')).toBeVisible();
+    await expect(page.getByText(/^PIX$/)).toBeVisible();
+    await expect(page.getByText('Cartão de crédito')).toBeVisible();
+
+    const typeSelect = page.locator('#typeSelect');
+    await expect.poll(
+      () => typeSelect.locator('option').count(),
+      { timeout: 30000 }
+    ).toBeGreaterThan(1);
+
+    expect(Date.now() - iniciou).toBeLessThan(30000);
+
+    // Não informa comprador e não inicia pagamento.
+    await expect(page.locator('#payButton')).toBeVisible();
+  });
+
 });
