@@ -124,3 +124,130 @@ test.describe('Backoffice Master BI',()=>{
     await expect(page.locator('#app')).toHaveClass(/hidden/);
   });
 });
+
+
+function financeRequestFixture(status='SOLICITADA') {
+  return {
+    solicitacaoId:'CCP-SOL-E2E',
+    produtorId:'PROD-E2E',
+    produtorNome:'Produtor Homologacao',
+    eventoId:EVENT_ID_MASTER,
+    evento:{id:EVENT_ID_MASTER,nome:'Evento Financeiro E2E'},
+    valor:500,
+    status,
+    solicitadoPorPerfil:'PRODUTOR_TITULAR',
+    criadoEm:'2026-09-24T20:00:00.000Z',
+    financeiro:{
+      vendasElegiveis:1000,
+      maximoAntecipavel:800,
+      reservaSeguranca:200,
+      taxaCtPercentual:3.5,
+      taxaCtValor:17.5,
+      valorLiquidoProdutor:482.5
+    }
+  };
+}
+
+const EVENT_ID_MASTER='EVT-FIN-E2E';
+
+async function financeMasterMock(page,state){
+  await page.route('https://script.google.com/**', async route => {
+    const params=new URLSearchParams(route.request().postData()||'');
+    const id=String(params.get('ctMinhaCariocaRequestId')||'');
+    const method=String(params.get('metodo')||'');
+    let args=[];try{args=JSON.parse(params.get('argsJson')||'[]')}catch(_){}
+    let ok=true,resultado=null,erro='';
+    try{
+      expect(String(args[0]||'')).toBe('CT-MASTER-E2E-TOKEN');
+      if(method==='ctContaCariocaPayMasterContarPendentesPROD'){
+        resultado={
+          sucesso:true,
+          autorizado:true,
+          contagem:{
+            solicitadas:state.status==='SOLICITADA'?1:0,
+            emAnalise:state.status==='EM_ANALISE'?1:0,
+            abertas:['SOLICITADA','EM_ANALISE'].includes(state.status)?1:0,
+            notificacoesNaoLidas:state.status==='SOLICITADA'?1:0
+          }
+        };
+      }else if(method==='ctContaCariocaPayMasterListarPROD'){
+        resultado={
+          sucesso:true,
+          autorizado:true,
+          itens:[{
+            solicitacaoId:'CCP-SOL-E2E',
+            produtorId:'PROD-E2E',
+            produtorNome:'Produtor Homologacao',
+            eventoId:EVENT_ID_MASTER,
+            evento:{id:EVENT_ID_MASTER,nome:'Evento Financeiro E2E'},
+            valor:500,
+            status:state.status,
+            criadoEm:'2026-09-24T20:00:00.000Z'
+          }]
+        };
+      }else if(method==='ctContaCariocaPayMasterDetalharPROD'){
+        expect(String(args[1]||'')).toBe('CCP-SOL-E2E');
+        resultado={sucesso:true,autorizado:true,solicitacao:financeRequestFixture(state.status)};
+      }else if(method==='ctContaCariocaPayMasterDecidirPROD'){
+        expect(String(args[1]||'')).toBe('CCP-SOL-E2E');
+        const action=String(args[2]||'');
+        state.actions.push(action);
+        if(action==='INICIAR_ANALISE')state.status='EM_ANALISE';
+        else if(action==='APROVAR')state.status='APROVADA_MASTER';
+        else if(action==='RECUSAR')state.status='RECUSADA';
+        else throw new Error('Ação Master inesperada: '+action);
+        resultado={
+          sucesso:true,
+          autorizado:true,
+          solicitacao:financeRequestFixture(state.status),
+          providerAcionado:false,
+          movimentouDinheiro:false,
+          transferenciaCriada:false,
+          mensagem:'Decisão registrada.'
+        };
+      }else{
+        throw new Error('Método financeiro Master não previsto: '+method);
+      }
+    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    const payload=JSON.stringify({ctMinhaCariocaPost:true,id,ok,resultado:ok?resultado:null,erro:ok?'':erro}).replace(/</g,'\\u003c');
+    await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");<\/script></body></html>'});
+  });
+}
+
+test.describe('Backoffice Master — antecipação do produtor',()=>{
+  test.skip(!BRANCH_MODE,'Fluxo financeiro Master roda somente na branch com backend simulado.');
+
+  test('solicitacao aparece no Master e aprova sem provider ou transferencia',async({page})=>{
+    const state={status:'SOLICITADA',actions:[]};
+    await financeMasterMock(page,state);
+    await seed(page);
+
+    await page.goto('/backoffice/carioca-pay/',{waitUntil:'domcontentloaded'});
+    await expect(page.getByRole('heading',{name:'Antecipações'})).toBeVisible();
+    await expect(page.locator('#kRequested')).toHaveText('1');
+    await expect(page.locator('#kNotifications')).toHaveText('1');
+    await expect(page.locator('#list')).toContainText('Produtor Homologacao');
+    await expect(page.locator('#list')).toContainText('R$ 500,00');
+    await expect(page.locator('body')).toContainText(/mínimo R\$ 500,00 elegível/i);
+    await expect(page.locator('body')).toContainText(/taxa 3,5%/i);
+    await expect(page.locator('body')).toContainText(/até 2 dias úteis/i);
+    await expect(page.locator('body')).toContainText(/D\+3 úteis sem taxa de antecipação/i);
+
+    await page.getByText('Produtor Homologacao').first().click();
+    await expect(page.locator('#detailStatus')).toHaveText('SOLICITADA');
+    await expect(page.locator('#detail')).toContainText('3,50%');
+    await expect(page.locator('#detail')).toContainText('não envia dinheiro');
+
+    await page.getByRole('button',{name:'Iniciar análise'}).click();
+    await page.locator('#decisionConfirm').click();
+    await expect.poll(()=>state.status).toBe('EM_ANALISE');
+    await expect(page.locator('#detailStatus')).toHaveText('EM ANÁLISE');
+
+    await page.getByRole('button',{name:'Aprovar'}).click();
+    await expect(page.locator('#decisionText')).toContainText('não executará antecipação nem transferência');
+    await page.locator('#decisionConfirm').click();
+    await expect.poll(()=>state.status).toBe('APROVADA_MASTER');
+    await expect(page.locator('#detailStatus')).toHaveText('APROVADA MASTER');
+    expect(state.actions).toEqual(['INICIAR_ANALISE','APROVAR']);
+  });
+});
