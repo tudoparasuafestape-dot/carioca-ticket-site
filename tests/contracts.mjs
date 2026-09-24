@@ -1242,6 +1242,25 @@ if (produtorOficialEventos) {
   }
 }
 
+const produtorMasterBoundary = read('produtor/index.html');
+if (produtorMasterBoundary) {
+  requireAll('produtor/index.html',produtorMasterBoundary,[
+    "var podeGerirPlataforma =",
+    "perfilGlobal ===",
+    "'ADMINISTRADOR';",
+    "el.partnerAdminLink.classList.toggle(",
+    "el.backofficeMasterLink.classList.toggle("
+  ]);
+  const masterStart=produtorMasterBoundary.indexOf('var podeGerirPlataforma =');
+  const masterEnd=produtorMasterBoundary.indexOf('var podeFinanceiro =',masterStart);
+  const masterBlock=masterStart>=0&&masterEnd>masterStart
+    ? produtorMasterBoundary.slice(masterStart,masterEnd)
+    : '';
+  if (masterBlock.includes('state.produtores.some')) {
+    fail('produtor/index.html','administrador local de produtor não pode ganhar visibilidade Master');
+  }
+}
+
 const produtorOnboardingPage = read('produtor-v2/index.html');
 if (produtorOnboardingPage) {
   for (const required of [
