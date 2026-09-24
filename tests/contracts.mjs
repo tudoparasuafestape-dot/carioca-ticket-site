@@ -32,6 +32,7 @@ const protectedFiles = [
   'parceiro/programa/index.html',
   'parceiro/admin/index.html',
   'backoffice/index.html',
+  'backoffice/eventos/index.html',
   'backoffice/carioca-pay/index.html',
   'backoffice/carioca-pay/baas-sandbox/index.html',
   'backoffice/carioca-pay/saldo-extrato/index.html',
@@ -1248,6 +1249,42 @@ if (produtorOnboardingPage) {
   if (restoreBlock.includes('r.autorizado !==\ntrue')) {
     fail('produtor-v2/index.html', 'restauracao de sessao sem produtor volta a bloquear onboarding');
   }
+}
+
+
+const eventosGovernancaMasterPage = read('backoffice/eventos/index.html');
+if (eventosGovernancaMasterPage) {
+  for (const required of [
+    '<title>Aprovação de Eventos | Backoffice Master | Carioca Ticket</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctEventosGovernancaMasterContarPendentesPROD',
+    'ctEventosGovernancaMasterListarPROD',
+    'ctEventosGovernancaMasterDetalharPROD',
+    'ctEventosGovernancaMasterDecidirPROD',
+    'INICIAR_ANALISE',
+    'AUTORIZAR_PUBLICACAO',
+    'BLOQUEAR',
+    'Autorizar publicação',
+    'não publica o evento',
+    'não cria venda, cobrança, ingresso ou transferência',
+    'publicacaoExecutada===true',
+    'criouVenda===true',
+    'criouCobranca===true',
+    'criouIngresso===true',
+    'movimentouDinheiro===true'
+  ]) {
+    if (!eventosGovernancaMasterPage.includes(required)) {
+      fail('backoffice/eventos/index.html', 'Governança Master de eventos incompleta: ' + required);
+    }
+  }
+}
+
+const backofficeEventosNav = read('backoffice/index.html');
+if (
+  backofficeEventosNav &&
+  !backofficeEventosNav.includes('href="/backoffice/eventos/"')
+) {
+  fail('backoffice/index.html', 'Backoffice Master sem fila de aprovação de eventos');
 }
 
 if (errors.length) {

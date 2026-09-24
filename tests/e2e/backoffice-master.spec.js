@@ -124,3 +124,164 @@ test.describe('Backoffice Master BI',()=>{
     await expect(page.locator('#app')).toHaveClass(/hidden/);
   });
 });
+
+
+function eventGovernanceFixture(status='PENDENTE_ANALISE') {
+  return {
+    eventoId:'EVT-GOV-E2E',
+    produtorId:'PROD-E2E',
+    status,
+    publicacaoAutorizada:status==='APROVADO',
+    origemComercial:'PRODUTOR',
+    possuiReferenciaComercial:false,
+    atualizadoEm:'2026-09-24T20:30:00.000Z',
+    evento:{
+      id:'EVT-GOV-E2E',
+      nome:'Evento Teste Governança',
+      data:'25/10/2026',
+      horario:'15:00 às 22:00',
+      local:'Local Teste',
+      cidade:'Jaboatão dos Guararapes',
+      uf:'PE',
+      capacidade:300,
+      status:'RASCUNHO'
+    }
+  };
+}
+
+async function eventGovernanceMock(page,state){
+  await page.route('https://script.google.com/**', async route => {
+    const params=new URLSearchParams(route.request().postData()||'');
+    const id=String(params.get('ctMinhaCariocaRequestId')||'');
+    const method=String(params.get('metodo')||'');
+    let args=[];try{args=JSON.parse(params.get('argsJson')||'[]')}catch(_){}
+    let ok=true,resultado=null,erro='';
+    try{
+      expect(String(args[0]||'')).toBe('CT-MASTER-E2E-TOKEN');
+      if(method==='ctEventosGovernancaMasterContarPendentesPROD'){
+        resultado={
+          sucesso:true,autorizado:true,
+          contagem:{
+            pendenteAnalise:state.status==='PENDENTE_ANALISE'?1:0,
+            emAnalise:state.status==='EM_ANALISE'?1:0,
+            aprovados:state.status==='APROVADO'?1:0,
+            bloqueados:state.status==='BLOQUEADO'?1:0,
+            abertos:['PENDENTE_ANALISE','EM_ANALISE'].includes(state.status)?1:0
+          }
+        };
+      }else if(method==='ctEventosGovernancaMasterListarPROD'){
+        resultado={sucesso:true,autorizado:true,itens:[eventGovernanceFixture(state.status)],total:1};
+      }else if(method==='ctEventosGovernancaMasterDetalharPROD'){
+        expect(String(args[1]||'')).toBe('EVT-GOV-E2E');
+        resultado={
+          sucesso:true,autorizado:true,
+          governanca:eventGovernanceFixture(state.status),
+          validacaoPublicacao:{
+            sucesso:state.status==='APROVADO',
+            pendencias:state.status==='APROVADO'?[]:['A autorização de risco/financeiro para publicação ainda está pendente.']
+          }
+        };
+      }else if(method==='ctEventosGovernancaMasterDecidirPROD'){
+        expect(String(args[1]||'')).toBe('EVT-GOV-E2E');
+        const action=String(args[2]||'');
+        const reason=String(args[3]||'');
+        state.actions.push({action,reason});
+        if(action==='INICIAR_ANALISE'){
+          expect(state.status).toBe('PENDENTE_ANALISE');
+          state.status='EM_ANALISE';
+        }else if(action==='AUTORIZAR_PUBLICACAO'){
+          expect(state.status).toBe('EM_ANALISE');
+          state.status='APROVADO';
+        }else if(action==='BLOQUEAR'){
+          expect(state.status).toBe('EM_ANALISE');
+          expect(reason.length).toBeGreaterThanOrEqual(3);
+          state.status='BLOQUEADO';
+        }else{
+          throw new Error('Ação de governança inesperada: '+action);
+        }
+        resultado={
+          sucesso:true,autorizado:true,
+          governanca:eventGovernanceFixture(state.status),
+          publicacaoExecutada:false,
+          criouVenda:false,
+          criouCobranca:false,
+          criouIngresso:false,
+          movimentouDinheiro:false,
+          mensagem:action==='AUTORIZAR_PUBLICACAO'
+            ?'Evento autorizado pelo Master. O produtor ainda precisa publicar as vendas.'
+            :action==='BLOQUEAR'
+              ?'Publicação bloqueada pelo Master.'
+              :'Evento colocado em análise.'
+        };
+      }else{
+        throw new Error('Método de governança não previsto: '+method);
+      }
+    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    const payload=JSON.stringify({ctMinhaCariocaPost:true,id,ok,resultado:ok?resultado:null,erro:ok?'':erro}).replace(/</g,'\\u003c');
+    await route.fulfill({
+      status:200,
+      contentType:'text/html; charset=utf-8',
+      body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");<\/script></body></html>'
+    });
+  });
+}
+
+test.describe('Backoffice Master — governança de eventos',()=>{
+  test.skip(!BRANCH_MODE,'Governança de eventos roda somente na branch com backend simulado.');
+
+  test('evento RASCUNHO passa por análise e autorização sem publicar vendas',async({page})=>{
+    const state={status:'PENDENTE_ANALISE',actions:[]};
+    await eventGovernanceMock(page,state);
+    await seed(page);
+
+    await page.goto('/backoffice/eventos/',{waitUntil:'domcontentloaded'});
+    await expect(page.getByRole('heading',{name:'Aprovação de Eventos'})).toBeVisible();
+    await expect(page.locator('#kPending')).toHaveText('1');
+    await expect(page.locator('#list')).toContainText('Evento Teste Governança');
+    await expect(page.locator('#list')).toContainText('PENDENTE ANÁLISE');
+
+    await page.getByText('Evento Teste Governança').first().click();
+    await expect(page.locator('#detailStatus')).toHaveText('PENDENTE ANÁLISE');
+    await expect(page.locator('#detail')).toContainText('Publicação autorizada');
+    await expect(page.locator('#detail')).toContainText('NÃO');
+    await expect(page.locator('#detail')).toContainText('não cria venda, cobrança, ingresso ou transferência');
+
+    await page.getByRole('button',{name:'Iniciar análise'}).click();
+    await page.locator('#decisionConfirm').click();
+    await expect.poll(()=>state.status).toBe('EM_ANALISE');
+    await expect(page.locator('#detailStatus')).toHaveText('EM ANÁLISE');
+
+    await page.getByRole('button',{name:'Autorizar publicação'}).click();
+    await expect(page.locator('#decisionText')).toContainText('não publica');
+    await page.locator('#decisionConfirm').click();
+    await expect.poll(()=>state.status).toBe('APROVADO');
+    await expect(page.locator('#detailStatus')).toHaveText('APROVADO');
+    await expect(page.locator('#detail')).toContainText('SIM');
+    await expect(page.locator('#detail')).toContainText('O produtor ainda precisa publicar as vendas');
+    expect(state.actions.map(x=>x.action)).toEqual(['INICIAR_ANALISE','AUTORIZAR_PUBLICACAO']);
+  });
+
+  test('bloqueio exige motivo e continua sem publicar',async({page})=>{
+    const state={status:'PENDENTE_ANALISE',actions:[]};
+    await eventGovernanceMock(page,state);
+    await seed(page);
+
+    await page.goto('/backoffice/eventos/',{waitUntil:'domcontentloaded'});
+    await page.getByText('Evento Teste Governança').first().click();
+    await page.getByRole('button',{name:'Iniciar análise'}).click();
+    await page.locator('#decisionConfirm').click();
+    await expect.poll(()=>state.status).toBe('EM_ANALISE');
+
+    await page.getByRole('button',{name:'Bloquear'}).click();
+    await page.locator('#decisionConfirm').click();
+    await expect(page.locator('#toast')).toContainText('Informe o motivo do bloqueio');
+    expect(state.status).toBe('EM_ANALISE');
+
+    await page.locator('#reason').fill('Documentação financeira pendente');
+    await page.locator('#decisionConfirm').click();
+    await expect.poll(()=>state.status).toBe('BLOQUEADO');
+    await expect(page.locator('#detailStatus')).toHaveText('BLOQUEADO');
+    await expect(page.locator('#detail')).toContainText('NÃO');
+    expect(state.actions.map(x=>x.action)).toEqual(['INICIAR_ANALISE','BLOQUEAR']);
+  });
+});
