@@ -1190,6 +1190,53 @@ if (minhaCariocaContaRecovery) {
   }
 }
 
+
+const produtorOnboardingPage = read('produtor-v2/index.html');
+if (produtorOnboardingPage) {
+  for (const required of [
+    'id="onboardingPanel"',
+    'id="onboardingForm"',
+    'id="onboardingNomeFantasia"',
+    'id="onboardingCpfCnpj"',
+    'id="onboardingWhatsapp"',
+    'id="onboardingCidade"',
+    'id="onboardingUf"',
+    'id="eventsManagementLink"',
+    'href="https://cariocaticket.com.br/eventos-v2/"',
+    'function carregarOnboardingProdutor(){',
+    'function executarOnboardingProdutor(',
+    '.ctProdutorOnboardingConsultarPROD(',
+    '.ctProdutorOnboardingEnviarPROD(',
+    "state.produtores.length >",
+    "el.onboardingPanel",
+    "el.selectorsPanel"
+  ]) {
+    if (!produtorOnboardingPage.includes(required)) {
+      fail('produtor-v2/index.html', 'onboarding/autonomia do produtor incompleto: ' + required);
+    }
+  }
+
+  const loginStart = produtorOnboardingPage.indexOf('async function executarLogin(');
+  const loginEnd = produtorOnboardingPage.indexOf('function inicializarFirebaseSilencioso()', loginStart);
+  const loginBlock = loginStart >= 0 && loginEnd > loginStart
+    ? produtorOnboardingPage.slice(loginStart, loginEnd)
+    : '';
+
+  if (loginBlock.includes('resposta.autorizado !==\ntrue')) {
+    fail('produtor-v2/index.html', 'conta autenticada sem produtor volta a ser expulsa antes do onboarding');
+  }
+
+  const restoreStart = produtorOnboardingPage.indexOf('function tentarRestaurarSessao(){');
+  const restoreEnd = produtorOnboardingPage.indexOf('function abrirPortal(){', restoreStart);
+  const restoreBlock = restoreStart >= 0 && restoreEnd > restoreStart
+    ? produtorOnboardingPage.slice(restoreStart, restoreEnd)
+    : '';
+
+  if (restoreBlock.includes('r.autorizado !==\ntrue')) {
+    fail('produtor-v2/index.html', 'restauracao de sessao sem produtor volta a bloquear onboarding');
+  }
+}
+
 if (errors.length) {
   console.error('\n❌ CONTRATOS DE REGRESSAO FALHARAM\n');
   for (const e of errors) {
