@@ -391,6 +391,7 @@
         queryToken:'',
         polling:null,
         ticketReadyTimer:null,
+        ticketReadyAttempts:0,
         reconcilePolling:null,
         reconcileStartedAt:0,
         successRendered:false,
@@ -887,10 +888,17 @@
           clearTimeout(state.ticketReadyTimer);
           state.ticketReadyTimer=null;
         }
+        state.ticketReadyAttempts=0;
       }
 
       function scheduleTicketReadyRefresh(){
-        if(state.successRendered||state.ticketReadyTimer)return;
+        if(
+          state.successRendered||
+          state.ticketReadyTimer||
+          state.ticketReadyAttempts>=8
+        )return;
+
+        state.ticketReadyAttempts+=1;
         state.ticketReadyTimer=setTimeout(function(){
           state.ticketReadyTimer=null;
           refreshLocal();
