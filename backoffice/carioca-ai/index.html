@@ -149,7 +149,8 @@ function render(r){
   var s=r.resumo||{},g=r.governanca||{},sec=r.seguranca||{};
   $('meta').textContent=(r.admin&&r.admin.nome?r.admin.nome+' · ':'')+(r.admin&&r.admin.perfil||'ADMINISTRADOR')+' · Atualizado '+dateTime(r.geradoEm);
   $('kOpen').textContent=num(s.abertas);$('kExec').textContent=num(s.emExecucao);$('kApproval').textContent=num(s.approvalsPendentes);$('kRisk').textContent=num(s.riscoAltoAbertas);$('kFail').textContent=num(s.falhas);$('kDone').textContent=num(s.concluidas);
-  $('safety').textContent='Governança '+(g.instalada?'instalada':'ainda não instalada em produção')+' · Master A5 '+(g.masterConfigurado?'configurado':'não configurado')+' · Cognitive Gateway '+(sec.cognitiveGatewayPreparado?'preparado':'indisponível')+' · Provider '+esc(sec.cognitiveProvider||'NONE')+' · Rede '+(sec.cognitiveNetworkEnabled?'ON':'OFF')+' · Execução externa OFF · Financeiro OFF · Deploy autônomo OFF';
+  var ms=sec.mistral||null;
+  $('safety').textContent='Governança '+(g.instalada?'instalada':'ainda não instalada em produção')+' · Master A5 '+(g.masterConfigurado?'configurado':'não configurado')+' · Cognitive Gateway '+(sec.cognitiveGatewayPreparado?'preparado':'indisponível')+' · Provider '+esc(sec.cognitiveProvider||'NONE')+(ms?' / '+esc(ms.model||''):'')+' · Chave '+(ms&&ms.segredoConfigurado?'configurada':'não configurada')+' · Shadow '+(ms&&ms.shadowEnabled?'ON':'OFF')+' · Rede '+(sec.cognitiveNetworkEnabled?'ON':'OFF')+' · Execução externa OFF · Financeiro OFF · Deploy autônomo OFF';
   renderAgents(r.agentes);renderDecisions(r.decisoesPendentes);renderWorkOrders(r.workOrdersRecentes);
 }
 
