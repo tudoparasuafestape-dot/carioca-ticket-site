@@ -190,7 +190,7 @@ function renderDetail(){
       fin('Líquido produtor',money(f.valorLiquidoProdutor))+
       fin('Custo provider','P4 / sandbox')+
     '</div>'+
-    '<div class="note">Aprovar nesta tela <b>não envia dinheiro</b>. A integração com provider/transferência permanece bloqueada até a P4 BaaS.</div>'+
+    '<div class="note">Aprovar nesta tela <b>não envia dinheiro</b>. Após aprovação, a política comercial prevê processamento do envio em até 2 dias úteis; a execução financeira permanece uma etapa separada e controlada.</div>'+
     actions(s.status);
   $('detail').innerHTML=html;
   $('detail').querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){openDecision(this.dataset.action)})});
