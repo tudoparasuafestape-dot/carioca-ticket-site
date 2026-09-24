@@ -43,6 +43,7 @@ a{color:inherit}.hidden{display:none!important}.shell{width:min(1440px,calc(100%
       <a class="btn" href="/parceiro/admin/">Parceiros</a>
       <a class="btn" href="/cupons/admin/">Cupons</a>
       <a class="btn" href="/produtor/solicitacoes/">Produtores</a>
+      <a id="financialRequestsLink" class="btn gold" href="/backoffice/carioca-pay/">Solicitações financeiras <span id="financialRequestsBadge"></span></a>
     </nav>
   </header>
 
@@ -194,6 +195,21 @@ function renderTrend(list){
   var max=Math.max.apply(null,list.map(function(x){return Number(x.acessos||0)}).concat([1]));
   list.forEach(function(x){var w=document.createElement('div');w.className='bar-wrap';var b=document.createElement('div');b.className='bar';b.style.height=Math.max(2,Math.round(Number(x.acessos||0)/max*150))+'px';b.title=dateLabel(x.dia)+' · '+num(x.acessos)+' acessos';var s=document.createElement('small');s.textContent=x.dia.slice(5).split('-').reverse().join('/');w.append(b,s);box.appendChild(w)})
 }
+async function loadFinancialRequestsBadge(){
+  var badge=$('financialRequestsBadge');
+  if(!badge||!state.session||!state.session.token)return;
+  try{
+    var r=await rpc('ctContaCariocaPayMasterContarPendentesPROD',[String(state.session.token)]);
+    var c=r&&r.contagem?r.contagem:{};
+    var n=Number(c.abertas||0);
+    badge.textContent=n>0?' · '+n:'';
+    $('financialRequestsLink').title=n>0
+      ? n+' solicitação(ões) de antecipação em aberto'
+      : 'Nenhuma solicitação de antecipação em aberto';
+  }catch(_){
+    badge.textContent='';
+  }
+}
 function render(r){
   state.data=r;
   var x=r.resumo||{},f=r.funil||{},p=r.plataforma||{},fin=r.financeiro||{},on=fin.online||{},promo=fin.promocoes||{},rank=r.rankings||{},an=r.analytics||{};
@@ -211,6 +227,7 @@ function render(r){
   $('rankProducers').innerHTML=producerTable(rank.produtoresMaiorReceita);
   $('paymentMethods').innerHTML=methodTable(fin.vendasPorForma);
   $('sources').innerHTML=kvList(an.porOrigem);$('devices').innerHTML=kvList(an.porDispositivo);
+  loadFinancialRequestsBadge();
 }
 async function load(filters){
   if(state.busy)return;state.busy=true;$('refresh').disabled=true;$('applyCustom').disabled=true;
