@@ -853,7 +853,11 @@ if (parceiroPrograma) {
     '<span id="heroCommission">1</span>%',
     '<span id="serviceFee">10</span>%',
     '<span id="anticipationMax">80</span>%',
-    '<span id="anticipationFee">2,5</span>%',
+    '<span id="anticipationFee">3,5</span>%',
+    'id="anticipationMinimum"',
+    'R$ 500,00',
+    'id="anticipationDeadline"',
+    'id="normalSettlement"',
     'for(var tentativa=0;tentativa<3;tentativa++)',
     "CT_PARCEIRO_CADASTRO_RASCUNHO_V1",
     "sessionStorage.setItem(DRAFT_KEY",
@@ -873,7 +877,18 @@ if (parceiroPrograma) {
 
 const parceiroRegras = read('parceiro/regras-comerciais/index.html');
 if (parceiroRegras) {
-  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','2,5%']) {
+  for (const required of [
+    'Regras comerciais do Programa Parceiro CT',
+    '10%',
+    '1%',
+    'R$ 500,00',
+    '80%',
+    '20%',
+    '3,5%',
+    '2 dias úteis',
+    '3 dias úteis',
+    'sem taxa de antecipação'
+  ]) {
     if (!parceiroRegras.includes(required)) {
       fail('parceiro/regras-comerciais/index.html', 'documento comercial incompleto: ' + required);
     }
