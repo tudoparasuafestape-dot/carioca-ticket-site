@@ -12,7 +12,11 @@ function configFixture() {
       adesao: 0,
       mensalidade: 0,
       antecipacaoMaxPercentual: 80,
-      antecipacaoTaxaMinPercentual: 2.5,
+      antecipacaoTaxaMinPercentual: 3.5,
+      antecipacaoMinimoElegivel: 500,
+      antecipacaoPrazoDiasUteis: 2,
+      repasseNormalDiasUteis: 3,
+      repasseNormalSemTaxa: true,
       antecipacaoAviso: 'Sujeita à análise de risco, disponibilidade de saldo, prazo, perfil do produtor/evento e condições financeiras vigentes.',
       pagamentoAutomaticoComissao: false
     },
@@ -173,7 +177,11 @@ test.describe('Programa Parceiro CT', () => {
     await expect(page.locator('#heroCommission')).toHaveText('1');
     await expect(page.locator('#serviceFee')).toHaveText('10');
     await expect(page.locator('#anticipationMax')).toHaveText('80');
-    await expect(page.locator('#anticipationFee')).toHaveText('2,5');
+    await expect(page.locator('#anticipationFee')).toHaveText('3,5');
+    await expect(page.locator('#anticipationMinimum')).toContainText('500,00');
+    await expect(page.locator('#anticipationDeadline')).toHaveText('2');
+    await expect(page.locator('#normalSettlement')).toContainText('D+3');
+    await expect(page.locator('#normalSettlement')).toContainText('sem taxa');
     await expect(page.getByRole('link', { name:/Já sou parceiro/i }).first()).toHaveAttribute('href','/parceiro/');
     await expect(page.locator('#materialsGrid')).toContainText('Tabela Comercial para Produtores');
 
