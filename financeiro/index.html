@@ -68,7 +68,7 @@
     </div>
     <div class="box">
       <h3>Como funciona</h3>
-      <p id="withdrawHelp" class="muted">A Carioca Ticket valida o saldo disponível da conta Asaas antes de registrar o pedido. O valor fica reservado no controle interno até processamento ou cancelamento.</p>
+      <p id="withdrawHelp" class="muted">Solicitação de saque temporariamente indisponível até a integração com uma fila própria do Backoffice Master. Nenhum pedido de saque é registrado por esta tela.</p>
       <p id="permissionNote" class="muted"></p>
     </div>
   </div>
@@ -219,23 +219,12 @@ async function requestAnticipation(){
 }
 
 function updateWithdrawButton(){
-  var canMove=state.panel&&state.panel.podeMovimentar===true;
-  var value=Number(document.getElementById('withdrawValue').value||0);
-  var confirm=String(document.getElementById('withdrawConfirm').value||'').trim().toUpperCase();
-  document.getElementById('withdrawButton').disabled=!(canMove&&value>=1&&confirm==='SOLICITAR SAQUE'&&!state.busy);
+  document.getElementById('withdrawButton').disabled=true;
 }
 
 async function requestWithdraw(){
-  if(document.getElementById('withdrawButton').disabled)return;
-  state.busy=true;document.getElementById('withdrawButton').disabled=true;document.getElementById('withdrawButton').textContent='Registrando…';
-  try{
-    var value=Number(document.getElementById('withdrawValue').value||0);
-    var confirm=String(document.getElementById('withdrawConfirm').value||'');
-    var r=await rpc('ctFinanceiroProdutorSolicitarSaquePROD',[String(state.session.token),state.eventId,value,confirm]);
-    if(!r||r.sucesso!==true)throw new Error('A solicitação não foi registrada.');
-    document.getElementById('withdrawValue').value='';document.getElementById('withdrawConfirm').value='';toast(r.mensagem||'Solicitação registrada.');state.busy=false;await load();
-  }catch(e){toast(e&&e.message?e.message:String(e))}
-  finally{state.busy=false;document.getElementById('withdrawButton').textContent='Registrar solicitação';updateWithdrawButton()}
+  toast('Solicitação de saque indisponível até a integração com o Backoffice Master.');
+  updateWithdrawButton();
 }
 
 async function cancelWithdraw(id){
