@@ -96,6 +96,21 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
 }
 
 
+// P0 SEGURANÇA/UX — o checkout nunca pode abrir o ingresso em script.google.com.
+// Mesmo que o backend devolva um link técnico legado, o navegador converte
+// código + assinatura para a rota oficial da Carioca Ticket.
+for(const path of ['checkout/index.html','checkout-v2/index.html']){
+  const checkout=read(path);
+  requireAll(path,checkout,[
+    'function officialTicketLink(ticket){',
+    "'https://cariocaticket.com.br/ingresso/?codigo='",
+    'a.href=officialTicketLink(t)'
+  ]);
+  if(checkout.includes("a.href=t.link||'#'")){
+    failures.push(path+': link técnico do backend voltou a ser aberto diretamente');
+  }
+}
+
 // REGRA DE PRODUTO — mídia principal do evento é sempre imagem estática.
 // A página pública não pode carregar player, iframe, autoplay ou endpoint
 // de vídeo na capa principal.

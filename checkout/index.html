@@ -939,6 +939,35 @@
         startPolling();
       }
 
+      function officialTicketLink(ticket){
+        var t=ticket||{};
+        var raw=String(t.link||'').trim();
+        var codigo=String(t.codigo||'').trim().toUpperCase();
+        var sig='';
+
+        try{
+          if(raw){
+            var parsed=new URL(raw,window.location.origin);
+            codigo=String(parsed.searchParams.get('codigo')||codigo).trim().toUpperCase();
+            sig=String(parsed.searchParams.get('sig')||'').trim();
+          }
+        }catch(_){}
+
+        if(codigo&&sig){
+          return 'https://cariocaticket.com.br/ingresso/?codigo='+
+            encodeURIComponent(codigo)+
+            '&sig='+
+            encodeURIComponent(sig)+
+            '&v=20260923-2258';
+        }
+
+        if(/^https:\/\/cariocaticket\.com\.br\/ingresso\//i.test(raw)){
+          return raw;
+        }
+
+        return '#';
+      }
+
       function renderSuccess(ingressos){
         el.pixPanel.classList.add('hidden');
         el.cardPanel.classList.add('hidden');
@@ -957,7 +986,7 @@
 
         (ingressos||[]).forEach(function(t,i){
           var a=document.createElement('a');a.className='ticket-link';a.target='_blank';a.rel='noopener';
-          a.href=t.link||'#';a.textContent='🎫 Abrir ingresso '+(i+1)+(t.nome?' — '+t.nome:'');
+          a.href=officialTicketLink(t);a.textContent='🎫 Abrir ingresso '+(i+1)+(t.nome?' — '+t.nome:'');
           el.ticketLinks.appendChild(a);
         });
 
