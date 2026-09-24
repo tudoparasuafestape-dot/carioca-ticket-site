@@ -300,9 +300,9 @@ if (contaCariocaPayPage) {
     'D+3 úteis',
     'movimentação real desabilitada',
     'ctContaCariocaPayPortalSolicitarAntecipacaoPROD',
-    'disabled><b>Registrar patrocínio',
-    'disabled><b>Planejar pagamento',
-    'disabled><b>Adicionar saldo'
+    'ctContaCariocaPayPortalSolicitarSaquePROD',
+    'Solicitar saque',
+    'Mínimo de R$ 500,00'
   ]) {
     if (!contaCariocaPayPage.includes(required)) {
       fail('produtor/financeiro/index.html', 'Conta Carioca Pay incompleta: ' + required);
@@ -352,7 +352,7 @@ if (contaCariocaPayMasterPage) {
     'providerAcionado===true',
     'movimentouDinheiro===true',
     'transferenciaCriada===true',
-    'P4 / sandbox'
+    'Integração bloqueada'
   ]) {
     if (!contaCariocaPayMasterPage.includes(required)) {
       fail('backoffice/carioca-pay/index.html', 'Backoffice Master Carioca Pay incompleto: ' + required);
