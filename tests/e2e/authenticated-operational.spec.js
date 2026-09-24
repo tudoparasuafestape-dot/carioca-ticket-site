@@ -618,6 +618,7 @@ function contaCariocaPayFixture(aguardandoMaster=0) {
     antecipacao: {
       vendasElegiveis: 1000,
       maximoAntecipavel: 800,
+      saldoMinimoSolicitacao: 500,
       reservaSeguranca: 200,
       antecipacoesAbertas: 0,
       disponivelSolicitar: 800,
@@ -1468,6 +1469,7 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#policyReserve')).toHaveText('20%');
     await expect(page.locator('#policyFee')).toContainText('3,5%');
     await expect(page.locator('body')).toContainText(/R\$ 500,00/);
+    await expect(page.locator('body')).toContainText(/efetivamente disponíveis para antecipação/i);
     await expect(page.locator('body')).toContainText(/até 2 dias úteis/i);
     await expect(page.locator('body')).toContainText(/D\+3 úteis/i);
     await expect(page.locator('body')).toContainText(/sem taxa de antecipação/i);
