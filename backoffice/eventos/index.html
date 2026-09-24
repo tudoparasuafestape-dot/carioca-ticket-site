@@ -159,7 +159,7 @@ function openDecision(action){
  $('decisionText').textContent=action==='AUTORIZAR_PUBLICACAO'?'A autorização apenas libera o produtor para publicar depois. Nenhuma venda será aberta agora.':action==='BLOQUEAR'?'Informe o motivo do bloqueio.':'O evento passará para Em análise.';
  $('reason').value='';$('reasonBox').classList.toggle('hidden',action!=='BLOQUEAR');$('decisionBackdrop').classList.remove('hidden');$('decisionBackdrop').setAttribute('aria-hidden','false')
 }
-function closeDecision(){if(state.busy)return;$('decisionBackdrop').classList.add('hidden');$('decisionBackdrop').setAttribute('aria-hidden','true');state.action=''}
+function closeDecision(){$('decisionBackdrop').classList.add('hidden');$('decisionBackdrop').setAttribute('aria-hidden','true');state.action=''}
 async function confirmDecision(){
  if(!state.selected||!state.action||state.busy)return;
  var reason=$('reason').value.trim();if(state.action==='BLOQUEAR'&&reason.length<3){toast('Informe o motivo do bloqueio.');return}
@@ -168,7 +168,13 @@ async function confirmDecision(){
   var r=await rpc('ctEventosGovernancaMasterDecidirPROD',[state.session.token,state.selected.eventoId,state.action,reason]);
   if(!r||r.sucesso!==true)throw new Error('A decisão não foi concluída.');
   if(r.publicacaoExecutada===true||r.criouVenda===true||r.criouCobranca===true||r.criouIngresso===true||r.movimentouDinheiro===true)throw new Error('Gate de segurança violado.');
-  state.selected=r.governanca||state.selected;closeDecision();toast(r.mensagem||'Decisão registrada.');await load();await detail(state.selected.eventoId)
+  state.selected=r.governanca||state.selected;
+  var eventoAtual=state.selected.eventoId;
+  closeDecision();
+  state.busy=false;
+  await load();
+  await detail(eventoAtual);
+  toast(r.mensagem||'Decisão registrada.')
  }catch(e){toast(e&&e.message?e.message:String(e))}finally{state.busy=false;$('decisionConfirm').disabled=false}
 }
 $('refresh').addEventListener('click',load);$('statusFilter').addEventListener('change',load);$('search').addEventListener('keydown',function(e){if(e.key==='Enter')load()});$('decisionConfirm').addEventListener('click',confirmDecision);$('decisionCancel').addEventListener('click',closeDecision);$('decisionBackdrop').addEventListener('click',function(e){if(e.target===this)closeDecision()});
