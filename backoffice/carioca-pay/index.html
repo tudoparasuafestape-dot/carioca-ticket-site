@@ -116,7 +116,7 @@ window.addEventListener('message',function(ev){if(ev.origin!=='https://script.go
 
 function toast(msg){$('toast').textContent=String(msg||'');$('toast').classList.remove('hidden');setTimeout(function(){$('toast').classList.add('hidden')},4000)}
 function message(msg){$('message').textContent=String(msg||'');$('message').className='message'+(msg?' show error':'')}
-function human(s){return String(s||'').replace('EM_ANALISE','EM ANÁLISE').replace('APROVADA_MASTER','APROVADA MASTER')}
+function human(s){return String(s||'').replace('EM_ANALISE','EM ANÁLISE').replace('APROVADA_MASTER','APROVADA MASTER').replace('ANTECIPACAO','ANTECIPAÇÃO').replace('SAQUE','SAQUE')}
 function date(v){if(!v)return'—';var d=new Date(v);return isNaN(d.getTime())?String(v):d.toLocaleString('pt-BR')}
 function statusClass(s){return's-'+String(s||'').trim().toUpperCase()}
 
@@ -153,7 +153,7 @@ function renderList(){
   $('list').innerHTML=state.list.map(function(x){
     return '<button class="item'+(state.selected&&state.selected.solicitacaoId===x.solicitacaoId?' on':'')+'" type="button" data-id="'+esc(x.solicitacaoId)+'">'+
       '<div class="row"><b>'+esc(x.produtorNome||x.produtorId)+'</b><span class="status '+statusClass(x.status)+'">'+esc(human(x.status))+'</span></div>'+
-      '<small>'+esc(x.evento&&x.evento.nome||x.eventoId)+' · '+money(x.valor)+'</small>'+
+      '<small>'+esc(human(x.tipo))+' · '+esc(x.evento&&x.evento.nome||x.eventoId)+' · '+money(x.valor)+'</small>'+
       '<small>'+date(x.criadoEm)+'</small></button>'
   }).join('');
   $('list').querySelectorAll('[data-id]').forEach(function(b){b.addEventListener('click',function(){detail(this.dataset.id)})});
@@ -174,23 +174,33 @@ function renderDetail(){
   $('detailStatus').textContent=human(s.status);
   $('detailStatus').className='badge status '+statusClass(s.status);
   var f=s.financeiro||{};
+  var tipo=String(s.tipo||'').toUpperCase();
+  var financeiroHtml=tipo==='SAQUE'
+    ? '<div class="finance">'+
+        fin('Saldo disponível no pedido',money(f.saldoDisponivelNoMomento))+
+        fin('Mínimo para saque',money(f.saldoMinimoSolicitacao||500))+
+        fin('Valor solicitado',money(s.valor))+
+        fin('Transferência automática','Não')+
+      '</div>'
+    : '<div class="finance">'+
+        fin('Vendas elegíveis',money(f.vendasElegiveis))+
+        fin('Máximo antecipável',money(f.maximoAntecipavel))+
+        fin('Reserva',money(f.reservaSeguranca))+
+        fin('Taxa CT',money(f.taxaCtValor)+' · '+Number(f.taxaCtPercentual||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'%')+
+        fin('Líquido produtor',money(f.valorLiquidoProdutor))+
+        fin('Custo provider','Integração bloqueada')+
+      '</div>';
   var html='<h2>'+esc(s.produtorNome||s.produtorId)+'</h2>'+
-    '<div class="sub">'+esc(s.evento&&s.evento.nome||s.eventoId)+' · '+date(s.criadoEm)+'</div>'+
+    '<div class="sub">'+esc(human(tipo))+' · '+esc(s.evento&&s.evento.nome||s.eventoId)+' · '+date(s.criadoEm)+'</div>'+
     '<div class="kvgrid">'+
       kv('Solicitação',s.solicitacaoId)+
+      kv('Tipo',human(tipo))+
       kv('Valor solicitado',money(s.valor))+
       kv('Status',human(s.status))+
       kv('Perfil solicitante',s.solicitadoPorPerfil||'—')+
     '</div>'+
-    '<div class="finance">'+
-      fin('Vendas elegíveis',money(f.vendasElegiveis))+
-      fin('Máximo antecipável',money(f.maximoAntecipavel))+
-      fin('Reserva',money(f.reservaSeguranca))+
-      fin('Taxa CT',money(f.taxaCtValor)+' · '+Number(f.taxaCtPercentual||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'%')+
-      fin('Líquido produtor',money(f.valorLiquidoProdutor))+
-      fin('Custo provider','P4 / sandbox')+
-    '</div>'+
-    '<div class="note">Aprovar nesta tela <b>não envia dinheiro</b>. A integração com provider/transferência permanece bloqueada até a P4 BaaS.</div>'+
+    financeiroHtml+
+    '<div class="note">Aprovar nesta tela <b>não envia dinheiro</b>. Nenhuma antecipação, Pix, TED ou transferência é executada automaticamente.</div>'+
     actions(s.status);
   $('detail').innerHTML=html;
   $('detail').querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){openDecision(this.dataset.action)})});
@@ -210,7 +220,7 @@ function openDecision(action){
   var titles={INICIAR_ANALISE:'Iniciar análise',APROVAR:'Aprovar solicitação',RECUSAR:'Recusar solicitação'};
   $('decisionTitle').textContent=titles[action]||'Confirmar decisão';
   $('decisionText').textContent=action==='APROVAR'
-    ? 'A aprovação será registrada, mas não executará antecipação nem transferência nesta fase.'
+    ? 'A aprovação será registrada, mas não executará antecipação, saque nem transferência automaticamente.'
     : action==='RECUSAR'
       ? 'Informe o motivo da recusa. A decisão será registrada na auditoria.'
       : 'A solicitação passará para o status Em análise.';
