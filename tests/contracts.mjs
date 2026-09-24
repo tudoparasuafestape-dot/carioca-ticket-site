@@ -296,10 +296,14 @@ if (contaCariocaPayPage) {
     'Regras de antecipação',
     '80%',
     '20%',
-    '3,49%',
+    '3,5%',
+    'R$ 500,00',
+    'até 2 dias úteis',
     'D+3 úteis',
     'movimentação real desabilitada',
-    'disabled><b>Solicitar antecipação',
+    'id="advanceButton"',
+    'ctContaCariocaPayPortalSolicitarAntecipacaoPROD',
+    'Solicitação enviada ao Backoffice Master',
     'disabled><b>Registrar patrocínio',
     'disabled><b>Planejar pagamento',
     'disabled><b>Adicionar saldo'
@@ -317,12 +321,46 @@ if (contaCariocaPayPage) {
   }
 
   if (
-    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
+    !contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAportePROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
   ) {
-    fail('produtor/financeiro/index.html', 'UI P2 nao pode disparar mutacoes antes da P3 Master');
+    fail('produtor/financeiro/index.html', 'UI financeira deve permitir somente a solicitacao interna de antecipacao');
+  }
+
+  if (
+    contaCariocaPayPage.includes('ctAsaasProvider') ||
+    contaCariocaPayPage.includes('/transfers') ||
+    contaCariocaPayPage.includes('UrlFetchApp')
+  ) {
+    fail('produtor/financeiro/index.html', 'solicitacao de antecipacao nao pode chamar provider diretamente');
+  }
+}
+
+const produtorSaldoExtratoPage = read('produtor/carioca-pay/index.html');
+if (produtorSaldoExtratoPage) {
+  for (const required of [
+    'href="/produtor/financeiro/"',
+    'Antecipação e regras'
+  ]) {
+    if (!produtorSaldoExtratoPage.includes(required)) {
+      fail('produtor/carioca-pay/index.html', 'saldo/extrato sem acesso ao fluxo de antecipação: ' + required);
+    }
+  }
+}
+
+const backofficeMasterLanding = read('backoffice/index.html');
+if (backofficeMasterLanding) {
+  for (const required of [
+    'href="/backoffice/carioca-pay/"',
+    'id="advanceRequestsBadge"',
+    'ctContaCariocaPayMasterContarPendentesPROD',
+    'solicitações de antecipação aguardando sua análise'
+  ]) {
+    if (!backofficeMasterLanding.includes(required)) {
+      fail('backoffice/index.html', 'Backoffice Master sem visibilidade de antecipações: ' + required);
+    }
   }
 }
 
