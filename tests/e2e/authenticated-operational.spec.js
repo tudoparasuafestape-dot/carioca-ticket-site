@@ -951,7 +951,7 @@ async function installMock(page, state) {
             const payload = args[1] || {};
             expect(String(payload.produtorId || '')).toBe('PROD-E2E');
             expect(String(payload.nome || '')).toBe('Evento Homologacao Rascunho');
-            expect(String(payload.data || '')).toBe('30/10/2026');
+            expect(String(payload.data || '')).toBe('2026-10-30');
             expect(String(payload.local || '')).toBe('Local Homologacao');
             expect(String(payload.origemComercial || '')).toBe('PRODUTOR');
             state.createdEvent = {
