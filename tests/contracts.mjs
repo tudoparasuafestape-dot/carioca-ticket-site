@@ -349,6 +349,8 @@ if (contaCariocaPayMasterPage) {
     'SAQUE',
     'Saldo disponível no pedido',
     'Transferência automática',
+    'Marcar saque como processado',
+    'Referência externa',
     'providerAcionado===true',
     'movimentouDinheiro===true',
     'transferenciaCriada===true',
