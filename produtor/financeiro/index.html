@@ -357,8 +357,8 @@ async function submitAnticipation(){
     if(!response||response.sucesso!==true)throw new Error('A solicitação não pôde ser registrada.');
     document.getElementById('anticipationBackdrop').classList.add('hidden');
     document.getElementById('anticipationBackdrop').setAttribute('aria-hidden','true');
-    msg('Solicitação enviada para análise do Backoffice Master.','ok');
     await loadSummary();
+    msg('Solicitação enviada para análise do Backoffice Master.','ok');
   }catch(e){
     msg(String(e&&e.message||e||'Não foi possível enviar a solicitação.'),'error');
   }finally{
