@@ -146,10 +146,19 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
   requireAll(path,checkout,[
     'function officialTicketLink(ticket){',
     "'https://cariocaticket.com.br/ingresso/?codigo='",
-    'a.href=officialTicketLink(t)'
+    'function openTicketFromOrder(ticket,button){',
+    '.ctCheckoutPixPublicoLinkIngressoPROD(',
+    'window.location.assign(String(res.link))',
+    'a.href=officialTicketLink(t)',
+    "if(direto&&direto!=='#')return",
+    'ev.preventDefault();',
+    'openTicketFromOrder(t,a)'
   ]);
   if(checkout.includes("a.href=t.link||'#'")){
     failures.push(path+': link técnico do backend voltou a ser aberto diretamente');
+  }
+  if(checkout.includes("a.target='_blank'")){
+    failures.push(path+': botão do ingresso não pode abrir uma cópia vazia do checkout em nova aba');
   }
 }
 
