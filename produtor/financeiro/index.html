@@ -48,6 +48,7 @@ button,select,input{font:inherit}
       <div><b>Conta Carioca Pay</b><small>Portal do Produtor</small></div>
     </div>
     <div class="actions">
+      <a class="btn" href="/central/">Central Mobile</a>
       <a class="btn" href="/produtor/">Voltar ao Portal</a>
       <button id="rulesTopButton" class="btn gold" type="button">Regras</button>
     </div>
@@ -59,7 +60,7 @@ button,select,input{font:inherit}
     <div class="eyebrow">Centro financeiro do evento</div>
     <h1>Conta Carioca Pay</h1>
     <p>Centralize vendas, patrocínios, capital próprio e pagamentos planejados sem perder a origem de cada valor.</p>
-    <div class="preview">Homologação interna • movimentação real desabilitada</div>
+    <div class="preview">Solicitações protegidas • aprovação Master obrigatória</div>
   </section>
 
   <section class="selectors">
@@ -94,9 +95,9 @@ button,select,input{font:inherit}
         </section>
 
         <section class="card">
-          <div class="head"><div><h2>Ações financeiras</h2><span>em homologação</span></div></div>
+          <div class="head"><div><h2>Solicitações financeiras</h2><span>fluxo protegido</span></div></div>
           <div class="action-grid">
-            <button class="action" type="button" disabled><b>Solicitar antecipação</b><small>Até 80% do saldo elegível, mediante análise.</small></button>
+            <button id="advanceRequestButton" class="action" type="button" disabled><b>Solicitar antecipação</b><small>Até 80% do saldo elegível, mediante análise da Carioca Ticket.</small></button>
             <button class="action" type="button" disabled><b>Registrar patrocínio</b><small>Identifique patrocinador, contrato e valor.</small></button>
             <button class="action" type="button" disabled><b>Planejar pagamento</b><small>Fornecedor/equipe com aprovação por perfil.</small></button>
             <button class="action" type="button" disabled><b>Adicionar saldo</b><small>Capital próprio via Pix após habilitação BaaS.</small></button>
@@ -109,10 +110,12 @@ button,select,input{font:inherit}
         <section class="card">
           <div class="head"><div><h3>Política financeira</h3><span>padrão Carioca Ticket</span></div></div>
           <div class="policy">
+            <div class="policy-item"><small>Mínimo elegível</small><strong id="policyMinimum">R$ 500,00</strong></div>
             <div class="policy-item"><small>Máximo antecipável</small><strong id="policyMax">80%</strong></div>
             <div class="policy-item"><small>Reserva</small><strong id="policyReserve">20%</strong></div>
-            <div class="policy-item"><small>Taxa antecipação</small><strong id="policyFee">3,49%</strong></div>
-            <div class="policy-item"><small>Repasse normal</small><strong>D+3 úteis</strong></div>
+            <div class="policy-item"><small>Taxa antecipação</small><strong id="policyFee">3,5%</strong></div>
+            <div class="policy-item"><small>Após aprovação</small><strong id="policyDeadline">Até 2 dias úteis</strong></div>
+            <div class="policy-item"><small>Repasse normal</small><strong id="policyNormal">D+3 úteis • sem taxa</strong></div>
           </div>
         </section>
 
@@ -122,7 +125,7 @@ button,select,input{font:inherit}
           <div class="status-line"><span>Movimentação real</span><b id="realMovement" class="off">Desabilitada</b></div>
           <div class="status-line"><span>Pix para aporte</span><b id="depositPix" class="off">Desabilitado</b></div>
           <div class="status-line"><span>Antecipação no provider</span><b id="providerAdvance" class="off">Desabilitada</b></div>
-          <div class="status-line"><span>Aguardando aprovação</span><b id="pendingApprovals">0</b></div>
+          <div class="status-line"><span>Antecipações em andamento</span><b id="pendingApprovals">0</b></div>
         </section>
       </aside>
     </div>
@@ -136,15 +139,31 @@ button,select,input{font:inherit}
     <h2 id="rulesTitle">Regras de antecipação</h2>
     <p>A Conta Carioca Pay seguirá a política comercial definida para produtores:</p>
     <ul>
-      <li>mínimo de R$ 300,00 em vendas elegíveis;</li>
+      <li>é necessário ter pelo menos R$ 500,00 de saldo/vendas elegíveis;</li>
       <li>até 80% do saldo elegível pode ser solicitado;</li>
       <li>20% permanece como reserva de segurança;</li>
-      <li>taxa de 3,49% sobre o valor antecipado;</li>
+      <li>taxa de 3,5% sobre o valor antecipado;</li>
       <li>a solicitação depende de análise e aprovação da Carioca Ticket;</li>
-      <li>o repasse normal ocorre em até 3 dias úteis após o evento, após conciliação de estornos, reembolsos e ajustes.</li>
+      <li>após a aprovação, o processamento do envio ocorre em até 2 dias úteis;</li>
+      <li>o repasse normal ocorre em até 3 dias úteis após o evento, sem taxa de antecipação, após conciliação de estornos, reembolsos e ajustes.</li>
     </ul>
-    <p>Nesta versão de homologação nenhuma movimentação financeira real é executada.</p>
+    <p><strong>Importante:</strong> aprovar uma solicitação não transfere dinheiro automaticamente. A aprovação e o processamento financeiro são etapas separadas.</p>
     <button id="rulesClose" class="btn gold" type="button">Entendi</button>
+  </section>
+</div>
+
+<div id="advanceBackdrop" class="backdrop hidden" aria-hidden="true">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="advanceTitle">
+    <h2 id="advanceTitle">Solicitar antecipação</h2>
+    <p id="advanceSummary">Informe o valor que deseja solicitar.</p>
+    <div class="field">
+      <label for="advanceAmount">Valor da solicitação</label>
+      <input id="advanceAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0,00">
+    </div>
+    <p>A solicitação será enviada ao administrador da Carioca Ticket para análise. Após aprovação, o processamento do envio ocorre em até 2 dias úteis.</p>
+    <p><strong>A aprovação no painel não transfere dinheiro automaticamente.</strong></p>
+    <button id="advanceConfirm" class="btn gold" type="button">Enviar solicitação</button>
+    <button id="advanceCancel" class="btn" type="button">Cancelar</button>
   </section>
 </div>
 
@@ -157,7 +176,7 @@ button,select,input{font:inherit}
 var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 var pending={};
-var state={session:null,usuario:null,produtores:[],produtor:null,evento:null};
+var state={session:null,usuario:null,produtores:[],produtor:null,evento:null,resumo:null,advanceRequestKey:''};
 
 function rpc(method,args){
   return new Promise(function(resolve,reject){
@@ -254,6 +273,7 @@ async function loadSummary(){
 }
 
 function render(r){
+  state.resumo=r||null;
   document.getElementById('dashboard').classList.remove('hidden');
   var vendas=r.vendas||{}, ledger=r.ledger||{}, ant=r.antecipacao||{}, sol=r.solicitacoes||{}, fin=r.financeiro||{};
   var origem=ledger.porOrigem||{};
@@ -270,9 +290,20 @@ function render(r){
   document.getElementById('originCapital').textContent=money(origem.CAPITAL_PROPRIO);
   document.getElementById('originAdvance').textContent=money(origem.ANTECIPACAO);
 
+  document.getElementById('policyMinimum').textContent=money(ant.minimoVendas||500);
   document.getElementById('policyMax').textContent=Number(ant.percentualMaximo||80).toLocaleString('pt-BR')+'%';
   document.getElementById('policyReserve').textContent=Number(ant.reservaPercentual||20).toLocaleString('pt-BR')+'%';
-  document.getElementById('policyFee').textContent=Number(ant.taxaCtPercentual||3.49).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  document.getElementById('policyFee').textContent=Number(ant.taxaCtPercentual||3.5).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2})+'%';
+  document.getElementById('policyDeadline').textContent='Até '+Number(ant.prazoEnvioDiasUteis||2)+' dias úteis';
+  document.getElementById('policyNormal').textContent='D+'+Number(ant.repasseNormalDiasUteis||3)+' úteis'+(ant.repasseNormalSemTaxaAntecipacao===false?'':' • sem taxa');
+
+  var advanceButton=document.getElementById('advanceRequestButton');
+  var podeAntecipar=!!(r.permissoes&&r.permissoes.solicitarAntecipacao===true);
+  var possuiDisponivel=Number(ant.disponivelSolicitar||0)>0;
+  advanceButton.disabled=!(podeAntecipar&&possuiDisponivel);
+  advanceButton.title=podeAntecipar
+    ? (possuiDisponivel?'':'Sem saldo elegível disponível para nova solicitação.')
+    : 'Seu perfil não possui permissão para solicitar antecipação.';
 
   var conf=document.getElementById('financialConfigured');
   conf.textContent=fin.configurado?'Configurada':'Pendente';
@@ -281,7 +312,7 @@ function render(r){
   setGate('realMovement',fin.movimentacaoRealHabilitada,'Habilitada','Desabilitada');
   setGate('depositPix',fin.aportePixHabilitado,'Habilitado','Desabilitado');
   setGate('providerAdvance',ant.providerHabilitado,'Habilitada','Desabilitada');
-  document.getElementById('pendingApprovals').textContent=String(sol.pagamentosAguardandoAprovacao||0);
+  document.getElementById('pendingApprovals').textContent=String(sol.antecipacoesAbertasQuantidade||0);
   document.getElementById('updatedAt').textContent='Atualizado em '+esc(r.atualizadoEm||'');
 }
 
@@ -291,6 +322,69 @@ function setGate(id,on,yes,no){
 
 function openRules(){document.getElementById('rulesBackdrop').classList.remove('hidden');document.getElementById('rulesBackdrop').setAttribute('aria-hidden','false')}
 function closeRules(){document.getElementById('rulesBackdrop').classList.add('hidden');document.getElementById('rulesBackdrop').setAttribute('aria-hidden','true')}
+
+function newRequestKey(){
+  return 'PORTAL-ANT-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));
+}
+
+function openAdvance(){
+  var r=state.resumo||{}, ant=r.antecipacao||{};
+  if(!r.permissoes||r.permissoes.solicitarAntecipacao!==true){
+    msg('Seu perfil não possui permissão para solicitar antecipação.','error');
+    return;
+  }
+  var disponivel=Number(ant.disponivelSolicitar||0);
+  if(disponivel<=0){
+    msg('Não há saldo elegível disponível para uma nova solicitação.','error');
+    return;
+  }
+  state.advanceRequestKey=newRequestKey();
+  document.getElementById('advanceAmount').value=disponivel.toFixed(2);
+  document.getElementById('advanceAmount').max=String(disponivel);
+  document.getElementById('advanceSummary').textContent='Disponível para solicitar: '+money(disponivel)+'. Taxa: '+Number(ant.taxaCtPercentual||3.5).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2})+'%.';
+  document.getElementById('advanceBackdrop').classList.remove('hidden');
+  document.getElementById('advanceBackdrop').setAttribute('aria-hidden','false');
+  document.getElementById('advanceAmount').focus();
+}
+
+function closeAdvance(){
+  document.getElementById('advanceBackdrop').classList.add('hidden');
+  document.getElementById('advanceBackdrop').setAttribute('aria-hidden','true');
+}
+
+async function submitAdvance(){
+  if(!state.session||!state.evento||!state.resumo)return;
+  var ant=state.resumo.antecipacao||{};
+  var disponivel=Number(ant.disponivelSolicitar||0);
+  var valor=Number(document.getElementById('advanceAmount').value||0);
+  if(!isFinite(valor)||valor<=0||valor>disponivel){
+    msg('Informe um valor válido, de até '+money(disponivel)+'.','error');
+    return;
+  }
+  if(!state.advanceRequestKey)state.advanceRequestKey=newRequestKey();
+  var button=document.getElementById('advanceConfirm');
+  button.disabled=true;
+  showLoading(true);
+  msg('');
+  try{
+    var r=await rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD',[
+      state.session.token,
+      state.evento.id,
+      valor,
+      state.advanceRequestKey
+    ]);
+    if(!r||r.sucesso!==true)throw new Error('A solicitação não pôde ser registrada.');
+    closeAdvance();
+    state.advanceRequestKey='';
+    await loadSummary();
+    msg('Solicitação de antecipação enviada ao administrador para análise.','ok');
+  }catch(e){
+    msg(String(e&&e.message||e||'Não foi possível enviar a solicitação.'),'error');
+  }finally{
+    showLoading(false);
+    button.disabled=false;
+  }
+}
 
 async function init(){
   state.session=readSession();
@@ -323,6 +417,10 @@ document.getElementById('rulesButton').addEventListener('click',openRules);
 document.getElementById('rulesTopButton').addEventListener('click',openRules);
 document.getElementById('rulesClose').addEventListener('click',closeRules);
 document.getElementById('rulesBackdrop').addEventListener('click',function(e){if(e.target===this)closeRules()});
+document.getElementById('advanceRequestButton').addEventListener('click',openAdvance);
+document.getElementById('advanceConfirm').addEventListener('click',submitAdvance);
+document.getElementById('advanceCancel').addEventListener('click',closeAdvance);
+document.getElementById('advanceBackdrop').addEventListener('click',function(e){if(e.target===this)closeAdvance()});
 
 init();
 }());

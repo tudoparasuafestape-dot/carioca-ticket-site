@@ -587,6 +587,58 @@ function financeiroProdutorFixture() {
   };
 }
 
+function contaCariocaPayFixture() {
+  return {
+    sucesso:true,
+    autorizado:true,
+    produtorId:'PROD-E2E',
+    eventoId:EVENT_ID,
+    perfil:'ADMINISTRADOR',
+    permissoes:{
+      verSaldo:true,
+      verExtrato:true,
+      solicitarAntecipacao:true,
+      aprovarAntecipacao:true,
+      registrarPatrocinio:true,
+      adicionarCapitalProprio:true,
+      planejarPagamento:true,
+      executarPagamento:true
+    },
+    financeiro:{
+      configurado:true,
+      modoConta:'SUBCONTA_PLATAFORMA',
+      movimentacaoRealHabilitada:false,
+      aportePixHabilitado:false,
+      repasseAutomaticoHabilitado:false
+    },
+    vendas:{confirmado:1250,recebido:1250,aReceber:0,vendasElegiveisAntecipacao:1250},
+    ledger:{saldoOperacional:1250,porOrigem:{VENDAS_INGRESSOS_ONLINE:1250}},
+    solicitacoes:{
+      antecipacoesAbertas:0,
+      antecipacoesAbertasQuantidade:0,
+      pagamentosPlanejados:0,
+      pagamentosAguardandoAprovacao:0,
+      totalSolicitacoes:0
+    },
+    antecipacao:{
+      minimoVendas:500,
+      percentualMaximo:80,
+      reservaPercentual:20,
+      taxaCtPercentual:3.5,
+      prazoEnvioDiasUteis:2,
+      repasseNormalDiasUteis:3,
+      repasseNormalSemTaxaAntecipacao:true,
+      baseElegivel:1250,
+      maximoBruto:1000,
+      jaSolicitadoAberto:0,
+      disponivelSolicitar:1000,
+      providerHabilitado:false
+    },
+    atualizadoEm:'24/09/2026 16:45:00',
+    versaoModulo:'0.3.0'
+  };
+}
+
 
 function relatoriosFixture() {
   const f = financeiroFixture();
@@ -990,11 +1042,21 @@ async function installMock(page, state) {
             resultado = financeiroProdutorFixture();
             break;
 
+          case 'ctContaCariocaPayPortalResumoPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = contaCariocaPayFixture();
+            break;
+
+          case 'ctContaCariocaPayPortalSolicitarAntecipacaoPROD':
+            state.financeMutationCalls = (state.financeMutationCalls || 0) + 1;
+            throw new Error('Teste de navegacao nao deve solicitar antecipacao.');
+
           case 'ctFinanceiroProdutorSimularAntecipacaoPROD':
           case 'ctFinanceiroProdutorSolicitarAntecipacaoPROD':
           case 'ctFinanceiroProdutorSolicitarSaquePROD':
           case 'ctFinanceiroProdutorCancelarSaquePROD':
-            throw new Error('Teste de navegacao nao deve movimentar o financeiro.');
+            throw new Error('Fluxo financeiro legado nao deve ser usado.');
 
           case 'ctRelatoriosEventoCarregarPROD':
             expect(String(args[0] || '')).toBe(state.token);
@@ -1197,7 +1259,8 @@ test.describe('Jornada operacional autenticada', () => {
       barMutationCalls: 0,
       eventMutationCalls: 0,
       supplierMutationCalls: 0,
-      commissionMutationCalls: 0
+      commissionMutationCalls: 0,
+      financeMutationCalls: 0
     };
 
     await installMock(page, state);
@@ -1268,7 +1331,7 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#mCRM')).toHaveAttribute('aria-disabled', 'false');
     await expect(page.locator('#mFinanceiro')).toHaveAttribute(
       'href',
-      new RegExp('/financeiro/\\?evento=' + EVENT_ID)
+      new RegExp('/produtor/financeiro/\\?evento=' + EVENT_ID)
     );
     await expect(page.locator('#mFinanceiro')).toHaveAttribute('aria-disabled', 'false');
     await expect(page.locator('#mRelatorios')).toHaveAttribute(
@@ -1380,18 +1443,22 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
     await page.locator('#mFinanceiro').click();
-    await expect(page).toHaveURL(/\/financeiro\/\?evento=/);
-    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('#revenue')).toHaveText('R$ 90,00');
-    await expect(page.locator('#received')).toHaveText('R$ 65,00');
-    await expect(page.locator('#receivable')).toHaveText('R$ 25,00');
-    await expect(page.locator('#asaasBalance')).toHaveText('R$ 180,00');
-    await expect(page.getByRole('link', { name: /Central$/i })).toHaveAttribute('href', '/central/');
-    await expect(page.locator('body')).toContainText(/taxa CT 2,5%/i);
-    await expect(page.locator('body')).toContainText(/Nenhuma transferência Pix\/TED é executada automaticamente/i);
+    await expect(page).toHaveURL(/\/produtor\/financeiro\/\?evento=/);
+    await expect(page.locator('#dashboard')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#confirmedSales')).toContainText('1.250,00');
+    await expect(page.locator('#policyMinimum')).toContainText('500,00');
+    await expect(page.locator('#policyFee')).toHaveText('3,5%');
+    await expect(page.locator('#policyDeadline')).toContainText('2 dias úteis');
+    await expect(page.locator('#policyNormal')).toContainText('sem taxa');
+    await expect(page.getByRole('link', { name: /Voltar ao Portal/i })).toHaveAttribute('href', '/produtor/');
     await expectNoTechnicalVisibleLinks(page);
+    expect(state.financeMutationCalls||0).toBe(0);
 
-    await page.getByRole('link', { name: /Central$/i }).click();
+    await page.getByRole('link', { name: /Voltar ao Portal/i }).click();
+    await expect(page.locator('#portalView')).toBeVisible({ timeout: 15000 });
+    const centralAgain=page.locator('#centralMobileLink');
+    await expect(centralAgain).toHaveAttribute('aria-disabled','false',{timeout:15000});
+    await centralAgain.click();
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
@@ -1443,6 +1510,7 @@ test.describe('Jornada operacional autenticada', () => {
     expect(state.eventMutationCalls).toBe(0);
     expect(state.supplierMutationCalls).toBe(0);
     expect(state.commissionMutationCalls).toBe(0);
+    expect(state.financeMutationCalls).toBe(0);
   });
 
   test('Central -> Usuarios e Permissoes -> Sair sem rota escondida', async ({ page }) => {

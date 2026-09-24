@@ -23,6 +23,7 @@ a{color:inherit}.hidden{display:none!important}.shell{width:min(1440px,calc(100%
 .kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.kv:last-child{border-bottom:0}.kv span{color:var(--muted);font-size:11px}.kv strong{font-size:12px;text-align:right}
 .empty{padding:20px;border:1px dashed var(--line);border-radius:13px;color:var(--muted);text-align:center;font-size:12px}.notice{border:1px solid rgba(128,173,255,.24);background:rgba(128,173,255,.06);color:#cddcff;border-radius:13px;padding:11px 13px;font-size:11px;line-height:1.45;margin-bottom:14px}
 .gate{min-height:70vh;display:grid;place-items:center;padding:24px}.gate-card{width:min(520px,100%);border:1px solid var(--line);background:var(--card);border-radius:20px;padding:24px;text-align:center}.gate-card p{color:var(--muted);line-height:1.5}
+.nav-badge{display:none;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--gold);color:#111;font-size:10px;font-weight:900;align-items:center;justify-content:center;margin-left:5px}.nav-badge.show{display:inline-flex}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1a1d24;border:1px solid var(--line);border-radius:12px;padding:12px 16px;z-index:30;box-shadow:0 14px 40px rgba(0,0,0,.35);font-size:12px}
 @media(max-width:1080px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2,.grid3{grid-template-columns:1fr}.funnel{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:680px){.shell{width:min(100% - 18px,1440px);padding-top:12px}.top{align-items:flex-start}.nav{max-width:52%}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat strong{font-size:21px}.funnel{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{align-items:stretch}.filters .group{width:100%}.preset{flex:1}.field{flex:1;min-width:140px}.btn{width:100%}}
@@ -43,6 +44,7 @@ a{color:inherit}.hidden{display:none!important}.shell{width:min(1440px,calc(100%
       <a class="btn" href="/parceiro/admin/">Parceiros</a>
       <a class="btn" href="/cupons/admin/">Cupons</a>
       <a class="btn" href="/produtor/solicitacoes/">Produtores</a>
+      <a id="anticipationRequestsLink" class="btn" href="/backoffice/carioca-pay/">Antecipações <span id="anticipationRequestsBadge" class="nav-badge">0</span></a>
     </nav>
   </header>
 
@@ -212,12 +214,26 @@ function render(r){
   $('paymentMethods').innerHTML=methodTable(fin.vendasPorForma);
   $('sources').innerHTML=kvList(an.porOrigem);$('devices').innerHTML=kvList(an.porDispositivo);
 }
+async function loadAnticipationBadge(){
+  try{
+    if(!state.session||!state.session.token)return;
+    var r=await rpc('ctContaCariocaPayMasterContarPendentesPROD',[String(state.session.token)]);
+    var total=Number(r&&r.contagem&&r.contagem.abertas||0);
+    $('anticipationRequestsBadge').textContent=String(total);
+    $('anticipationRequestsBadge').classList.toggle('show',total>0);
+    $('anticipationRequestsLink').title=total>0
+      ? total+' solicitação(ões) de antecipação em aberto'
+      : 'Nenhuma solicitação de antecipação em aberto';
+  }catch(_){
+    $('anticipationRequestsBadge').classList.remove('show');
+  }
+}
 async function load(filters){
   if(state.busy)return;state.busy=true;$('refresh').disabled=true;$('applyCustom').disabled=true;
   try{
     var r=await rpc('ctBackofficeMasterCarregarPROD',[String(state.session.token),filters||{preset:state.preset}]);
     if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Seu perfil não está autorizado para o Backoffice Master.');
-    render(r);$('gate').classList.add('hidden');$('app').classList.remove('hidden');
+    render(r);$('gate').classList.add('hidden');$('app').classList.remove('hidden');loadAnticipationBadge();
   }catch(e){
     if($('app').classList.contains('hidden'))deny(e&&e.message?e.message:String(e));else toast(e&&e.message?e.message:String(e));
   }finally{state.busy=false;$('refresh').disabled=false;$('applyCustom').disabled=false}
