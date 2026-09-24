@@ -124,6 +124,45 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
   }
 }
 
+// P0 JORNADA DE COMPRA — a experiência termina quando existe ingresso durável,
+// mesmo que tarefas pós-venda ainda mantenham o pedido em PROCESSANDO.
+for(const path of ['checkout/index.html','checkout-v2/index.html']){
+  const checkout=read(path);
+  requireAll(path,checkout,[
+    'var ingressosProntos=',
+    'res.ingressoEmitido===true',
+    'Array.isArray(res.ingressos)',
+    "if(status==='CONCLUIDO'||ingressosProntos){",
+    'stopPolling();',
+    'stopExpiry();',
+    'renderSuccess(res.ingressos||[]);'
+  ]);
+
+  const renderOrderStart=checkout.indexOf('function renderOrder(res){');
+  const renderOrderEnd=checkout.indexOf('function officialTicketLink',renderOrderStart);
+  const renderOrderBlock=renderOrderStart>=0&&renderOrderEnd>renderOrderStart
+    ? checkout.slice(renderOrderStart,renderOrderEnd)
+    : '';
+
+  if(!renderOrderBlock.includes("status==='CONCLUIDO'||ingressosProntos")){
+    failures.push(path+': checkout ainda depende exclusivamente de CONCLUIDO para liberar ingresso');
+  }
+}
+
+// CARTÃO — deve usar checkout hospedado do Asaas e convergir para a mesma
+// experiência terminal de ingresso do PIX.
+for(const path of ['checkout/index.html','checkout-v2/index.html']){
+  const checkout=read(path);
+  requireAll(path,checkout,[
+    "state.paymentMethod==='CREDIT_CARD'",
+    "el.cardPanel.classList.remove('hidden')",
+    'var invoiceUrl=String(res&&res.pagamento&&res.pagamento.invoiceUrl',
+    'el.cardPaymentLink.href=invoiceUrl',
+    'ctCheckoutPixPublicoReconciliarPROD',
+    'res.ingressoEmitido===true'
+  ]);
+}
+
 // P0 PERFORMANCE — o checkout observa o ledger local a cada 4s e
 // reconcilia com o Asaas em burst controlado: 10s nos primeiros 2 minutos
 // e 30s depois. O webhook imediato segue como caminho principal.
@@ -177,8 +216,9 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
     'function openTicketFromOrder(ticket,button){',
     '.ctCheckoutPixPublicoLinkIngressoPROD(',
     'window.location.assign(String(res.link))',
-    'a.href=officialTicketLink(t)',
-    "if(direto&&direto!=='#')return",
+    'var direto=officialTicketLink(t);',
+    "if(direto&&direto!=='#'){",
+    'a.href=direto;',
     'ev.preventDefault();',
     'openTicketFromOrder(t,a)'
   ]);
