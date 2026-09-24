@@ -149,7 +149,7 @@ function render(r){
   var s=r.resumo||{},g=r.governanca||{},sec=r.seguranca||{};
   $('meta').textContent=(r.admin&&r.admin.nome?r.admin.nome+' · ':'')+(r.admin&&r.admin.perfil||'ADMINISTRADOR')+' · Atualizado '+dateTime(r.geradoEm);
   $('kOpen').textContent=num(s.abertas);$('kExec').textContent=num(s.emExecucao);$('kApproval').textContent=num(s.approvalsPendentes);$('kRisk').textContent=num(s.riscoAltoAbertas);$('kFail').textContent=num(s.falhas);$('kDone').textContent=num(s.concluidas);
-  $('safety').textContent='Governança '+(g.instalada?'instalada':'ainda não instalada em produção')+' · Master A5 '+(g.masterConfigurado?'configurado':'não configurado')+' · LLM '+(sec.llmConectado?'conectado':'desconectado')+' · Execução externa OFF · Financeiro OFF · Deploy autônomo OFF';
+  $('safety').textContent='Governança '+(g.instalada?'instalada':'ainda não instalada em produção')+' · Master A5 '+(g.masterConfigurado?'configurado':'não configurado')+' · Cognitive Gateway '+(sec.cognitiveGatewayPreparado?'preparado':'indisponível')+' · Provider '+esc(sec.cognitiveProvider||'NONE')+' · Rede '+(sec.cognitiveNetworkEnabled?'ON':'OFF')+' · Execução externa OFF · Financeiro OFF · Deploy autônomo OFF';
   renderAgents(r.agentes);renderDecisions(r.decisoesPendentes);renderWorkOrders(r.workOrdersRecentes);
 }
 
@@ -166,7 +166,7 @@ async function load(){
 
 function renderAgentAnswer(r){
   var pontos=Array.isArray(r.pontos)?r.pontos:[],prioridades=Array.isArray(r.prioridades)?r.prioridades:[];
-  $('agentAnswer').innerHTML='<h3>'+esc((r.agente&&r.agente.nome)||'Orquestrador Executivo')+'</h3><p>'+esc(r.resposta||'Sem resposta disponível.')+'</p>'+(pontos.length?'<div class="points">'+pontos.map(function(p){return'<div class="point"><span>'+esc(p.titulo||'Indicador')+'</span><strong>'+esc(p.valor==null?'—':p.valor)+'</strong></div>'}).join('')+'</div>':'')+(prioridades.length?'<div class="priorities">'+prioridades.map(function(p){return'<div class="priority"><b>'+esc(p.titulo||'Prioridade')+'</b><br>'+esc(p.motivo||'')+'</div>'}).join('')+'</div>':'')+'<div class="answer-meta">Intenção: '+esc(human(r.intencao||'STATUS_GERAL'))+' · A1 leitura/análise · LLM externo desconectado · '+esc(dateTime(r.geradoEm))+'</div>';
+  $('agentAnswer').innerHTML='<h3>'+esc((r.agente&&r.agente.nome)||'Orquestrador Executivo')+'</h3><p>'+esc(r.resposta||'Sem resposta disponível.')+'</p>'+(pontos.length?'<div class="points">'+pontos.map(function(p){return'<div class="point"><span>'+esc(p.titulo||'Indicador')+'</span><strong>'+esc(p.valor==null?'—':p.valor)+'</strong></div>'}).join('')+'</div>':'')+(prioridades.length?'<div class="priorities">'+prioridades.map(function(p){return'<div class="priority"><b>'+esc(p.titulo||'Prioridade')+'</b><br>'+esc(p.motivo||'')+'</div>'}).join('')+'</div>':'')+'<div class="answer-meta">Intenção: '+esc(human(r.intencao||'STATUS_GERAL'))+' · A1 leitura/análise · '+(r.cognitivo&&r.cognitivo.preparado?'Gateway preparado':'Gateway indisponível')+' · Provider '+esc(r.cognitivo&&r.cognitivo.provider||'NONE')+' · '+(r.cognitivo&&r.cognitivo.usouLLM?'resposta generativa':'resposta determinística')+' · '+esc(dateTime(r.geradoEm))+'</div>';
   $('agentAnswer').classList.remove('hidden');
 }
 
