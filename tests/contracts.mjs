@@ -318,12 +318,14 @@ if (contaCariocaPayPage) {
 
   if (
     !contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
+    !contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarSaquePROD'") ||
     !contaCariocaPayPage.includes('Solicitação registrada e enviada para análise do Administrador Master') ||
+    !contaCariocaPayPage.includes('Solicitação de saque registrada e enviada para análise do Administrador Master') ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAportePROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
   ) {
-    fail('produtor/financeiro/index.html', 'UI de antecipacao nao converge exclusivamente para solicitacao Master');
+    fail('produtor/financeiro/index.html', 'UI financeira nao converge exclusivamente para solicitacoes protegidas pelo Master');
   }
 }
 
@@ -344,6 +346,9 @@ if (contaCariocaPayMasterPage) {
     'Aprovar',
     'Recusar',
     'Aprovar nesta tela <b>não envia dinheiro</b>',
+    'SAQUE',
+    'Saldo disponível no pedido',
+    'Transferência automática',
     'providerAcionado===true',
     'movimentouDinheiro===true',
     'transferenciaCriada===true',
