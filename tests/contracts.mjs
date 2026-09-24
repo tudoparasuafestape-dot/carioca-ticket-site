@@ -286,7 +286,7 @@ if (contaCariocaPayPage) {
     'ctPortalProdutorRestaurarSessaoIsoladaPROD',
     'ctContaCariocaPayPortalResumoPROD',
     'Vendas confirmadas',
-    'Saldo operacional conciliado',
+    'Saldo operacional interno',
     'Disponível para solicitar antecipação',
     'Pagamentos planejados',
     'Portaria / Smart App',
