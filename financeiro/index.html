@@ -47,7 +47,7 @@
 <section class="section">
   <div class="head"><div><h2>Política financeira</h2><p>Regras aplicadas antes de qualquer solicitação.</p></div></div>
   <div class="policy">
-    <div class="notice"><strong>Antecipação · taxa CT 2,5%</strong><br>A simulação consulta o Asaas em tempo real. A taxa CT é calculada sobre o valor bruto antecipado e mostrada antes da confirmação. Em conta própria do produtor, essa taxa fica registrada no financeiro da plataforma e não é debitada automaticamente pelo Asaas.</div>
+    <div class="notice"><strong>Antecipação · taxa CT 3,5%</strong><br>A simulação consulta o Asaas em tempo real. A taxa CT é de 3,5% sobre o valor antecipado. O fluxo oficial exige análise do Backoffice Master antes de qualquer execução financeira. Em conta própria do produtor, essa taxa fica registrada no financeiro da plataforma e não é debitada automaticamente pelo Asaas.</div>
     <div class="notice safe"><strong>Saque protegido</strong><br>O botão abaixo registra uma solicitação auditável e reserva o valor. Nenhuma transferência Pix/TED é executada automaticamente nesta etapa; isso evita movimentação bancária sem validação financeira adicional.</div>
   </div>
 </section>
@@ -211,14 +211,11 @@ function updateAnticipationButton(){
 }
 
 async function requestAnticipation(){
-  if(executeAnticipation.disabled||!state.paymentId)return;
-  state.busy=true;executeAnticipation.disabled=true;executeAnticipation.textContent='Solicitando…';
-  try{
-    var r=await rpc('ctFinanceiroProdutorSolicitarAntecipacaoPROD',[String(state.session.token),state.eventId,state.paymentId,String(anticipationConfirm.value||''),acceptFee.checked===true]);
-    if(!r||r.sucesso!==true)throw new Error('A antecipação não foi registrada.');
-    closeModal();toast(r.mensagem||'Antecipação solicitada.');state.busy=false;await load();
-  }catch(e){toast(e&&e.message?e.message:String(e))}
-  finally{state.busy=false;executeAnticipation.textContent='Solicitar antecipação';updateAnticipationButton()}
+  if(!state.eventId)return;
+  window.location.assign(
+    '/produtor/financeiro/?evento='+
+    encodeURIComponent(String(state.eventId||''))
+  );
 }
 
 function updateWithdrawButton(){
