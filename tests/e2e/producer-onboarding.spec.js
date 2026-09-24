@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 const BRANCH_MODE = String(process.env.CT_BRANCH_MODE || '') === '1';
 const STORAGE = 'CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 
-function requestFixture(status='ENVIADO') {
+function requestFixture(status='ENVIADO', indicated=true) {
   return {
     solicitacaoId:'PRODSOL-E2E',
     nomeFantasia:'Priscila Eventos',
@@ -17,12 +17,12 @@ function requestFixture(status='ENVIADO') {
     instagram:'@priscila',
     status,
     produtorId:status==='ATIVO'?'PROD-E2E':'',
-    codigoIndicacao:'VINICIUSCT',
+    codigoIndicacao:indicated?'VINICIUSCT':'',
     pendenciaPublica:'',
     criadoEm:'22/09/2026 06:00',
     atualizadoEm:'22/09/2026 06:00',
     historico:[
-      {de:'INICIO',para:'ENVIADO',em:'2026-09-22T09:00:00.000Z',observacao:'Solicitação recebida com indicação VINICIUSCT.'}
+      {de:'INICIO',para:'ENVIADO',em:'2026-09-22T09:00:00.000Z',observacao:indicated?'Solicitação recebida com indicação VINICIUSCT.':'Solicitação recebida sem parceiro indicado.'}
     ]
   };
 }
@@ -49,12 +49,12 @@ async function installRpcMock(page, state) {
           autenticado:true,
           possuiProdutor:state.status==='ATIVO',
           usuario:{id:'USR-PRISCILA',nome:'Priscila Ferreira',email:'priscila@example.invalid'},
-          solicitacao:state.submitted ? requestFixture(state.status) : null,
-          indicacao:state.status==='ATIVO' ? null : {
+          solicitacao:state.submitted ? requestFixture(state.status,state.indicated!==false) : null,
+          indicacao:state.indicated!==false && state.status!=='ATIVO' ? {
             indicacaoId:'IND-E2E',
             parceiroId:'PCT-VINICIUS',
             codigoIndicacao:'VINICIUSCT'
-          }
+          } : null
         };
       } else if (method === 'ctProdutorOnboardingEnviarPROD') {
         expect(String(args[0] || '')).toBe(state.userToken);
@@ -63,7 +63,7 @@ async function installRpcMock(page, state) {
         state.lastSubmit = payload;
         state.submitted = true;
         state.status = 'ENVIADO';
-        resultado = {sucesso:true,jaExistia:false,solicitacao:requestFixture('ENVIADO')};
+        resultado = {sucesso:true,jaExistia:false,solicitacao:requestFixture('ENVIADO',state.indicated!==false)};
       } else if (method === 'logoutUsuarioCT2') {
         expect(String(args[0] || '')).toBe(state.userToken);
         state.logoutCalls += 1;
@@ -89,7 +89,7 @@ async function installRpcMock(page, state) {
             cidade:'Jaboatão dos Guararapes',
             uf:'PE',
             status:s,
-            codigoIndicacao:'VINICIUSCT',
+            codigoIndicacao:state.indicated!==false?'VINICIUSCT':'',
             criadoEm:'22/09/2026 06:00',
             atualizadoEm:'22/09/2026 06:00'
           }]:[],
@@ -99,7 +99,7 @@ async function installRpcMock(page, state) {
         expect(String(args[0] || '')).toBe(state.adminToken);
         state.detailCalls=(state.detailCalls||0)+1;
         const detalheStatus=(state.staleDetailAfterDecision&&state.status!=='ENVIADO')?'ENVIADO':state.status;
-        resultado = {sucesso:true,autorizado:true,admin:{perfil:'ADMINISTRADOR'},solicitacao:requestFixture(detalheStatus)};
+        resultado = {sucesso:true,autorizado:true,admin:{perfil:'ADMINISTRADOR'},solicitacao:requestFixture(detalheStatus,state.indicated!==false)};
       } else if (method === 'ctProdutorOnboardingAdminDecidirPROD') {
         expect(String(args[0] || '')).toBe(state.adminToken);
         const actionName=String(args[2]||'');
@@ -107,13 +107,15 @@ async function installRpcMock(page, state) {
         state.adminActions.push(actionName);
         if(actionName==='INICIAR_ANALISE'){
           state.status='EM_ANALISE';
-          resultado={sucesso:true,autorizado:true,solicitacao:requestFixture('EM_ANALISE')};
+          resultado={sucesso:true,autorizado:true,solicitacao:requestFixture('EM_ANALISE',state.indicated!==false)};
         }else if(actionName==='APROVAR'){
           state.status='ATIVO';
           resultado={
             sucesso:true,autorizado:true,produtorId:'PROD-E2E',
-            indicacaoComercial:{sucesso:true,vinculou:true,parceiroId:'PCT-VINICIUS',produtorId:'PROD-E2E'},
-            solicitacao:requestFixture('ATIVO')
+            indicacaoComercial:state.indicated!==false
+              ? {sucesso:true,vinculou:true,parceiroId:'PCT-VINICIUS',produtorId:'PROD-E2E'}
+              : null,
+            solicitacao:requestFixture('ATIVO',state.indicated!==false)
           };
         }else{
           throw new Error('Ação inesperada: '+actionName);
@@ -156,6 +158,7 @@ test.describe('Onboarding do Produtor indicado', () => {
     const state={
       userToken:'CT-E2E-USER',
       adminToken:'CT-E2E-ADMIN',
+      indicated:true,
       submitted:false,
       status:'',
       submitCalls:0,
@@ -221,10 +224,68 @@ test.describe('Onboarding do Produtor indicado', () => {
     expect(state.detailCalls).toBe(1);
   });
 
+  test('aprova produtor sem parceiro indicado e mantém vínculo comercial opcional', async ({ page }) => {
+    const state={
+      userToken:'CT-E2E-USER-SEM-PARCEIRO',
+      adminToken:'CT-E2E-ADMIN',
+      indicated:false,
+      submitted:false,
+      status:'',
+      submitCalls:0,
+      lastSubmit:null,
+      adminActions:[],
+      logoutCalls:0,
+      detailCalls:0,
+      staleDetailAfterDecision:false,
+      staleListAfterDecision:false,
+      previousStatus:''
+    };
+
+    await installRpcMock(page,state);
+    await setSession(page,state.userToken);
+    await page.goto('/produtor/solicitar/', {waitUntil:'domcontentloaded'});
+
+    await expect(page.locator('#formCard')).toBeVisible({timeout:15000});
+    await expect(page.locator('#refBadge')).not.toContainText('VINICIUSCT');
+
+    await page.locator('#nomeFantasia').fill('Produtor Sem Parceiro');
+    await page.locator('#razaoSocial').fill('Produtor Sem Parceiro LTDA');
+    await page.locator('#cpfCnpj').fill('52998224725');
+    await page.locator('#whatsapp').fill('81999990001');
+    await page.locator('#cidade').fill('Jaboatão dos Guararapes');
+    await page.locator('#uf').fill('PE');
+    await page.locator('#submitButton').click();
+
+    await expect.poll(() => state.submitCalls).toBe(1);
+    expect(state.lastSubmit).not.toHaveProperty('codigoIndicacao');
+
+    await page.evaluate(({storage,token}) => {
+      const value=JSON.stringify({token,expiraEm:'2099-01-01T00:00:00.000Z'});
+      sessionStorage.setItem(storage,value);
+      localStorage.setItem(storage,value);
+    }, {storage:STORAGE,token:state.adminToken});
+
+    await page.goto('/produtor/solicitacoes/', {waitUntil:'domcontentloaded'});
+    await page.getByText('Priscila Eventos').first().click();
+
+    await page.getByRole('button',{name:'Iniciar análise'}).click();
+    await page.locator('#confirmAction').click();
+    await expect.poll(() => state.status).toBe('EM_ANALISE');
+
+    await page.getByRole('button',{name:'Aprovar e ativar'}).click();
+    await page.locator('#confirmAction').click();
+    await expect.poll(() => state.status).toBe('ATIVO');
+
+    expect(state.adminActions).toEqual(['INICIAR_ANALISE','APROVAR']);
+    const aprovado=requestFixture('ATIVO',false);
+    expect(aprovado.codigoIndicacao).toBe('');
+  });
+
   test('permite sair do onboarding sem loopar de volta para a mesma sessao', async ({ page }) => {
     const state={
       userToken:'CT-E2E-USER',
       adminToken:'CT-E2E-ADMIN',
+      indicated:true,
       submitted:true,
       status:'ENVIADO',
       submitCalls:0,
