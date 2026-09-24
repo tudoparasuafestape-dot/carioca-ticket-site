@@ -893,7 +893,7 @@ if (parceiroPrograma) {
 
 const parceiroRegras = read('parceiro/regras-comerciais/index.html');
 if (parceiroRegras) {
-  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','2,5%']) {
+  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','3,5%']) {
     if (!parceiroRegras.includes(required)) {
       fail('parceiro/regras-comerciais/index.html', 'documento comercial incompleto: ' + required);
     }
