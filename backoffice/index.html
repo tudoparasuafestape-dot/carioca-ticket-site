@@ -44,6 +44,7 @@ a{color:inherit}.hidden{display:none!important}.shell{width:min(1440px,calc(100%
       <a class="btn" href="/cupons/admin/">Cupons</a>
       <a class="btn" href="/produtor/solicitacoes/">Produtores</a>
       <a class="btn gold" href="/backoffice/carioca-pay/">Antecipações <span id="advanceRequestsBadge" class="hidden">0</span></a>
+      <a class="btn gold" href="/backoffice/eventos/">Eventos pendentes <span id="eventGovernanceBadge" class="hidden">0</span></a>
     </nav>
   </header>
 
@@ -213,6 +214,19 @@ function render(r){
   $('paymentMethods').innerHTML=methodTable(fin.vendasPorForma);
   $('sources').innerHTML=kvList(an.porOrigem);$('devices').innerHTML=kvList(an.porDispositivo);
 }
+async function loadEventGovernanceBadge(){
+  var badge=$('eventGovernanceBadge');
+  if(!badge||!state.session||!state.session.token)return;
+  try{
+    var r=await rpc('ctEventosGovernancaMasterContarPendentesPROD',[String(state.session.token)]);
+    var total=r&&r.sucesso===true?Number(r.pendentes||0):0;
+    badge.textContent=total>99?'99+':String(total);
+    badge.classList.toggle('hidden',total<=0);
+    badge.parentElement.title=total===1?'1 evento aguardando autorização Master.':(total+' eventos aguardando autorização Master.');
+  }catch(_){
+    badge.classList.add('hidden');
+  }
+}
 async function loadAdvanceRequestsBadge(){
   var badge=$('advanceRequestsBadge');
   if(!badge||!state.session||!state.session.token)return;
@@ -231,7 +245,7 @@ async function load(filters){
   try{
     var r=await rpc('ctBackofficeMasterCarregarPROD',[String(state.session.token),filters||{preset:state.preset}]);
     if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Seu perfil não está autorizado para o Backoffice Master.');
-    render(r);$('gate').classList.add('hidden');$('app').classList.remove('hidden');loadAdvanceRequestsBadge();
+    render(r);$('gate').classList.add('hidden');$('app').classList.remove('hidden');loadAdvanceRequestsBadge();loadEventGovernanceBadge();
   }catch(e){
     if($('app').classList.contains('hidden'))deny(e&&e.message?e.message:String(e));else toast(e&&e.message?e.message:String(e));
   }finally{state.busy=false;$('refresh').disabled=false;$('applyCustom').disabled=false}
