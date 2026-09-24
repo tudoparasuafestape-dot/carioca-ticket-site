@@ -1096,14 +1096,14 @@ if (financeiroProdutor) {
   if (!financeiroProdutor.includes("'/produtor/financeiro/?evento='")) {
     fail('financeiro/index.html', 'Financeiro sem redirecionamento seguro para solicitacao de antecipacao');
   }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarSaquePROD')) {
-    fail('financeiro/index.html', 'Financeiro sem solicitacao de saque');
+  if (financeiroProdutor.includes("rpc('ctFinanceiroProdutorSolicitarSaquePROD'")) {
+    fail('financeiro/index.html', 'Financeiro legado ainda registra saque fora do Master');
+  }
+  if (!financeiroProdutor.includes('Solicitação de saque temporariamente indisponível')) {
+    fail('financeiro/index.html', 'Financeiro legado não informa bloqueio do saque fora do Master');
   }
   if (!financeiroProdutor.includes("==='ANTECIPAR'")) {
     fail('financeiro/index.html', 'Antecipacao sem confirmacao textual de seguranca');
-  }
-  if (!financeiroProdutor.includes("==='SOLICITAR SAQUE'")) {
-    fail('financeiro/index.html', 'Saque sem confirmacao textual de seguranca');
   }
   if (!financeiroProdutor.includes('3,5%')) {
     fail('financeiro/index.html', 'Taxa CT vigente de antecipacao nao esta transparente na interface');
@@ -1115,7 +1115,7 @@ if (financeiroProdutor) {
     fail('financeiro/index.html', 'Antecipacao legada ainda chama mutacao direta');
   }
   if (!financeiroProdutor.includes('Nenhuma transferência Pix/TED é executada automaticamente')) {
-    fail('financeiro/index.html', 'Saque nao informa que e apenas solicitacao interna');
+    fail('financeiro/index.html', 'Financeiro não informa proteção contra transferência automática');
   }
   const nativeDialogFinance = financeiroProdutor.match(/(?:window\.)?(?:alert|confirm|prompt)\s*\(/i);
   if (nativeDialogFinance) {
