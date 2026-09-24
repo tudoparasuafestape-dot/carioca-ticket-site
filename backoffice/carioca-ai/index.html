@@ -17,8 +17,9 @@
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}.head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.head h2{font-size:15px;margin:0}.head p{font-size:10px;color:var(--muted);margin:4px 0 0}.body{padding:14px 16px}
 .agent-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.agent{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}.agent-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.agent b{font-size:12px}.agent small{display:block;color:var(--muted);font-size:9px;margin-top:4px}.badge{font-size:8px;border:1px solid var(--line);border-radius:999px;padding:5px 6px;white-space:nowrap;font-weight:900}.badge.ok{color:#baf1cf;border-color:rgba(100,214,141,.3)}.badge.warn{color:#ffe4a2;border-color:rgba(241,201,90,.3)}.badge.bad{color:#ffb4b4;border-color:rgba(255,121,121,.3)}.agent-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}.agent-kpi{background:#0c0e13;border-radius:9px;padding:7px}.agent-kpi span{display:block;color:var(--muted);font-size:8px}.agent-kpi strong{display:block;font-size:13px;margin-top:3px}
 .tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:720px}.table th,.table td{text-align:left;border-bottom:1px solid var(--line);padding:10px 8px;font-size:10px}.table th{color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.06em}.table td b{font-size:11px}.empty{padding:24px;text-align:center;color:var(--muted);font-size:11px}.brief{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.brief-card{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px}.brief-card span{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.brief-card strong{display:block;font-size:17px;margin-top:5px}.alerts{display:grid;gap:8px}.alert{border:1px solid var(--line);background:var(--card2);border-radius:11px;padding:10px 12px;font-size:10px;line-height:1.45}
+.askbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.askbar input{min-height:46px;border:1px solid var(--line);border-radius:12px;background:#0c0e13;color:var(--text);padding:0 13px;font:inherit;outline:none}.askbar input:focus{border-color:rgba(213,165,54,.65)}.examples{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.chip{border:1px solid var(--line);background:var(--card2);color:var(--muted);border-radius:999px;padding:7px 9px;font-size:9px;cursor:pointer}.answer{margin-top:12px;border:1px solid rgba(213,165,54,.24);background:rgba(213,165,54,.05);border-radius:14px;padding:13px}.answer h3{font-size:13px;margin:0 0 7px}.answer p{font-size:11px;line-height:1.55;margin:0}.answer-meta{color:var(--muted);font-size:9px;margin-top:8px}.points{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}.point{border:1px solid var(--line);background:#0c0e13;border-radius:10px;padding:9px}.point span{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.point strong{display:block;font-size:13px;margin-top:4px}.priorities{display:grid;gap:6px;margin-top:10px}.priority{border-left:3px solid var(--gold);background:var(--card2);border-radius:8px;padding:9px 10px;font-size:10px;line-height:1.4}
 .gate{min-height:70vh;display:grid;place-items:center;padding:24px}.gatebox{width:min(500px,100%);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center}.gatebox p{color:var(--muted);line-height:1.5}.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#171a21;border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:11px;z-index:20;max-width:min(680px,calc(100% - 30px))}
-@media(max-width:1050px){.stats{grid-template-columns:repeat(3,1fr)}.agent-grid{grid-template-columns:repeat(2,1fr)}.brief{grid-template-columns:repeat(2,1fr)}}@media(max-width:720px){.shell{width:min(100% - 18px,1440px);padding-top:10px}.top{align-items:flex-start}.actions{max-width:52%}.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.agent-grid{grid-template-columns:1fr}.hero h1{font-size:23px}.stat strong{font-size:20px}}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(3,1fr)}.agent-grid{grid-template-columns:repeat(2,1fr)}.brief{grid-template-columns:repeat(2,1fr)}.points{grid-template-columns:repeat(2,1fr)}}@media(max-width:720px){.shell{width:min(100% - 18px,1440px);padding-top:10px}.top{align-items:flex-start}.actions{max-width:52%}.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.agent-grid{grid-template-columns:1fr}.askbar{grid-template-columns:1fr}.points{grid-template-columns:1fr}.hero h1{font-size:23px}.stat strong{font-size:20px}}
 </style>
 </head>
 <body>
@@ -51,6 +52,24 @@
     <article class="stat"><span>Risco alto</span><strong id="kRisk">0</strong><small>Tarefas abertas</small></article>
     <article class="stat"><span>Falhas</span><strong id="kFail">0</strong><small>Exigem análise</small></article>
     <article class="stat"><span>Concluídas</span><strong id="kDone">0</strong><small>Histórico concluído</small></article>
+  </section>
+
+  <section class="panel" style="margin-bottom:14px">
+    <div class="head"><div><h2>Orquestrador Executivo A1</h2><p>Pergunte sobre vendas, financeiro, operação, riscos, decisões ou o estado geral da Carioca Ticket.</p></div><span class="badge ok">Somente leitura</span></div>
+    <div class="body">
+      <div class="askbar">
+        <input id="agentQuestion" maxlength="800" autocomplete="off" placeholder="Ex.: Como está a Carioca Ticket hoje?">
+        <button id="agentAsk" class="btn gold" type="button">Perguntar ao agente</button>
+      </div>
+      <div class="examples">
+        <button class="chip" type="button" data-question="Como está a Carioca Ticket hoje?">Status de hoje</button>
+        <button class="chip" type="button" data-question="Como estão vendas e ingressos hoje?">Vendas</button>
+        <button class="chip" type="button" data-question="Como está o financeiro este mês?">Financeiro</button>
+        <button class="chip" type="button" data-question="Existe algum risco ou falha que exige atenção?">Riscos</button>
+        <button class="chip" type="button" data-question="Tem alguma decisão aguardando minha aprovação?">Minhas decisões</button>
+      </div>
+      <div id="agentAnswer" class="answer hidden"></div>
+    </div>
   </section>
 
   <section class="panel" style="margin-bottom:14px">
@@ -145,6 +164,25 @@ async function load(){
   }finally{state.busy=false;$('refresh').disabled=false}
 }
 
+function renderAgentAnswer(r){
+  var pontos=Array.isArray(r.pontos)?r.pontos:[],prioridades=Array.isArray(r.prioridades)?r.prioridades:[];
+  $('agentAnswer').innerHTML='<h3>'+esc((r.agente&&r.agente.nome)||'Orquestrador Executivo')+'</h3><p>'+esc(r.resposta||'Sem resposta disponível.')+'</p>'+(pontos.length?'<div class="points">'+pontos.map(function(p){return'<div class="point"><span>'+esc(p.titulo||'Indicador')+'</span><strong>'+esc(p.valor==null?'—':p.valor)+'</strong></div>'}).join('')+'</div>':'')+(prioridades.length?'<div class="priorities">'+prioridades.map(function(p){return'<div class="priority"><b>'+esc(p.titulo||'Prioridade')+'</b><br>'+esc(p.motivo||'')+'</div>'}).join(''):'')+'<div class="answer-meta">Intenção: '+esc(human(r.intencao||'STATUS_GERAL'))+' · A1 leitura/análise · LLM externo desconectado · '+esc(dateTime(r.geradoEm))+'</div>';
+  $('agentAnswer').classList.remove('hidden');
+}
+
+async function askAgent(){
+  if(state.busy)return;
+  var q=String($('agentQuestion').value||'').trim();
+  if(!q){toast('Digite uma pergunta para o Orquestrador Executivo.');$('agentQuestion').focus();return}
+  state.busy=true;$('agentAsk').disabled=true;$('agentAsk').textContent='Analisando…';
+  try{
+    var r=await rpc('ctCariocaAIExecutiveAgentConsultarPROD',[String(state.session.token),q,{}]);
+    if(!r||r.sucesso!==true)throw new Error('O agente não conseguiu concluir a análise.');
+    renderAgentAnswer(r);
+  }catch(e){toast(e&&e.message?e.message:String(e))}
+  finally{state.busy=false;$('agentAsk').disabled=false;$('agentAsk').textContent='Perguntar ao agente'}
+}
+
 async function briefing(){
   if(state.busy)return;state.busy=true;$('briefingBtn').disabled=true;$('briefStatus').textContent='Gerando…';
   try{
@@ -159,6 +197,9 @@ async function briefing(){
 
 $('refresh').addEventListener('click',load);
 $('briefingBtn').addEventListener('click',briefing);
+$('agentAsk').addEventListener('click',askAgent);
+$('agentQuestion').addEventListener('keydown',function(e){if(e.key==='Enter')askAgent()});
+document.querySelectorAll('[data-question]').forEach(function(b){b.addEventListener('click',function(){$('agentQuestion').value=String(b.dataset.question||'');askAgent()})});
 state.session=readSession();if(!state.session)deny('Entre no Portal do Produtor antes de abrir a Carioca AI.');else load();
 }());
 </script>
