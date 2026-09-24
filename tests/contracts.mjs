@@ -285,21 +285,21 @@ if (contaCariocaPayPage) {
     'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
     'ctPortalProdutorRestaurarSessaoIsoladaPROD',
     'ctContaCariocaPayPortalResumoPROD',
+    'ctContaCariocaPayPortalSolicitarAntecipacaoPROD',
+    'id="requestAnticipationButton"',
     'Vendas confirmadas',
     'Saldo operacional conciliado',
     'Disponível para solicitar antecipação',
-    'Pagamentos planejados',
-    'Portaria / Smart App',
-    'Bar / Smart App',
-    'Patrocínios',
-    'Capital próprio',
     'Regras de antecipação',
+    'R$ 500,00',
     '80%',
     '20%',
-    '3,49%',
+    '3,5%',
+    'até 2 dias úteis',
     'D+3 úteis',
-    'movimentação real desabilitada',
-    'disabled><b>Solicitar antecipação',
+    'sem taxa de antecipação',
+    'Backoffice Master',
+    'Nenhum valor é transferido automaticamente nesta etapa.',
     'disabled><b>Registrar patrocínio',
     'disabled><b>Planejar pagamento',
     'disabled><b>Adicionar saldo'
@@ -316,14 +316,55 @@ if (contaCariocaPayPage) {
     fail('produtor/financeiro/index.html', 'Conta Carioca Pay sem PWA oficial do produtor');
   }
 
-  if (
-    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
-    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAportePROD'") ||
-    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'") ||
-    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
-  ) {
-    fail('produtor/financeiro/index.html', 'UI P2 nao pode disparar mutacoes antes da P3 Master');
+  for (const forbidden of [
+    '3,49%',
+    'R$ 300,00',
+    'movimentação real desabilitada',
+    "rpc('ctContaCariocaPayPortalSolicitarAportePROD'",
+    "rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'",
+    "rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'"
+  ]) {
+    if (contaCariocaPayPage.includes(forbidden)) {
+      fail('produtor/financeiro/index.html', 'Conta Carioca Pay contém regra/ação indevida: ' + forbidden);
+    }
   }
+}
+
+const produtorFinanceiroOficial = read('produtor/index.html');
+if (
+  produtorFinanceiroOficial &&
+  (
+    !produtorFinanceiroOficial.includes('id="cariocaPayLink"') ||
+    !produtorFinanceiroOficial.includes('href="/produtor/financeiro/"')
+  )
+) {
+  fail('produtor/index.html', 'Conta Carioca Pay não aponta para o financeiro oficial');
+}
+
+const centralFinanceiroOficial = read('central/index.html');
+if (
+  centralFinanceiroOficial &&
+  !centralFinanceiroOficial.includes("'/produtor/financeiro/?evento='")
+) {
+  fail('central/index.html', 'Financeiro da Central não aponta para o fluxo Master');
+}
+
+const financeiroLegado = read('financeiro/index.html');
+if (financeiroLegado) {
+  if (!financeiroLegado.includes("'/produtor/financeiro/?evento='")) {
+    fail('financeiro/index.html', 'Financeiro legado não redireciona antecipação para Conta Carioca Pay');
+  }
+  if (financeiroLegado.includes(".ctFinanceiroProdutorSolicitarAntecipacaoPROD(")) {
+    fail('financeiro/index.html', 'Financeiro legado ainda dispara antecipação direta');
+  }
+}
+
+const backofficeMasterNav = read('backoffice/index.html');
+if (
+  backofficeMasterNav &&
+  !backofficeMasterNav.includes('href="/backoffice/carioca-pay/"')
+) {
+  fail('backoffice/index.html', 'Backoffice Master sem acesso à fila de antecipações');
 }
 
 const contaCariocaPayMasterPage = read('backoffice/carioca-pay/index.html');
