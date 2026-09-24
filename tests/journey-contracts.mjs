@@ -124,18 +124,23 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
   }
 }
 
-// P0 JORNADA DE COMPRA — a experiência termina quando existe ingresso durável,
-// mesmo que tarefas pós-venda ainda mantenham o pedido em PROCESSANDO.
+// P0 JORNADA DE COMPRA — a experiência só termina quando o ingresso durável
+// também possui link seguro oficial utilizável. CONCLUIDO sozinho não libera botão quebrado.
 for(const path of ['checkout/index.html','checkout-v2/index.html']){
   const checkout=read(path);
   requireAll(path,checkout,[
+    'var ingressosRecebidos=',
+    'var ingressosComLinkSeguro=',
+    "return officialTicketLink(item)!=='#';",
     'var ingressosProntos=',
     'res.ingressoEmitido===true',
-    'Array.isArray(res.ingressos)',
-    "if(status==='CONCLUIDO'||ingressosProntos){",
+    'ingressosComLinkSeguro.length',
+    'if(ingressosProntos){',
     'stopPolling();',
     'stopExpiry();',
-    'renderSuccess(res.ingressos||[]);'
+    'stopTicketReadyRefresh();',
+    'renderSuccess(ingressosComLinkSeguro);',
+    'scheduleTicketReadyRefresh();'
   ]);
 
   const renderOrderStart=checkout.indexOf('function renderOrder(res){');
@@ -144,8 +149,12 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
     ? checkout.slice(renderOrderStart,renderOrderEnd)
     : '';
 
-  if(!renderOrderBlock.includes("status==='CONCLUIDO'||ingressosProntos")){
-    failures.push(path+': checkout ainda depende exclusivamente de CONCLUIDO para liberar ingresso');
+  if(renderOrderBlock.includes("status==='CONCLUIDO'||ingressosProntos")){
+    failures.push(path+': CONCLUIDO sozinho não pode liberar ingresso sem link seguro');
+  }
+
+  if(!renderOrderBlock.includes('if(ingressosProntos){')){
+    failures.push(path+': checkout precisa exigir ingresso com link seguro antes da tela final');
   }
 }
 
@@ -156,7 +165,8 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
   requireAll(path,checkout,[
     "state.paymentMethod==='CREDIT_CARD'",
     "el.cardPanel.classList.remove('hidden')",
-    'var invoiceUrl=String(res&&res.pagamento&&res.pagamento.invoiceUrl',
+    'var pagamentoConfirmado=',
+    'var invoiceUrl=pagamentoConfirmado',
     'el.cardPaymentLink.href=invoiceUrl',
     'ctCheckoutPixPublicoReconciliarPROD',
     'res.ingressoEmitido===true'
