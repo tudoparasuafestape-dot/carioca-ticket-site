@@ -47,7 +47,7 @@
 <section class="section">
   <div class="head"><div><h2>Política financeira</h2><p>Regras aplicadas antes de qualquer solicitação.</p></div></div>
   <div class="policy">
-    <div class="notice"><strong>Antecipação · taxa CT 2,5%</strong><br>A simulação consulta o Asaas em tempo real. A taxa CT é calculada sobre o valor bruto antecipado e mostrada antes da confirmação. Em conta própria do produtor, essa taxa fica registrada no financeiro da plataforma e não é debitada automaticamente pelo Asaas.</div>
+    <div class="notice"><strong>Antecipação · taxa CT 3,5%</strong><br>A simulação consulta o Asaas em tempo real. A taxa CT é de 3,5% sobre o valor antecipado. O fluxo oficial exige análise do Backoffice Master antes de qualquer execução financeira. Em conta própria do produtor, essa taxa fica registrada no financeiro da plataforma e não é debitada automaticamente pelo Asaas.</div>
     <div class="notice safe"><strong>Saque protegido</strong><br>O botão abaixo registra uma solicitação auditável e reserva o valor. Nenhuma transferência Pix/TED é executada automaticamente nesta etapa; isso evita movimentação bancária sem validação financeira adicional.</div>
   </div>
 </section>
@@ -68,7 +68,7 @@
     </div>
     <div class="box">
       <h3>Como funciona</h3>
-      <p id="withdrawHelp" class="muted">A Carioca Ticket valida o saldo disponível da conta Asaas antes de registrar o pedido. O valor fica reservado no controle interno até processamento ou cancelamento.</p>
+      <p id="withdrawHelp" class="muted">Solicitação de saque temporariamente indisponível até a integração com uma fila própria do Backoffice Master. Nenhum pedido de saque é registrado por esta tela.</p>
       <p id="permissionNote" class="muted"></p>
     </div>
   </div>
@@ -93,7 +93,7 @@
     <p class="lead">Os valores abaixo foram consultados no Asaas agora. Nenhuma antecipação é criada até a confirmação final.</p>
     <div id="simulation" class="sim-grid"></div>
     <div id="simulationNotice" class="notice"></div>
-    <label class="check"><input id="acceptFee" type="checkbox"><span>Li e aceito a taxa comercial Carioca Ticket de <strong>2,5%</strong> exibida nesta simulação.</span></label>
+    <label class="check"><input id="acceptFee" type="checkbox"><span>Li e aceito a taxa comercial Carioca Ticket de <strong>3,5%</strong> exibida nesta simulação.</span></label>
     <div class="field"><label for="anticipationConfirm">Confirmação de segurança</label><input id="anticipationConfirm" autocomplete="off" placeholder="Digite ANTECIPAR"></div>
     <div class="modal-actions"><button id="closeAnticipation" class="btn" type="button">Fechar</button><button id="executeAnticipation" class="btn gold" type="button" disabled>Solicitar antecipação</button></div>
   </section>
@@ -195,7 +195,7 @@ async function simulate(index){
       '<div class="sim"><span>Valor bruto</span><strong>'+esc(x.valorBruto||'—')+'</strong></div>'+
       '<div class="sim"><span>Taxa Asaas</span><strong>'+esc(x.taxaProvider||'—')+'</strong></div>'+
       '<div class="sim"><span>Líquido Asaas</span><strong>'+esc(x.liquidoProvider||'—')+'</strong></div>'+
-      '<div class="sim"><span>Taxa CT · 2,5%</span><strong>'+esc(x.taxaCtValor||'—')+'</strong></div>'+
+      '<div class="sim"><span>Taxa CT · 3,5%</span><strong>'+esc(x.taxaCtValor||'—')+'</strong></div>'+
       '<div class="sim highlight"><span>Líquido econômico estimado</span><strong>'+esc(x.liquidoEconomico||'—')+'</strong></div>'+
       '<div class="sim"><span>Crédito previsto</span><strong>'+esc(x.dataPrevista||'Conforme análise Asaas')+'</strong></div>';
     var n=document.getElementById('simulationNotice');
@@ -211,34 +211,20 @@ function updateAnticipationButton(){
 }
 
 async function requestAnticipation(){
-  if(executeAnticipation.disabled||!state.paymentId)return;
-  state.busy=true;executeAnticipation.disabled=true;executeAnticipation.textContent='Solicitando…';
-  try{
-    var r=await rpc('ctFinanceiroProdutorSolicitarAntecipacaoPROD',[String(state.session.token),state.eventId,state.paymentId,String(anticipationConfirm.value||''),acceptFee.checked===true]);
-    if(!r||r.sucesso!==true)throw new Error('A antecipação não foi registrada.');
-    closeModal();toast(r.mensagem||'Antecipação solicitada.');state.busy=false;await load();
-  }catch(e){toast(e&&e.message?e.message:String(e))}
-  finally{state.busy=false;executeAnticipation.textContent='Solicitar antecipação';updateAnticipationButton()}
+  if(!state.eventId)return;
+  window.location.assign(
+    '/produtor/financeiro/?evento='+
+    encodeURIComponent(String(state.eventId||''))
+  );
 }
 
 function updateWithdrawButton(){
-  var canMove=state.panel&&state.panel.podeMovimentar===true;
-  var value=Number(document.getElementById('withdrawValue').value||0);
-  var confirm=String(document.getElementById('withdrawConfirm').value||'').trim().toUpperCase();
-  document.getElementById('withdrawButton').disabled=!(canMove&&value>=1&&confirm==='SOLICITAR SAQUE'&&!state.busy);
+  document.getElementById('withdrawButton').disabled=true;
 }
 
 async function requestWithdraw(){
-  if(document.getElementById('withdrawButton').disabled)return;
-  state.busy=true;document.getElementById('withdrawButton').disabled=true;document.getElementById('withdrawButton').textContent='Registrando…';
-  try{
-    var value=Number(document.getElementById('withdrawValue').value||0);
-    var confirm=String(document.getElementById('withdrawConfirm').value||'');
-    var r=await rpc('ctFinanceiroProdutorSolicitarSaquePROD',[String(state.session.token),state.eventId,value,confirm]);
-    if(!r||r.sucesso!==true)throw new Error('A solicitação não foi registrada.');
-    document.getElementById('withdrawValue').value='';document.getElementById('withdrawConfirm').value='';toast(r.mensagem||'Solicitação registrada.');state.busy=false;await load();
-  }catch(e){toast(e&&e.message?e.message:String(e))}
-  finally{state.busy=false;document.getElementById('withdrawButton').textContent='Registrar solicitação';updateWithdrawButton()}
+  toast('Solicitação de saque indisponível até a integração com o Backoffice Master.');
+  updateWithdrawButton();
 }
 
 async function cancelWithdraw(id){

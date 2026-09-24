@@ -573,7 +573,7 @@ function financeiroProdutorFixture() {
       taxasCtPendentes: 'R$ 0,00'
     },
     politica: {
-      taxaAntecipacaoCtPercentual: 2.5,
+      taxaAntecipacaoCtPercentual: 3.5,
       taxaAntecipacaoModo: 'LEDGER_CT',
       saqueModo: 'SOLICITACAO_INTERNA',
       saqueMovimentaDinheiroAutomaticamente: false,
@@ -584,6 +584,63 @@ function financeiroProdutorFixture() {
     diagnostico: { saldoErro: '' },
     atualizadoEm: '22/09/2026 00:30:00',
     versaoModulo: '1.0.0'
+  };
+}
+
+
+function contaCariocaPayFixture(aguardandoMaster=0) {
+  return {
+    sucesso: true,
+    autenticado: true,
+    autorizado: true,
+    eventoId: EVENT_ID,
+    produtorId: 'PROD-E2E',
+    permissoes: {
+      solicitarAntecipacao: true,
+      registrarPatrocinio: false,
+      planejarPagamento: false,
+      adicionarCapitalProprio: false
+    },
+    vendas: {
+      confirmado: 1000,
+      vendasElegiveisAntecipacao: 1000
+    },
+    ledger: {
+      saldoOperacional: 1000,
+      porOrigem: {
+        VENDAS_PORTARIA: 0,
+        VENDAS_BAR: 0,
+        PATROCINIO: 0,
+        CAPITAL_PROPRIO: 0,
+        ANTECIPACAO: 0
+      }
+    },
+    antecipacao: {
+      vendasElegiveis: 1000,
+      maximoAntecipavel: 800,
+      saldoMinimoSolicitacao: 500,
+      reservaSeguranca: 200,
+      antecipacoesAbertas: 0,
+      disponivelSolicitar: 800,
+      percentualMaximo: 80,
+      reservaPercentual: 20,
+      taxaCtPercentual: 3.5,
+      prazoEnvioDiasUteis: 2,
+      providerHabilitado: false
+    },
+    solicitacoes: {
+      antecipacoesAbertas: aguardandoMaster ? 500 : 0,
+      antecipacoesAguardandoMaster: aguardandoMaster,
+      pagamentosPlanejados: 0,
+      pagamentosAguardandoAprovacao: 0
+    },
+    financeiro: {
+      configurado: true,
+      movimentacaoRealHabilitada: false,
+      aportePixHabilitado: false,
+      repasseAutomaticoHabilitado: false
+    },
+    atualizadoEm: '24/09/2026 17:30:00'
   };
 }
 
@@ -990,6 +1047,29 @@ async function installMock(page, state) {
             resultado = financeiroProdutorFixture();
             break;
 
+          case 'ctContaCariocaPayPortalResumoPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            resultado = contaCariocaPayFixture(state.anticipationRequestCalls || 0);
+            break;
+
+          case 'ctContaCariocaPayPortalSolicitarAntecipacaoPROD':
+            expect(String(args[0] || '')).toBe(state.token);
+            expect(String(args[1] || '')).toBe(EVENT_ID);
+            expect(Number(args[2] || 0)).toBe(500);
+            expect(String(args[3] || '')).toContain('PORTAL|ANTECIPACAO|');
+            state.anticipationRequestCalls = (state.anticipationRequestCalls || 0) + 1;
+            resultado = {
+              sucesso: true,
+              status: 'SOLICITADA',
+              exigeAprovacaoMaster: true,
+              chamouProvider: false,
+              movimentouDinheiro: false,
+              solicitacao: { solicitacaoId: 'CCP-SOL-E2E', status: 'SOLICITADA', valor: 500 },
+              notificacaoMaster: { notificacaoId: 'CCP-NOT-E2E', destinoPerfil: 'ADMINISTRADOR' }
+            };
+            break;
+
           case 'ctFinanceiroProdutorSimularAntecipacaoPROD':
           case 'ctFinanceiroProdutorSolicitarAntecipacaoPROD':
           case 'ctFinanceiroProdutorSolicitarSaquePROD':
@@ -1197,7 +1277,8 @@ test.describe('Jornada operacional autenticada', () => {
       barMutationCalls: 0,
       eventMutationCalls: 0,
       supplierMutationCalls: 0,
-      commissionMutationCalls: 0
+      commissionMutationCalls: 0,
+      anticipationRequestCalls: 0
     };
 
     await installMock(page, state);
@@ -1268,7 +1349,7 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#mCRM')).toHaveAttribute('aria-disabled', 'false');
     await expect(page.locator('#mFinanceiro')).toHaveAttribute(
       'href',
-      new RegExp('/financeiro/\\?evento=' + EVENT_ID)
+      new RegExp('/produtor/financeiro/\\?evento=' + EVENT_ID)
     );
     await expect(page.locator('#mFinanceiro')).toHaveAttribute('aria-disabled', 'false');
     await expect(page.locator('#mRelatorios')).toHaveAttribute(
@@ -1380,18 +1461,39 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
     await page.locator('#mFinanceiro').click();
-    await expect(page).toHaveURL(/\/financeiro\/\?evento=/);
-    await expect(page.locator('#app')).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('#revenue')).toHaveText('R$ 90,00');
-    await expect(page.locator('#received')).toHaveText('R$ 65,00');
-    await expect(page.locator('#receivable')).toHaveText('R$ 25,00');
-    await expect(page.locator('#asaasBalance')).toHaveText('R$ 180,00');
-    await expect(page.getByRole('link', { name: /Central$/i })).toHaveAttribute('href', '/central/');
-    await expect(page.locator('body')).toContainText(/taxa CT 2,5%/i);
-    await expect(page.locator('body')).toContainText(/Nenhuma transferência Pix\/TED é executada automaticamente/i);
+    await expect(page).toHaveURL(/\/produtor\/financeiro\/\?evento=/);
+    await expect(page.locator('#dashboard')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#confirmedSales')).toHaveText('R$ 1.000,00');
+    await expect(page.locator('#anticipationAvailable')).toHaveText('R$ 800,00');
+    await expect(page.locator('#policyMax')).toHaveText('80%');
+    await expect(page.locator('#policyReserve')).toHaveText('20%');
+    await expect(page.locator('#policyFee')).toContainText('3,5%');
+    await expect(page.locator('body')).toContainText(/R\$ 500,00/);
+    await expect(page.locator('body')).toContainText(/efetivamente disponíveis para antecipação/i);
+    await expect(page.locator('body')).toContainText(/até 2 dias úteis/i);
+    await expect(page.locator('body')).toContainText(/D\+3 úteis/i);
+    await expect(page.locator('body')).toContainText(/sem taxa de antecipação/i);
+    await expect(page.locator('#requestAnticipationButton')).toBeEnabled();
+    await page.locator('#requestAnticipationButton').click();
+    await expect(page.locator('#anticipationBackdrop')).toBeVisible();
+    await page.locator('#anticipationValue').fill('500');
+    await page.locator('#anticipationSubmit').click();
+    await expect.poll(() => state.anticipationRequestCalls || 0).toBe(1);
+    await expect(page.locator('#message')).toContainText('Backoffice Master');
+    await expect(page.locator('#pendingApprovals')).toHaveText('1');
     await expectNoTechnicalVisibleLinks(page);
 
-    await page.getByRole('link', { name: /Central$/i }).click();
+    await page.getByRole('link', { name: /Voltar ao Portal/i }).click();
+    await expect(page).toHaveURL(/\/produtor\//);
+    await expect(page.locator('#portalView')).toBeVisible({ timeout: 15000 });
+
+    const centralLinkAfterFinance = page.locator('#centralMobileLink');
+    const centralHrefAfterFinance = await centralLinkAfterFinance.getAttribute('href');
+    const centralUrlAfterFinance = new URL(centralHrefAfterFinance);
+    await page.goto(
+      centralUrlAfterFinance.pathname + centralUrlAfterFinance.search + centralUrlAfterFinance.hash,
+      { waitUntil: 'domcontentloaded' }
+    );
     await expect(page).toHaveURL(/\/central\//);
     await expect(page.locator('#central')).toBeVisible({ timeout: 15000 });
 
@@ -1443,6 +1545,7 @@ test.describe('Jornada operacional autenticada', () => {
     expect(state.eventMutationCalls).toBe(0);
     expect(state.supplierMutationCalls).toBe(0);
     expect(state.commissionMutationCalls).toBe(0);
+    expect(state.anticipationRequestCalls).toBe(1);
   });
 
   test('Central -> Usuarios e Permissoes -> Sair sem rota escondida', async ({ page }) => {
