@@ -302,7 +302,10 @@ if (contaCariocaPayPage) {
     'ctContaCariocaPayPortalSolicitarAntecipacaoPROD',
     'ctContaCariocaPayPortalSolicitarSaquePROD',
     'Solicitar saque',
-    'Mínimo de R$ 500,00'
+    'Mínimo de R$ 500,00',
+    'Disponível para saque',
+    'saldoAutoritativoDisponivel',
+    'O saque permanece bloqueado por segurança'
   ]) {
     if (!contaCariocaPayPage.includes(required)) {
       fail('produtor/financeiro/index.html', 'Conta Carioca Pay incompleta: ' + required);
