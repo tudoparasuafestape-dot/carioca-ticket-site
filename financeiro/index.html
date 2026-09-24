@@ -58,17 +58,17 @@
 </section>
 
 <section class="section">
-  <div class="head"><div><h2>Solicitar saque</h2><p>Uma solicitação aberta por vez para reduzir duplicidade e conciliar o financeiro.</p></div></div>
+  <div class="head"><div><h2>Saque</h2><p>Fluxo temporariamente bloqueado até a homologação da análise pelo Administrador Master.</p></div></div>
   <div class="panel grid">
     <div class="box">
       <h3>Nova solicitação</h3>
-      <div class="field"><label for="withdrawValue">Valor do saque</label><input id="withdrawValue" type="number" min="1" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-      <div class="field"><label for="withdrawConfirm">Confirmação</label><input id="withdrawConfirm" autocomplete="off" placeholder="Digite SOLICITAR SAQUE"></div>
+      <div class="field"><label for="withdrawValue">Valor do saque</label><input id="withdrawValue" type="number" min="1" step="0.01" inputmode="decimal" placeholder="0,00" disabled></div>
+      <div class="field"><label for="withdrawConfirm">Confirmação</label><input id="withdrawConfirm" autocomplete="off" placeholder="Aguardando fluxo Master" disabled></div>
       <div class="actions"><button id="withdrawButton" class="btn gold" type="button" disabled>Registrar solicitação</button></div>
     </div>
     <div class="box">
       <h3>Como funciona</h3>
-      <p id="withdrawHelp" class="muted">A Carioca Ticket valida o saldo disponível da conta Asaas antes de registrar o pedido. O valor fica reservado no controle interno até processamento ou cancelamento.</p>
+      <p id="withdrawHelp" class="muted">Nenhuma solicitação de saque será registrada enquanto não existir tela Master, decisão auditável e homologação ponta a ponta.</p>
       <p id="permissionNote" class="muted"></p>
     </div>
   </div>
@@ -186,7 +186,7 @@ function updateWithdrawButton(){
   var canMove=state.panel&&state.panel.podeMovimentar===true;
   var value=Number(document.getElementById('withdrawValue').value||0);
   var confirm=String(document.getElementById('withdrawConfirm').value||'').trim().toUpperCase();
-  document.getElementById('withdrawButton').disabled=!(canMove&&value>=1&&confirm==='SOLICITAR SAQUE'&&!state.busy);
+  document.getElementById('withdrawButton').disabled=true;
 }
 
 async function requestWithdraw(){
