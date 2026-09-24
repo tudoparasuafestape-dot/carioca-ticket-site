@@ -99,7 +99,9 @@ async function installRpcMock(page, state) {
         expect(String(args[0] || '')).toBe(state.adminToken);
         state.detailCalls=(state.detailCalls||0)+1;
         const detalheStatus=(state.staleDetailAfterDecision&&state.status!=='ENVIADO')?'ENVIADO':state.status;
-        resultado = {sucesso:true,autorizado:true,admin:{perfil:'ADMINISTRADOR'},solicitacao:requestFixture(detalheStatus)};
+        var detalhe=requestFixture(detalheStatus);
+        if(detalheStatus==='ATIVO')detalhe.financeiro={existe:true,statusOnboarding:'PENDENTE_CREDENCIAL',credencialConfigurada:false,recebimentoHabilitado:false,prontoParaVendas:false};
+        resultado = {sucesso:true,autorizado:true,admin:{perfil:'ADMINISTRADOR'},solicitacao:detalhe};
       } else if (method === 'ctProdutorOnboardingAdminDecidirPROD') {
         expect(String(args[0] || '')).toBe(state.adminToken);
         const actionName=String(args[2]||'');
@@ -214,6 +216,8 @@ test.describe('Onboarding do Produtor indicado', () => {
     await page.locator('#confirmAction').click();
     await expect.poll(() => state.status).toBe('ATIVO');
     await expect(page.locator('#detailStatus')).toHaveText('ATIVO', {timeout:15000});
+    await expect(page.locator('#detail')).toContainText('PENDENTE_CREDENCIAL');
+    await expect(page.locator('#detail')).toContainText('Financeiro ainda não liberado para vendas.');
     await expect(page.locator('#cReview')).toHaveText('0');
     await expect(page.locator('#cActive')).toHaveText('1');
 
