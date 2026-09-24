@@ -43,6 +43,48 @@ function requireLink(path, content, id, href){
   }
 }
 
+// Minha Carioca — entrada pública simples e coerente com OTP somente por e-mail.
+{
+  const landing=read('minha-carioca/index.html');
+  requireAll('minha-carioca/index.html',landing,[
+    'Acesse com o e-mail usado na compra',
+    'Enviaremos um código de 6 dígitos',
+    'id="customerAccountCta"',
+    'href="/minha-carioca/conta/"'
+  ]);
+  for(const forbidden of [
+    'Pelo WhatsApp ou ingresso recebido',
+    'Já tem um link seguro? Cole aqui',
+    'id="secure-link"',
+    'id="open-secure"',
+    'function openPasted()'
+  ]){
+    if(landing.includes(forbidden)){
+      failures.push('minha-carioca/index.html: fluxo público antigo reapareceu -> '+forbidden);
+    }
+  }
+
+  const conta=read('minha-carioca/conta/index.html');
+  requireAll('minha-carioca/conta/index.html',conta,[
+    "e('label','','E-mail da compra')",
+    "i.type='email'",
+    "i.autocomplete='email'",
+    'Seu e-mail cadastrado na compra',
+    'código de 6 dígitos para o e-mail cadastrado na sua compra'
+  ]);
+  for(const forbidden of [
+    'WhatsApp ou e-mail',
+    'Use preferencialmente seu WhatsApp',
+    'Seu e-mail ou WhatsApp cadastrado',
+    'Informe seu e-mail ou WhatsApp.',
+    'canal seguro disponível na sua conta'
+  ]){
+    if(conta.includes(forbidden)){
+      failures.push('minha-carioca/conta/index.html: texto legado de OTP multicanal reapareceu -> '+forbidden);
+    }
+  }
+}
+
 const home=read('index.html');
 requireLink('index.html',home,'producerPortalCta','/produtor/');
 requireLink('index.html',home,'partnerProgramCta','/parceiro/programa/');
