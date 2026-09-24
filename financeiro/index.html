@@ -1,270 +1,36 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<link rel="manifest" href="/manifest-produtor.webmanifest">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
-<meta name="theme-color" content="#080808">
-<meta name="robots" content="noindex,nofollow,noarchive">
-<title>Financeiro do Produtor | Carioca Ticket</title>
-<link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
-<style>
-:root{--bg:#08090c;--panel:#111319;--panel2:#171a21;--line:#292d36;--gold:#d9a62e;--gold2:#f2c451;--text:#f7f2e8;--muted:#9da2ad;--ok:#68d993;--warn:#f2c451;--bad:#ff7777;--blue:#7baaff;--shadow:0 18px 52px rgba(0,0,0,.34)}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{background:radial-gradient(circle at 92% 0,rgba(217,166,46,.12),transparent 28rem),var(--bg)}button,input{font:inherit}.hidden{display:none!important}.shell{width:min(1180px,calc(100% - 28px));margin:auto;padding:20px 0 54px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:17px}.brand{display:flex;align-items:center;gap:11px;color:inherit;text-decoration:none}.brand img{width:52px;height:44px;object-fit:contain}.brand strong{display:block;font-size:15px}.brand span{display:block;font-size:10px;color:var(--muted);margin-top:2px}.top-actions{display:flex;gap:8px;align-items:center}.ghost,.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:#15171c;color:var(--text);text-decoration:none;font-size:11px;font-weight:900;cursor:pointer}.btn.gold{border:0;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#111}.btn.danger{border-color:rgba(255,119,119,.4);background:rgba(255,119,119,.08);color:#ffd0d0}.btn:disabled{opacity:.42;cursor:not-allowed}.hero{border:1px solid rgba(217,166,46,.28);background:linear-gradient(145deg,rgba(217,166,46,.12),rgba(217,166,46,.02)),var(--panel);border-radius:23px;padding:22px;box-shadow:var(--shadow)}.ey{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold2);font-weight:900}.hero h1{font-size:clamp(27px,5vw,45px);margin:7px 0 6px;letter-spacing:-.035em}.hero p{margin:0;color:var(--muted);line-height:1.55;font-size:12px}.meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}.chip{border:1px solid #42371e;border-radius:999px;padding:6px 9px;color:#ead79b;font-size:10px}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px}.stat{border:1px solid var(--line);border-radius:17px;background:var(--panel);padding:16px;min-height:108px}.stat span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.07em;font-weight:800}.stat strong{display:block;font-size:23px;margin-top:8px}.stat small{display:block;color:#737985;font-size:9px;margin-top:5px;line-height:1.4}.stat.ok strong{color:var(--ok)}.stat.warn strong{color:var(--warn)}.section{margin-top:18px}.head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:10px}.head h2{margin:0;font-size:18px}.head p{margin:4px 0 0;color:var(--muted);font-size:10px;line-height:1.5}.panel{border:1px solid var(--line);background:var(--panel);border-radius:19px;padding:16px;box-shadow:var(--shadow)}.policy{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.notice{border:1px solid rgba(242,196,81,.3);background:rgba(242,196,81,.07);border-radius:15px;padding:14px;color:#e9d99f;font-size:11px;line-height:1.55}.notice strong{color:var(--gold2)}.notice.safe{border-color:rgba(104,217,147,.28);background:rgba(104,217,147,.06);color:#c9f0d6}.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(290px,.65fr);gap:12px}.box{border:1px solid var(--line);background:var(--panel2);border-radius:16px;padding:15px}.box h3{margin:0 0 10px;font-size:14px}.field{margin-top:11px}.field label{display:block;color:#c7cbd2;font-size:10px;font-weight:850;margin-bottom:6px}.field input{width:100%;min-height:46px;border:1px solid var(--line);border-radius:12px;background:#0a0d11;color:#fff;padding:0 12px;outline:none}.field input:focus{border-color:var(--gold)}.actions{display:flex;gap:8px;margin-top:12px}.actions .btn{flex:1}.muted{color:var(--muted);font-size:10px;line-height:1.5}.table-wrap{overflow:auto;border:1px solid #292d36;border-radius:14px}.table{width:100%;border-collapse:collapse;min-width:680px}.table th,.table td{padding:11px 12px;border-bottom:1px solid #24272d;text-align:left;font-size:10px;vertical-align:middle}.table th{background:#15130e;color:#dec98c;text-transform:uppercase;letter-spacing:.05em;font-size:8px}.table tr:last-child td{border-bottom:0}.status{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:8px;font-weight:900;background:#22262e;color:#cfd3da}.status.ok{background:rgba(104,217,147,.1);color:#a9edc0}.status.warn{background:rgba(242,196,81,.1);color:#ffe59b}.status.bad{background:rgba(255,119,119,.1);color:#ffcaca}.empty{padding:28px 12px;text-align:center;color:var(--muted);font-size:11px}.gate{min-height:100vh;display:grid;place-items:center;padding:20px}.gate-card{width:min(490px,100%);border:1px solid #332b1d;background:#111;border-radius:23px;padding:27px;text-align:center;box-shadow:var(--shadow)}.gate-card img{width:90px;height:60px;object-fit:contain}.gate-card h1{margin:13px 0 7px}.gate-card p{color:var(--muted);font-size:12px;line-height:1.55}.loader{width:30px;height:30px;border:3px solid #292929;border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:17px auto}@keyframes spin{to{transform:rotate(360deg)}}.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.76);backdrop-filter:blur(5px);z-index:40;display:flex;align-items:center;justify-content:center;padding:18px}.modal{width:min(640px,100%);max-height:92vh;overflow:auto;background:#10141a;border:1px solid #343b45;border-radius:22px;padding:20px;box-shadow:0 28px 80px rgba(0,0,0,.52)}.modal h2{margin:0 0 5px;font-size:21px}.modal .lead{color:var(--muted);font-size:11px;line-height:1.5;margin:0 0 15px}.sim-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sim{border:1px solid var(--line);background:var(--panel2);border-radius:13px;padding:12px}.sim span{display:block;color:var(--muted);font-size:9px}.sim strong{display:block;margin-top:5px;font-size:14px}.sim.highlight{border-color:rgba(217,166,46,.35)}.check{display:flex;align-items:flex-start;gap:9px;margin-top:13px;color:#d4d6db;font-size:10px;line-height:1.45}.check input{margin-top:2px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.toast{position:fixed;right:16px;bottom:16px;z-index:60;max-width:390px;background:#171b21;border:1px solid var(--line);border-radius:14px;padding:13px 15px;font-size:11px;box-shadow:0 18px 50px rgba(0,0,0,.45)}.updated{text-align:right;color:#737985;font-size:9px;margin-top:12px}
-@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.grid,.policy{grid-template-columns:1fr}}
-@media(max-width:560px){.shell{width:min(100% - 20px,1180px)}.top{align-items:flex-start}.top-actions{flex-direction:column;align-items:stretch}.top-actions .ghost,.top-actions .btn{min-height:38px;padding:0 10px}.hero{padding:18px}.hero h1{font-size:23px}.stats{grid-template-columns:1fr 1fr}.stat strong{font-size:19px}.sim-grid{grid-template-columns:1fr}.modal-actions{flex-direction:column}.modal-actions .btn{width:100%}}
-</style>
-<script src="/pwa-register.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+  <title>Financeiro | Carioca Ticket</title>
+  <link rel="manifest" href="/manifest-produtor.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+  <script src="/pwa-register.js" defer></script>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#090b0f;color:#f4f4f4;font-family:Arial,Helvetica,sans-serif}
+    body{display:grid;place-items:center;padding:24px}.card{width:min(520px,100%);padding:28px;border:1px solid #282f3a;border-radius:18px;background:#11151c;text-align:center}
+    img{width:86px;height:86px}.gold{color:#e8b34b}p{color:#9ca5b3;line-height:1.55}
+  </style>
 </head>
 <body>
-<section id="gate" class="gate"><div class="gate-card"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div id="gateLoading"><h1>Financeiro do Produtor</h1><p>Validando sua sessão, o evento e o acesso financeiro.</p><div class="loader"></div></div><div id="gateDenied" class="hidden"><h1>Acesso restrito</h1><p id="gateMessage">Selecione um evento autorizado na Central Mobile.</p><p><a class="ghost" href="/central/">Voltar à Central</a></p></div></div></section>
-
-<main id="app" class="shell hidden">
-<header class="top">
-  <a class="brand" href="/central/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Financeiro do Produtor</strong><span>Saldo, antecipação e solicitações</span></div></a>
-  <div class="top-actions"><button id="refresh" class="btn" type="button">Atualizar</button><a class="ghost" href="/central/">← Central</a></div>
-</header>
-
-<section class="hero">
-  <div class="ey">Carioca Ticket · Financeiro</div>
-  <h1 id="eventName">Evento</h1>
-  <p>Visão financeira segura do produtor. Valores do evento são separados do saldo global da conta Asaas.</p>
-  <div id="eventMeta" class="meta"></div>
-</section>
-
-<section class="stats">
-  <article class="stat"><span>Receita confirmada</span><strong id="revenue">R$ 0,00</strong><small>vendas confirmadas deste evento</small></article>
-  <article class="stat ok"><span>Recebido no evento</span><strong id="received">R$ 0,00</strong><small>pagamentos já recebidos no ledger</small></article>
-  <article class="stat warn"><span>A receber</span><strong id="receivable">R$ 0,00</strong><small>confirmado, ainda não recebido</small></article>
-  <article class="stat ok"><span>Saldo disponível Asaas</span><strong id="asaasBalance">—</strong><small>saldo da conta do produtor, todos os eventos</small></article>
-  <article class="stat"><span>Saques reservados</span><strong id="withdrawals">R$ 0,00</strong><small>solicitações abertas na Carioca Ticket</small></article>
-  <article class="stat"><span>Taxas CT pendentes</span><strong id="ctFees">R$ 0,00</strong><small>taxa comercial de antecipações</small></article>
-</section>
-
-<section class="section">
-  <div class="head"><div><h2>Política financeira</h2><p>Regras aplicadas antes de qualquer solicitação.</p></div></div>
-  <div class="policy">
-    <div class="notice"><strong>Antecipação · taxa CT 2,5%</strong><br>A simulação consulta o Asaas em tempo real. A taxa CT é calculada sobre o valor bruto antecipado e mostrada antes da confirmação. Em conta própria do produtor, essa taxa fica registrada no financeiro da plataforma e não é debitada automaticamente pelo Asaas.</div>
-    <div class="notice safe"><strong>Saque protegido</strong><br>O botão abaixo registra uma solicitação auditável e reserva o valor. Nenhuma transferência Pix/TED é executada automaticamente nesta etapa; isso evita movimentação bancária sem validação financeira adicional.</div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="head"><div><h2>Antecipação de recebíveis</h2><p>Somente cobranças de cartão elegíveis aparecem aqui. Sempre simulamos novamente no Asaas antes de solicitar.</p></div></div>
-  <div class="panel" id="anticipations"><div class="empty">Carregando recebíveis...</div></div>
-</section>
-
-<section class="section">
-  <div class="head"><div><h2>Solicitar saque</h2><p>Uma solicitação aberta por vez para reduzir duplicidade e conciliar o financeiro.</p></div></div>
-  <div class="panel grid">
-    <div class="box">
-      <h3>Nova solicitação</h3>
-      <div class="field"><label for="withdrawValue">Valor do saque</label><input id="withdrawValue" type="number" min="1" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-      <div class="field"><label for="withdrawConfirm">Confirmação</label><input id="withdrawConfirm" autocomplete="off" placeholder="Digite SOLICITAR SAQUE"></div>
-      <div class="actions"><button id="withdrawButton" class="btn gold" type="button" disabled>Registrar solicitação</button></div>
-    </div>
-    <div class="box">
-      <h3>Como funciona</h3>
-      <p id="withdrawHelp" class="muted">A Carioca Ticket valida o saldo disponível da conta Asaas antes de registrar o pedido. O valor fica reservado no controle interno até processamento ou cancelamento.</p>
-      <p id="permissionNote" class="muted"></p>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="head"><div><h2>Histórico financeiro</h2><p>Antecipações e solicitações de saque registradas pelo produtor.</p></div></div>
-  <div class="panel" id="history"><div class="empty">Nenhuma operação registrada.</div></div>
-</section>
-
-<section class="section">
-  <div class="head"><div><h2>Detalhamento comercial</h2><p>Pagamentos, tipos de ingresso e evolução das vendas confirmadas.</p></div></div>
-  <div class="panel" id="commercial"><div class="empty">Carregando detalhamento...</div></div>
-</section>
-
-<div id="updated" class="updated"></div>
-</main>
-
-<div id="anticipationModal" class="backdrop hidden" aria-hidden="true">
-  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="anticipationTitle">
-    <h2 id="anticipationTitle">Simulação de antecipação</h2>
-    <p class="lead">Os valores abaixo foram consultados no Asaas agora. Nenhuma antecipação é criada até a confirmação final.</p>
-    <div id="simulation" class="sim-grid"></div>
-    <div id="simulationNotice" class="notice"></div>
-    <label class="check"><input id="acceptFee" type="checkbox"><span>Li e aceito a taxa comercial Carioca Ticket de <strong>2,5%</strong> exibida nesta simulação.</span></label>
-    <div class="field"><label for="anticipationConfirm">Confirmação de segurança</label><input id="anticipationConfirm" autocomplete="off" placeholder="Digite ANTECIPAR"></div>
-    <div class="modal-actions"><button id="closeAnticipation" class="btn" type="button">Fechar</button><button id="executeAnticipation" class="btn gold" type="button" disabled>Solicitar antecipação</button></div>
-  </section>
-</div>
-
-<div id="toast" class="toast hidden"></div>
-
-<script>
-(function(){
-'use strict';
-var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
-var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
-var pending={};
-var state={session:null,eventId:'',panel:null,simulation:null,paymentId:'',busy:false};
-
-var gate=document.getElementById('gate'),gateLoading=document.getElementById('gateLoading'),gateDenied=document.getElementById('gateDenied'),gateMessage=document.getElementById('gateMessage'),app=document.getElementById('app');
-var modal=document.getElementById('anticipationModal'),acceptFee=document.getElementById('acceptFee'),anticipationConfirm=document.getElementById('anticipationConfirm'),executeAnticipation=document.getElementById('executeAnticipation');
-
-function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function session(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm){var t=Date.parse(d.expiraEm);if(!isNaN(t)&&t<=Date.now())return null}return d}catch(_){return null}}
-function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
-function rpc(method,args){return new Promise(function(resolve,reject){var id='CTFIN2-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='ctfin2_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},50000)};form.submit()})}
-window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível concluir a operação.')))});
-
-function deny(msg){gateLoading.classList.add('hidden');gateDenied.classList.remove('hidden');gateMessage.textContent=msg||'Acesso restrito.'}
-function toast(msg){var t=document.getElementById('toast');t.textContent=String(msg||'');t.classList.remove('hidden');setTimeout(function(){t.classList.add('hidden')},4800)}
-function statusClass(s){s=String(s||'').toUpperCase();if(['CREDITED','CONCLUIDO'].indexOf(s)>=0)return'ok';if(['DENIED','CANCELLED','CANCELADO','OVERDUE'].indexOf(s)>=0)return'bad';return'warn'}
-
-function renderPanel(r){
-  state.panel=r;
-  var e=r.evento||{},x=r.resumo||{};
-  document.getElementById('eventName').textContent=e.nome||state.eventId;
-  document.getElementById('eventMeta').innerHTML=[e.data,e.horario,e.local,[e.cidade,e.uf].filter(Boolean).join(' - ')].filter(Boolean).map(function(v){return '<span class="chip">'+esc(v)+'</span>'}).join('');
-  document.getElementById('revenue').textContent=x.receitaConfirmada||'R$ 0,00';
-  document.getElementById('received').textContent=x.recebidoEvento||'R$ 0,00';
-  document.getElementById('receivable').textContent=x.aReceberEvento||'R$ 0,00';
-  document.getElementById('asaasBalance').textContent=x.saldoContaAsaas||'Indisponível';
-  document.getElementById('withdrawals').textContent=x.saquesReservados||'R$ 0,00';
-  document.getElementById('ctFees').textContent=x.taxasCtPendentes||'R$ 0,00';
-  document.getElementById('updated').textContent='Atualizado em '+(r.atualizadoEm||'—');
-
-  var canMove=r.podeMovimentar===true;
-  document.getElementById('permissionNote').textContent=canMove?'Seu perfil pode solicitar antecipações e saques.':'Seu perfil possui consulta financeira. Movimentações ficam restritas ao Produtor Titular ou Administrador.';
-  document.getElementById('withdrawValue').disabled=!canMove;
-  document.getElementById('withdrawConfirm').disabled=!canMove;
-
-  renderAnticipations();
-  renderHistory();
-  updateWithdrawButton();
-}
-
-function renderAnticipations(){
-  var items=state.panel&&Array.isArray(state.panel.antecipacoesElegiveis)?state.panel.antecipacoesElegiveis:[];
-  var canMove=state.panel&&state.panel.podeMovimentar===true;
-  if(!items.length){document.getElementById('anticipations').innerHTML='<div class="empty">Nenhum recebível de cartão elegível para antecipação neste momento.</div>';return}
-  document.getElementById('anticipations').innerHTML='<div class="table-wrap"><table class="table"><thead><tr><th>Pedido</th><th>Valor</th><th>Status Asaas</th><th>Ação</th></tr></thead><tbody>'+items.map(function(x,i){return '<tr><td>…'+esc(x.pedidoFinal||'')+'</td><td><strong>'+esc(x.valor||'R$ 0,00')+'</strong></td><td><span class="status warn">'+esc(x.statusProvider||'CONFIRMED')+'</span></td><td><button class="btn simulate" data-index="'+i+'" type="button" '+(canMove?'':'disabled')+'>Simular</button></td></tr>'}).join('')+'</tbody></table></div>';
-  document.querySelectorAll('.simulate').forEach(function(btn){btn.addEventListener('click',function(){simulate(Number(btn.getAttribute('data-index')))})});
-}
-
-function renderHistory(){
-  var items=state.panel&&Array.isArray(state.panel.historico)?state.panel.historico:[];
-  if(!items.length){document.getElementById('history').innerHTML='<div class="empty">Nenhuma antecipação ou solicitação de saque registrada.</div>';return}
-  var canMove=state.panel&&state.panel.podeMovimentar===true;
-  document.getElementById('history').innerHTML='<div class="table-wrap"><table class="table"><thead><tr><th>Data</th><th>Operação</th><th>Valor</th><th>Taxa CT</th><th>Status</th><th>Ação</th></tr></thead><tbody>'+items.map(function(x){var cancel=canMove&&x.tipo==='SAQUE'&&x.status==='SOLICITADO';return '<tr><td>'+esc(x.criadoEm||'—')+'</td><td>'+esc(x.tipo||'—')+'</td><td><strong>'+esc(x.valorBruto||'R$ 0,00')+'</strong></td><td>'+esc(x.tipo==='ANTECIPACAO'?x.taxaCtValor:'—')+'</td><td><span class="status '+statusClass(x.status)+'">'+esc(x.status||'—')+'</span></td><td>'+(cancel?'<button class="btn danger cancel-withdraw" data-id="'+esc(x.operacaoId)+'" type="button">Cancelar</button>':'—')+'</td></tr>'}).join('')+'</tbody></table></div>';
-  document.querySelectorAll('.cancel-withdraw').forEach(function(btn){btn.addEventListener('click',function(){cancelWithdraw(String(btn.getAttribute('data-id')||''))})});
-}
-
-function renderCommercial(r){
-  var x=r&&r.resumo||{};
-  var paymentRows=Array.isArray(x.pagamentos)?x.pagamentos:[];
-  var typeRows=Array.isArray(x.tipos)?x.tipos:[];
-  function mini(items,title){return '<div class="box"><h3>'+esc(title)+'</h3>'+(items.length?items.map(function(a){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #292d36;font-size:10px"><span style="color:var(--muted)">'+esc(a.chave||'—')+'</span><strong>'+Number(a.quantidade||0)+' · '+esc(a.valor||'R$ 0,00')+'</strong></div>'}).join(''):'<p class="muted">Sem dados confirmados.</p>')+'</div>'}
-  document.getElementById('commercial').innerHTML='<div class="policy">'+mini(paymentRows,'Formas de pagamento')+mini(typeRows,'Tipos de ingresso')+'</div>';
-}
-
-async function load(){
-  if(state.busy)return;state.busy=true;document.getElementById('refresh').disabled=true;
-  try{
-    var r=await rpc('ctFinanceiroProdutorPainelPROD',[String(state.session.token),state.eventId]);
-    if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Sua conta não possui permissão FINANCEIRO para este evento.');
-    renderPanel(r);gate.classList.add('hidden');app.classList.remove('hidden');
-    try{var legacy=await rpc('ctFinanceiroEventoCarregarPROD',[String(state.session.token),state.eventId]);if(legacy&&legacy.sucesso===true)renderCommercial(legacy)}catch(_){document.getElementById('commercial').innerHTML='<div class="empty">O resumo principal está disponível. O detalhamento comercial não pôde ser carregado agora.</div>'}
-  }catch(e){if(app.classList.contains('hidden'))deny(e&&e.message?e.message:String(e));else toast(e&&e.message?e.message:String(e))}
-  finally{state.busy=false;document.getElementById('refresh').disabled=false}
-}
-
-async function simulate(index){
-  var items=state.panel&&Array.isArray(state.panel.antecipacoesElegiveis)?state.panel.antecipacoesElegiveis:[];
-  var item=items[index];if(!item)return;
-  state.paymentId=String(item.pagamentoId||'');state.simulation=null;acceptFee.checked=false;anticipationConfirm.value='';executeAnticipation.disabled=true;
-  modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');
-  document.getElementById('simulation').innerHTML='<div class="sim"><span>Status</span><strong>Consultando Asaas…</strong></div>';
-  document.getElementById('simulationNotice').className='notice';document.getElementById('simulationNotice').textContent='Aguarde. Estamos recalculando as condições diretamente no Asaas.';
-  try{
-    var r=await rpc('ctFinanceiroProdutorSimularAntecipacaoPROD',[String(state.session.token),state.eventId,state.paymentId]);
-    if(!r||r.sucesso!==true)throw new Error('Não foi possível simular a antecipação.');
-    state.simulation=r;var x=r.resumo||{};
-    document.getElementById('simulation').innerHTML=
-      '<div class="sim"><span>Valor bruto</span><strong>'+esc(x.valorBruto||'—')+'</strong></div>'+
-      '<div class="sim"><span>Taxa Asaas</span><strong>'+esc(x.taxaProvider||'—')+'</strong></div>'+
-      '<div class="sim"><span>Líquido Asaas</span><strong>'+esc(x.liquidoProvider||'—')+'</strong></div>'+
-      '<div class="sim"><span>Taxa CT · 2,5%</span><strong>'+esc(x.taxaCtValor||'—')+'</strong></div>'+
-      '<div class="sim highlight"><span>Líquido econômico estimado</span><strong>'+esc(x.liquidoEconomico||'—')+'</strong></div>'+
-      '<div class="sim"><span>Crédito previsto</span><strong>'+esc(x.dataPrevista||'Conforme análise Asaas')+'</strong></div>';
-    var n=document.getElementById('simulationNotice');
-    if(x.documentacaoObrigatoria===true){n.className='notice';n.innerHTML='<strong>Documentação obrigatória.</strong><br>O Asaas exige documentos para esta antecipação. A solicitação fica bloqueada no portal até essa etapa ser tratada.'}
-    else{n.className='notice safe';n.innerHTML='<strong>Simulação pronta.</strong><br>'+esc(r.mensagemTaxa||'Revise os valores antes de confirmar.')}
-    updateAnticipationButton();
-  }catch(e){document.getElementById('simulationNotice').className='notice';document.getElementById('simulationNotice').textContent=e&&e.message?e.message:String(e)}
-}
-
-function updateAnticipationButton(){
-  var x=state.simulation&&state.simulation.resumo||{};
-  executeAnticipation.disabled=!(state.simulation&&x.documentacaoObrigatoria!==true&&acceptFee.checked===true&&String(anticipationConfirm.value||'').trim().toUpperCase()==='ANTECIPAR'&&!state.busy);
-}
-
-async function requestAnticipation(){
-  if(executeAnticipation.disabled||!state.paymentId)return;
-  state.busy=true;executeAnticipation.disabled=true;executeAnticipation.textContent='Solicitando…';
-  try{
-    var r=await rpc('ctFinanceiroProdutorSolicitarAntecipacaoPROD',[String(state.session.token),state.eventId,state.paymentId,String(anticipationConfirm.value||''),acceptFee.checked===true]);
-    if(!r||r.sucesso!==true)throw new Error('A antecipação não foi registrada.');
-    closeModal();toast(r.mensagem||'Antecipação solicitada.');state.busy=false;await load();
-  }catch(e){toast(e&&e.message?e.message:String(e))}
-  finally{state.busy=false;executeAnticipation.textContent='Solicitar antecipação';updateAnticipationButton()}
-}
-
-function updateWithdrawButton(){
-  var canMove=state.panel&&state.panel.podeMovimentar===true;
-  var value=Number(document.getElementById('withdrawValue').value||0);
-  var confirm=String(document.getElementById('withdrawConfirm').value||'').trim().toUpperCase();
-  document.getElementById('withdrawButton').disabled=!(canMove&&value>=1&&confirm==='SOLICITAR SAQUE'&&!state.busy);
-}
-
-async function requestWithdraw(){
-  if(document.getElementById('withdrawButton').disabled)return;
-  state.busy=true;document.getElementById('withdrawButton').disabled=true;document.getElementById('withdrawButton').textContent='Registrando…';
-  try{
-    var value=Number(document.getElementById('withdrawValue').value||0);
-    var confirm=String(document.getElementById('withdrawConfirm').value||'');
-    var r=await rpc('ctFinanceiroProdutorSolicitarSaquePROD',[String(state.session.token),state.eventId,value,confirm]);
-    if(!r||r.sucesso!==true)throw new Error('A solicitação não foi registrada.');
-    document.getElementById('withdrawValue').value='';document.getElementById('withdrawConfirm').value='';toast(r.mensagem||'Solicitação registrada.');state.busy=false;await load();
-  }catch(e){toast(e&&e.message?e.message:String(e))}
-  finally{state.busy=false;document.getElementById('withdrawButton').textContent='Registrar solicitação';updateWithdrawButton()}
-}
-
-async function cancelWithdraw(id){
-  if(!id||state.busy)return;state.busy=true;
-  try{var r=await rpc('ctFinanceiroProdutorCancelarSaquePROD',[String(state.session.token),state.eventId,id]);if(!r||r.sucesso!==true)throw new Error('Não foi possível cancelar a solicitação.');toast(r.mensagem||'Solicitação cancelada.');state.busy=false;await load()}catch(e){toast(e&&e.message?e.message:String(e))}finally{state.busy=false}
-}
-
-function closeModal(){modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');state.simulation=null;state.paymentId=''}
-document.getElementById('closeAnticipation').addEventListener('click',closeModal);
-modal.addEventListener('click',function(e){if(e.target===modal)closeModal()});
-acceptFee.addEventListener('change',updateAnticipationButton);
-anticipationConfirm.addEventListener('input',updateAnticipationButton);
-executeAnticipation.addEventListener('click',requestAnticipation);
-document.getElementById('withdrawValue').addEventListener('input',updateWithdrawButton);
-document.getElementById('withdrawConfirm').addEventListener('input',updateWithdrawButton);
-document.getElementById('withdrawButton').addEventListener('click',requestWithdraw);
-document.getElementById('refresh').addEventListener('click',load);
-
-function init(){
-  state.session=session();state.eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();
-  if(!state.session||!state.session.token){deny('Entre no Portal do Produtor para acessar o Financeiro.');return}
-  if(!state.eventId){deny('Selecione um evento na Central Mobile antes de abrir o Financeiro.');return}
-  load();
-}
-init();
-}());
-</script>
+  <main class="card">
+    <img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket">
+    <h1 class="gold">Conta Carioca Pay</h1>
+    <p>O Financeiro do Produtor foi centralizado na Conta Carioca Pay. Redirecionando para a área oficial e protegida.</p>
+    <p><a href="/central/" style="color:#e8b34b">Voltar à Central Mobile</a></p>
+  </main>
+  <script>
+    (function(){
+      'use strict';
+      var params=new URLSearchParams(window.location.search||'');
+      var evento=String(params.get('evento')||'').trim();
+      var destino='/produtor/financeiro/'+(evento?'?evento='+encodeURIComponent(evento):'');
+      window.location.replace(destino);
+    }());
+  </script>
 </body>
 </html>

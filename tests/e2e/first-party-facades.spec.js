@@ -764,17 +764,14 @@ test.describe('Fachadas first-party em homologacao', () => {
   });
 
 
-  test('Financeiro oficial exige sessao e evento autorizado', async ({ page }) => {
-    await page.goto('/financeiro/?evento=' + encodeURIComponent(EVENT_ID), {
+  test('Financeiro oficial exige sessao e retorna ao Portal sem credencial', async ({ page }) => {
+    await page.goto('/produtor/financeiro/?evento=' + encodeURIComponent(EVENT_ID), {
       waitUntil: 'domcontentloaded'
     });
 
-    await expect(page.locator('#gate')).toBeVisible();
-    await expect(page.locator('#gateDenied')).toBeVisible();
-    await expect(page.locator('body')).toContainText(/Financeiro/i);
-    await expect(page.locator('body')).toContainText(/Portal do Produtor|Acesso restrito/i);
-    await expect(page.locator('body')).not.toContainText('\\n');
-    expect(new URL(page.url()).pathname).toBe('/financeiro/');
+    await page.waitForURL(/\/produtor\/?(?:\?.*)?$/, { timeout: 15000 });
+    await expect(page.getByRole('heading', { name:/Acesse sua conta/i })).toBeVisible({ timeout:15000 });
+    expect(new URL(page.url()).pathname).toBe('/produtor/');
     await expectNoTechnicalVisibleLinks(page);
   });
 
