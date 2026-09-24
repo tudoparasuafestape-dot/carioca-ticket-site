@@ -4,7 +4,8 @@ const BRANCH_MODE=String(process.env.CT_BRANCH_MODE||'')==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 
 async function seed(page,token){
-  await page.addInitScript(({key,token})=>{
+  await page.goto('/',{waitUntil:'domcontentloaded'});
+  await page.evaluate(({key,token})=>{
     const value=JSON.stringify({token,expiraEm:'2099-01-01T00:00:00.000Z'});
     sessionStorage.setItem(key,value);
     localStorage.setItem(key,value);
@@ -170,8 +171,11 @@ test.describe('Financeiro Produtor -> Backoffice Master',()=>{
     await expect(page.getByRole('heading',{name:'Conta Carioca Pay'})).toBeVisible();
     await expect(page.locator('#policyFee')).toContainText('3,5');
     await expect(page.locator('#policyAdvanceDeadline')).toContainText('2 dias úteis');
+    await page.locator('#rulesTopButton').click();
+    await expect(page.locator('#rulesBackdrop')).not.toHaveClass(/hidden/);
     await expect(page.getByText(/mínimo de R\$ 500,00/i)).toBeVisible();
-    await expect(page.getByText(/D\+3 úteis · sem taxa/i)).toBeVisible();
+    await expect(page.getByText(/sem antecipação, o repasse normal ocorre em até 3 dias úteis/i)).toBeVisible();
+    await page.locator('#rulesClose').click();
 
     const button=page.locator('#requestAdvanceButton');
     await expect(button).toBeEnabled();
