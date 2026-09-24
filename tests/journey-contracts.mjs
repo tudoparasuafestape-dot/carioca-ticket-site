@@ -377,7 +377,7 @@ for(const path of [
   'eventos-v2/index.html',
   'fornecedores/index.html',
   'crm/index.html',
-  'financeiro/index.html',
+  'produtor/financeiro/index.html',
   'relatorios/index.html',
   'comissionado/index.html',
   'comissoes/index.html',
