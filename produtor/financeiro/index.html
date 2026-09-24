@@ -94,12 +94,10 @@ button,select,input{font:inherit}
         </section>
 
         <section class="card">
-          <div class="head"><div><h2>Ações financeiras</h2><span>em homologação</span></div></div>
+          <div class="head"><div><h2>Ações financeiras</h2><span>solicitações protegidas</span></div></div>
           <div class="action-grid">
-            <div class="action"><b>Solicitar antecipação</b><small>Informe o valor. A solicitação seguirá para análise do Administrador Master e não movimenta dinheiro automaticamente.</small><div class="field" style="margin-top:10px"><label for="advanceValue">Valor solicitado</label><input id="advanceValue" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00"></div><button id="advanceButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar para análise</button></div>
-            <button class="action" type="button" disabled><b>Registrar patrocínio</b><small>Identifique patrocinador, contrato e valor.</small></button>
-            <button class="action" type="button" disabled><b>Planejar pagamento</b><small>Fornecedor/equipe com aprovação por perfil.</small></button>
-            <button class="action" type="button" disabled><b>Adicionar saldo</b><small>Capital próprio via Pix após habilitação BaaS.</small></button>
+            <div class="action"><b>Solicitar antecipação</b><small>Até 80% do saldo elegível. A solicitação segue para análise do Administrador Master e não movimenta dinheiro automaticamente.</small><div class="field" style="margin-top:10px"><label for="advanceValue">Valor solicitado</label><input id="advanceValue" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00"></div><button id="advanceButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar antecipação para análise</button></div>
+            <div class="action"><b>Solicitar saque</b><small>Mínimo de R$ 500,00. O pedido segue para análise do Administrador Master e não executa Pix/TED automaticamente.</small><div class="field" style="margin-top:10px"><label for="withdrawValue">Valor solicitado</label><input id="withdrawValue" type="number" min="500" step="0.01" inputmode="decimal" placeholder="500,00"></div><button id="withdrawButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar saque para análise</button></div>
           </div>
           <button id="rulesButton" class="btn rule-link" type="button">Ver regras de antecipação</button>
         </section>
@@ -157,7 +155,7 @@ button,select,input{font:inherit}
 var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 var pending={};
-var state={session:null,usuario:null,produtores:[],produtor:null,evento:null,resumo:null,busyAdvance:false};
+var state={session:null,usuario:null,produtores:[],produtor:null,evento:null,resumo:null,busyAdvance:false,busyWithdraw:false};
 
 function rpc(method,args){
   return new Promise(function(resolve,reject){
@@ -256,7 +254,7 @@ async function loadSummary(){
 function render(r){
   state.resumo=r||null;
   document.getElementById('dashboard').classList.remove('hidden');
-  var vendas=r.vendas||{}, ledger=r.ledger||{}, ant=r.antecipacao||{}, sol=r.solicitacoes||{}, fin=r.financeiro||{};
+  var vendas=r.vendas||{}, ledger=r.ledger||{}, ant=r.antecipacao||{}, saque=r.saque||{}, sol=r.solicitacoes||{}, fin=r.financeiro||{};
   var origem=ledger.porOrigem||{};
 
   document.getElementById('confirmedSales').textContent=money(vendas.confirmado);
@@ -282,7 +280,7 @@ function render(r){
   setGate('realMovement',fin.movimentacaoRealHabilitada,'Habilitada','Desabilitada');
   setGate('depositPix',fin.aportePixHabilitado,'Habilitado','Desabilitado');
   setGate('providerAdvance',ant.providerHabilitado,'Habilitada','Desabilitada');
-  document.getElementById('pendingApprovals').textContent=money(sol.antecipacoesAbertas||0);
+  document.getElementById('pendingApprovals').textContent=money(Number(sol.antecipacoesAbertas||0)+Number(sol.saquesAbertos||0));
   document.getElementById('updatedAt').textContent='Atualizado em '+esc(r.atualizadoEm||'');
 }
 
@@ -309,6 +307,28 @@ async function requestAdvance(){
     await loadSummary();
   }catch(e){msg(String(e&&e.message||e||'Falha ao solicitar antecipação.'),'error')}
   finally{state.busyAdvance=false;if(button)button.disabled=false;showLoading(false)}
+}
+
+async function requestWithdraw(){
+  if(state.busyWithdraw||!state.session||!state.evento)return;
+  var input=document.getElementById('withdrawValue');
+  var button=document.getElementById('withdrawButton');
+  var valor=Number(input&&input.value||0);
+  var saque=state.resumo&&state.resumo.saque||{};
+  var minimo=Number(saque.minimoSolicitacao||500);
+  var disponivel=Number(saque.saldoDisponivel||0);
+  if(valor<minimo){msg('O saque mínimo é de '+money(minimo)+'.','error');return}
+  if(valor>disponivel){msg('O valor solicitado excede o saldo disponível para saque.','error');return}
+  state.busyWithdraw=true;if(button)button.disabled=true;showLoading(true);msg('');
+  try{
+    var chave='WEB-SAQ-'+String(state.evento.id||'')+'-'+Date.now()+'-'+Math.random().toString(16).slice(2);
+    var r=await rpc('ctContaCariocaPayPortalSolicitarSaquePROD',[state.session.token,state.evento.id,valor,chave]);
+    if(!r||r.sucesso!==true)throw new Error((r&&r.codigo)||'Não foi possível registrar a solicitação de saque.');
+    if(input)input.value='';
+    msg('Solicitação de saque registrada e enviada para análise do Administrador Master. Nenhuma transferência foi executada.','ok');
+    await loadSummary();
+  }catch(e){msg(String(e&&e.message||e||'Falha ao solicitar saque.'),'error')}
+  finally{state.busyWithdraw=false;if(button)button.disabled=false;showLoading(false)}
 }
 
 function openRules(){document.getElementById('rulesBackdrop').classList.remove('hidden');document.getElementById('rulesBackdrop').setAttribute('aria-hidden','false')}
@@ -342,6 +362,7 @@ document.getElementById('eventSelect').addEventListener('change',function(){
 });
 document.getElementById('refreshButton').addEventListener('click',loadSummary);
 document.getElementById('advanceButton').addEventListener('click',requestAdvance);
+document.getElementById('withdrawButton').addEventListener('click',requestWithdraw);
 document.getElementById('rulesButton').addEventListener('click',openRules);
 document.getElementById('rulesTopButton').addEventListener('click',openRules);
 document.getElementById('rulesClose').addEventListener('click',closeRules);
