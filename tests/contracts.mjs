@@ -250,6 +250,48 @@ for (const file of [
   }
 }
 
+
+// Carioca AI Control Center: nesta fase a superficie web e somente leitura/analise.
+const cariocaAIControl = read('backoffice/carioca-ai/index.html');
+if (cariocaAIControl) {
+  if (!cariocaAIControl.includes('ctCariocaAIExecutiveAgentConsultarPROD')) {
+    fail('backoffice/carioca-ai/index.html', 'agente executivo A1 nao conectado ao Control Center');
+  }
+  if (!cariocaAIControl.includes('Somente leitura')) {
+    fail('backoffice/carioca-ai/index.html', 'fronteira read-only nao sinalizada');
+  }
+
+  for (const forbidden of [
+    'ctCariocaAIGovernancaDecidirApprovalPROD',
+    'ctAIGovStorePersistirPlanoPROD',
+    'ctContaCariocaPayMasterDecidirPROD'
+  ]) {
+    if (cariocaAIControl.includes(forbidden)) {
+      fail('backoffice/carioca-ai/index.html', 'acao de escrita exposta antes da homologacao', forbidden);
+    }
+  }
+
+  const scripts = [...cariocaAIControl.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+    .map(match => match[1])
+    .filter(Boolean);
+
+  if (!scripts.length) {
+    fail('backoffice/carioca-ai/index.html', 'JavaScript inline do Control Center ausente');
+  } else {
+    for (const [index, script] of scripts.entries()) {
+      try {
+        new Function(script);
+      } catch (error) {
+        fail(
+          'backoffice/carioca-ai/index.html',
+          'JavaScript inline invalido no Control Center #' + (index + 1),
+          error && error.message
+        );
+      }
+    }
+  }
+}
+
 const checkinManifest = read('manifest-checkin.webmanifest');
 if (checkinManifest) {
   try {
