@@ -357,8 +357,8 @@ async function submitAdvance(){
     if(!resp||resp.sucesso!==true)throw new Error('Não foi possível registrar a solicitação.');
     document.getElementById('advanceBackdrop').classList.add('hidden');
     document.getElementById('advanceBackdrop').setAttribute('aria-hidden','true');
-    msg('Solicitação enviada para análise do Backoffice Master.','success');
     await loadSummary();
+    msg('Solicitação enviada para análise do Backoffice Master.','success');
   }catch(e){
     msg(String(e&&e.message||e||'Falha ao solicitar antecipação.'),'error');
   }finally{
