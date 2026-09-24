@@ -164,9 +164,9 @@ jobs:
           CT_BRANCH_MODE: '1'
         run: |
           if [ "${{ matrix.viewport }}" = "desktop" ]; then
-            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js tests/e2e/producer-onboarding.spec.js tests/e2e/navigation-journey.spec.js tests/e2e/checkin-journey.spec.js tests/e2e/supplier-journey.spec.js tests/e2e/buyer-journey.spec.js tests/e2e/coupon-journey.spec.js tests/e2e/backoffice-master.spec.js tests/e2e/p0-polling-checkout.spec.js --project=desktop-chromium
+            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js tests/e2e/producer-onboarding.spec.js tests/e2e/navigation-journey.spec.js tests/e2e/checkin-journey.spec.js tests/e2e/supplier-journey.spec.js tests/e2e/buyer-journey.spec.js tests/e2e/coupon-journey.spec.js tests/e2e/backoffice-master.spec.js tests/e2e/p0-polling-checkout.spec.js tests/e2e/p0-ticket-open-after-payment.spec.js --project=desktop-chromium
           else
-            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js tests/e2e/producer-onboarding.spec.js tests/e2e/navigation-journey.spec.js tests/e2e/checkin-journey.spec.js tests/e2e/supplier-journey.spec.js tests/e2e/buyer-journey.spec.js tests/e2e/coupon-journey.spec.js tests/e2e/backoffice-master.spec.js tests/e2e/p0-polling-checkout.spec.js --project=mobile-chromium
+            npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js tests/e2e/producer-onboarding.spec.js tests/e2e/navigation-journey.spec.js tests/e2e/checkin-journey.spec.js tests/e2e/supplier-journey.spec.js tests/e2e/buyer-journey.spec.js tests/e2e/coupon-journey.spec.js tests/e2e/backoffice-master.spec.js tests/e2e/p0-polling-checkout.spec.js tests/e2e/p0-ticket-open-after-payment.spec.js --project=mobile-chromium
           fi
       - name: Guardar evidencias
         if: failure()
@@ -201,12 +201,16 @@ jobs:
         shell: bash
         run: |
           for i in {1..48}; do
-            BODY="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/evento-v2/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
-            if printf '%s' "$BODY" | grep -q 'checkout-v2'; then
-              echo "Canario publicado."
+            BODY_V2="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/evento-v2/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
+            BODY_LEGADO="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/evento/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
+            CHECKOUT_LEGADO="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/checkout/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
+            if printf '%s' "$BODY_V2" | grep -q 'checkout-v2' && \
+               printf '%s' "$BODY_LEGADO" | grep -q '/checkout/' && \
+               printf '%s' "$CHECKOUT_LEGADO" | grep -q 'ctCheckoutPixPublico'; then
+              echo "Canarios v2 e legado publicados."
               exit 0
             fi
-            echo "Aguardando GitHub Pages propagar o canario... tentativa $i/48"
+            echo "Aguardando GitHub Pages propagar os canarios... tentativa $i/48"
             sleep 5
           done
           echo "::error::O canario ainda nao foi publicado no dominio oficial."

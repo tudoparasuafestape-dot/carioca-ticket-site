@@ -390,6 +390,8 @@
         order:null,
         queryToken:'',
         polling:null,
+        ticketReadyTimer:null,
+        ticketReadyAttempts:0,
         reconcilePolling:null,
         reconcileStartedAt:0,
         successRendered:false,
@@ -881,6 +883,28 @@
           .ctCheckoutPixPublicoConsultarPROD(String(rec.pedidoId||''),state.queryToken);
       }
 
+      function stopTicketReadyRefresh(){
+        if(state.ticketReadyTimer){
+          clearTimeout(state.ticketReadyTimer);
+          state.ticketReadyTimer=null;
+        }
+        state.ticketReadyAttempts=0;
+      }
+
+      function scheduleTicketReadyRefresh(){
+        if(
+          state.successRendered||
+          state.ticketReadyTimer||
+          state.ticketReadyAttempts>=8
+        )return;
+
+        state.ticketReadyAttempts+=1;
+        state.ticketReadyTimer=setTimeout(function(){
+          state.ticketReadyTimer=null;
+          refreshLocal();
+        },900);
+      }
+
       function renderOrder(res){
         state.order=res.pedido||state.order;
         var status=String(state.order.status||'').toUpperCase();
@@ -890,23 +914,39 @@
         el.paymentPix.checked=state.paymentMethod!=='CREDIT_CARD';
         updatePaymentMethodUI();
 
+        var ingressosRecebidos=
+          res&&Array.isArray(res.ingressos)
+            ? res.ingressos
+            : [];
+
+        var ingressosComLinkSeguro=
+          ingressosRecebidos.filter(function(item){
+            return officialTicketLink(item)!=='#';
+          });
+
         var ingressosProntos=
           !!(
             res&&
             res.ingressoEmitido===true&&
-            Array.isArray(res.ingressos)&&
-            res.ingressos.length
+            ingressosComLinkSeguro.length
           );
 
-        if(status==='CONCLUIDO'||ingressosProntos){
+        /*
+         * P0 POS-PAGAMENTO:
+         * CONCLUIDO sozinho nao libera a tela final.
+         * O cliente só recebe "Abrir ingresso" depois de existir
+         * pelo menos um link oficial com codigo + assinatura.
+         */
+        if(ingressosProntos){
           stopPolling();
           stopExpiry();
-          renderSuccess(res.ingressos||[]);
+          stopTicketReadyRefresh();
+          renderSuccess(ingressosComLinkSeguro);
           return;
         }
 
         if(['EXPIRADO','CANCELADO','FALHA'].indexOf(status)>=0){
-          stopPolling();stopExpiry();clearRecovery();clearIdempotency();
+          stopPolling();stopExpiry();stopTicketReadyRefresh();clearRecovery();clearIdempotency();
           el.pixPanel.classList.add('hidden');el.cardPanel.classList.add('hidden');
           el.salePanel.classList.remove('hidden');el.buyerPanel.classList.remove('hidden');el.payActionPanel.classList.remove('hidden');
           modal('Pedido encerrado',status==='EXPIRADO'?'O tempo de reserva terminou. Você pode gerar um novo pedido.':'Este pedido não está mais disponível. Você pode tentar novamente.');
@@ -919,8 +959,16 @@
         if(state.paymentMethod==='CREDIT_CARD'){
           el.pixPanel.classList.add('hidden');
           el.cardPanel.classList.remove('hidden');
-          el.cardStatus.textContent='Sua compra ainda não foi concluída. Clique no botão abaixo para pagar com cartão.';
-          var invoiceUrl=String(res&&res.pagamento&&res.pagamento.invoiceUrl||'').trim();
+          var pagamentoConfirmado=
+            ['PAGO','PROCESSANDO','CONCLUIDO'].indexOf(status)>=0;
+
+          el.cardStatus.textContent=pagamentoConfirmado
+            ? 'Pagamento confirmado. Finalizando seu ingresso agora...'
+            : 'Sua compra ainda não foi concluída. Clique no botão abaixo para pagar com cartão.';
+
+          var invoiceUrl=pagamentoConfirmado
+            ? ''
+            : String(res&&res.pagamento&&res.pagamento.invoiceUrl||'').trim();
           if(invoiceUrl){
             el.cardPaymentLink.href=invoiceUrl;
             el.cardPaymentLink.classList.remove('hidden');
@@ -931,8 +979,8 @@
         }else{
           el.cardPanel.classList.add('hidden');
           el.pixPanel.classList.remove('hidden');
-          if(status==='PAGO'||status==='PROCESSANDO'){
-            el.pixStatus.textContent='Pagamento confirmado. Estamos emitindo seu ingresso agora...';
+          if(['PAGO','PROCESSANDO','CONCLUIDO'].indexOf(status)>=0){
+            el.pixStatus.textContent='Pagamento confirmado. Finalizando seu ingresso agora...';
           }else{
             el.pixStatus.textContent='Aguardando confirmação do PIX. Pode voltar do app do banco para esta tela: verificaremos automaticamente.';
           }
@@ -949,6 +997,10 @@
 
         startExpiry();
         startPolling();
+
+        if(['PAGO','PROCESSANDO','CONCLUIDO'].indexOf(status)>=0){
+          scheduleTicketReadyRefresh();
+        }
       }
 
       function officialTicketLink(ticket){
@@ -1042,6 +1094,7 @@
       }
 
       function renderSuccess(ingressos){
+        stopTicketReadyRefresh();
         state.successRendered=true;
         el.pixPanel.classList.add('hidden');
         el.cardPanel.classList.add('hidden');
@@ -1256,7 +1309,7 @@
         }
       });
 
-      window.addEventListener('beforeunload',function(){stopPolling();stopExpiry();});
+      window.addEventListener('beforeunload',function(){stopPolling();stopExpiry();stopTicketReadyRefresh();});
 
       updatePaymentMethodUI();
       start();
