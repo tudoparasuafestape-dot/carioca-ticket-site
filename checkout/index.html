@@ -968,6 +968,67 @@
         return '#';
       }
 
+      function openTicketFromOrder(ticket,button){
+        var t=ticket||{};
+        var direto=officialTicketLink(t);
+
+        if(direto&&direto!=='#'){
+          window.location.assign(direto);
+          return;
+        }
+
+        if(
+          !state.order||
+          !state.order.pedidoId||
+          !state.queryToken||
+          !String(t.codigo||'').trim()
+        ){
+          modal(
+            'Ingresso indisponível',
+            'O ingresso foi emitido, mas o link seguro ainda não ficou disponível. Abra pela Minha Carioca.'
+          );
+          return;
+        }
+
+        var textoOriginal=button.textContent;
+        button.setAttribute('aria-disabled','true');
+        button.textContent='Abrindo ingresso...';
+
+        google.script.run
+          .withSuccessHandler(function(res){
+            if(
+              res&&
+              res.sucesso===true&&
+              /^https:\/\/cariocaticket\.com\.br\/ingresso\/\?/i.test(String(res.link||''))&&
+              String(res.link||'').indexOf('codigo=')>=0&&
+              String(res.link||'').indexOf('sig=')>=0
+            ){
+              window.location.assign(String(res.link));
+              return;
+            }
+
+            button.removeAttribute('aria-disabled');
+            button.textContent=textoOriginal;
+            modal(
+              'Ingresso indisponível',
+              'Não foi possível abrir o link seguro agora. Você pode acessar o ingresso pela Minha Carioca.'
+            );
+          })
+          .withFailureHandler(function(){
+            button.removeAttribute('aria-disabled');
+            button.textContent=textoOriginal;
+            modal(
+              'Ingresso indisponível',
+              'Não foi possível abrir o link seguro agora. Você pode acessar o ingresso pela Minha Carioca.'
+            );
+          })
+          .ctCheckoutPixPublicoLinkIngressoPROD(
+            state.order.pedidoId,
+            state.queryToken,
+            String(t.codigo||'').trim()
+          );
+      }
+
       function renderSuccess(ingressos){
         el.pixPanel.classList.add('hidden');
         el.cardPanel.classList.add('hidden');
@@ -985,8 +1046,14 @@
         }
 
         (ingressos||[]).forEach(function(t,i){
-          var a=document.createElement('a');a.className='ticket-link';a.target='_blank';a.rel='noopener';
+          var a=document.createElement('a');a.className='ticket-link';a.rel='nofollow';
           a.href=officialTicketLink(t);a.textContent='🎫 Abrir ingresso '+(i+1)+(t.nome?' — '+t.nome:'');
+          a.addEventListener('click',function(ev){
+            var direto=officialTicketLink(t);
+            if(direto&&direto!=='#')return;
+            ev.preventDefault();
+            openTicketFromOrder(t,a);
+          });
           el.ticketLinks.appendChild(a);
         });
 
