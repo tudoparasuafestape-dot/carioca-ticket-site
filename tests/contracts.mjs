@@ -869,7 +869,7 @@ if (parceiroPrograma) {
     '<span id="heroCommission">1</span>%',
     '<span id="serviceFee">10</span>%',
     '<span id="anticipationMax">80</span>%',
-    '<span id="anticipationFee">2,5</span>%',
+    '<span id="anticipationFee">3,5</span>%',
     'for(var tentativa=0;tentativa<3;tentativa++)',
     "CT_PARCEIRO_CADASTRO_RASCUNHO_V1",
     "sessionStorage.setItem(DRAFT_KEY",
@@ -889,7 +889,7 @@ if (parceiroPrograma) {
 
 const parceiroRegras = read('parceiro/regras-comerciais/index.html');
 if (parceiroRegras) {
-  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','2,5%']) {
+  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','3,5%']) {
     if (!parceiroRegras.includes(required)) {
       fail('parceiro/regras-comerciais/index.html', 'documento comercial incompleto: ' + required);
     }
@@ -1076,38 +1076,31 @@ if (reembolsos) {
   }
 }
 
-const financeiroProdutor = read('financeiro/index.html');
-if (financeiroProdutor) {
-  if (!financeiroProdutor.includes("ctMinhaCariocaAction','portalRpc'")) {
-    fail('financeiro/index.html', 'Financeiro sem ponte first-party segura');
+const financeiroLegado = read('financeiro/index.html');
+if (financeiroLegado) {
+  for (const required of [
+    '<title>Financeiro | Carioca Ticket</title>',
+    'Conta Carioca Pay',
+    "window.location.replace(destino)",
+    "'/produtor/financeiro/'",
+    "params.get('evento')",
+    'rel="manifest" href="/manifest-produtor.webmanifest"',
+    '/pwa-register.js'
+  ]) {
+    if (!financeiroLegado.includes(required)) {
+      fail('financeiro/index.html', 'rota financeira legada nao redireciona com seguranca: ' + required);
+    }
   }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorPainelPROD')) {
-    fail('financeiro/index.html', 'Financeiro sem painel seguro do produtor');
-  }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSimularAntecipacaoPROD')) {
-    fail('financeiro/index.html', 'Financeiro sem simulacao de antecipacao');
-  }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarAntecipacaoPROD')) {
-    fail('financeiro/index.html', 'Financeiro sem solicitacao de antecipacao');
-  }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarSaquePROD')) {
-    fail('financeiro/index.html', 'Financeiro sem solicitacao de saque');
-  }
-  if (!financeiroProdutor.includes("==='ANTECIPAR'")) {
-    fail('financeiro/index.html', 'Antecipacao sem confirmacao textual de seguranca');
-  }
-  if (!financeiroProdutor.includes("==='SOLICITAR SAQUE'")) {
-    fail('financeiro/index.html', 'Saque sem confirmacao textual de seguranca');
-  }
-  if (!financeiroProdutor.includes('2,5%')) {
-    fail('financeiro/index.html', 'Taxa CT de antecipacao nao esta transparente na interface');
-  }
-  if (!financeiroProdutor.includes('Nenhuma transferência Pix/TED é executada automaticamente')) {
-    fail('financeiro/index.html', 'Saque nao informa que e apenas solicitacao interna');
-  }
-  const nativeDialogFinance = financeiroProdutor.match(/(?:window\.)?(?:alert|confirm|prompt)\s*\(/i);
-  if (nativeDialogFinance) {
-    fail('financeiro/index.html', 'dialogo nativo do navegador no fluxo financeiro', nativeDialogFinance[0]);
+  for (const forbidden of [
+    'ctFinanceiroProdutorSolicitarAntecipacaoPROD',
+    'ctFinanceiroProdutorSolicitarSaquePROD',
+    "==='ANTECIPAR'",
+    "==='SOLICITAR SAQUE'",
+    '2,5%'
+  ]) {
+    if (financeiroLegado.includes(forbidden)) {
+      fail('financeiro/index.html', 'rota financeira legada ainda contem fluxo mutavel: ' + forbidden);
+    }
   }
 }
 
