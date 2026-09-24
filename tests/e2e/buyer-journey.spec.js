@@ -97,7 +97,10 @@ function concludedOrder() {
       valorTotal: 25
     },
     pagamento: { forma: 'PIX' },
+    vendaCriada: true,
+    ingressoEmitido: true,
     ingressos: [{
+      codigo: TICKET_CODE,
       nome: 'Cliente Homologação',
       link: '/ingresso/?codigo=' + encodeURIComponent(TICKET_CODE) + '&sig=' + encodeURIComponent(TICKET_SIG)
     }]
