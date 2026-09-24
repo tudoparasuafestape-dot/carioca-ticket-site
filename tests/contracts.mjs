@@ -1191,6 +1191,19 @@ if (minhaCariocaContaRecovery) {
 }
 
 
+const produtorOficialEventos = read('produtor/index.html');
+if (produtorOficialEventos) {
+  for (const required of [
+    'id="eventsManagementLink"',
+    'href="/eventos-v2/"',
+    '>\nEventos\n</a>'
+  ]) {
+    if (!produtorOficialEventos.includes(required)) {
+      fail('produtor/index.html', 'Portal oficial sem acesso direto a Eventos: ' + required);
+    }
+  }
+}
+
 const produtorOnboardingPage = read('produtor-v2/index.html');
 if (produtorOnboardingPage) {
   for (const required of [
