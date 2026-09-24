@@ -292,6 +292,8 @@ if (contaCariocaPayPage) {
     'Disponível para solicitar antecipação',
     'Regras de antecipação',
     'R$ 500,00',
+    'efetivamente disponíveis para antecipação',
+    'saldoMinimoSolicitacao',
     '80%',
     '20%',
     '3,5%',
