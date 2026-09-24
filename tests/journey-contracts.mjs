@@ -43,6 +43,24 @@ function requireLink(path, content, id, href){
   }
 }
 
+const contaMinhaCarioca=read('minha-carioca/conta/index.html');
+requireAll('minha-carioca/conta/index.html',contaMinhaCarioca,[
+  "E-mail da compra",
+  "Seu e-mail cadastrado na compra",
+  "Enviaremos um código de 6 dígitos para o e-mail cadastrado na compra.",
+  "Digite o código recebido no e-mail cadastrado na compra."
+]);
+for(const forbidden of [
+  "WhatsApp ou e-mail",
+  "Use preferencialmente seu WhatsApp.",
+  "Seu e-mail ou WhatsApp cadastrado",
+  "Informe seu e-mail ou WhatsApp."
+]){
+  if(contaMinhaCarioca.includes(forbidden)){
+    failures.push('minha-carioca/conta/index.html: texto legado de OTP por WhatsApp reapareceu: '+forbidden);
+  }
+}
+
 const home=read('index.html');
 requireLink('index.html',home,'producerPortalCta','/produtor/');
 requireLink('index.html',home,'partnerProgramCta','/parceiro/programa/');
