@@ -1057,18 +1057,15 @@ if (financeiroProdutor) {
   if (!financeiroProdutor.includes('href="/produtor/financeiro/"')) {
     fail('financeiro/index.html', 'Financeiro legado não encaminha para a Conta Carioca Pay');
   }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarSaquePROD')) {
-    fail('financeiro/index.html', 'Financeiro sem solicitacao de saque');
-  }
-
-  if (!financeiroProdutor.includes("==='SOLICITAR SAQUE'")) {
-    fail('financeiro/index.html', 'Saque sem confirmacao textual de seguranca');
+  if (!financeiroProdutor.includes('Aguardando fluxo Master') ||
+      !financeiroProdutor.includes("document.getElementById('withdrawButton').disabled=true;")) {
+    fail('financeiro/index.html', 'Saque legado deve permanecer bloqueado ate existir fluxo Master');
   }
   if (!financeiroProdutor.includes('3,5%') || !financeiroProdutor.includes('R$ 500,00')) {
     fail('financeiro/index.html', 'Politica vigente de antecipacao nao esta transparente na interface');
   }
-  if (!financeiroProdutor.includes('Nenhuma transferência Pix/TED é executada automaticamente')) {
-    fail('financeiro/index.html', 'Saque nao informa que e apenas solicitacao interna');
+  if (!financeiroProdutor.includes('Nenhuma solicitação de saque será registrada enquanto não existir tela Master')) {
+    fail('financeiro/index.html', 'Saque bloqueado sem explicacao do gate Master');
   }
   const nativeDialogFinance = financeiroProdutor.match(/(?:window\.)?(?:alert|confirm|prompt)\s*\(/i);
   if (nativeDialogFinance) {
