@@ -569,7 +569,7 @@ const producerPage = read('produtor/index.html');
 if (producerPage) {
   if (
     !producerPage.includes('id="cariocaPayLink"') ||
-    !producerPage.includes('href="/produtor/carioca-pay/"') ||
+    !producerPage.includes('href="/produtor/financeiro/"') ||
     !producerPage.includes("perfil === 'PRODUTOR_TITULAR'") ||
     !producerPage.includes("perfil === 'FINANCEIRO'")
   ) {
