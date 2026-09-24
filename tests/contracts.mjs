@@ -33,6 +33,7 @@ const protectedFiles = [
   'parceiro/admin/index.html',
   'backoffice/index.html',
   'backoffice/carioca-pay/index.html',
+  'backoffice/eventos/index.html',
   'backoffice/carioca-pay/baas-sandbox/index.html',
   'backoffice/carioca-pay/saldo-extrato/index.html',
   'parceiro/ativar/index.html',
@@ -353,6 +354,15 @@ if (produtorSaldoExtratoPage) {
 const backofficeMasterLanding = read('backoffice/index.html');
 if (backofficeMasterLanding) {
   for (const required of [
+    'href="/backoffice/eventos/"',
+    'id="eventGovernanceBadge"',
+    'ctEventosGovernancaMasterContarPendentesPROD'
+  ]) {
+    if (!backofficeMasterLanding.includes(required)) {
+      fail('backoffice/index.html','Backoffice Master sem fila de eventos: ' + required);
+    }
+  }
+  for (const required of [
     'href="/backoffice/carioca-pay/"',
     'id="advanceRequestsBadge"',
     'ctContaCariocaPayMasterContarPendentesPROD',
@@ -360,6 +370,37 @@ if (backofficeMasterLanding) {
   ]) {
     if (!backofficeMasterLanding.includes(required)) {
       fail('backoffice/index.html', 'Backoffice Master sem visibilidade de antecipações: ' + required);
+    }
+  }
+}
+
+const eventosGovernancaMasterPage = read('backoffice/eventos/index.html');
+if (eventosGovernancaMasterPage) {
+  for (const required of [
+    '<title>Eventos Pendentes | Backoffice Master</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctEventosGovernancaMasterListarPROD',
+    'ctEventosGovernancaMasterDecidirPROD',
+    'AUTORIZAR',
+    'BLOQUEAR',
+    'Autorizar risco/financeiro',
+    'não publicar vendas automaticamente'
+  ]) {
+    if (!eventosGovernancaMasterPage.includes(required)) {
+      fail('backoffice/eventos/index.html','governança Master de eventos incompleta: ' + required);
+    }
+  }
+  for (const forbidden of [
+    'ctCheckoutPublicoLiberarEventoPROD',
+    'ctEventosPublicacaoPublicarPROD',
+    'ctAsaasProvider',
+    'UrlFetchApp',
+    'window.alert(',
+    'window.confirm(',
+    'window.prompt('
+  ]) {
+    if (eventosGovernancaMasterPage.includes(forbidden)) {
+      fail('backoffice/eventos/index.html','governança Master não pode publicar/movimentar provider: ' + forbidden);
     }
   }
 }
