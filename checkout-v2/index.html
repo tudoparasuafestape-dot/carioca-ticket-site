@@ -384,6 +384,7 @@
         queryToken:'',
         polling:null,
         reconcilePolling:null,
+        reconcileStartedAt:0,
         expiryTimer:null,
         expiryReconciled:false,
         busy:false,
@@ -1077,7 +1078,14 @@
           state.polling=setInterval(refreshLocal,4000);
         }
         if(!state.reconcilePolling){
-          state.reconcilePolling=setInterval(reconcile,30000);
+          state.reconcileStartedAt=Date.now();
+          state.reconcilePolling=setInterval(function(){
+            if(document.visibilityState!=='visible')return;
+            var elapsed=Date.now()-(state.reconcileStartedAt||Date.now());
+            if(elapsed<120000||Math.floor(elapsed/10000)%3===0){
+              reconcile();
+            }
+          },10000);
         }
       }
 
@@ -1090,6 +1098,7 @@
           clearInterval(state.reconcilePolling);
           state.reconcilePolling=null;
         }
+        state.reconcileStartedAt=0;
       }
 
       function stopExpiry(){
