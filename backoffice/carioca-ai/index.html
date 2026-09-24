@@ -166,7 +166,7 @@ async function load(){
 
 function renderAgentAnswer(r){
   var pontos=Array.isArray(r.pontos)?r.pontos:[],prioridades=Array.isArray(r.prioridades)?r.prioridades:[];
-  $('agentAnswer').innerHTML='<h3>'+esc((r.agente&&r.agente.nome)||'Orquestrador Executivo')+'</h3><p>'+esc(r.resposta||'Sem resposta disponível.')+'</p>'+(pontos.length?'<div class="points">'+pontos.map(function(p){return'<div class="point"><span>'+esc(p.titulo||'Indicador')+'</span><strong>'+esc(p.valor==null?'—':p.valor)+'</strong></div>'}).join('')+'</div>':'')+(prioridades.length?'<div class="priorities">'+prioridades.map(function(p){return'<div class="priority"><b>'+esc(p.titulo||'Prioridade')+'</b><br>'+esc(p.motivo||'')+'</div>'}).join(''):'')+'<div class="answer-meta">Intenção: '+esc(human(r.intencao||'STATUS_GERAL'))+' · A1 leitura/análise · LLM externo desconectado · '+esc(dateTime(r.geradoEm))+'</div>';
+  $('agentAnswer').innerHTML='<h3>'+esc((r.agente&&r.agente.nome)||'Orquestrador Executivo')+'</h3><p>'+esc(r.resposta||'Sem resposta disponível.')+'</p>'+(pontos.length?'<div class="points">'+pontos.map(function(p){return'<div class="point"><span>'+esc(p.titulo||'Indicador')+'</span><strong>'+esc(p.valor==null?'—':p.valor)+'</strong></div>'}).join('')+'</div>':'')+(prioridades.length?'<div class="priorities">'+prioridades.map(function(p){return'<div class="priority"><b>'+esc(p.titulo||'Prioridade')+'</b><br>'+esc(p.motivo||'')+'</div>'}).join('')+'</div>':'')+'<div class="answer-meta">Intenção: '+esc(human(r.intencao||'STATUS_GERAL'))+' · A1 leitura/análise · LLM externo desconectado · '+esc(dateTime(r.geradoEm))+'</div>';
   $('agentAnswer').classList.remove('hidden');
 }
 
