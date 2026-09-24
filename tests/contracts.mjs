@@ -1244,13 +1244,17 @@ if (produtorOficialEventos) {
 
 const produtorMasterBoundary = read('produtor/index.html');
 if (produtorMasterBoundary) {
-  requireAll('produtor/index.html',produtorMasterBoundary,[
+  for (const required of [
     "var podeGerirPlataforma =",
     "perfilGlobal ===",
     "'ADMINISTRADOR';",
     "el.partnerAdminLink.classList.toggle(",
     "el.backofficeMasterLink.classList.toggle("
-  ]);
+  ]) {
+    if (!produtorMasterBoundary.includes(required)) {
+      fail('produtor/index.html','fronteira Master incompleta: ' + required);
+    }
+  }
   const masterStart=produtorMasterBoundary.indexOf('var podeGerirPlataforma =');
   const masterEnd=produtorMasterBoundary.indexOf('var podeFinanceiro =',masterStart);
   const masterBlock=masterStart>=0&&masterEnd>masterStart
