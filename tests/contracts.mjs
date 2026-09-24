@@ -296,10 +296,10 @@ if (contaCariocaPayPage) {
     'Regras de antecipação',
     '80%',
     '20%',
-    '3,49%',
+    '3,5%',
     'D+3 úteis',
     'movimentação real desabilitada',
-    'disabled><b>Solicitar antecipação',
+    'ctContaCariocaPayPortalSolicitarAntecipacaoPROD',
     'disabled><b>Registrar patrocínio',
     'disabled><b>Planejar pagamento',
     'disabled><b>Adicionar saldo'
@@ -317,12 +317,13 @@ if (contaCariocaPayPage) {
   }
 
   if (
-    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
+    !contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
+    !contaCariocaPayPage.includes('Solicitação registrada e enviada para análise do Administrador Master') ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAportePROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
   ) {
-    fail('produtor/financeiro/index.html', 'UI P2 nao pode disparar mutacoes antes da P3 Master');
+    fail('produtor/financeiro/index.html', 'UI de antecipacao nao converge exclusivamente para solicitacao Master');
   }
 }
 
@@ -832,7 +833,7 @@ if (parceiroPrograma) {
     '<span id="heroCommission">1</span>%',
     '<span id="serviceFee">10</span>%',
     '<span id="anticipationMax">80</span>%',
-    '<span id="anticipationFee">2,5</span>%',
+    '<span id="anticipationFee">3,5</span>%',
     'for(var tentativa=0;tentativa<3;tentativa++)',
     "CT_PARCEIRO_CADASTRO_RASCUNHO_V1",
     "sessionStorage.setItem(DRAFT_KEY",
@@ -852,7 +853,7 @@ if (parceiroPrograma) {
 
 const parceiroRegras = read('parceiro/regras-comerciais/index.html');
 if (parceiroRegras) {
-  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','2,5%']) {
+  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','3,5%']) {
     if (!parceiroRegras.includes(required)) {
       fail('parceiro/regras-comerciais/index.html', 'documento comercial incompleto: ' + required);
     }
@@ -1047,23 +1048,24 @@ if (financeiroProdutor) {
   if (!financeiroProdutor.includes('ctFinanceiroProdutorPainelPROD')) {
     fail('financeiro/index.html', 'Financeiro sem painel seguro do produtor');
   }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSimularAntecipacaoPROD')) {
-    fail('financeiro/index.html', 'Financeiro sem simulacao de antecipacao');
+  if (
+    financeiroProdutor.includes("rpc('ctFinanceiroProdutorSimularAntecipacaoPROD'") ||
+    financeiroProdutor.includes("rpc('ctFinanceiroProdutorSolicitarAntecipacaoPROD'")
+  ) {
+    fail('financeiro/index.html', 'Financeiro legado ainda permite antecipacao direta');
   }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarAntecipacaoPROD')) {
-    fail('financeiro/index.html', 'Financeiro sem solicitacao de antecipacao');
+  if (!financeiroProdutor.includes('href="/produtor/financeiro/"')) {
+    fail('financeiro/index.html', 'Financeiro legado não encaminha para a Conta Carioca Pay');
   }
   if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarSaquePROD')) {
     fail('financeiro/index.html', 'Financeiro sem solicitacao de saque');
   }
-  if (!financeiroProdutor.includes("==='ANTECIPAR'")) {
-    fail('financeiro/index.html', 'Antecipacao sem confirmacao textual de seguranca');
-  }
+
   if (!financeiroProdutor.includes("==='SOLICITAR SAQUE'")) {
     fail('financeiro/index.html', 'Saque sem confirmacao textual de seguranca');
   }
-  if (!financeiroProdutor.includes('2,5%')) {
-    fail('financeiro/index.html', 'Taxa CT de antecipacao nao esta transparente na interface');
+  if (!financeiroProdutor.includes('3,5%') || !financeiroProdutor.includes('R$ 500,00')) {
+    fail('financeiro/index.html', 'Politica vigente de antecipacao nao esta transparente na interface');
   }
   if (!financeiroProdutor.includes('Nenhuma transferência Pix/TED é executada automaticamente')) {
     fail('financeiro/index.html', 'Saque nao informa que e apenas solicitacao interna');
