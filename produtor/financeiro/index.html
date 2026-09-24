@@ -375,8 +375,8 @@ async function submitAdvance(){
     if(!r||r.sucesso!==true)throw new Error('A solicitação não pôde ser registrada.');
     closeAdvance();
     state.advanceRequestKey='';
-    msg('Solicitação de antecipação enviada ao administrador para análise.','ok');
     await loadSummary();
+    msg('Solicitação de antecipação enviada ao administrador para análise.','ok');
   }catch(e){
     msg(String(e&&e.message||e||'Não foi possível enviar a solicitação.'),'error');
   }finally{
