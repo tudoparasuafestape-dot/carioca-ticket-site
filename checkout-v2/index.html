@@ -940,8 +940,19 @@
         el.paymentPix.checked=state.paymentMethod!=='CREDIT_CARD';
         updatePaymentMethodUI();
 
-        if(status==='CONCLUIDO'){
-          stopPolling();stopExpiry();renderSuccess(res.ingressos||[]);return;
+        var ingressosProntos=
+          !!(
+            res&&
+            res.ingressoEmitido===true&&
+            Array.isArray(res.ingressos)&&
+            res.ingressos.length
+          );
+
+        if(status==='CONCLUIDO'||ingressosProntos){
+          stopPolling();
+          stopExpiry();
+          renderSuccess(res.ingressos||[]);
+          return;
         }
 
         if(['EXPIRADO','CANCELADO','FALHA'].indexOf(status)>=0){
@@ -1098,14 +1109,22 @@
         }
 
         (ingressos||[]).forEach(function(t,i){
-          var a=document.createElement('a');a.className='ticket-link';a.rel='nofollow';
-          a.href=officialTicketLink(t);a.textContent='🎫 Abrir ingresso '+(i+1)+(t.nome?' — '+t.nome:'');
-          a.addEventListener('click',function(ev){
-            var direto=officialTicketLink(t);
-            if(direto&&direto!=='#')return;
-            ev.preventDefault();
-            openTicketFromOrder(t,a);
-          });
+          var a=document.createElement('a');
+          var direto=officialTicketLink(t);
+          a.className='ticket-link';
+          a.rel='nofollow';
+          a.textContent='🎫 Abrir ingresso '+(i+1)+(t.nome?' — '+t.nome:'');
+
+          if(direto&&direto!=='#'){
+            a.href=direto;
+          }else{
+            a.href='#';
+            a.addEventListener('click',function(ev){
+              ev.preventDefault();
+              openTicketFromOrder(t,a);
+            });
+          }
+
           el.ticketLinks.appendChild(a);
         });
 
