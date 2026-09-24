@@ -211,21 +211,25 @@ function actions(status){
   status=String(status||'').toUpperCase();
   if(status==='SOLICITADA')return'<div class="actions"><button class="btn gold" data-action="INICIAR_ANALISE" type="button">Iniciar análise</button></div>';
   if(status==='EM_ANALISE')return'<div class="actions"><button class="btn gold" data-action="APROVAR" type="button">Aprovar</button><button class="btn danger" data-action="RECUSAR" type="button">Recusar</button></div>';
+  if(status==='APROVADA_MASTER'&&state.selected&&String(state.selected.tipo||'').toUpperCase()==='SAQUE')return'<div class="actions"><button class="btn gold" data-action="CONCLUIR" type="button">Marcar saque como processado</button></div>';
   return'';
 }
 
 function openDecision(action){
   if(!state.selected)return;
   state.action=action;
-  var titles={INICIAR_ANALISE:'Iniciar análise',APROVAR:'Aprovar solicitação',RECUSAR:'Recusar solicitação'};
+  var titles={INICIAR_ANALISE:'Iniciar análise',APROVAR:'Aprovar solicitação',RECUSAR:'Recusar solicitação',CONCLUIR:'Confirmar processamento externo'};
   $('decisionTitle').textContent=titles[action]||'Confirmar decisão';
   $('decisionText').textContent=action==='APROVAR'
     ? 'A aprovação será registrada, mas não executará antecipação, saque nem transferência automaticamente.'
     : action==='RECUSAR'
       ? 'Informe o motivo da recusa. A decisão será registrada na auditoria.'
-      : 'A solicitação passará para o status Em análise.';
+      : action==='CONCLUIR'
+        ? 'Use somente após o saque ter sido efetivamente pago fora da plataforma. Informe uma referência externa/comprovante; esta ação apenas concilia o ledger e não envia dinheiro.'
+        : 'A solicitação passará para o status Em análise.';
   $('reason').value='';
-  $('reasonBox').classList.toggle('hidden',action!=='RECUSAR');
+  $('reason').placeholder=action==='CONCLUIR'?'Referência externa, comprovante ou observação do pagamento':'Informe o motivo da recusa';
+  $('reasonBox').classList.toggle('hidden',action!=='RECUSAR'&&action!=='CONCLUIR');
   $('decisionBackdrop').classList.remove('hidden');$('decisionBackdrop').setAttribute('aria-hidden','false');
 }
 function closeDecision(){$('decisionBackdrop').classList.add('hidden');$('decisionBackdrop').setAttribute('aria-hidden','true');state.action=''}
@@ -234,6 +238,7 @@ async function confirmDecision(){
   if(!state.selected||!state.action||state.busy)return;
   var reason=$('reason').value.trim();
   if(state.action==='RECUSAR'&&reason.length<3){toast('Informe o motivo da recusa.');return}
+  if(state.action==='CONCLUIR'&&reason.length<3){toast('Informe a referência externa do pagamento.');return}
   state.busy=true;$('decisionConfirm').disabled=true;
   try{
     var r=await rpc('ctContaCariocaPayMasterDecidirPROD',[state.session.token,state.selected.solicitacaoId,state.action,reason]);
