@@ -365,7 +365,7 @@ requireAll('central/index.html',central,[
   '/consulta/',
   '/fornecedores/',
   '/crm/',
-  '/financeiro/',
+  '/produtor/financeiro/',
   '/relatorios/',
   '/comissoes/',
   '/cupons/'
