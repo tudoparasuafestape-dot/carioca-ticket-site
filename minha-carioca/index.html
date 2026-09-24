@@ -148,7 +148,7 @@
           var p=pending[id];if(!p)return;delete pending[id];
           try{p.form.remove();p.frame.remove()}catch(_){}
           done({ok:false,erro:'A consulta demorou mais que o esperado. Tente novamente.'});
-        },20000);
+        },45000);
         form.submit();
       }
 
@@ -165,6 +165,13 @@
           var codigo=String(u.searchParams.get('codigo')||'').trim();
           var sig=String(u.searchParams.get('sig')||'').trim();
           if(codigo&&sig)return '/ingresso/?codigo='+encodeURIComponent(codigo)+'&sig='+encodeURIComponent(sig);
+          var destino=String(u.searchParams.get('destino')||'').trim();
+          if(destino){
+            var d=new URL(destino);
+            codigo=String(d.searchParams.get('codigo')||'').trim();
+            sig=String(d.searchParams.get('sig')||'').trim();
+            if(codigo&&sig)return '/ingresso/?codigo='+encodeURIComponent(codigo)+'&sig='+encodeURIComponent(sig);
+          }
         }catch(_){}
         return String(raw||'#');
       }
