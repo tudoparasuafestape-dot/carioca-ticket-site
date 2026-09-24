@@ -911,10 +911,16 @@ async function installMock(page, state) {
             state.barMutationCalls += 1;
             throw new Error('Teste nao deve alterar o Carioca Bar.');
 
-          case 'ctEventosOperacionalListarSeguraPROD':
+          case 'ctEventosOperacionalListarSeguraPROD': {
             expect(String(args[0] || '')).toBe(state.token);
-            resultado = eventosFixture();
+            const base = eventosFixture();
+            if (state.createdEvent) {
+              base.eventos.push(state.createdEvent);
+              base.total = base.eventos.length;
+            }
+            resultado = base;
             break;
+          }
 
           case 'ctEventosOperacionalContextoCadastroSeguraPROD':
             expect(String(args[0] || '')).toBe(state.token);
@@ -936,12 +942,54 @@ async function installMock(page, state) {
             };
             break;
 
+          case 'ctEventosOperacionalCriarSeguraPROD': {
+            state.eventMutationCalls += 1;
+            if (state.allowEventCreate !== true) {
+              throw new Error('Teste nao deve alterar Eventos.');
+            }
+            expect(String(args[0] || '')).toBe(state.token);
+            const payload = args[1] || {};
+            expect(String(payload.produtorId || '')).toBe('PROD-E2E');
+            expect(String(payload.nome || '')).toBe('Evento Homologacao Rascunho');
+            expect(String(payload.data || '')).toBe('30/10/2026');
+            expect(String(payload.local || '')).toBe('Local Homologacao');
+            expect(String(payload.origemComercial || '')).toBe('PRODUTOR');
+            state.createdEvent = {
+              id:'EVT-30102026-E2E',
+              nome:'Evento Homologacao Rascunho',
+              data:'30/10/2026',
+              horario:'18:00 às 23:00',
+              local:'Local Homologacao',
+              cidade:'Jaboatão dos Guararapes',
+              uf:'PE',
+              status:'RASCUNHO',
+              ativo:false,
+              publicacao:{
+                publicado:false,
+                prontoPublicar:false,
+                pendencias:['A autorização de risco/financeiro para publicação ainda está pendente.']
+              }
+            };
+            resultado = {
+              sucesso:true,
+              jaExistia:false,
+              mensagem:'Evento cadastrado como rascunho.',
+              evento:state.createdEvent,
+              governanca:{
+                eventoId:state.createdEvent.id,
+                produtorId:'PROD-E2E',
+                riscoStatus:'PENDENTE_ANALISE',
+                publicacaoAutorizada:false
+              }
+            };
+            break;
+          }
+
           case 'ctEventosOperacionalPublicarSeguraPROD':
           case 'ctEventosOperacionalFecharSeguraPROD':
           case 'ctEventosOperacionalAtualizarStatusSeguraPROD':
-          case 'ctEventosOperacionalCriarSeguraPROD':
-            state.eventMutationCalls += 1;
-            throw new Error('Teste nao deve alterar Eventos.');
+            state.eventPublicationCalls = (state.eventPublicationCalls || 0) + 1;
+            throw new Error('Teste nao deve publicar ou alterar status de Eventos.');
 
           case 'ctFornecedoresGestaoCarregarPROD':
             expect(String(args[0] || '')).toBe(state.token);
@@ -1188,6 +1236,51 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#registerReferralCode')).toHaveValue('PARCEIROE2E');
     await expect(page.locator('#registerReferralHint')).toBeVisible();
     await expect(page.locator('#registerReferralHint')).toContainText('Parceiro Carioca Ticket');
+  });
+
+  test('Produtor autorizado cria evento somente como RASCUNHO e aguarda Master', async ({ page }) => {
+    const state = {
+      token: 'CT-E2E-TOKEN-NAO-REAL',
+      transactionCalls: 0,
+      barMutationCalls: 0,
+      eventMutationCalls: 0,
+      eventPublicationCalls: 0,
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0,
+      allowEventCreate: true,
+      createdEvent: null
+    };
+
+    await installMock(page, state);
+    await seedSession(page, state.token);
+
+    await page.goto('/eventos-v2/', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: /^Eventos$/i })).toBeVisible({ timeout: 15000 });
+    await page.locator('#botaoNovoEvento').click();
+    await expect(page.locator('#modalNovoEvento')).toBeVisible();
+
+    await expect(page.locator('#campoProdutorId')).toHaveValue('PROD-E2E');
+    await page.locator('#campoNome').fill('Evento Homologacao Rascunho');
+    await page.locator('#campoData').fill('2026-10-30');
+    await page.locator('#campoHorarioInicio').fill('18:00');
+    await page.locator('#campoHorarioFim').fill('23:00');
+    await page.locator('#campoLocal').fill('Local Homologacao');
+    await page.locator('#campoEndereco').fill('Rua Teste, 100');
+    await page.locator('#campoCidade').fill('Jaboatão dos Guararapes');
+    await page.locator('#campoUf').fill('PE');
+    await page.locator('#campoCapacidade').fill('300');
+
+    await page.locator('#botaoSalvarEvento').click();
+    await expect.poll(() => state.eventMutationCalls).toBe(1);
+    await expect(page.locator('#mensagemCadastro')).toContainText('rascunho');
+    await expect.poll(() => state.createdEvent && state.createdEvent.status).toBe('RASCUNHO');
+    await expect.poll(() => state.createdEvent && state.createdEvent.publicacao.prontoPublicar).toBe(false);
+    expect(state.eventPublicationCalls).toBe(0);
+
+    await expect(page.getByText('Evento Homologacao Rascunho').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('RASCUNHO').last()).toBeVisible();
+    await expect(page.getByRole('button', { name: /Verificar e publicar vendas/i }).last()).toBeVisible();
+    expect(state.eventPublicationCalls).toBe(0);
   });
 
   test('Portal -> Central -> Vendas -> Bar -> voltar -> logout sem transacao', async ({ page }) => {
