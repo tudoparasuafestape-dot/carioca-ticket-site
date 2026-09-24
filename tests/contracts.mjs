@@ -573,7 +573,7 @@ const producerPage = read('produtor/index.html');
 if (producerPage) {
   if (
     !producerPage.includes('id="cariocaPayLink"') ||
-    !producerPage.includes('href="/produtor/carioca-pay/"') ||
+    !producerPage.includes('href="/produtor/financeiro/"') ||
     !producerPage.includes("perfil === 'PRODUTOR_TITULAR'") ||
     !producerPage.includes("perfil === 'FINANCEIRO'")
   ) {
@@ -1091,8 +1091,8 @@ if (financeiroProdutor) {
   if (!financeiroProdutor.includes('ctFinanceiroProdutorSimularAntecipacaoPROD')) {
     fail('financeiro/index.html', 'Financeiro sem simulacao de antecipacao');
   }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarAntecipacaoPROD')) {
-    fail('financeiro/index.html', 'Financeiro sem solicitacao de antecipacao');
+  if (!financeiroProdutor.includes("'/produtor/financeiro/?evento='")) {
+    fail('financeiro/index.html', 'Financeiro sem redirecionamento seguro para solicitacao de antecipacao');
   }
   if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarSaquePROD')) {
     fail('financeiro/index.html', 'Financeiro sem solicitacao de saque');
