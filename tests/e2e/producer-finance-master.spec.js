@@ -28,7 +28,7 @@ async function installMock(page,state){
       if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
         resultado={sucesso:true,autenticado:true,autorizado:true,usuario:{id:'USR-PROD'},produtores:[{id:'PROD-E2E',nomeFantasia:'Produtor E2E',eventos:[{id:'EVT-E2E',nome:'Evento E2E'}]}]};
       }else if(method==='ctContaCariocaPayPortalResumoPROD'){
-        resultado={sucesso:true,autorizado:true,produtorId:'PROD-E2E',eventoId:'EVT-E2E',perfil:'PRODUTOR_TITULAR',financeiro:{configurado:true,movimentacaoRealHabilitada:false,aportePixHabilitado:false},vendas:{confirmado:1800},ledger:{saldoOperacional:1200,porOrigem:{}},solicitacoes:{antecipacoesAbertas:0,saquesAbertos:0,pagamentosPlanejados:0,pagamentosAguardandoAprovacao:0},antecipacao:{percentualMaximo:80,reservaPercentual:20,taxaCtPercentual:3.5,disponivelSolicitar:960,providerHabilitado:false},saque:{minimoSolicitacao:500,saldoDisponivel:1200,jaSolicitadoAberto:0,exigeAprovacaoMaster:true,movimentacaoAutomatica:false},atualizadoEm:'24/09/2026 20:00:00'};
+        resultado={sucesso:true,autorizado:true,produtorId:'PROD-E2E',eventoId:'EVT-E2E',perfil:'PRODUTOR_TITULAR',financeiro:{configurado:true,movimentacaoRealHabilitada:false,aportePixHabilitado:false},vendas:{confirmado:1800},ledger:{saldoOperacional:1200,porOrigem:{}},solicitacoes:{antecipacoesAbertas:0,saquesAbertos:0,pagamentosPlanejados:0,pagamentosAguardandoAprovacao:0},antecipacao:{percentualMaximo:80,reservaPercentual:20,taxaCtPercentual:3.5,disponivelSolicitar:960,providerHabilitado:false},saque:{minimoSolicitacao:500,saldoAutoritativoDisponivel:true,saldoConta:1200,saldoDisponivel:1200,jaSolicitadoAberto:0,saldoFonte:'ASAAS',saldoEscopo:'CONTA_ASAAS_PRODUTOR',saldoErro:'',exigeAprovacaoMaster:true,movimentacaoAutomatica:false},atualizadoEm:'24/09/2026 20:00:00'};
       }else if(method==='ctContaCariocaPayPortalSolicitarAntecipacaoPROD'){
         state.advanceCalls++;state.advanceArgs=args;
         resultado={sucesso:true,status:'SOLICITADA',movimentouDinheiro:false,chamouProvider:false};
@@ -77,6 +77,8 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
     expect(Number(state.advanceArgs[2])).toBe(600);
     await expect(page.locator('#message')).toContainText('enviada para análise do Administrador Master');
 
+    await expect(page.locator('#withdrawAvailable')).toContainText('1.200,00');
+    await expect(page.locator('#withdrawButton')).toBeEnabled();
     await page.locator('#withdrawValue').fill('500');
     await page.locator('#withdrawButton').click();
     await expect.poll(()=>state.withdrawCalls).toBe(1);
