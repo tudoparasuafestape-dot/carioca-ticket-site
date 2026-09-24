@@ -93,7 +93,7 @@
     <p class="lead">Os valores abaixo foram consultados no Asaas agora. Nenhuma antecipação é criada até a confirmação final.</p>
     <div id="simulation" class="sim-grid"></div>
     <div id="simulationNotice" class="notice"></div>
-    <label class="check"><input id="acceptFee" type="checkbox"><span>Li e aceito a taxa comercial Carioca Ticket de <strong>2,5%</strong> exibida nesta simulação.</span></label>
+    <label class="check"><input id="acceptFee" type="checkbox"><span>Li e aceito a taxa comercial Carioca Ticket de <strong>3,5%</strong> exibida nesta simulação.</span></label>
     <div class="field"><label for="anticipationConfirm">Confirmação de segurança</label><input id="anticipationConfirm" autocomplete="off" placeholder="Digite ANTECIPAR"></div>
     <div class="modal-actions"><button id="closeAnticipation" class="btn" type="button">Fechar</button><button id="executeAnticipation" class="btn gold" type="button" disabled>Solicitar antecipação</button></div>
   </section>
@@ -195,7 +195,7 @@ async function simulate(index){
       '<div class="sim"><span>Valor bruto</span><strong>'+esc(x.valorBruto||'—')+'</strong></div>'+
       '<div class="sim"><span>Taxa Asaas</span><strong>'+esc(x.taxaProvider||'—')+'</strong></div>'+
       '<div class="sim"><span>Líquido Asaas</span><strong>'+esc(x.liquidoProvider||'—')+'</strong></div>'+
-      '<div class="sim"><span>Taxa CT · 2,5%</span><strong>'+esc(x.taxaCtValor||'—')+'</strong></div>'+
+      '<div class="sim"><span>Taxa CT · 3,5%</span><strong>'+esc(x.taxaCtValor||'—')+'</strong></div>'+
       '<div class="sim highlight"><span>Líquido econômico estimado</span><strong>'+esc(x.liquidoEconomico||'—')+'</strong></div>'+
       '<div class="sim"><span>Crédito previsto</span><strong>'+esc(x.dataPrevista||'Conforme análise Asaas')+'</strong></div>';
     var n=document.getElementById('simulationNotice');
