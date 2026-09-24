@@ -296,10 +296,13 @@ if (contaCariocaPayPage) {
     'Regras de antecipação',
     '80%',
     '20%',
-    '3,49%',
-    'D+3 úteis',
-    'movimentação real desabilitada',
-    'disabled><b>Solicitar antecipação',
+    '3,5%',
+    'R$ 500,00',
+    'Até 2 dias úteis',
+    'D+3 úteis · sem taxa',
+    'id="requestAdvanceButton"',
+    'ctContaCariocaPayPortalSolicitarAntecipacaoPROD',
+    'Solicitação enviada para análise do Backoffice Master.',
     'disabled><b>Registrar patrocínio',
     'disabled><b>Planejar pagamento',
     'disabled><b>Adicionar saldo'
@@ -317,12 +320,46 @@ if (contaCariocaPayPage) {
   }
 
   if (
-    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAportePROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
   ) {
-    fail('produtor/financeiro/index.html', 'UI P2 nao pode disparar mutacoes antes da P3 Master');
+    fail('produtor/financeiro/index.html', 'UI financeira nao pode disparar mutacoes ainda nao homologadas');
+  }
+  if (!contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'")) {
+    fail('produtor/financeiro/index.html', 'solicitacao de antecipacao nao chega ao fluxo Master');
+  }
+}
+
+const backofficeMasterHome = read('backoffice/index.html');
+if (backofficeMasterHome) {
+  for (const required of [
+    'id="financialRequestsLink"',
+    'href="/backoffice/carioca-pay/"',
+    'ctContaCariocaPayMasterContarPendentesPROD',
+    'id="financialRequestsBadge"'
+  ]) {
+    if (!backofficeMasterHome.includes(required)) {
+      fail('backoffice/index.html', 'atalho/fila financeira Master incompleta: ' + required);
+    }
+  }
+}
+
+const centralFinanceiroUnificado = read('central/index.html');
+if (centralFinanceiroUnificado) {
+  if (!centralFinanceiroUnificado.includes("'/produtor/financeiro/?evento='")) {
+    fail('central/index.html', 'Financeiro da Central ainda nao aponta para Conta Carioca Pay');
+  }
+  if (centralFinanceiroUnificado.includes("'/financeiro/?evento='")) {
+    fail('central/index.html', 'rota financeira legada direta ainda exposta na Central');
+  }
+}
+
+const produtorPortalFinanceiro = read('produtor/index.html');
+if (produtorPortalFinanceiro) {
+  if (!produtorPortalFinanceiro.includes('id="cariocaPayLink"') ||
+      !produtorPortalFinanceiro.includes('href="/produtor/financeiro/"')) {
+    fail('produtor/index.html', 'Portal do Produtor nao aponta para Financeiro oficial');
   }
 }
 
