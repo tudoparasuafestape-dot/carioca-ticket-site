@@ -16,6 +16,33 @@ function requireLink(path, content, id, href){
   if(!block.includes('href="'+href+'"')) failures.push(path+': '+id+' não aponta para '+href);
 }
 
+// Um link legado de ingresso pode envolver o destino assinado em ?destino=.
+// A Minha Carioca deve sempre abrir a página oficial de ingresso.
+{
+  const page=read('minha-carioca/index.html');
+  requireAll('minha-carioca/index.html',page,[
+    'id="customerAccountCta"',
+    'href="/minha-carioca/conta/"',
+    '},45000);'
+  ]);
+  const start=page.indexOf('function officialTicketLink(raw){');
+  const end=page.indexOf('function showError(msg){',start);
+  if(start<0||end<0){
+    failures.push('minha-carioca/index.html: conversor de ingresso ausente');
+  }else{
+    const {runInNewContext}=await import('node:vm');
+    const fn=runInNewContext(page.slice(start,end)+'; officialTicketLink', {
+      URL, location:{href:'https://cariocaticket.com.br/minha-carioca/'}
+    });
+    const ticket='https://script.google.com/macros/s/example/exec?codigo=CT-TEST&sig=ASSINATURA';
+    const legacy='https://example.org/ingresso.html?destino='+encodeURIComponent(ticket);
+    const expected='/ingresso/?codigo=CT-TEST&sig=ASSINATURA';
+    if(fn(legacy)!==expected||fn(ticket)!==expected){
+      failures.push('minha-carioca/index.html: ingresso não abre no domínio oficial');
+    }
+  }
+}
+
 const home=read('index.html');
 requireLink('index.html',home,'producerPortalCta','/produtor/');
 requireLink('index.html',home,'partnerProgramCta','/parceiro/programa/');
