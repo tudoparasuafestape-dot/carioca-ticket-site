@@ -204,9 +204,9 @@ jobs:
             BODY_V2="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/evento-v2/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
             BODY_LEGADO="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/evento/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
             CHECKOUT_LEGADO="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/checkout/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
-            if printf '%s' "$BODY_V2" | grep -q 'checkout-v2' && \
-               printf '%s' "$BODY_LEGADO" | grep -q '/checkout/' && \
-               printf '%s' "$CHECKOUT_LEGADO" | grep -q 'ctCheckoutPixPublico'; then
+            if [[ "$BODY_V2" == *"checkout-v2"* ]] && \
+               [[ "$BODY_LEGADO" == *"/checkout/"* ]] && \
+               [[ "$CHECKOUT_LEGADO" == *"ctCheckoutPixPublico"* ]]; then
               echo "Canarios v2 e legado publicados."
               exit 0
             fi
