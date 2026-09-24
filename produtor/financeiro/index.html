@@ -73,7 +73,7 @@ button,select,input{font:inherit}
   <section id="dashboard" class="hidden">
     <section class="metrics">
       <div class="metric gold"><small>Vendas confirmadas</small><strong id="confirmedSales">R$ 0,00</strong></div>
-      <div class="metric green"><small>Saldo operacional conciliado</small><strong id="ledgerBalance">R$ 0,00</strong></div>
+      <div class="metric green"><small>Saldo operacional interno</small><strong id="ledgerBalance">R$ 0,00</strong></div>
       <div class="metric blue"><small>Disponível para solicitar antecipação</small><strong id="anticipationAvailable">R$ 0,00</strong></div>
       <div class="metric"><small>Pagamentos planejados</small><strong id="plannedPayments">R$ 0,00</strong></div>
     </section>
@@ -97,7 +97,7 @@ button,select,input{font:inherit}
           <div class="head"><div><h2>Ações financeiras</h2><span>solicitações protegidas</span></div></div>
           <div class="action-grid">
             <div class="action"><b>Solicitar antecipação</b><small>Até 80% do saldo elegível. A solicitação segue para análise do Administrador Master e não movimenta dinheiro automaticamente.</small><div class="field" style="margin-top:10px"><label for="advanceValue">Valor solicitado</label><input id="advanceValue" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00"></div><button id="advanceButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar antecipação para análise</button></div>
-            <div class="action"><b>Solicitar saque</b><small>Mínimo de R$ 500,00. O pedido segue para análise do Administrador Master e não executa Pix/TED automaticamente.</small><div class="field" style="margin-top:10px"><label for="withdrawValue">Valor solicitado</label><input id="withdrawValue" type="number" min="500" step="0.01" inputmode="decimal" placeholder="500,00"></div><button id="withdrawButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar saque para análise</button></div>
+            <div class="action"><b>Solicitar saque</b><small>Mínimo de R$ 500,00. O saldo é confirmado diretamente na conta financeira antes da solicitação e considera saques já reservados em todos os eventos. O pedido segue para análise do Administrador Master e não executa Pix/TED automaticamente.</small><div class="status-line" style="margin-top:8px"><span>Disponível para saque</span><b id="withdrawAvailable">—</b></div><div class="field" style="margin-top:10px"><label for="withdrawValue">Valor solicitado</label><input id="withdrawValue" type="number" min="500" step="0.01" inputmode="decimal" placeholder="500,00"></div><button id="withdrawButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar saque para análise</button></div>
           </div>
           <button id="rulesButton" class="btn rule-link" type="button">Ver regras de antecipação</button>
         </section>
@@ -281,6 +281,12 @@ function render(r){
   setGate('depositPix',fin.aportePixHabilitado,'Habilitado','Desabilitado');
   setGate('providerAdvance',ant.providerHabilitado,'Habilitada','Desabilitada');
   document.getElementById('pendingApprovals').textContent=money(Number(sol.antecipacoesAbertas||0)+Number(sol.saquesAbertos||0));
+  var saqueDisponivel=saque.saldoAutoritativoDisponivel===true;
+  var withdrawAvailable=document.getElementById('withdrawAvailable');
+  withdrawAvailable.textContent=saqueDisponivel?money(saque.saldoDisponivel):'Indisponível';
+  withdrawAvailable.className=saqueDisponivel?'on':'off';
+  var withdrawButton=document.getElementById('withdrawButton');
+  withdrawButton.disabled=!saqueDisponivel||Number(saque.saldoDisponivel||0)<Number(saque.minimoSolicitacao||500);
   document.getElementById('updatedAt').textContent='Atualizado em '+esc(r.atualizadoEm||'');
 }
 
@@ -317,6 +323,7 @@ async function requestWithdraw(){
   var saque=state.resumo&&state.resumo.saque||{};
   var minimo=Number(saque.minimoSolicitacao||500);
   var disponivel=Number(saque.saldoDisponivel||0);
+  if(saque.saldoAutoritativoDisponivel!==true){msg('Não foi possível confirmar o saldo autoritativo da conta. O saque permanece bloqueado por segurança.','error');return}
   if(valor<minimo){msg('O saque mínimo é de '+money(minimo)+'.','error');return}
   if(valor>disponivel){msg('O valor solicitado excede o saldo disponível para saque.','error');return}
   state.busyWithdraw=true;if(button)button.disabled=true;showLoading(true);msg('');
@@ -328,7 +335,12 @@ async function requestWithdraw(){
     msg('Solicitação de saque registrada e enviada para análise do Administrador Master. Nenhuma transferência foi executada.','ok');
     await loadSummary();
   }catch(e){msg(String(e&&e.message||e||'Falha ao solicitar saque.'),'error')}
-  finally{state.busyWithdraw=false;if(button)button.disabled=false;showLoading(false)}
+  finally{
+    state.busyWithdraw=false;
+    var atual=state.resumo&&state.resumo.saque||{};
+    if(button)button.disabled=atual.saldoAutoritativoDisponivel!==true||Number(atual.saldoDisponivel||0)<Number(atual.minimoSolicitacao||500);
+    showLoading(false)
+  }
 }
 
 function openRules(){document.getElementById('rulesBackdrop').classList.remove('hidden');document.getElementById('rulesBackdrop').setAttribute('aria-hidden','false')}
