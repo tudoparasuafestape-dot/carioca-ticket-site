@@ -49,8 +49,10 @@ async function installMock(page,state){
           :{solicitacaoId:'CCP-ANT',tipo:'ANTECIPACAO',produtorId:'PROD-E2E',produtorNome:'Produtor E2E',eventoId:'EVT-E2E',evento:{id:'EVT-E2E',nome:'Evento E2E'},valor:600,status:'SOLICITADA',solicitadoPorPerfil:'PRODUTOR_TITULAR',criadoEm:'2026-09-24T20:00:00.000Z',financeiro:{vendasElegiveis:1800,maximoAntecipavel:1440,reservaSeguranca:360,taxaCtPercentual:3.5,taxaCtValor:21,valorLiquidoProdutor:579}},
           providerAcionado:false,movimentouDinheiro:false};
       }else if(method==='ctContaCariocaPayMasterDecidirPROD'){
-        state.masterActions.push(String(args[2]||''));
-        state.saqueStatus=String(args[2]||'')==='INICIAR_ANALISE'?'EM_ANALISE':'APROVADA_MASTER';
+        const actionName=String(args[2]||'');
+        state.masterActions.push(actionName);
+        state.lastReason=String(args[3]||'');
+        state.saqueStatus=actionName==='INICIAR_ANALISE'?'EM_ANALISE':(actionName==='APROVAR'?'APROVADA_MASTER':'CONCLUIDO');
         resultado={sucesso:true,autorizado:true,solicitacao:{solicitacaoId:'CCP-SAQ',tipo:'SAQUE',produtorNome:'Produtor E2E',evento:{nome:'Evento E2E'},valor:500,status:state.saqueStatus,solicitadoPorPerfil:'PRODUTOR_TITULAR',financeiro:{saldoDisponivelNoMomento:1200,saldoMinimoSolicitacao:500}},providerAcionado:false,movimentouDinheiro:false,transferenciaCriada:false};
       }else{
         throw new Error('Método não previsto: '+method);
@@ -64,7 +66,7 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
   test.skip(!BRANCH_MODE,'Fluxo financeiro mutável roda somente na branch local com backend simulado.');
 
   test('produtor solicita antecipacao e saque sem movimentacao real',async({page})=>{
-    const state={advanceCalls:0,withdrawCalls:0,advanceArgs:null,withdrawArgs:null,masterActions:[],saqueStatus:'SOLICITADA'};
+    const state={advanceCalls:0,withdrawCalls:0,advanceArgs:null,withdrawArgs:null,masterActions:[],saqueStatus:'SOLICITADA',lastReason:''};
     await installMock(page,state);await seed(page,'CT-PROD-E2E');
     await page.goto('/produtor/financeiro/',{waitUntil:'domcontentloaded'});
     await expect(page.getByRole('heading',{name:'Conta Carioca Pay'})).toBeVisible();
@@ -82,8 +84,8 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
     await expect(page.locator('#message')).toContainText('Nenhuma transferência foi executada');
   });
 
-  test('Master enxerga saque, inicia analise e aprova sem transferencia',async({page})=>{
-    const state={advanceCalls:0,withdrawCalls:0,advanceArgs:null,withdrawArgs:null,masterActions:[],saqueStatus:'SOLICITADA'};
+  test('Master enxerga saque, aprova e conclui externamente sem transferencia da plataforma',async({page})=>{
+    const state={advanceCalls:0,withdrawCalls:0,advanceArgs:null,withdrawArgs:null,masterActions:[],saqueStatus:'SOLICITADA',lastReason:''};
     await installMock(page,state);await seed(page,'CT-MASTER-E2E');
     await page.goto('/backoffice/carioca-pay/',{waitUntil:'domcontentloaded'});
     await expect(page.locator('#list')).toContainText('SAQUE');
@@ -96,5 +98,11 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
     await page.locator('#decisionConfirm').click();
     await expect.poll(()=>state.masterActions).toEqual(['INICIAR_ANALISE','APROVAR']);
     await expect(page.locator('#detail')).toContainText('APROVADA MASTER');
+    await page.getByRole('button',{name:'Marcar saque como processado'}).click();
+    await page.locator('#reason').fill('PIX externo E2E 12345');
+    await page.locator('#decisionConfirm').click();
+    await expect.poll(()=>state.masterActions).toEqual(['INICIAR_ANALISE','APROVAR','CONCLUIR']);
+    expect(state.lastReason).toBe('PIX externo E2E 12345');
+    await expect(page.locator('#detail')).toContainText('CONCLUIDO');
   });
 });
