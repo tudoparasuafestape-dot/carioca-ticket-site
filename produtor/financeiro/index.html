@@ -96,7 +96,7 @@ button,select,input{font:inherit}
         <section class="card">
           <div class="head"><div><h2>Ações financeiras</h2><span>fluxo protegido</span></div></div>
           <div class="action-grid">
-            <button id="requestAnticipationButton" class="action" type="button"><b>Solicitar antecipação</b><small>Até 80% do saldo elegível. A solicitação irá para análise do Backoffice Master.</small></button>
+            <button id="requestAnticipationButton" class="action" type="button"><b>Solicitar antecipação</b><small>Mínimo de R$ 500,00 disponíveis. Até 80% do saldo elegível, com análise do Backoffice Master.</small></button>
             <button class="action" type="button" disabled><b>Registrar patrocínio</b><small>Identifique patrocinador, contrato e valor.</small></button>
             <button class="action" type="button" disabled><b>Planejar pagamento</b><small>Fornecedor/equipe com aprovação por perfil.</small></button>
             <button class="action" type="button" disabled><b>Adicionar saldo</b><small>Capital próprio via Pix após habilitação BaaS.</small></button>
@@ -151,7 +151,7 @@ button,select,input{font:inherit}
     <h2 id="rulesTitle">Regras de antecipação</h2>
     <p>A Conta Carioca Pay seguirá a política comercial definida para produtores:</p>
     <ul>
-      <li>mínimo de R$ 500,00 em saldo/vendas elegíveis para solicitar;</li>
+      <li>mínimo de R$ 500,00 efetivamente disponíveis para antecipação;</li>
       <li>até 80% do saldo elegível pode ser solicitado;</li>
       <li>20% permanece como reserva de segurança;</li>
       <li>taxa de 3,5% sobre o valor antecipado;</li>
@@ -303,10 +303,11 @@ function render(r){
   setGate('providerAdvance',ant.providerHabilitado,'Habilitada','Desabilitada');
   document.getElementById('pendingApprovals').textContent=String(sol.antecipacoesAguardandoMaster||0);
 
+  var saldoMinimo=Number(ant.saldoMinimoSolicitacao||500);
   var canRequest=!!(
     r.permissoes &&
     r.permissoes.solicitarAntecipacao===true &&
-    Number(ant.disponivelSolicitar||0)>0
+    Number(ant.disponivelSolicitar||0)>=saldoMinimo
   );
   document.getElementById('requestAnticipationButton').disabled=!canRequest;
   document.getElementById('updatedAt').textContent='Atualizado em '+esc(r.atualizadoEm||'');
@@ -319,11 +320,13 @@ function setGate(id,on,yes,no){
 function openAnticipation(){
   var r=state.summary||{},ant=r.antecipacao||{};
   var disponivel=Number(ant.disponivelSolicitar||0);
-  if(!state.evento||disponivel<=0)return;
+  var saldoMinimo=Number(ant.saldoMinimoSolicitacao||500);
+  if(!state.evento||disponivel<saldoMinimo)return;
   document.getElementById('anticipationValue').value='';
   document.getElementById('anticipationValue').max=String(disponivel);
   document.getElementById('anticipationSummary').textContent=
     'Disponível para solicitar: '+money(disponivel)+
+    '. Mínimo elegível: '+money(saldoMinimo)+
     '. Taxa: '+Number(ant.taxaCtPercentual||3.5).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2})+
     '%. Envio em até '+Number(ant.prazoEnvioDiasUteis||2)+' dias úteis após aprovação.';
   document.getElementById('anticipationBackdrop').classList.remove('hidden');
