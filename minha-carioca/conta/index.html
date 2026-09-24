@@ -61,7 +61,7 @@ if(ev.origin!=='https://script.google.com' && !/\.googleusercontent\.com$/.test(
 var p=ev.data;if(!p||p.ctMinhaCariocaPost!==true||!p.id||!pendingPosts[p.id])return;
 var ctx=pendingPosts[p.id];delete pendingPosts[p.id];clearTimeout(ctx.timer);try{ctx.form.remove();ctx.frame.remove()}catch(_){}
 if(ctx.action==='solicitarCodigo'){
-if(p.ok&&p.resultado&&p.resultado.requestId){var r=p.resultado;sessionStorage.setItem(REQ,r.requestId);otp(r.requestId,r.mensagem||'Confira o canal seguro da sua conta.');return}
+if(p.ok&&p.resultado&&p.resultado.requestId){var r=p.resultado;sessionStorage.setItem(REQ,r.requestId);otp(r.requestId,r.mensagem||'Confira o e-mail cadastrado na compra.');return}
 login(p.erro||'Não foi possível enviar o código.');return
 }
 if(ctx.action==='validarCodigo'){
@@ -82,7 +82,7 @@ function save(data){var token=String(data&&data.token||'').trim();if(!token){loc
 function load(){try{var x=JSON.parse(localStorage.getItem(STORE)||'null');if(!x||Date.now()>x.exp||!x.token){localStorage.removeItem(STORE);return null}return String(x.token)}catch(_){localStorage.removeItem(STORE);return null}}
 function restore(token){post('consultarSessao',{token:String(token||'')})}
 function base(title,lead){app.innerHTML='';app.append(e('div','ey','Área do cliente'),e('h1','',title),e('p','lead',lead))}
-function security(){var s=e('div','sec');s.append(e('strong','','Seus ingressos continuam protegidos'),e('p','','Informar telefone ou e-mail não libera ingressos. O acesso só acontece depois da confirmação do código recebido.'));app.append(s)}
+function security(){var s=e('div','sec');s.append(e('strong','','Seus ingressos continuam protegidos'),e('p','','Informar seu e-mail não libera ingressos. O acesso só acontece depois da confirmação do código recebido.'));app.append(s)}
 
 function comprasSegurasDoAparelho(){
 var out=[],seen={};
@@ -113,7 +113,7 @@ if(!compras.length)return;
 var box=e('div','sec');
 box.append(
   e('strong','','Compra segura encontrada neste aparelho'),
-  e('p','','Você pode abrir os ingressos salvos neste navegador sem esperar pelo código de e-mail ou WhatsApp.')
+  e('p','','Você pode abrir os ingressos salvos neste navegador sem esperar pelo código enviado por e-mail.')
 );
 compras.forEach(function(item,idx){
   var row=e('div','row'),info=e('div');
@@ -127,14 +127,14 @@ app.append(box);
 
 function login(msg){
 base('Minha Carioca','Entre para acessar seus ingressos e compras com segurança.');
-var l=e('label','','WhatsApp ou e-mail'),i=document.createElement('input'),b=e('button','btn','Continuar'),h=e('p','help','Use preferencialmente seu WhatsApp. O código será enviado pelo canal seguro disponível na sua conta.'),m=e('p','msg',msg||'');
-i.placeholder='Seu e-mail ou WhatsApp cadastrado';i.value=sessionStorage.getItem(ID)||'';b.type='button';app.append(l,i,b,h,m);deviceRecovery();security();
-function go(){var v=String(i.value||'').trim();if(!v){m.textContent='Informe seu e-mail ou WhatsApp.';return}sessionStorage.setItem(ID,v);b.disabled=true;b.textContent='Enviando…';post('solicitarCodigo',{identificador:v})}
+var l=e('label','','E-mail da compra'),i=document.createElement('input'),b=e('button','btn','Continuar'),h=e('p','help','Enviaremos um código de 6 dígitos para o e-mail cadastrado na compra.'),m=e('p','msg',msg||'');
+i.placeholder='Seu e-mail cadastrado na compra';i.value=sessionStorage.getItem(ID)||'';b.type='button';app.append(l,i,b,h,m);deviceRecovery();security();
+function go(){var v=String(i.value||'').trim();if(!v){m.textContent='Informe seu e-mail cadastrado na compra.';return}sessionStorage.setItem(ID,v);b.disabled=true;b.textContent='Enviando…';post('solicitarCodigo',{identificador:v})}
 b.onclick=go;i.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();go()}};setTimeout(function(){i.focus()},0)
 }
 
 function otp(req,msg){
-base('Digite o código','Enviamos um código de 6 dígitos pelo canal seguro disponível na sua conta.');
+base('Digite o código','Enviamos um código de 6 dígitos para o e-mail cadastrado na sua compra.');
 var l=e('label','','Código de acesso'),i=document.createElement('input'),b=e('button','btn','Confirmar código'),m=e('p','msg ok',msg||''),h=e('p','help','O código expira em 5 minutos. Para solicitar outro, volte aos eventos e entre novamente.');
 i.className='code';i.inputMode='numeric';i.autocomplete='one-time-code';i.maxLength=6;i.placeholder='000000';b.type='button';app.append(l,i,b,m,h);deviceRecovery();security();
 function go(){var v=String(i.value||'').replace(/\D/g,'').slice(0,6);if(v.length!==6){m.className='msg';m.textContent='Digite os 6 números do código.';return}b.disabled=true;b.textContent='Validando…';post('validarCodigo',{requestId:req,codigo:v})}
@@ -250,7 +250,7 @@ if(env.tipo==='solicitarCodigo'&&env.ok&&env.resultado&&env.resultado.requestId)
 if(env.tipo==='validarCodigo'){var v=env.resultado||{};if(env.ok&&v.autenticado&&v.token){sessionStorage.removeItem(REQ);sessionStorage.removeItem(ID);restore(v.token);return}otp(sessionStorage.getItem(REQ)||'',v.mensagem||env.erro||'Código inválido ou expirado.');return}
 login(env.erro||'Não foi possível concluir o acesso.');return
 }
-var pending=sessionStorage.getItem(REQ)||'';if(pending){otp(pending,'Digite o código recebido pelo canal seguro da sua conta.');return}
+var pending=sessionStorage.getItem(REQ)||'';if(pending){otp(pending,'Digite o código recebido no e-mail cadastrado na compra.');return}
 var cached=load();if(cached){restore(cached);return}
 login('');
 }());
