@@ -384,7 +384,7 @@ if (eventosGovernancaMasterPage) {
     'AUTORIZAR',
     'BLOQUEAR',
     'Autorizar risco/financeiro',
-    'não publicar vendas automaticamente'
+    'sem publicar vendas automaticamente'
   ]) {
     if (!eventosGovernancaMasterPage.includes(required)) {
       fail('backoffice/eventos/index.html','governança Master de eventos incompleta: ' + required);
