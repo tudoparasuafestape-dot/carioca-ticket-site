@@ -249,7 +249,7 @@ test.describe('Jornada publica protegida', () => {
     await page.goto('/minha-carioca/conta/?e2e=1', { waitUntil: 'domcontentloaded' });
     await expectOfficialTopUrl(page, /^\/minha-carioca\/conta\/$/);
     await expect(page.getByRole('heading', { name: /Minha Carioca/i })).toBeVisible();
-    await expect(page.getByPlaceholder(/Seu e-mail ou WhatsApp cadastrado/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/Seu e-mail cadastrado na compra/i)).toBeVisible();
     await expect(page.locator('body')).not.toContainText('\\n');
     await expectNoForbiddenVisibleLinks(page);
 
