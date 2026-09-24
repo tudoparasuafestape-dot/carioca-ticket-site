@@ -64,11 +64,21 @@ async function mock(page,state){
     let ok=true,resultado=null,erro='';
     try{
       expect(action).toBe('portalRpc');
-      expect(method).toBe('ctBackofficeMasterCarregarPROD');
       expect(String(args[0]||'')).toBe('CT-MASTER-E2E-TOKEN');
-      state.calls++;
-      state.lastFilters=args[1]||{};
-      resultado=fixture(state.lastFilters);
+      if(method==='ctBackofficeMasterCarregarPROD'){
+        state.calls++;
+        state.lastFilters=args[1]||{};
+        resultado=fixture(state.lastFilters);
+      }else if(method==='ctContaCariocaPayMasterContarPendentesPROD'){
+        state.badgeCalls=(state.badgeCalls||0)+1;
+        resultado={
+          sucesso:true,autorizado:true,
+          contagem:{solicitadas:2,emAnalise:1,abertas:3,notificacoesNaoLidas:2},
+          providerAcionado:false,movimentouDinheiro:false
+        };
+      }else{
+        throw new Error('Método não previsto: '+method);
+      }
     }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
     const payload=JSON.stringify({ctMinhaCariocaPost:true,id,ok,resultado:ok?resultado:null,erro:ok?'':erro}).replace(/</g,'\\u003c');
     await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");<\/script></body></html>'});
@@ -79,7 +89,7 @@ test.describe('Backoffice Master BI',()=>{
   test.skip(!BRANCH_MODE,'Backoffice mutável roda somente contra branch local com backend simulado.');
 
   test('dashboard global carrega KPIs, rankings, financeiro e filtros sem evento ativo',async({page})=>{
-    const state={calls:0,lastFilters:null};
+    const state={calls:0,badgeCalls:0,lastFilters:null};
     await mock(page,state);await seed(page);
     await page.goto('/backoffice/',{waitUntil:'domcontentloaded'});
 
@@ -104,7 +114,11 @@ test.describe('Backoffice Master BI',()=>{
     await expect(page.locator('#paymentMethods')).toContainText('PIX');
     await expect(page.locator('#sources')).toContainText('WHATSAPP');
     await expect(page.locator('#devices')).toContainText('MOBILE');
+    await expect(page.locator('#anticipationRequestsLink')).toHaveAttribute('href','/backoffice/carioca-pay/');
+    await expect(page.locator('#anticipationRequestsBadge')).toHaveText('3');
+    await expect(page.locator('#anticipationRequestsBadge')).toHaveClass(/show/);
     expect(state.calls).toBe(1);
+    expect(state.badgeCalls).toBe(1);
     expect(state.lastFilters).toEqual({preset:'7D'});
 
     await page.getByRole('button',{name:'30 dias'}).click();
