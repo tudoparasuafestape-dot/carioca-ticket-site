@@ -119,9 +119,10 @@ async function instalarBackendFake(page, contadores) {
       };
     } else if (metodo === 'ctCheckoutPixPublicoStatusLocalPROD') {
       consultasLocais += 1;
-      resultado = consultasLocais === 1
-        ? respostaPedido('CONCLUIDO', false)
-        : respostaPedido('CONCLUIDO', true);
+      resultado = respostaPedido(
+        'CONCLUIDO',
+        contadores.liberarLink === true
+      );
     } else if (metodo === 'ctCheckoutPixPublicoReconciliarPROD') {
       resultado = respostaPedido('CONCLUIDO', true);
     } else {
@@ -186,15 +187,21 @@ for (const rota of ['/checkout/', '/checkout-v2/']) {
       { timeout: 5000 }
     ).toBeGreaterThanOrEqual(1);
 
-    // Primeiro retorno: pedido CONCLUIDO, mas ainda sem link seguro.
-    // A tela final não pode ser liberada nesse estado.
+    // Enquanto o backend ainda não entrega link seguro, CONCLUIDO não pode
+    // liberar a tela final, mesmo que ocorram várias consultas locais.
     await expect(page.locator('#successPanel')).toBeHidden();
 
-    // O fast refresh local consulta novamente sem chamar o Asaas.
+    const consultasAntesDoLink =
+      chamadas.ctCheckoutPixPublicoStatusLocalPROD || 0;
+
+    chamadas.liberarLink = true;
+
+    // Depois da liberação explícita do fixture, o próximo refresh local
+    // deve disponibilizar o ingresso sem consultar o Asaas.
     await expect.poll(
       () => chamadas.ctCheckoutPixPublicoStatusLocalPROD || 0,
       { timeout: 5000 }
-    ).toBeGreaterThanOrEqual(2);
+    ).toBeGreaterThan(consultasAntesDoLink);
 
     await expect(page.locator('#successPanel')).toBeVisible({ timeout: 5000 });
 
