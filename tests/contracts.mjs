@@ -33,6 +33,7 @@ const protectedFiles = [
   'parceiro/admin/index.html',
   'backoffice/index.html',
   'backoffice/carioca-pay/index.html',
+  'backoffice/eventos/index.html',
   'backoffice/carioca-pay/baas-sandbox/index.html',
   'backoffice/carioca-pay/saldo-extrato/index.html',
   'parceiro/ativar/index.html',
@@ -296,10 +297,14 @@ if (contaCariocaPayPage) {
     'Regras de antecipação',
     '80%',
     '20%',
-    '3,49%',
+    '3,5%',
+    'R$ 500,00',
+    'até 2 dias úteis',
     'D+3 úteis',
     'movimentação real desabilitada',
-    'disabled><b>Solicitar antecipação',
+    'id="advanceButton"',
+    'ctContaCariocaPayPortalSolicitarAntecipacaoPROD',
+    'Solicitação enviada ao Backoffice Master',
     'disabled><b>Registrar patrocínio',
     'disabled><b>Planejar pagamento',
     'disabled><b>Adicionar saldo'
@@ -317,12 +322,86 @@ if (contaCariocaPayPage) {
   }
 
   if (
-    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
+    !contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAportePROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
   ) {
-    fail('produtor/financeiro/index.html', 'UI P2 nao pode disparar mutacoes antes da P3 Master');
+    fail('produtor/financeiro/index.html', 'UI financeira deve permitir somente a solicitacao interna de antecipacao');
+  }
+
+  if (
+    contaCariocaPayPage.includes('ctAsaasProvider') ||
+    contaCariocaPayPage.includes('/transfers') ||
+    contaCariocaPayPage.includes('UrlFetchApp')
+  ) {
+    fail('produtor/financeiro/index.html', 'solicitacao de antecipacao nao pode chamar provider diretamente');
+  }
+}
+
+const produtorSaldoExtratoPage = read('produtor/carioca-pay/index.html');
+if (produtorSaldoExtratoPage) {
+  for (const required of [
+    'href="/produtor/financeiro/"',
+    'Antecipação e regras'
+  ]) {
+    if (!produtorSaldoExtratoPage.includes(required)) {
+      fail('produtor/carioca-pay/index.html', 'saldo/extrato sem acesso ao fluxo de antecipação: ' + required);
+    }
+  }
+}
+
+const backofficeMasterLanding = read('backoffice/index.html');
+if (backofficeMasterLanding) {
+  for (const required of [
+    'href="/backoffice/eventos/"',
+    'id="eventGovernanceBadge"',
+    'ctEventosGovernancaMasterContarPendentesPROD'
+  ]) {
+    if (!backofficeMasterLanding.includes(required)) {
+      fail('backoffice/index.html','Backoffice Master sem fila de eventos: ' + required);
+    }
+  }
+  for (const required of [
+    'href="/backoffice/carioca-pay/"',
+    'id="advanceRequestsBadge"',
+    'ctContaCariocaPayMasterContarPendentesPROD',
+    'solicitações de antecipação aguardando sua análise'
+  ]) {
+    if (!backofficeMasterLanding.includes(required)) {
+      fail('backoffice/index.html', 'Backoffice Master sem visibilidade de antecipações: ' + required);
+    }
+  }
+}
+
+const eventosGovernancaMasterPage = read('backoffice/eventos/index.html');
+if (eventosGovernancaMasterPage) {
+  for (const required of [
+    '<title>Eventos Pendentes | Backoffice Master</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctEventosGovernancaMasterListarPROD',
+    'ctEventosGovernancaMasterDecidirPROD',
+    'AUTORIZAR',
+    'BLOQUEAR',
+    'Autorizar risco/financeiro',
+    'sem publicar vendas automaticamente'
+  ]) {
+    if (!eventosGovernancaMasterPage.includes(required)) {
+      fail('backoffice/eventos/index.html','governança Master de eventos incompleta: ' + required);
+    }
+  }
+  for (const forbidden of [
+    'ctCheckoutPublicoLiberarEventoPROD',
+    'ctEventosPublicacaoPublicarPROD',
+    'ctAsaasProvider',
+    'UrlFetchApp',
+    'window.alert(',
+    'window.confirm(',
+    'window.prompt('
+  ]) {
+    if (eventosGovernancaMasterPage.includes(forbidden)) {
+      fail('backoffice/eventos/index.html','governança Master não pode publicar/movimentar provider: ' + forbidden);
+    }
   }
 }
 
@@ -1201,6 +1280,29 @@ if (produtorOficialEventos) {
     if (!produtorOficialEventos.includes(required)) {
       fail('produtor/index.html', 'Portal oficial sem acesso direto a Eventos: ' + required);
     }
+  }
+}
+
+const produtorMasterBoundary = read('produtor/index.html');
+if (produtorMasterBoundary) {
+  for (const required of [
+    "var podeGerirPlataforma =",
+    "perfilGlobal ===",
+    "'ADMINISTRADOR';",
+    "el.partnerAdminLink.classList.toggle(",
+    "el.backofficeMasterLink.classList.toggle("
+  ]) {
+    if (!produtorMasterBoundary.includes(required)) {
+      fail('produtor/index.html','fronteira Master incompleta: ' + required);
+    }
+  }
+  const masterStart=produtorMasterBoundary.indexOf('var podeGerirPlataforma =');
+  const masterEnd=produtorMasterBoundary.indexOf('var podeFinanceiro =',masterStart);
+  const masterBlock=masterStart>=0&&masterEnd>masterStart
+    ? produtorMasterBoundary.slice(masterStart,masterEnd)
+    : '';
+  if (masterBlock.includes('state.produtores.some')) {
+    fail('produtor/index.html','administrador local de produtor não pode ganhar visibilidade Master');
   }
 }
 

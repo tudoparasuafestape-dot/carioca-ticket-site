@@ -4135,33 +4135,18 @@ state.usuario.perfil ||
 .trim()
 .toUpperCase();
 
-var podeGerirParceiros =
-perfilGlobal === 'ADMINISTRADOR' ||
-state.produtores.some(
-function(p){
-var perfil =
-String(
-p &&
-p.perfil ||
-''
-)
-.trim()
-.toUpperCase();
-
-return (
-perfil === 'ADMINISTRADOR'
-);
-}
-);
+var podeGerirPlataforma =
+perfilGlobal ===
+'ADMINISTRADOR';
 
 el.partnerAdminLink.classList.toggle(
 'hidden',
-!podeGerirParceiros
+!podeGerirPlataforma
 );
 
 el.backofficeMasterLink.classList.toggle(
 'hidden',
-!podeGerirParceiros
+!podeGerirPlataforma
 );
 
 var podeFinanceiro =
