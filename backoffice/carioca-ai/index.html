@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Carioca AI | Backoffice Master</title>
+<link rel="icon" href="/assets/carioca-ticket-icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">\n<link rel="manifest" href="/manifest-produtor.webmanifest">
+<style>
+:root{--bg:#08090c;--card:#111319;--card2:#171a21;--line:#292d36;--text:#f8f3e8;--muted:#989da7;--gold:#d5a536;--gold2:#f1c95a;--green:#64d68d;--red:#ff7979;--blue:#80adff;--amber:#f1c95a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.hidden{display:none!important}
+.shell{width:min(100% - 28px,1440px);margin:auto;padding:18px 0 42px}.top{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px}.brand{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--text)}.brand img{width:46px;height:46px;object-fit:contain}.brand strong{display:block;font-size:17px}.brand span{display:block;color:var(--muted);font-size:11px;margin-top:3px}.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn{min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);font-weight:800;padding:0 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn.gold{border:0;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#111}.btn:disabled{opacity:.55;cursor:not-allowed}
+.hero{border:1px solid rgba(213,165,54,.3);background:linear-gradient(145deg,rgba(213,165,54,.08),rgba(17,19,25,.94));border-radius:20px;padding:19px;margin-bottom:14px}.ey{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:var(--gold2);font-weight:900}.hero h1{font-size:28px;margin:7px 0 5px}.hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}.meta{margin-top:10px;color:var(--muted);font-size:10px}
+.notice{border:1px solid rgba(128,173,255,.2);background:rgba(128,173,255,.05);color:#b9d2ff;padding:11px 13px;border-radius:13px;font-size:11px;margin-bottom:14px;line-height:1.5}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-bottom:14px}.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}.stat span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:900}.stat strong{display:block;font-size:24px;margin-top:7px}.stat small{display:block;color:var(--muted);font-size:9px;margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}.head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.head h2{font-size:15px;margin:0}.head p{font-size:10px;color:var(--muted);margin:4px 0 0}.body{padding:14px 16px}
+.agent-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.agent{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}.agent-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.agent b{font-size:12px}.agent small{display:block;color:var(--muted);font-size:9px;margin-top:4px}.badge{font-size:8px;border:1px solid var(--line);border-radius:999px;padding:5px 6px;white-space:nowrap;font-weight:900}.badge.ok{color:#baf1cf;border-color:rgba(100,214,141,.3)}.badge.warn{color:#ffe4a2;border-color:rgba(241,201,90,.3)}.badge.bad{color:#ffb4b4;border-color:rgba(255,121,121,.3)}.agent-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}.agent-kpi{background:#0c0e13;border-radius:9px;padding:7px}.agent-kpi span{display:block;color:var(--muted);font-size:8px}.agent-kpi strong{display:block;font-size:13px;margin-top:3px}
+.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:720px}.table th,.table td{text-align:left;border-bottom:1px solid var(--line);padding:10px 8px;font-size:10px}.table th{color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.06em}.table td b{font-size:11px}.empty{padding:24px;text-align:center;color:var(--muted);font-size:11px}.brief{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.brief-card{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px}.brief-card span{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.brief-card strong{display:block;font-size:17px;margin-top:5px}.alerts{display:grid;gap:8px}.alert{border:1px solid var(--line);background:var(--card2);border-radius:11px;padding:10px 12px;font-size:10px;line-height:1.45}
+.askbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.askbar input{min-height:46px;border:1px solid var(--line);border-radius:12px;background:#0c0e13;color:var(--text);padding:0 13px;font:inherit;outline:none}.askbar input:focus{border-color:rgba(213,165,54,.65)}.examples{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.chip{border:1px solid var(--line);background:var(--card2);color:var(--muted);border-radius:999px;padding:7px 9px;font-size:9px;cursor:pointer}.answer{margin-top:12px;border:1px solid rgba(213,165,54,.24);background:rgba(213,165,54,.05);border-radius:14px;padding:13px}.answer h3{font-size:13px;margin:0 0 7px}.answer p{font-size:11px;line-height:1.55;margin:0}.answer-meta{color:var(--muted);font-size:9px;margin-top:8px}.points{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}.point{border:1px solid var(--line);background:#0c0e13;border-radius:10px;padding:9px}.point span{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.point strong{display:block;font-size:13px;margin-top:4px}.priorities{display:grid;gap:6px;margin-top:10px}.priority{border-left:3px solid var(--gold);background:var(--card2);border-radius:8px;padding:9px 10px;font-size:10px;line-height:1.4}
+.gate{min-height:70vh;display:grid;place-items:center;padding:24px}.gatebox{width:min(500px,100%);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center}.gatebox p{color:var(--muted);line-height:1.5}.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#171a21;border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:11px;z-index:20;max-width:min(680px,calc(100% - 30px))}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(3,1fr)}.agent-grid{grid-template-columns:repeat(2,1fr)}.brief{grid-template-columns:repeat(2,1fr)}.points{grid-template-columns:repeat(2,1fr)}}@media(max-width:720px){.shell{width:min(100% - 18px,1440px);padding-top:10px}.top{align-items:flex-start}.actions{max-width:52%}.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.agent-grid{grid-template-columns:1fr}.askbar{grid-template-columns:1fr}.points{grid-template-columns:1fr}.hero h1{font-size:23px}.stat strong{font-size:20px}}
+</style>
+</head>
+<body>
+<section id="gate" class="gate">
+  <div class="gatebox">
+    <div id="gateLoading"><h1>Carioca AI</h1><p>Validando acesso ao Control Center…</p></div>
+    <div id="gateDenied" class="hidden"><h1>Acesso restrito</h1><p id="gateMessage">Entre com uma conta administradora da plataforma.</p><a class="btn" href="/produtor/">Voltar ao Portal</a></div>
+  </div>
+</section>
+
+<main id="app" class="shell hidden">
+  <header class="top">
+    <a class="brand" href="/backoffice/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Carioca AI</strong><span>Control Center · Backoffice Master</span></div></a>
+    <div class="actions"><button id="briefingBtn" class="btn gold" type="button">Briefing Executivo</button><button id="refresh" class="btn" type="button">Atualizar</button><a class="btn" href="/backoffice/">Backoffice</a></div>
+  </header>
+
+  <section class="hero">
+    <div class="ey">Governança · Inteligência Operacional</div>
+    <h1>Control Center</h1>
+    <p>Acompanhe agentes, Work Orders, aprovações e decisões humanas em uma única central. Nesta fase, a Carioca AI continua sem execução externa, movimentação financeira ou deploy autônomo.</p>
+    <div id="meta" class="meta">—</div>
+  </section>
+
+  <div id="safety" class="notice">Carregando estado de segurança…</div>
+
+  <section class="stats">
+    <article class="stat"><span>Tarefas abertas</span><strong id="kOpen">0</strong><small>Work Orders em andamento</small></article>
+    <article class="stat"><span>Em execução</span><strong id="kExec">0</strong><small>Agentes trabalhando</small></article>
+    <article class="stat"><span>Aguardando Master</span><strong id="kApproval">0</strong><small>Decisões humanas</small></article>
+    <article class="stat"><span>Risco alto</span><strong id="kRisk">0</strong><small>Tarefas abertas</small></article>
+    <article class="stat"><span>Falhas</span><strong id="kFail">0</strong><small>Exigem análise</small></article>
+    <article class="stat"><span>Concluídas</span><strong id="kDone">0</strong><small>Histórico concluído</small></article>
+  </section>
+
+  <section class="panel" style="margin-bottom:14px">
+    <div class="head"><div><h2>Orquestrador Executivo A1</h2><p>Pergunte sobre vendas, financeiro, operação, riscos, decisões ou o estado geral da Carioca Ticket.</p></div><span class="badge ok">Somente leitura</span></div>
+    <div class="body">
+      <div class="askbar">
+        <input id="agentQuestion" maxlength="800" autocomplete="off" placeholder="Ex.: Como está a Carioca Ticket hoje?">
+        <button id="agentAsk" class="btn gold" type="button">Perguntar ao agente</button>
+      </div>
+      <div class="examples">
+        <button class="chip" type="button" data-question="Como está a Carioca Ticket hoje?">Status de hoje</button>
+        <button class="chip" type="button" data-question="Como estão vendas e ingressos hoje?">Vendas</button>
+        <button class="chip" type="button" data-question="Como está o financeiro este mês?">Financeiro</button>
+        <button class="chip" type="button" data-question="Existe algum risco ou falha que exige atenção?">Riscos</button>
+        <button class="chip" type="button" data-question="Tem alguma decisão aguardando minha aprovação?">Minhas decisões</button>
+      </div>
+      <div id="agentAnswer" class="answer hidden"></div>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-bottom:14px">
+    <div class="head"><div><h2>Agentes</h2><p>Estado operacional por domínio.</p></div><span id="agentCount" class="badge">0 agentes</span></div>
+    <div class="body"><div id="agents" class="agent-grid"></div></div>
+  </section>
+
+  <section class="grid2">
+    <article class="panel">
+      <div class="head"><div><h2>Decisões para o Master</h2><p>Aprovações pendentes que exigem decisão humana.</p></div><span id="decisionCount" class="badge">0</span></div>
+      <div id="decisions" class="body"></div>
+    </article>
+    <article class="panel">
+      <div class="head"><div><h2>Briefing Executivo</h2><p>Leitura consolidada da empresa + Carioca AI.</p></div><span id="briefStatus" class="badge">Sob demanda</span></div>
+      <div id="briefing" class="body"><div class="empty">Toque em “Briefing Executivo” para gerar uma leitura consolidada.</div></div>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="head"><div><h2>Work Orders recentes</h2><p>Trilha de trabalho dos agentes, sem execução externa nesta fase.</p></div><span id="woCount" class="badge">0</span></div>
+    <div id="workorders" class="tablewrap"></div>
+  </section>
+</main>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var pending={},state={session:null,busy:false,data:null};
+
+function $(id){return document.getElementById(id)}
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function num(v){return Number(v||0).toLocaleString('pt-BR')}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function dateTime(v){if(!v)return'—';var d=new Date(v);return isNaN(d.getTime())?'—':d.toLocaleString('pt-BR')}
+function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){return new Promise(function(resolve,reject){var id='CTAI-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='ctai_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A consulta demorou mais do que o esperado.'))},60000)};form.submit()})}
+window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível consultar a Carioca AI.')))});
+function deny(msg){$('gateLoading').classList.add('hidden');$('gateDenied').classList.remove('hidden');$('gateMessage').textContent=msg||'Acesso restrito.'}
+function toast(msg){$('toast').textContent=String(msg||'');$('toast').classList.remove('hidden');setTimeout(function(){$('toast').classList.add('hidden')},4200)}
+function badgeClass(estado){return estado==='ATENCAO'?'bad':(estado==='AGUARDANDO_MASTER'?'warn':'ok')}
+function human(s){return String(s||'').replace(/_/g,' ')}
+
+function renderAgents(list){
+  list=Array.isArray(list)?list:[];
+  $('agentCount').textContent=num(list.length)+' agentes';
+  $('agents').innerHTML=list.length?list.map(function(a){
+    var t=a.tarefas||{};
+    return '<article class="agent"><div class="agent-top"><div><b>'+esc(a.nome||a.agenteId)+'</b><small>'+esc(a.dominio||'')+' · A'+num(a.nivelMaximo)+'</small></div><span class="badge '+badgeClass(a.estado)+'">'+esc(human(a.estado))+'</span></div><div class="agent-kpis"><div class="agent-kpi"><span>Abertas</span><strong>'+num(t.abertas)+'</strong></div><div class="agent-kpi"><span>Execução</span><strong>'+num(t.emExecucao)+'</strong></div><div class="agent-kpi"><span>Falhas</span><strong>'+num(t.falhas)+'</strong></div></div></article>'
+  }).join(''):'<div class="empty">Nenhum agente registrado.</div>'
+}
+
+function renderDecisions(list){
+  list=Array.isArray(list)?list:[];
+  $('decisionCount').textContent=num(list.length);
+  if(!list.length){$('decisions').innerHTML='<div class="empty">Nenhuma decisão aguardando o Master.</div>';return}
+  $('decisions').innerHTML='<div class="alerts">'+list.map(function(x){
+    return '<div class="alert"><b>'+esc(human(x.tipo||'APROVACAO'))+'</b><br>'+esc(x.acaoProposta||'')+'<br><span style="color:var(--muted)">'+money(x.valorFinanceiro||0)+' · '+dateTime(x.solicitadaEm)+'</span></div>'
+  }).join('')+'</div>'
+}
+
+function renderWorkOrders(list){
+  list=Array.isArray(list)?list:[];
+  $('woCount').textContent=num(list.length);
+  if(!list.length){$('workorders').innerHTML='<div class="empty">Nenhuma Work Order registrada.</div>';return}
+  $('workorders').innerHTML='<table class="table"><thead><tr><th>Status</th><th>Tipo</th><th>Agente</th><th>Risco</th><th>Produtor / Evento</th><th>Atualização</th></tr></thead><tbody>'+list.map(function(x){
+    return '<tr><td><b>'+esc(human(x.status))+'</b></td><td>'+esc(human(x.tipo))+'</td><td>'+esc(x.responsavelAgenteId||'—')+'</td><td>'+esc(human(x.risco||'—'))+'</td><td>'+esc((x.produtorId||'—')+(x.eventoId?' · '+x.eventoId:''))+'</td><td>'+esc(dateTime(x.atualizadoEm||x.criadoEm))+'</td></tr>'
+  }).join('')+'</tbody></table>'
+}
+
+function render(r){
+  state.data=r;
+  var s=r.resumo||{},g=r.governanca||{},sec=r.seguranca||{};
+  $('meta').textContent=(r.admin&&r.admin.nome?r.admin.nome+' · ':'')+(r.admin&&r.admin.perfil||'ADMINISTRADOR')+' · Atualizado '+dateTime(r.geradoEm);
+  $('kOpen').textContent=num(s.abertas);$('kExec').textContent=num(s.emExecucao);$('kApproval').textContent=num(s.approvalsPendentes);$('kRisk').textContent=num(s.riscoAltoAbertas);$('kFail').textContent=num(s.falhas);$('kDone').textContent=num(s.concluidas);
+  var ms=sec.mistral||null;
+  $('safety').textContent='Governança '+(g.instalada?'instalada':'ainda não instalada em produção')+' · Master A5 '+(g.masterConfigurado?'configurado':'não configurado')+' · Cognitive Gateway '+(sec.cognitiveGatewayPreparado?'preparado':'indisponível')+' · Provider '+esc(sec.cognitiveProvider||'NONE')+(ms?' / '+esc(ms.model||''):'')+' · Chave '+(ms&&ms.segredoConfigurado?'configurada':'não configurada')+' · Shadow '+(ms&&ms.shadowEnabled?'ON':'OFF')+' · Rede '+(sec.cognitiveNetworkEnabled?'ON':'OFF')+' · Execução externa OFF · Financeiro OFF · Deploy autônomo OFF';
+  renderAgents(r.agentes);renderDecisions(r.decisoesPendentes);renderWorkOrders(r.workOrdersRecentes);
+}
+
+async function load(){
+  if(state.busy)return;state.busy=true;$('refresh').disabled=true;
+  try{
+    var r=await rpc('ctCariocaAIControlCenterCarregarPROD',[String(state.session.token),{}]);
+    if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Seu perfil não está autorizado para a Carioca AI.');
+    render(r);$('gate').classList.add('hidden');$('app').classList.remove('hidden');
+  }catch(e){
+    if($('app').classList.contains('hidden'))deny(e&&e.message?e.message:String(e));else toast(e&&e.message?e.message:String(e));
+  }finally{state.busy=false;$('refresh').disabled=false}
+}
+
+function renderAgentAnswer(r){
+  var pontos=Array.isArray(r.pontos)?r.pontos:[],prioridades=Array.isArray(r.prioridades)?r.prioridades:[];
+  $('agentAnswer').innerHTML='<h3>'+esc((r.agente&&r.agente.nome)||'Orquestrador Executivo')+'</h3><p>'+esc(r.resposta||'Sem resposta disponível.')+'</p>'+(pontos.length?'<div class="points">'+pontos.map(function(p){return'<div class="point"><span>'+esc(p.titulo||'Indicador')+'</span><strong>'+esc(p.valor==null?'—':p.valor)+'</strong></div>'}).join('')+'</div>':'')+(prioridades.length?'<div class="priorities">'+prioridades.map(function(p){return'<div class="priority"><b>'+esc(p.titulo||'Prioridade')+'</b><br>'+esc(p.motivo||'')+'</div>'}).join('')+'</div>':'')+'<div class="answer-meta">Intenção: '+esc(human(r.intencao||'STATUS_GERAL'))+' · A1 leitura/análise · '+(r.cognitivo&&r.cognitivo.preparado?'Gateway preparado':'Gateway indisponível')+' · Provider '+esc(r.cognitivo&&r.cognitivo.provider||'NONE')+' · '+(r.cognitivo&&r.cognitivo.usouLLM?'resposta generativa':'resposta determinística')+' · '+esc(dateTime(r.geradoEm))+'</div>';
+  $('agentAnswer').classList.remove('hidden');
+}
+
+async function askAgent(){
+  if(state.busy)return;
+  var q=String($('agentQuestion').value||'').trim();
+  if(!q){toast('Digite uma pergunta para o Orquestrador Executivo.');$('agentQuestion').focus();return}
+  state.busy=true;$('agentAsk').disabled=true;$('agentAsk').textContent='Analisando…';
+  try{
+    var r=await rpc('ctCariocaAIExecutiveAgentConsultarPROD',[String(state.session.token),q,{}]);
+    if(!r||r.sucesso!==true)throw new Error('O agente não conseguiu concluir a análise.');
+    renderAgentAnswer(r);
+  }catch(e){toast(e&&e.message?e.message:String(e))}
+  finally{state.busy=false;$('agentAsk').disabled=false;$('agentAsk').textContent='Perguntar ao agente'}
+}
+
+async function briefing(){
+  if(state.busy)return;state.busy=true;$('briefingBtn').disabled=true;$('briefStatus').textContent='Gerando…';
+  try{
+    var r=await rpc('ctCariocaAIBriefingExecutivoPROD',[String(state.session.token),{preset:'7D'}]);
+    if(!r||r.sucesso!==true)throw new Error('Não foi possível gerar o briefing.');
+    var e=r.empresa||{},alerts=Array.isArray(r.alertasExecutivos)?r.alertasExecutivos:[];
+    $('briefing').innerHTML='<div class="brief"><div class="brief-card"><span>Receita</span><strong>'+money(e.receitaBruta)+'</strong></div><div class="brief-card"><span>Ingressos</span><strong>'+num(e.ingressos)+'</strong></div><div class="brief-card"><span>Eventos ativos</span><strong>'+num(e.eventosAtivos)+'</strong></div><div class="brief-card"><span>Produtores ativos</span><strong>'+num(e.produtoresAtivos)+'</strong></div></div><div class="alerts" style="margin-top:10px">'+alerts.map(function(a){return'<div class="alert">'+esc(a)+'</div>'}).join('')+'</div>';
+    $('briefStatus').textContent='Atualizado';
+  }catch(e){$('briefStatus').textContent='Falha';toast(e&&e.message?e.message:String(e))}
+  finally{state.busy=false;$('briefingBtn').disabled=false}
+}
+
+$('refresh').addEventListener('click',load);
+$('briefingBtn').addEventListener('click',briefing);
+$('agentAsk').addEventListener('click',askAgent);
+$('agentQuestion').addEventListener('keydown',function(e){if(e.key==='Enter')askAgent()});
+document.querySelectorAll('[data-question]').forEach(function(b){b.addEventListener('click',function(){$('agentQuestion').value=String(b.dataset.question||'');askAgent()})});
+state.session=readSession();if(!state.session)deny('Entre no Portal do Produtor antes de abrir a Carioca AI.');else load();
+}());
+</script>
+<script src="/pwa-register.js"></script>\n</body>
+</html>
