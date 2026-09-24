@@ -108,7 +108,7 @@ async function mockProducer(page,state){
       }
     }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
     const payload=JSON.stringify({ctMinhaCariocaPost:true,id,ok,resultado:ok?resultado:null,erro:ok?'':erro}).replace(/</g,'\\u003c');
-    await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");<\\/script></body></html>'});
+    await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");<\/script></body></html>'});
   });
 }
 
@@ -155,7 +155,7 @@ async function mockMaster(page,state){
       }
     }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
     const payload=JSON.stringify({ctMinhaCariocaPost:true,id,ok,resultado:ok?resultado:null,erro:ok?'':erro}).replace(/</g,'\\u003c');
-    await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");<\\/script></body></html>'});
+    await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");<\/script></body></html>'});
   });
 }
 
