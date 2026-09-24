@@ -591,7 +591,7 @@ test.describe('Fachadas first-party em homologacao', () => {
     await expect(page.getByRole('heading', { name: /Minha Carioca/i })).toBeVisible({
       timeout: 15000
     });
-    await expect(page.getByPlaceholder(/Seu e-mail ou WhatsApp cadastrado/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/Seu e-mail cadastrado na compra/i)).toBeVisible();
     await expect(page.locator('body')).not.toContainText('EVENTO FORJADO');
     await expect(page.locator('body')).not.toContainText('Conta Falsa');
   });
