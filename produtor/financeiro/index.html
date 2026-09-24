@@ -96,8 +96,8 @@ button,select,input{font:inherit}
         <section class="card">
           <div class="head"><div><h2>Ações financeiras</h2><span>solicitações protegidas</span></div></div>
           <div class="action-grid">
-            <div class="action"><b>Solicitar antecipação</b><small>Até 80% do saldo elegível. A solicitação segue para análise do Administrador Master e não movimenta dinheiro automaticamente.</small><div class="field" style="margin-top:10px"><label for="advanceValue">Valor solicitado</label><input id="advanceValue" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00"></div><button id="advanceButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar antecipação para análise</button></div>
-            <div class="action"><b>Solicitar saque</b><small>Mínimo de R$ 500,00. O saldo é confirmado diretamente na conta financeira antes da solicitação e considera saques já reservados em todos os eventos. O pedido segue para análise do Administrador Master e não executa Pix/TED automaticamente.</small><div class="status-line" style="margin-top:8px"><span>Disponível para saque</span><b id="withdrawAvailable">—</b></div><div class="field" style="margin-top:10px"><label for="withdrawValue">Valor solicitado</label><input id="withdrawValue" type="number" min="500" step="0.01" inputmode="decimal" placeholder="500,00"></div><button id="withdrawButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar saque para análise</button></div>
+            <div class="action"><b>Solicitar antecipação</b><small>Até 80% do saldo elegível. Uma nova solicitação só é aceita quando não existe outra antecipação aberta para este evento. A solicitação segue para análise do Administrador Master e não movimenta dinheiro automaticamente.</small><div class="status-line" style="margin-top:8px"><span>Status</span><b id="advanceStatus">—</b></div><div class="field" style="margin-top:10px"><label for="advanceValue">Valor solicitado</label><input id="advanceValue" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00"></div><button id="advanceButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar antecipação para análise</button></div>
+            <div class="action"><b>Solicitar saque</b><small>Mínimo de R$ 500,00. O saldo é confirmado diretamente na conta financeira antes da solicitação e considera saques já reservados em todos os eventos. Enquanto existir um saque aberto, um novo pedido fica bloqueado. O pedido segue para análise do Administrador Master e não executa Pix/TED automaticamente.</small><div class="status-line" style="margin-top:8px"><span>Disponível para saque</span><b id="withdrawAvailable">—</b></div><div class="status-line"><span>Status</span><b id="withdrawStatus">—</b></div><div class="field" style="margin-top:10px"><label for="withdrawValue">Valor solicitado</label><input id="withdrawValue" type="number" min="500" step="0.01" inputmode="decimal" placeholder="500,00"></div><button id="withdrawButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar saque para análise</button></div>
           </div>
           <button id="rulesButton" class="btn rule-link" type="button">Ver regras de antecipação</button>
         </section>
@@ -272,6 +272,12 @@ function render(r){
   document.getElementById('policyMax').textContent=Number(ant.percentualMaximo||80).toLocaleString('pt-BR')+'%';
   document.getElementById('policyReserve').textContent=Number(ant.reservaPercentual||20).toLocaleString('pt-BR')+'%';
   document.getElementById('policyFee').textContent=Number(ant.taxaCtPercentual||3.5).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  var advanceOpen=Number(ant.jaSolicitadoAberto||0)>0;
+  var advanceStatus=document.getElementById('advanceStatus');
+  advanceStatus.textContent=advanceOpen?'Solicitação em andamento':'Disponível';
+  advanceStatus.className=advanceOpen?'off':'on';
+  var advanceButton=document.getElementById('advanceButton');
+  advanceButton.disabled=advanceOpen||Number(ant.disponivelSolicitar||0)<=0;
 
   var conf=document.getElementById('financialConfigured');
   conf.textContent=fin.configurado?'Configurada':'Pendente';
@@ -285,8 +291,12 @@ function render(r){
   var withdrawAvailable=document.getElementById('withdrawAvailable');
   withdrawAvailable.textContent=saqueDisponivel?money(saque.saldoDisponivel):'Indisponível';
   withdrawAvailable.className=saqueDisponivel?'on':'off';
+  var withdrawOpen=Number(saque.jaSolicitadoAberto||0)>0;
+  var withdrawStatus=document.getElementById('withdrawStatus');
+  withdrawStatus.textContent=withdrawOpen?'Solicitação em andamento':'Disponível';
+  withdrawStatus.className=withdrawOpen?'off':'on';
   var withdrawButton=document.getElementById('withdrawButton');
-  withdrawButton.disabled=!saqueDisponivel||Number(saque.saldoDisponivel||0)<Number(saque.minimoSolicitacao||500);
+  withdrawButton.disabled=!saqueDisponivel||withdrawOpen||Number(saque.saldoDisponivel||0)<Number(saque.minimoSolicitacao||500);
   document.getElementById('updatedAt').textContent='Atualizado em '+esc(r.atualizadoEm||'');
 }
 
@@ -301,6 +311,7 @@ async function requestAdvance(){
   var valor=Number(input&&input.value||0);
   var ant=state.resumo&&state.resumo.antecipacao||{};
   var disponivel=Number(ant.disponivelSolicitar||0);
+  if(Number(ant.jaSolicitadoAberto||0)>0){msg('Já existe uma solicitação de antecipação em andamento para este evento.','error');return}
   if(valor<=0){msg('Informe um valor válido para antecipação.','error');return}
   if(valor>disponivel){msg('O valor solicitado excede o disponível para antecipação.','error');return}
   state.busyAdvance=true;if(button)button.disabled=true;showLoading(true);msg('');
@@ -323,6 +334,7 @@ async function requestWithdraw(){
   var saque=state.resumo&&state.resumo.saque||{};
   var minimo=Number(saque.minimoSolicitacao||500);
   var disponivel=Number(saque.saldoDisponivel||0);
+  if(Number(saque.jaSolicitadoAberto||0)>0){msg('Já existe uma solicitação de saque em andamento para este produtor.','error');return}
   if(saque.saldoAutoritativoDisponivel!==true){msg('Não foi possível confirmar o saldo autoritativo da conta. O saque permanece bloqueado por segurança.','error');return}
   if(valor<minimo){msg('O saque mínimo é de '+money(minimo)+'.','error');return}
   if(valor>disponivel){msg('O valor solicitado excede o saldo disponível para saque.','error');return}
@@ -338,7 +350,7 @@ async function requestWithdraw(){
   finally{
     state.busyWithdraw=false;
     var atual=state.resumo&&state.resumo.saque||{};
-    if(button)button.disabled=atual.saldoAutoritativoDisponivel!==true||Number(atual.saldoDisponivel||0)<Number(atual.minimoSolicitacao||500);
+    if(button)button.disabled=atual.saldoAutoritativoDisponivel!==true||Number(atual.jaSolicitadoAberto||0)>0||Number(atual.saldoDisponivel||0)<Number(atual.minimoSolicitacao||500);
     showLoading(false)
   }
 }
