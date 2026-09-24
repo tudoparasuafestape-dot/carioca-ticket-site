@@ -96,7 +96,7 @@ button,select,input{font:inherit}
         <section class="card">
           <div class="head"><div><h2>Ações financeiras</h2><span>em homologação</span></div></div>
           <div class="action-grid">
-            <button class="action" type="button" disabled><b>Solicitar antecipação</b><small>Até 80% do saldo elegível, mediante análise.</small></button>
+            <button id="requestAdvanceButton" class="action" type="button" disabled><b>Solicitar antecipação</b><small>Até 80% do saldo elegível, mediante análise do Master.</small></button>
             <button class="action" type="button" disabled><b>Registrar patrocínio</b><small>Identifique patrocinador, contrato e valor.</small></button>
             <button class="action" type="button" disabled><b>Planejar pagamento</b><small>Fornecedor/equipe com aprovação por perfil.</small></button>
             <button class="action" type="button" disabled><b>Adicionar saldo</b><small>Capital próprio via Pix após habilitação BaaS.</small></button>
@@ -111,8 +111,9 @@ button,select,input{font:inherit}
           <div class="policy">
             <div class="policy-item"><small>Máximo antecipável</small><strong id="policyMax">80%</strong></div>
             <div class="policy-item"><small>Reserva</small><strong id="policyReserve">20%</strong></div>
-            <div class="policy-item"><small>Taxa antecipação</small><strong id="policyFee">3,49%</strong></div>
-            <div class="policy-item"><small>Repasse normal</small><strong>D+3 úteis</strong></div>
+            <div class="policy-item"><small>Taxa antecipação</small><strong id="policyFee">3,50%</strong></div>
+            <div class="policy-item"><small>Crédito antecipado</small><strong id="policyAdvanceDeadline">Até 2 dias úteis</strong></div>
+            <div class="policy-item"><small>Repasse normal</small><strong>D+3 úteis · sem taxa</strong></div>
           </div>
         </section>
 
@@ -122,7 +123,7 @@ button,select,input{font:inherit}
           <div class="status-line"><span>Movimentação real</span><b id="realMovement" class="off">Desabilitada</b></div>
           <div class="status-line"><span>Pix para aporte</span><b id="depositPix" class="off">Desabilitado</b></div>
           <div class="status-line"><span>Antecipação no provider</span><b id="providerAdvance" class="off">Desabilitada</b></div>
-          <div class="status-line"><span>Aguardando aprovação</span><b id="pendingApprovals">0</b></div>
+          <div class="status-line"><span>Antecipações em aberto</span><b id="pendingApprovals">R$ 0,00</b></div>
         </section>
       </aside>
     </div>
@@ -136,15 +137,29 @@ button,select,input{font:inherit}
     <h2 id="rulesTitle">Regras de antecipação</h2>
     <p>A Conta Carioca Pay seguirá a política comercial definida para produtores:</p>
     <ul>
-      <li>mínimo de R$ 300,00 em vendas elegíveis;</li>
+      <li>mínimo de R$ 500,00 em saldo/vendas elegíveis para solicitar;</li>
       <li>até 80% do saldo elegível pode ser solicitado;</li>
       <li>20% permanece como reserva de segurança;</li>
-      <li>taxa de 3,49% sobre o valor antecipado;</li>
+      <li>taxa de 3,5% sobre o valor antecipado;</li>
       <li>a solicitação depende de análise e aprovação da Carioca Ticket;</li>
-      <li>o repasse normal ocorre em até 3 dias úteis após o evento, após conciliação de estornos, reembolsos e ajustes.</li>
+      <li>após aprovação e processamento, o crédito será enviado em até 2 dias úteis;</li>
+      <li>sem antecipação, o repasse normal ocorre em até 3 dias úteis após o evento, sem taxa de antecipação, após conciliação de estornos, reembolsos e ajustes.</li>
     </ul>
-    <p>Nesta versão de homologação nenhuma movimentação financeira real é executada.</p>
+    <p>A aprovação no Backoffice Master não movimenta dinheiro automaticamente; a execução financeira continua protegida por conciliação e integração financeira.</p>
     <button id="rulesClose" class="btn gold" type="button">Entendi</button>
+  </section>
+</div>
+
+<div id="advanceBackdrop" class="backdrop hidden" aria-hidden="true">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="advanceTitle">
+    <h2 id="advanceTitle">Solicitar antecipação</h2>
+    <p id="advanceHelp">Informe o valor desejado dentro do limite disponível. A solicitação será enviada ao Backoffice Master para análise.</p>
+    <div class="field"><label for="advanceValue">Valor da antecipação</label><input id="advanceValue" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+    <div id="advanceSummary" class="note"></div>
+    <div class="modal-actions">
+      <button id="advanceCancel" class="btn" type="button">Cancelar</button>
+      <button id="advanceSubmit" class="btn gold" type="button">Enviar solicitação</button>
+    </div>
   </section>
 </div>
 
@@ -157,7 +172,7 @@ button,select,input{font:inherit}
 var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 var pending={};
-var state={session:null,usuario:null,produtores:[],produtor:null,evento:null};
+var state={session:null,usuario:null,produtores:[],produtor:null,evento:null,resumo:null,advanceBusy:false};
 
 function rpc(method,args){
   return new Promise(function(resolve,reject){
@@ -272,7 +287,8 @@ function render(r){
 
   document.getElementById('policyMax').textContent=Number(ant.percentualMaximo||80).toLocaleString('pt-BR')+'%';
   document.getElementById('policyReserve').textContent=Number(ant.reservaPercentual||20).toLocaleString('pt-BR')+'%';
-  document.getElementById('policyFee').textContent=Number(ant.taxaCtPercentual||3.49).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  document.getElementById('policyFee').textContent=Number(ant.taxaCtPercentual||3.5).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2})+'%';
+  document.getElementById('policyAdvanceDeadline').textContent='Até '+Number(ant.prazoCreditoDiasUteis||2)+' dias úteis';
 
   var conf=document.getElementById('financialConfigured');
   conf.textContent=fin.configurado?'Configurada':'Pendente';
@@ -281,12 +297,73 @@ function render(r){
   setGate('realMovement',fin.movimentacaoRealHabilitada,'Habilitada','Desabilitada');
   setGate('depositPix',fin.aportePixHabilitado,'Habilitado','Desabilitado');
   setGate('providerAdvance',ant.providerHabilitado,'Habilitada','Desabilitada');
-  document.getElementById('pendingApprovals').textContent=String(sol.pagamentosAguardandoAprovacao||0);
+  document.getElementById('pendingApprovals').textContent=money(sol.antecipacoesAbertas||0);
+  state.resumo=r;
+  var podeSolicitar=!!(r.permissoes&&r.permissoes.solicitarAntecipacao===true);
+  var disponivel=Number(ant.disponivelSolicitar||0);
+  var minimo=Number(ant.minimoVendas||500);
+  var requestButton=document.getElementById('requestAdvanceButton');
+  requestButton.disabled=!(podeSolicitar&&disponivel>0&&Number(ant.baseElegivel||0)>=minimo);
+  requestButton.title=requestButton.disabled
+    ? 'É necessário perfil autorizado, saldo elegível mínimo de '+money(minimo)+' e valor disponível.'
+    : 'Enviar solicitação ao Backoffice Master.';
   document.getElementById('updatedAt').textContent='Atualizado em '+esc(r.atualizadoEm||'');
 }
 
 function setGate(id,on,yes,no){
   var el=document.getElementById(id);el.textContent=on?yes:no;el.className=on?'on':'off';
+}
+
+function openAdvance(){
+  var r=state.resumo||{}, ant=r.antecipacao||{};
+  var disponivel=Number(ant.disponivelSolicitar||0);
+  if(disponivel<=0)return;
+  var input=document.getElementById('advanceValue');
+  input.max=String(disponivel);
+  input.value=disponivel.toFixed(2);
+  document.getElementById('advanceSummary').textContent=
+    'Disponível: '+money(disponivel)+' · taxa 3,5% · reserva 20% · crédito em até 2 dias úteis após aprovação/processamento.';
+  document.getElementById('advanceBackdrop').classList.remove('hidden');
+  document.getElementById('advanceBackdrop').setAttribute('aria-hidden','false');
+  input.focus();
+}
+function closeAdvance(){
+  if(state.advanceBusy)return;
+  document.getElementById('advanceBackdrop').classList.add('hidden');
+  document.getElementById('advanceBackdrop').setAttribute('aria-hidden','true');
+}
+function requestKey(){
+  return 'ADV-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
+}
+async function submitAdvance(){
+  if(state.advanceBusy||!state.session||!state.evento)return;
+  var r=state.resumo||{}, ant=r.antecipacao||{};
+  var valor=Number(document.getElementById('advanceValue').value||0);
+  var disponivel=Number(ant.disponivelSolicitar||0);
+  if(!(valor>0)||valor>disponivel){
+    msg('Informe um valor válido de até '+money(disponivel)+'.','error');
+    return;
+  }
+  state.advanceBusy=true;
+  document.getElementById('advanceSubmit').disabled=true;
+  try{
+    var resp=await rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD',[
+      state.session.token,
+      state.evento.id,
+      valor,
+      requestKey()
+    ]);
+    if(!resp||resp.sucesso!==true)throw new Error('Não foi possível registrar a solicitação.');
+    document.getElementById('advanceBackdrop').classList.add('hidden');
+    document.getElementById('advanceBackdrop').setAttribute('aria-hidden','true');
+    msg('Solicitação enviada para análise do Backoffice Master.','success');
+    await loadSummary();
+  }catch(e){
+    msg(String(e&&e.message||e||'Falha ao solicitar antecipação.'),'error');
+  }finally{
+    state.advanceBusy=false;
+    document.getElementById('advanceSubmit').disabled=false;
+  }
 }
 
 function openRules(){document.getElementById('rulesBackdrop').classList.remove('hidden');document.getElementById('rulesBackdrop').setAttribute('aria-hidden','false')}
@@ -323,6 +400,10 @@ document.getElementById('rulesButton').addEventListener('click',openRules);
 document.getElementById('rulesTopButton').addEventListener('click',openRules);
 document.getElementById('rulesClose').addEventListener('click',closeRules);
 document.getElementById('rulesBackdrop').addEventListener('click',function(e){if(e.target===this)closeRules()});
+document.getElementById('requestAdvanceButton').addEventListener('click',openAdvance);
+document.getElementById('advanceCancel').addEventListener('click',closeAdvance);
+document.getElementById('advanceSubmit').addEventListener('click',submitAdvance);
+document.getElementById('advanceBackdrop').addEventListener('click',function(e){if(e.target===this)closeAdvance()});
 
 init();
 }());
