@@ -54,9 +54,9 @@ requireAll('index.html',home,[
 ]);
 
 
-// P0 PERFORMANCE — checkout não pode reconciliar com Asaas a cada ciclo curto.
-// Polling frequente observa apenas o ledger local; Asaas fica como fallback
-// espaçado/manual enquanto o webhook segue como caminho principal.
+// P0 PERFORMANCE — o checkout observa o ledger local a cada 4s e
+// reconcilia com o Asaas em burst controlado: 10s nos primeiros 2 minutos
+// e 30s depois. O webhook imediato segue como caminho principal.
 for(const path of ['checkout/index.html','checkout-v2/index.html']){
   const checkout=read(path);
   requireAll(path,checkout,[
@@ -65,13 +65,20 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
     'setInterval(refreshLocal,4000)',
     'function reconcile(){',
     'ctCheckoutPixPublicoReconciliarPROD',
-    'setInterval(reconcile,30000)',
     'reconcilePolling:null',
+    'reconcileStartedAt:0',
+    "document.visibilityState!=='visible'",
+    'elapsed<120000',
+    'Math.floor(elapsed/10000)%3===0',
+    '},10000)',
     'function stopExpiry(){',
     'if(sec<=0&&!state.expiryReconciled)',
     'el.refreshButton.onclick=reconcile',
     'el.cardRefreshButton.onclick=reconcile'
   ]);
+  if(checkout.includes('setInterval(reconcile,30000)')){
+    failures.push(path+': reconciliação PIX não pode voltar ao atraso fixo de 30s');
+  }
   if(checkout.includes('setInterval(refresh,4000)')){
     failures.push(path+': reconciliação Asaas voltou ao polling de 4s');
   }
