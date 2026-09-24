@@ -96,6 +96,34 @@ requireAll('index.html',home,[
 ]);
 
 
+// P0 UX — depois que o ingresso foi emitido, a tela de sucesso é monotônica.
+// Polling/reconcile atrasado nunca pode devolver o cliente ao formulário de compra.
+for(const path of ['checkout/index.html','checkout-v2/index.html']){
+  const checkout=read(path);
+  requireAll(path,checkout,[
+    'successRendered:false',
+    'state.successRendered=true;',
+    'function refreshLocal(){',
+    'if(state.successRendered)return;',
+    'function reconcile(){'
+  ]);
+  const refreshStart=checkout.indexOf('function refreshLocal(){');
+  const reconcileStart=checkout.indexOf('function reconcile(){');
+  const refreshBlock=refreshStart>=0&&reconcileStart>refreshStart
+    ? checkout.slice(refreshStart,reconcileStart)
+    : '';
+  if(!refreshBlock.includes('if(state.successRendered)return;')){
+    failures.push(path+': polling local pode reverter a tela após sucesso');
+  }
+  const reconcileEnd=checkout.indexOf('function startPolling(){',reconcileStart);
+  const reconcileBlock=reconcileStart>=0&&reconcileEnd>reconcileStart
+    ? checkout.slice(reconcileStart,reconcileEnd)
+    : '';
+  if(!reconcileBlock.includes('if(state.successRendered)return;')){
+    failures.push(path+': reconcile pode reverter a tela após sucesso');
+  }
+}
+
 // P0 PERFORMANCE — o checkout observa o ledger local a cada 4s e
 // reconcilia com o Asaas em burst controlado: 10s nos primeiros 2 minutos
 // e 30s depois. O webhook imediato segue como caminho principal.

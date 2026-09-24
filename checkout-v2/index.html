@@ -385,6 +385,7 @@
         polling:null,
         reconcilePolling:null,
         reconcileStartedAt:0,
+        successRendered:false,
         expiryTimer:null,
         expiryReconciled:false,
         busy:false,
@@ -1080,6 +1081,7 @@
       }
 
       function renderSuccess(ingressos){
+        state.successRendered=true;
         el.pixPanel.classList.add('hidden');
         el.cardPanel.classList.add('hidden');
         el.salePanel.classList.add('hidden');el.buyerPanel.classList.add('hidden');el.payActionPanel.classList.add('hidden');
@@ -1121,6 +1123,7 @@
        * e adquira ScriptLock a cada poucos segundos.
        */
       function refreshLocal(){
+        if(state.successRendered)return;
         if(!state.order||!state.queryToken||state.busy)return;
 
         var statusAntes=String(state.order.status||'').toUpperCase();
@@ -1147,6 +1150,7 @@
       }
 
       function reconcile(){
+        if(state.successRendered)return;
         if(!state.order||!state.queryToken||state.busy)return;
         state.busy=true;
         el.refreshButton.disabled=true;el.refreshButton.textContent='Atualizando...';
