@@ -140,7 +140,10 @@ for(const path of ['checkout/index.html','checkout-v2/index.html']){
     'stopExpiry();',
     'stopTicketReadyRefresh();',
     'renderSuccess(ingressosComLinkSeguro);',
-    'scheduleTicketReadyRefresh();'
+    'scheduleTicketReadyRefresh();',
+    'ticketReadyAttempts:0',
+    'state.ticketReadyAttempts>=8',
+    'state.ticketReadyAttempts+=1'
   ]);
 
   const renderOrderStart=checkout.indexOf('function renderOrder(res){');
