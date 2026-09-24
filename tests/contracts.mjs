@@ -1103,8 +1103,14 @@ if (financeiroProdutor) {
   if (!financeiroProdutor.includes("==='SOLICITAR SAQUE'")) {
     fail('financeiro/index.html', 'Saque sem confirmacao textual de seguranca');
   }
-  if (!financeiroProdutor.includes('2,5%')) {
-    fail('financeiro/index.html', 'Taxa CT de antecipacao nao esta transparente na interface');
+  if (!financeiroProdutor.includes('3,5%')) {
+    fail('financeiro/index.html', 'Taxa CT vigente de antecipacao nao esta transparente na interface');
+  }
+  if (!financeiroProdutor.includes("'/produtor/financeiro/?evento='")) {
+    fail('financeiro/index.html', 'Antecipacao legada nao redireciona para o fluxo Master');
+  }
+  if (financeiroProdutor.includes(".ctFinanceiroProdutorSolicitarAntecipacaoPROD(")) {
+    fail('financeiro/index.html', 'Antecipacao legada ainda chama mutacao direta');
   }
   if (!financeiroProdutor.includes('Nenhuma transferência Pix/TED é executada automaticamente')) {
     fail('financeiro/index.html', 'Saque nao informa que e apenas solicitacao interna');
