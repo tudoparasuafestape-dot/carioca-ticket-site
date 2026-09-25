@@ -345,6 +345,7 @@ if (governancaEventosMasterPage) {
     'ctEventoGovernancaMasterListarPROD',
     'ctEventoGovernancaMasterDecidirPROD',
     'Aprovar governança',
+    'Reabrir análise',
     'Não publica vendas automaticamente',
     'eventos legados preservados',
     'publicouVendas===true',
