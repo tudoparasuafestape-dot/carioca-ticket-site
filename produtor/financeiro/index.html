@@ -320,8 +320,8 @@ async function requestAdvance(){
     var r=await rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD',[state.session.token,state.evento.id,valor,chave]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível registrar a solicitação.');
     if(input)input.value='';
-    msg('Solicitação registrada e enviada para análise do Administrador Master. Nenhuma transferência foi executada.','ok');
     await loadSummary();
+    msg('Solicitação registrada e enviada para análise do Administrador Master. Nenhuma transferência foi executada.','ok');
   }catch(e){msg(String(e&&e.message||e||'Falha ao solicitar antecipação.'),'error')}
   finally{state.busyAdvance=false;if(button)button.disabled=false;showLoading(false)}
 }
@@ -344,8 +344,8 @@ async function requestWithdraw(){
     var r=await rpc('ctContaCariocaPayPortalSolicitarSaquePROD',[state.session.token,state.evento.id,valor,chave]);
     if(!r||r.sucesso!==true)throw new Error((r&&r.codigo)||'Não foi possível registrar a solicitação de saque.');
     if(input)input.value='';
-    msg('Solicitação de saque registrada e enviada para análise do Administrador Master. Nenhuma transferência foi executada.','ok');
     await loadSummary();
+    msg('Solicitação de saque registrada e enviada para análise do Administrador Master. Nenhuma transferência foi executada.','ok');
   }catch(e){msg(String(e&&e.message||e||'Falha ao solicitar saque.'),'error')}
   finally{
     state.busyWithdraw=false;
