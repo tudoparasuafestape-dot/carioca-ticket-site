@@ -106,7 +106,7 @@ async function activate(){
   if(!r||r.sucesso!==true||r.prontoParaVendas!==true)throw new Error('A ativação financeira não foi concluída.');
   if(r.segredoExposto===true||r.movimentouDinheiro===true||r.transferenciaCriada===true||r.splitHabilitado===true)throw new Error('Gate de segurança financeiro violado.');
   toast('Financeiro ativado. O produtor está pronto para vendas. Nenhuma movimentação financeira foi criada.');
-  state.selected=null;state.readiness=null;await load();
+  state.selected=null;state.readiness=null;state.busy=false;await load();
  }catch(e){toast(e&&e.message?e.message:String(e))}
  finally{state.busy=false}
 }
