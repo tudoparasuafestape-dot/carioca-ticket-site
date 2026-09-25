@@ -280,8 +280,8 @@ function render(r){
   advanceButton.disabled=advanceOpen||Number(ant.disponivelSolicitar||0)<=0;
 
   var conf=document.getElementById('financialConfigured');
-  conf.textContent=fin.configurado?'Configurada':'Pendente';
-  conf.className=fin.configurado?'on':'off';
+  conf.textContent=fin.prontoParaOperar?'Ativa':(fin.configurado?(fin.status||'Pendente'):'Pendente');
+  conf.className=fin.prontoParaOperar?'on':'off';
 
   setGate('realMovement',fin.movimentacaoRealHabilitada,'Habilitada','Desabilitada');
   setGate('depositPix',fin.aportePixHabilitado,'Habilitado','Desabilitado');
@@ -296,7 +296,7 @@ function render(r){
   withdrawStatus.textContent=withdrawOpen?'Solicitação em andamento':'Disponível';
   withdrawStatus.className=withdrawOpen?'off':'on';
   var withdrawButton=document.getElementById('withdrawButton');
-  withdrawButton.disabled=!saqueDisponivel||withdrawOpen||Number(saque.saldoDisponivel||0)<Number(saque.minimoSolicitacao||500);
+  withdrawButton.disabled=fin.prontoParaOperar!==true||!saqueDisponivel||withdrawOpen||Number(saque.saldoDisponivel||0)<Number(saque.minimoSolicitacao||500);
   document.getElementById('updatedAt').textContent='Atualizado em '+esc(r.atualizadoEm||'');
 }
 
@@ -306,6 +306,8 @@ function setGate(id,on,yes,no){
 
 async function requestAdvance(){
   if(state.busyAdvance||!state.session||!state.evento)return;
+  var fin=state.resumo&&state.resumo.financeiro||{};
+  if(fin.prontoParaOperar!==true){msg('O financeiro deste produtor ainda não está ativo para operações.','error');return}
   var input=document.getElementById('advanceValue');
   var button=document.getElementById('advanceButton');
   var valor=Number(input&&input.value||0);
@@ -328,6 +330,8 @@ async function requestAdvance(){
 
 async function requestWithdraw(){
   if(state.busyWithdraw||!state.session||!state.evento)return;
+  var fin=state.resumo&&state.resumo.financeiro||{};
+  if(fin.prontoParaOperar!==true){msg('O financeiro deste produtor ainda não está ativo para operações.','error');return}
   var input=document.getElementById('withdrawValue');
   var button=document.getElementById('withdrawButton');
   var valor=Number(input&&input.value||0);
@@ -350,7 +354,8 @@ async function requestWithdraw(){
   finally{
     state.busyWithdraw=false;
     var atual=state.resumo&&state.resumo.saque||{};
-    if(button)button.disabled=atual.saldoAutoritativoDisponivel!==true||Number(atual.jaSolicitadoAberto||0)>0||Number(atual.saldoDisponivel||0)<Number(atual.minimoSolicitacao||500);
+    var finAtual=state.resumo&&state.resumo.financeiro||{};
+    if(button)button.disabled=finAtual.prontoParaOperar!==true||atual.saldoAutoritativoDisponivel!==true||Number(atual.jaSolicitadoAberto||0)>0||Number(atual.saldoDisponivel||0)<Number(atual.minimoSolicitacao||500);
     showLoading(false)
   }
 }
