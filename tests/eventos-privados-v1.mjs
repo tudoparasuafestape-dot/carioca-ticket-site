@@ -9,6 +9,7 @@ function ok(cond,msg){if(!cond)throw new Error(msg)}
 const convite=read('convite/index.html');
 const checkout=read('checkout-v2/index.html');
 const produtor=read('produtor/convidados/index.html');
+const eventos=read('eventos-v2/index.html');
 const produtorPortal=read('produtor-v2/index.html');
 const master=read('backoffice/eventos/index.html');
 const backoffice=read('backoffice/index.html');
@@ -29,7 +30,22 @@ ok(checkout.includes('ctTaxasEventoPublicoSimularPROD'),'checkout sem preview au
 ok(checkout.includes('Taxa Carioca Ticket · paga pelo evento'),'checkout sem comunicacao da taxa absorvida');
 ok(checkout.includes('Nenhum acréscimo desta taxa será cobrado de você.'),'checkout sem explicacao ao comprador');
 
+for(const token of [
+  'campoModoAcesso',
+  'PUBLICO',
+  'NAO_LISTADO',
+  'PRIVADO_CONVITE',
+  'campoCapacidade',
+  'validacaoConvite',
+  'mensagemConviteTitulo'
+]){
+  ok(eventos.includes(token),'cadastro generico de evento sem '+token);
+}
+ok(eventos.includes('/produtor/convidados/?evento='),'eventos sem acesso a modalidade/convidados');
+
 for(const metodo of [
+  'ctEventoAcessoProdutorObterPROD',
+  'ctEventoAcessoProdutorSalvarPROD',
   'ctEventoConvidadosListarPROD',
   'ctEventoConvidadosSalvarPROD',
   'ctEventoImportacaoModeloCsvPROD',
@@ -40,6 +56,8 @@ for(const metodo of [
 ]){
   ok(produtor.includes(metodo),'portal de convidados sem '+metodo);
 }
+ok(produtor.includes('accessMode'),'produtor sem configuracao da modalidade');
+ok(produtor.includes('A taxa da Carioca Ticket não é alterada por esta tela.'),'produtor precisa ver separacao entre modalidade e taxa');
 ok(produtor.includes('duplicatePolicy'),'importacao sem politica de duplicidade');
 ok(produtor.includes('data-copy-link'),'produtor sem copia do link ativo');
 ok(produtor.includes('IGNORAR')&&produtor.includes('ATUALIZAR'),'politicas de duplicidade incompletas');
