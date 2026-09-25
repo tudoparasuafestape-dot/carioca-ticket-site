@@ -136,10 +136,16 @@ async function doAction(){
  var id=state.selected.solicitacaoId;state.busy=true;document.getElementById('confirmAction').disabled=true;
  try{var r=await rpc('ctProdutorOnboardingAdminDecidirPROD',[state.session.token,id,state.action,{observacaoInterna:note,pendenciaPublica:pub}]);if(!r||r.sucesso!==true)throw new Error('A decisão não foi concluída.');
   document.getElementById('actionBackdrop').classList.add('hidden');state.action='';
-  if(r.solicitacao)reconcileDecisionState(id,r.solicitacao);
+  if(r.solicitacao){
+    if(r.financeiro)r.solicitacao.financeiro=r.financeiro;
+    reconcileDecisionState(id,r.solicitacao);
+  }
   state.busy=false;
   await load({skipDetail:true});
-  if(r.solicitacao)reconcileDecisionState(id,r.solicitacao)
+  if(r.solicitacao){
+    if(r.financeiro)r.solicitacao.financeiro=r.financeiro;
+    reconcileDecisionState(id,r.solicitacao);
+  }
   toast(r.produtorId?'Produtor ativado. Financeiro preparado; vendas continuam bloqueadas até a configuração financeira ficar pronta.':'Ação concluída com auditoria.')}
  catch(e){toast(e&&e.message?e.message:String(e))}
  finally{state.busy=false;document.getElementById('confirmAction').disabled=false}
