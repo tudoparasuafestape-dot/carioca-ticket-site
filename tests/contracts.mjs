@@ -32,6 +32,7 @@ const protectedFiles = [
   'parceiro/programa/index.html',
   'parceiro/admin/index.html',
   'backoffice/index.html',
+  'backoffice/eventos/index.html',
   'backoffice/carioca-pay/index.html',
   'backoffice/carioca-pay/produtores/index.html',
   'backoffice/carioca-pay/baas-sandbox/index.html',
@@ -334,6 +335,34 @@ if (contaCariocaPayPage) {
   }
 }
 
+
+
+const governancaEventosMasterPage = read('backoffice/eventos/index.html');
+if (governancaEventosMasterPage) {
+  for (const required of [
+    '<title>Governança de Eventos | Backoffice Master</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctEventoGovernancaMasterListarPROD',
+    'ctEventoGovernancaMasterDecidirPROD',
+    'Aprovar governança',
+    'Não publica vendas automaticamente',
+    'eventos legados preservados',
+    'publicouVendas===true',
+    'movimentouDinheiro===true'
+  ]) {
+    if (!governancaEventosMasterPage.includes(required)) {
+      fail('backoffice/eventos/index.html', 'Governança Master de eventos incompleta: ' + required);
+    }
+  }
+  if (
+    governancaEventosMasterPage.includes('ctCheckoutPublicoLiberarEventoPROD') ||
+    governancaEventosMasterPage.includes('ctAsaasProvider') ||
+    governancaEventosMasterPage.includes('/transfers') ||
+    /window\.(?:alert|confirm|prompt)\s*\(/i.test(governancaEventosMasterPage)
+  ) {
+    fail('backoffice/eventos/index.html', 'Governança Master executa ação proibida ou diálogo nativo');
+  }
+}
 
 const financeiroProdutoresMasterPage = read('backoffice/carioca-pay/produtores/index.html');
 if (financeiroProdutoresMasterPage) {
