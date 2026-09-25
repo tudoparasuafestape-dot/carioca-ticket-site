@@ -23,8 +23,10 @@ const master=requireAll('backoffice/politicas-comerciais/index.html',[
   'MARGEM_CT','PERCENTUAL_INGRESSOS','PERCENTUAL_TAXA_CT','FIXO_POR_INGRESSO',
   'ctPoliticaComercialMasterListarPROD',
   'ctPoliticaComercialMasterSalvarPROD',
+  'ctPoliticaComercialMasterDesativarPROD',
   'ctPoliticaComercialSimularPROD',
   'movimentouDinheiro===true',
+  'validFrom','validUntil','Usar como base','Desativar',
   'APP_DEV',
   'AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg'
 ]);
