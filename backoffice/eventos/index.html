@@ -19,7 +19,7 @@
 <section class="hero">
 <div class="ey">Governança por evento</div>
 <h1>Modalidade e política financeira</h1>
-<p>Configure visibilidade, convite privado e quem assume a taxa da Carioca Ticket. Alterações financeiras valem apenas para novos pedidos.</p>
+<p>O produtor configura a modalidade do próprio evento. Aqui o Master acompanha/override quando necessário e define a política financeira. Alterações financeiras valem apenas para novos pedidos.</p>
 <div class="selector"><div class="field"><label>Evento</label><select id="eventSelect"><option value="">Selecione</option></select></div><button id="reload">Atualizar</button></div>
 </section>
 
@@ -54,12 +54,12 @@
 
 <section class="panel" style="margin-top:14px">
 <h2>Ativação controlada</h2>
-<div class="warning">Salvar configurações não ativa a funcionalidade. Use esta área somente depois de homologação verde. Desativar o evento na allowlist é o rollback imediato.</div>
+<div class="warning">A ativação normal é global. A allowlist abaixo é opcional e deve ser usada somente para rollout/canário temporário; com a allowlist vazia, qualquer evento configurado pelo produtor pode usar a V1.</div>
 <label class="check"><input id="flagModes" type="checkbox"> Modalidades V1 ativas globalmente</label>
 <label class="check"><input id="flagPrivate" type="checkbox"> Eventos privados V1 ativos globalmente</label>
 <label class="check"><input id="flagFees" type="checkbox"> Taxas V1 ativas globalmente</label>
-<label class="check"><input id="eventEnabled" type="checkbox"> Habilitar este evento na allowlist V1</label>
-<div class="row"><button id="applyActivation" class="gold">Aplicar ativação</button><button id="rollback" class="danger">Remover este evento da allowlist</button></div>
+<label class="check"><input id="eventEnabled" type="checkbox"> Restringir o rollout a este evento (opcional / temporário)</label>
+<div class="row"><button id="applyActivation" class="gold">Aplicar flags / rollout</button><button id="rollback" class="danger">Remover restrição deste evento</button></div>
 </section>
 </main>
 </div>
