@@ -277,7 +277,7 @@ function render(r){
   advanceStatus.textContent=advanceOpen?'Solicitação em andamento':'Disponível';
   advanceStatus.className=advanceOpen?'off':'on';
   var advanceButton=document.getElementById('advanceButton');
-  advanceButton.disabled=advanceOpen||Number(ant.disponivelSolicitar||0)<=0;
+  advanceButton.disabled=fin.prontoParaOperar!==true||advanceOpen||Number(ant.disponivelSolicitar||0)<=0;
 
   var conf=document.getElementById('financialConfigured');
   conf.textContent=fin.prontoParaOperar?'Ativa':(fin.configurado?(fin.status||'Pendente'):'Pendente');
@@ -325,7 +325,13 @@ async function requestAdvance(){
     await loadSummary();
     msg('Solicitação registrada e enviada para análise do Administrador Master. Nenhuma transferência foi executada.','ok');
   }catch(e){msg(String(e&&e.message||e||'Falha ao solicitar antecipação.'),'error')}
-  finally{state.busyAdvance=false;if(button)button.disabled=false;showLoading(false)}
+  finally{
+    state.busyAdvance=false;
+    var antAtual=state.resumo&&state.resumo.antecipacao||{};
+    var finAtual=state.resumo&&state.resumo.financeiro||{};
+    if(button)button.disabled=finAtual.prontoParaOperar!==true||Number(antAtual.jaSolicitadoAberto||0)>0||Number(antAtual.disponivelSolicitar||0)<=0;
+    showLoading(false)
+  }
 }
 
 async function requestWithdraw(){
