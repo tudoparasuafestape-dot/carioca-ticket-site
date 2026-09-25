@@ -75,7 +75,7 @@ for(const metodo of [
 }
 ok(master.includes('PUBLICO')&&master.includes('NAO_LISTADO')&&master.includes('PRIVADO_CONVITE'),'3 modalidades nao aparecem no Master');
 ok(master.includes('COMPRADOR')&&master.includes('EVENTO')&&master.includes('RATEIO'),'responsaveis de taxa incompletos');
-ok(master.includes('Remover este evento da allowlist'),'rollback nao exposto no Master');
+ok(master.includes('Rollback global da V1'),'rollback global nao exposto no Master');
 ok(backoffice.includes('/backoffice/eventos/'),'Backoffice principal sem link Eventos & Taxas');
 
 console.log('OK frontend eventos privados V1: contratos estruturais protegidos');
