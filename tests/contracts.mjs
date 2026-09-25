@@ -33,6 +33,7 @@ const protectedFiles = [
   'parceiro/admin/index.html',
   'backoffice/index.html',
   'backoffice/carioca-pay/index.html',
+  'backoffice/carioca-pay/produtores/index.html',
   'backoffice/carioca-pay/baas-sandbox/index.html',
   'backoffice/carioca-pay/saldo-extrato/index.html',
   'parceiro/ativar/index.html',
@@ -227,6 +228,7 @@ for (const file of [
   'produtor/index.html',
   'produtor/financeiro/index.html',
   'backoffice/carioca-pay/index.html',
+  'backoffice/carioca-pay/produtores/index.html',
   'central/index.html',
   'saude-vendas/index.html',
   'reembolsos/index.html',
@@ -329,6 +331,39 @@ if (contaCariocaPayPage) {
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
   ) {
     fail('produtor/financeiro/index.html', 'UI financeira nao converge exclusivamente para solicitacoes protegidas pelo Master');
+  }
+}
+
+
+const financeiroProdutoresMasterPage = read('backoffice/carioca-pay/produtores/index.html');
+if (financeiroProdutoresMasterPage) {
+  for (const required of [
+    '<title>Financeiro de Produtores | Conta Carioca Pay</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctFinanceiroProdutorMasterListarPROD',
+    'ctFinanceiroProdutorMasterProntidaoPROD',
+    'ctFinanceiroProdutorMasterAtivarPROD',
+    'ATIVAR FINANCEIRO',
+    'CT_SECRET_ASAAS_PRODUCAO_',
+    'Somente referência opaca',
+    'sem cobrança, split ou transferência',
+    'segredoExposto===true',
+    'movimentouDinheiro===true',
+    'transferenciaCriada===true',
+    'splitHabilitado===true'
+  ]) {
+    if (!financeiroProdutoresMasterPage.includes(required)) {
+      fail('backoffice/carioca-pay/produtores/index.html', 'Ativação financeira Master incompleta: ' + required);
+    }
+  }
+  if (
+    financeiroProdutoresMasterPage.includes('ctSegredosObterValorInternoPROD_') ||
+    financeiroProdutoresMasterPage.includes('$aact_') ||
+    financeiroProdutoresMasterPage.includes('/transfers') ||
+    financeiroProdutoresMasterPage.includes('ctAsaasProvider') ||
+    /window\.(?:alert|confirm|prompt)\s*\(/i.test(financeiroProdutoresMasterPage)
+  ) {
+    fail('backoffice/carioca-pay/produtores/index.html', 'Ativação financeira Master expõe segredo/provider ou diálogo nativo');
   }
 }
 
