@@ -1387,7 +1387,7 @@ test.describe('Jornada operacional autenticada', () => {
     await expect(page.locator('#receivable')).toHaveText('R$ 25,00');
     await expect(page.locator('#asaasBalance')).toHaveText('R$ 180,00');
     await expect(page.getByRole('link', { name: /Central$/i })).toHaveAttribute('href', '/central/');
-    await expect(page.locator('body')).toContainText(/taxa CT 2,5%/i);
+    await expect(page.locator('body')).toContainText(/regra vigente é 3,5%/i);
     await expect(page.locator('body')).toContainText(/Nenhuma transferência Pix\/TED é executada automaticamente/i);
     await expectNoTechnicalVisibleLinks(page);
 
