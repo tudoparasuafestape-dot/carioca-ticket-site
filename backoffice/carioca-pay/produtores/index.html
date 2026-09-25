@@ -74,13 +74,15 @@ function renderDetail(){
  '<div class="kv"><small>Split</small><strong>'+ (x.splitHabilitado?'HABILITADO':'DESABILITADO') +'</strong></div>'+
  '<div class="kv"><small>Termos</small><strong>'+esc(x.termosVersao||'—')+'</strong></div></div>';
  if(x.prontoParaVendas){
-   html+='<div class="note">Financeiro ativo e pronto para vendas. A chave de API não é exibida nesta tela.</div>';
+   html+='<div class="note">Financeiro ativo e pronto para vendas. A chave de API não é exibida nesta tela.</div>'+
+   '<div class="box"><b>Suspensão de emergência</b><div class="field"><label>Motivo</label><input id="suspendReason" maxlength="800" placeholder="Informe o motivo da suspensão"></div><div class="field"><label>Confirmação</label><input id="suspendConfirmation" autocomplete="off" placeholder="Digite SUSPENDER FINANCEIRO"></div><div class="actions"><button id="suspendButton" class="btn" type="button">Suspender financeiro</button></div><div class="note">Suspender desabilita recebimento e bloqueia novas vendas. Não movimenta dinheiro nem apaga a referência segura da credencial.</div></div>';
  }else{
    html+='<div class="box"><b>Validar credencial de produção</b><div class="field"><label>Referência segura no cofre</label><input id="credentialRef" autocomplete="off" placeholder="CT_SECRET_ASAAS_PRODUCAO_..."></div><div class="actions"><button id="validateButton" class="btn gold" type="button">Validar referência</button></div><div id="readinessBox"></div></div>'+
    '<div class="box"><b>Ativação</b><div class="field"><label>Confirmação</label><input id="confirmation" autocomplete="off" placeholder="Digite ATIVAR FINANCEIRO"></div><label class="check"><input id="acceptTerms" type="checkbox"> Confirmo a ativação do recebimento para este produtor após validação somente leitura do provider. Nenhuma cobrança, antecipação, split ou transferência será criada.</label><div class="actions"><button id="activateButton" class="btn gold" type="button" disabled>Ativar financeiro</button></div></div>';
  }
  $('detail').innerHTML=html;
  if(!x.prontoParaVendas){$('validateButton').addEventListener('click',validateRef);$('confirmation').addEventListener('input',updateActivate);$('acceptTerms').addEventListener('change',updateActivate);$('activateButton').addEventListener('click',activate)}
+ else{$('suspendButton').addEventListener('click',suspendFinance)}
 }
 async function validateRef(){
  if(!state.selected||state.busy)return;var ref=String($('credentialRef').value||'').trim().toUpperCase();if(!ref){toast('Informe a referência segura da credencial.');return}
@@ -98,6 +100,23 @@ async function validateRef(){
 function updateActivate(){
  var b=$('activateButton');if(!b)return;var ok=state.readiness&&state.readiness.podeAtivar===true&&$('acceptTerms').checked===true&&String($('confirmation').value||'').trim().toUpperCase()==='ATIVAR FINANCEIRO';b.disabled=!ok
 }
+async function suspendFinance(){
+ if(!state.selected||state.busy)return;
+ var motivo=String($('suspendReason').value||'').trim();
+ var confirmacao=String($('suspendConfirmation').value||'').trim().toUpperCase();
+ if(motivo.length<3){toast('Informe o motivo da suspensão.');return}
+ if(confirmacao!=='SUSPENDER FINANCEIRO'){toast('Digite SUSPENDER FINANCEIRO para confirmar.');return}
+ state.busy=true;$('suspendButton').disabled=true;
+ try{
+   var r=await rpc('ctFinanceiroProdutorMasterSuspenderPROD',[state.session.token,state.selected.produtorId,confirmacao,motivo]);
+   if(!r||r.sucesso!==true||r.prontoParaVendas===true)throw new Error('A suspensão financeira não foi concluída.');
+   if(r.movimentouDinheiro===true||r.transferenciaCriada===true||r.recebimentoHabilitado===true||r.splitHabilitado===true)throw new Error('Gate de segurança financeiro violado.');
+   toast('Financeiro suspenso. Novas vendas estão bloqueadas.');
+   state.selected=null;state.readiness=null;state.busy=false;await load();
+ }catch(e){toast(e&&e.message?e.message:String(e))}
+ finally{state.busy=false}
+}
+
 async function activate(){
  if(!state.selected||!state.readiness||$('activateButton').disabled||state.busy)return;
  state.busy=true;$('activateButton').disabled=true;
