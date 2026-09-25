@@ -45,7 +45,7 @@ a{color:inherit}.hidden{display:none!important}.shell{width:min(1440px,calc(100%
       <a id="producerRequestsLink" class="btn" href="/produtor/solicitacoes/">Produtores <span id="producerPendingBadge"></span></a>
       <a id="payRequestsLink" class="btn" href="/backoffice/carioca-pay/">Carioca Pay <span id="payPendingBadge"></span></a>
       <a class="btn" href="/backoffice/carioca-pay/produtores/">Financeiro Produtores</a>
-      <a class="btn" href="/backoffice/eventos/">Governança Eventos</a>
+      <a id="eventGovernanceLink" class="btn" href="/backoffice/eventos/">Governança Eventos <span id="eventGovernanceBadge"></span></a>
     </nav>
   </header>
 
@@ -219,16 +219,20 @@ async function loadPendingBadges(){
   try{
     var results=await Promise.all([
       rpc('ctProdutorOnboardingAdminContarPendentesPROD',[String(state.session.token)]),
-      rpc('ctContaCariocaPayMasterContarPendentesPROD',[String(state.session.token)])
+      rpc('ctContaCariocaPayMasterContarPendentesPROD',[String(state.session.token)]),
+      rpc('ctEventoGovernancaMasterListarPROD',[String(state.session.token),{}])
     ]);
-    var p=results[0]||{},f=results[1]||{};
+    var p=results[0]||{},f=results[1]||{},e=results[2]||{};
     var produtores=Number(p.total||0);
     var financeiro=Number(f.contagem&&f.contagem.abertas||0);
+    var eventos=Number(e.contagem&&e.contagem.pendentes||0);
     $('producerPendingBadge').textContent=produtores>0?'('+produtores+')':'';
     $('payPendingBadge').textContent=financeiro>0?'('+financeiro+')':'';
+    $('eventGovernanceBadge').textContent=eventos>0?'('+eventos+')':'';
   }catch(_){
     $('producerPendingBadge').textContent='';
     $('payPendingBadge').textContent='';
+    $('eventGovernanceBadge').textContent='';
   }
 }
 
