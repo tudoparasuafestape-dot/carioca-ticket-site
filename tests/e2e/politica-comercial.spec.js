@@ -25,11 +25,14 @@ async function mock(page,state){
     try{
       if(method==='ctPoliticaComercialMasterListarPROD'){
         result={sucesso:true,autorizado:true,politicas:[
-          {politicaId:'POL-1',escopo:'EVENTO',taxaCtPercentual:7,pagadorTaxa:'PRODUTOR',chaveResolucao:'EVENTO|PROD-E2E|EVT-E2E',versaoPolitica:2,status:'ATIVA'}
+          {politicaId:'POL-1',escopo:'EVENTO',produtorId:'PROD-E2E',eventoId:'EVT-E2E',taxaCtPercentual:7,pagadorTaxa:'PRODUTOR',compradorPercentualTaxa:0,produtorPercentualTaxa:100,chaveResolucao:'EVENTO|PROD-E2E|EVT-E2E',versaoPolitica:2,status:'ATIVA',motivoComercial:'Contrato vigente',beneficiarios:[]}
         ],movimentouDinheiro:false};
       }else if(method==='ctPoliticaComercialMasterSalvarPROD'){
         state.saved=args[1];
         result={sucesso:true,politicaId:'POL-NEW',versaoPolitica:3,movimentouDinheiro:false};
+      }else if(method==='ctPoliticaComercialMasterDesativarPROD'){
+        state.deactivated={politicaId:String(args[1]||''),motivo:String(args[2]||'')};
+        result={sucesso:true,politicaId:state.deactivated.politicaId,status:'INATIVA',movimentouDinheiro:false};
       }else if(method==='ctPoliticaComercialSimularPROD'){
         state.simulated=args[1];
         result={sucesso:true,ator:'MASTER',movimentouDinheiro:false,calculo:{subtotalIngressos:100,taxaCtTotal:10,taxaComprador:4,taxaProdutor:6,comissoesProdutor:2,totalComprador:104,deducoesProdutor:8,liquidoComercialProdutor:92}};
@@ -49,10 +52,13 @@ test.describe('Politica comercial flexivel',()=>{
   test.skip(!BRANCH_MODE,'Politica comercial mutavel roda somente na branch local com backend simulado.');
 
   test('Master configura pagador, beneficiario e simula sem cobranca',async({page})=>{
-    const state={saved:null,simulated:null};await mock(page,state);await seed(page);
+    const state={saved:null,simulated:null,deactivated:null};await mock(page,state);await seed(page);
     await page.goto('/backoffice/politicas-comerciais/',{waitUntil:'domcontentloaded'});
     await expect(page.getByRole('heading',{name:'Taxa, pagador e remunerações'})).toBeVisible();
     await expect(page.locator('#list')).toContainText('EVENTO · 7%');
+    await page.locator('.loadPolicy').first().click();
+    await expect(page.locator('#producerId')).toHaveValue('PROD-E2E');
+    await expect(page.locator('#fee')).toHaveValue('7');
 
     await page.locator('#scope').selectOption('EVENTO');
     await page.locator('#producerId').fill('PROD-E2E');
@@ -76,10 +82,14 @@ test.describe('Politica comercial flexivel',()=>{
     await expect.poll(()=>state.saved&&state.saved.taxaCtPercentual).toBe(10);
     expect(state.saved.compradorPercentualTaxa).toBe(40);
     expect(state.saved.beneficiarios[0].perfilTipo).toBe('PROMOTOR');
+
+    await page.locator('.deactivatePolicy').first().click();
+    await expect.poll(()=>state.deactivated&&state.deactivated.politicaId).toBe('POL-1');
+    expect(state.deactivated.motivo).toBe('Contrato E2E');
   });
 
   test('Produtor ve somente a regra vigente e simula',async({page})=>{
-    const state={saved:null,simulated:null};await mock(page,state);await seed(page);
+    const state={saved:null,simulated:null,deactivated:null};await mock(page,state);await seed(page);
     await page.goto('/produtor/politica-comercial/',{waitUntil:'domcontentloaded'});
     await expect(page.getByRole('heading',{name:'Sua política comercial'})).toBeVisible();
     await expect(page.locator('#metrics')).toContainText('7%');
