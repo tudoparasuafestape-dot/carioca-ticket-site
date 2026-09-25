@@ -49,6 +49,7 @@ button,select,input{font:inherit}
     </div>
     <div class="actions">
       <a class="btn" href="/produtor/">Voltar ao Portal</a>
+      <a class="btn" href="/produtor/politica-comercial/">Política comercial</a>
       <button id="rulesTopButton" class="btn gold" type="button">Regras</button>
     </div>
   </div>
@@ -73,7 +74,7 @@ button,select,input{font:inherit}
   <section id="dashboard" class="hidden">
     <section class="metrics">
       <div class="metric gold"><small>Vendas confirmadas</small><strong id="confirmedSales">R$ 0,00</strong></div>
-      <div class="metric green"><small>Saldo operacional conciliado</small><strong id="ledgerBalance">R$ 0,00</strong></div>
+      <div class="metric green"><small>Saldo operacional interno</small><strong id="ledgerBalance">R$ 0,00</strong></div>
       <div class="metric blue"><small>Disponível para solicitar antecipação</small><strong id="anticipationAvailable">R$ 0,00</strong></div>
       <div class="metric"><small>Pagamentos planejados</small><strong id="plannedPayments">R$ 0,00</strong></div>
     </section>
@@ -94,12 +95,10 @@ button,select,input{font:inherit}
         </section>
 
         <section class="card">
-          <div class="head"><div><h2>Ações financeiras</h2><span>em homologação</span></div></div>
+          <div class="head"><div><h2>Ações financeiras</h2><span>solicitações protegidas</span></div></div>
           <div class="action-grid">
-            <button class="action" type="button" disabled><b>Solicitar antecipação</b><small>Até 80% do saldo elegível, mediante análise.</small></button>
-            <button class="action" type="button" disabled><b>Registrar patrocínio</b><small>Identifique patrocinador, contrato e valor.</small></button>
-            <button class="action" type="button" disabled><b>Planejar pagamento</b><small>Fornecedor/equipe com aprovação por perfil.</small></button>
-            <button class="action" type="button" disabled><b>Adicionar saldo</b><small>Capital próprio via Pix após habilitação BaaS.</small></button>
+            <div class="action"><b>Solicitar antecipação</b><small>Até 80% do saldo elegível. Uma nova solicitação só é aceita quando não existe outra antecipação aberta para este evento. A solicitação segue para análise do Administrador Master e não movimenta dinheiro automaticamente.</small><div class="status-line" style="margin-top:8px"><span>Status</span><b id="advanceStatus">—</b></div><div class="field" style="margin-top:10px"><label for="advanceValue">Valor solicitado</label><input id="advanceValue" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00"></div><button id="advanceButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar antecipação para análise</button></div>
+            <div class="action"><b>Solicitar saque</b><small>Mínimo de R$ 500,00. O saldo é confirmado diretamente na conta financeira antes da solicitação e considera saques já reservados em todos os eventos. Enquanto existir um saque aberto, um novo pedido fica bloqueado. O pedido segue para análise do Administrador Master e não executa Pix/TED automaticamente.</small><div class="status-line" style="margin-top:8px"><span>Disponível para saque</span><b id="withdrawAvailable">—</b></div><div class="status-line"><span>Status</span><b id="withdrawStatus">—</b></div><div class="field" style="margin-top:10px"><label for="withdrawValue">Valor solicitado</label><input id="withdrawValue" type="number" min="500" step="0.01" inputmode="decimal" placeholder="500,00"></div><button id="withdrawButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar saque para análise</button></div>
           </div>
           <button id="rulesButton" class="btn rule-link" type="button">Ver regras de antecipação</button>
         </section>
@@ -111,7 +110,7 @@ button,select,input{font:inherit}
           <div class="policy">
             <div class="policy-item"><small>Máximo antecipável</small><strong id="policyMax">80%</strong></div>
             <div class="policy-item"><small>Reserva</small><strong id="policyReserve">20%</strong></div>
-            <div class="policy-item"><small>Taxa antecipação</small><strong id="policyFee">3,49%</strong></div>
+            <div class="policy-item"><small>Taxa antecipação</small><strong id="policyFee">3,5%</strong></div>
             <div class="policy-item"><small>Repasse normal</small><strong>D+3 úteis</strong></div>
           </div>
         </section>
@@ -136,10 +135,10 @@ button,select,input{font:inherit}
     <h2 id="rulesTitle">Regras de antecipação</h2>
     <p>A Conta Carioca Pay seguirá a política comercial definida para produtores:</p>
     <ul>
-      <li>mínimo de R$ 300,00 em vendas elegíveis;</li>
+      <li>mínimo de R$ 500,00 em vendas elegíveis;</li>
       <li>até 80% do saldo elegível pode ser solicitado;</li>
       <li>20% permanece como reserva de segurança;</li>
-      <li>taxa de 3,49% sobre o valor antecipado;</li>
+      <li>taxa de 3,5% sobre o valor antecipado;</li>
       <li>a solicitação depende de análise e aprovação da Carioca Ticket;</li>
       <li>o repasse normal ocorre em até 3 dias úteis após o evento, após conciliação de estornos, reembolsos e ajustes.</li>
     </ul>
@@ -157,7 +156,7 @@ button,select,input{font:inherit}
 var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 var pending={};
-var state={session:null,usuario:null,produtores:[],produtor:null,evento:null};
+var state={session:null,usuario:null,produtores:[],produtor:null,evento:null,resumo:null,busyAdvance:false,busyWithdraw:false};
 
 function rpc(method,args){
   return new Promise(function(resolve,reject){
@@ -254,8 +253,9 @@ async function loadSummary(){
 }
 
 function render(r){
+  state.resumo=r||null;
   document.getElementById('dashboard').classList.remove('hidden');
-  var vendas=r.vendas||{}, ledger=r.ledger||{}, ant=r.antecipacao||{}, sol=r.solicitacoes||{}, fin=r.financeiro||{};
+  var vendas=r.vendas||{}, ledger=r.ledger||{}, ant=r.antecipacao||{}, saque=r.saque||{}, sol=r.solicitacoes||{}, fin=r.financeiro||{};
   var origem=ledger.porOrigem||{};
 
   document.getElementById('confirmedSales').textContent=money(vendas.confirmado);
@@ -272,21 +272,99 @@ function render(r){
 
   document.getElementById('policyMax').textContent=Number(ant.percentualMaximo||80).toLocaleString('pt-BR')+'%';
   document.getElementById('policyReserve').textContent=Number(ant.reservaPercentual||20).toLocaleString('pt-BR')+'%';
-  document.getElementById('policyFee').textContent=Number(ant.taxaCtPercentual||3.49).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  document.getElementById('policyFee').textContent=Number(ant.taxaCtPercentual||3.5).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  var advanceOpen=Number(ant.jaSolicitadoAberto||0)>0;
+  var advanceStatus=document.getElementById('advanceStatus');
+  advanceStatus.textContent=advanceOpen?'Solicitação em andamento':'Disponível';
+  advanceStatus.className=advanceOpen?'off':'on';
+  var advanceButton=document.getElementById('advanceButton');
+  advanceButton.disabled=fin.prontoParaOperar!==true||advanceOpen||Number(ant.disponivelSolicitar||0)<=0;
 
   var conf=document.getElementById('financialConfigured');
-  conf.textContent=fin.configurado?'Configurada':'Pendente';
-  conf.className=fin.configurado?'on':'off';
+  conf.textContent=fin.prontoParaOperar?'Ativa':(fin.configurado?(fin.status||'Pendente'):'Pendente');
+  conf.className=fin.prontoParaOperar?'on':'off';
 
   setGate('realMovement',fin.movimentacaoRealHabilitada,'Habilitada','Desabilitada');
   setGate('depositPix',fin.aportePixHabilitado,'Habilitado','Desabilitado');
   setGate('providerAdvance',ant.providerHabilitado,'Habilitada','Desabilitada');
-  document.getElementById('pendingApprovals').textContent=String(sol.pagamentosAguardandoAprovacao||0);
+  document.getElementById('pendingApprovals').textContent=money(Number(sol.antecipacoesAbertas||0)+Number(sol.saquesAbertos||0));
+  var saqueDisponivel=saque.saldoAutoritativoDisponivel===true;
+  var withdrawAvailable=document.getElementById('withdrawAvailable');
+  withdrawAvailable.textContent=saqueDisponivel?money(saque.saldoDisponivel):'Indisponível';
+  withdrawAvailable.className=saqueDisponivel?'on':'off';
+  var withdrawOpen=Number(saque.jaSolicitadoAberto||0)>0;
+  var withdrawStatus=document.getElementById('withdrawStatus');
+  withdrawStatus.textContent=withdrawOpen?'Solicitação em andamento':'Disponível';
+  withdrawStatus.className=withdrawOpen?'off':'on';
+  var withdrawButton=document.getElementById('withdrawButton');
+  withdrawButton.disabled=fin.prontoParaOperar!==true||!saqueDisponivel||withdrawOpen||Number(saque.saldoDisponivel||0)<Number(saque.minimoSolicitacao||500);
   document.getElementById('updatedAt').textContent='Atualizado em '+esc(r.atualizadoEm||'');
 }
 
 function setGate(id,on,yes,no){
   var el=document.getElementById(id);el.textContent=on?yes:no;el.className=on?'on':'off';
+}
+
+async function requestAdvance(){
+  if(state.busyAdvance||!state.session||!state.evento)return;
+  var fin=state.resumo&&state.resumo.financeiro||{};
+  if(fin.prontoParaOperar!==true){msg('O financeiro deste produtor ainda não está ativo para operações.','error');return}
+  var input=document.getElementById('advanceValue');
+  var button=document.getElementById('advanceButton');
+  var valor=Number(input&&input.value||0);
+  var ant=state.resumo&&state.resumo.antecipacao||{};
+  var disponivel=Number(ant.disponivelSolicitar||0);
+  if(Number(ant.jaSolicitadoAberto||0)>0){msg('Já existe uma solicitação de antecipação em andamento para este evento.','error');return}
+  if(valor<=0){msg('Informe um valor válido para antecipação.','error');return}
+  if(valor>disponivel){msg('O valor solicitado excede o disponível para antecipação.','error');return}
+  state.busyAdvance=true;if(button)button.disabled=true;showLoading(true);msg('');
+  try{
+    var chave='WEB-ANT-'+String(state.evento.id||'')+'-'+Date.now()+'-'+Math.random().toString(16).slice(2);
+    var r=await rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD',[state.session.token,state.evento.id,valor,chave]);
+    if(!r||r.sucesso!==true)throw new Error('Não foi possível registrar a solicitação.');
+    if(input)input.value='';
+    await loadSummary();
+    msg('Solicitação registrada e enviada para análise do Administrador Master. Nenhuma transferência foi executada.','ok');
+  }catch(e){msg(String(e&&e.message||e||'Falha ao solicitar antecipação.'),'error')}
+  finally{
+    state.busyAdvance=false;
+    var antAtual=state.resumo&&state.resumo.antecipacao||{};
+    var finAtual=state.resumo&&state.resumo.financeiro||{};
+    if(button)button.disabled=finAtual.prontoParaOperar!==true||Number(antAtual.jaSolicitadoAberto||0)>0||Number(antAtual.disponivelSolicitar||0)<=0;
+    showLoading(false)
+  }
+}
+
+async function requestWithdraw(){
+  if(state.busyWithdraw||!state.session||!state.evento)return;
+  var fin=state.resumo&&state.resumo.financeiro||{};
+  if(fin.prontoParaOperar!==true){msg('O financeiro deste produtor ainda não está ativo para operações.','error');return}
+  var input=document.getElementById('withdrawValue');
+  var button=document.getElementById('withdrawButton');
+  var valor=Number(input&&input.value||0);
+  var saque=state.resumo&&state.resumo.saque||{};
+  var minimo=Number(saque.minimoSolicitacao||500);
+  var disponivel=Number(saque.saldoDisponivel||0);
+  if(Number(saque.jaSolicitadoAberto||0)>0){msg('Já existe uma solicitação de saque em andamento para este produtor.','error');return}
+  if(saque.saldoAutoritativoDisponivel!==true){msg('Não foi possível confirmar o saldo autoritativo da conta. O saque permanece bloqueado por segurança.','error');return}
+  if(valor<minimo){msg('O saque mínimo é de '+money(minimo)+'.','error');return}
+  if(valor>disponivel){msg('O valor solicitado excede o saldo disponível para saque.','error');return}
+  state.busyWithdraw=true;if(button)button.disabled=true;showLoading(true);msg('');
+  try{
+    var chave='WEB-SAQ-'+String(state.evento.id||'')+'-'+Date.now()+'-'+Math.random().toString(16).slice(2);
+    var r=await rpc('ctContaCariocaPayPortalSolicitarSaquePROD',[state.session.token,state.evento.id,valor,chave]);
+    if(!r||r.sucesso!==true)throw new Error((r&&r.codigo)||'Não foi possível registrar a solicitação de saque.');
+    if(input)input.value='';
+    await loadSummary();
+    msg('Solicitação de saque registrada e enviada para análise do Administrador Master. Nenhuma transferência foi executada.','ok');
+  }catch(e){msg(String(e&&e.message||e||'Falha ao solicitar saque.'),'error')}
+  finally{
+    state.busyWithdraw=false;
+    var atual=state.resumo&&state.resumo.saque||{};
+    var finAtual=state.resumo&&state.resumo.financeiro||{};
+    if(button)button.disabled=finAtual.prontoParaOperar!==true||atual.saldoAutoritativoDisponivel!==true||Number(atual.jaSolicitadoAberto||0)>0||Number(atual.saldoDisponivel||0)<Number(atual.minimoSolicitacao||500);
+    showLoading(false)
+  }
 }
 
 function openRules(){document.getElementById('rulesBackdrop').classList.remove('hidden');document.getElementById('rulesBackdrop').setAttribute('aria-hidden','false')}
@@ -319,6 +397,8 @@ document.getElementById('eventSelect').addEventListener('change',function(){
   loadSummary();
 });
 document.getElementById('refreshButton').addEventListener('click',loadSummary);
+document.getElementById('advanceButton').addEventListener('click',requestAdvance);
+document.getElementById('withdrawButton').addEventListener('click',requestWithdraw);
 document.getElementById('rulesButton').addEventListener('click',openRules);
 document.getElementById('rulesTopButton').addEventListener('click',openRules);
 document.getElementById('rulesClose').addEventListener('click',closeRules);
