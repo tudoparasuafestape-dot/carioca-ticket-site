@@ -29,3 +29,13 @@ A rota legada /financeiro/ não pode permitir antecipação direta via provider.
 
 ## Regra de navegação
 Produtor aprovado pode navegar e configurar. Venda/publicação permanece bloqueada até o financeiro estar pronto e a governança do evento ter sido autorizada.
+
+
+## Estado de homologação da interface
+- contratos de regressão: verdes;
+- first-party branch desktop: verde;
+- first-party branch mobile: verde;
+- produção/canário real: não executados no PR;
+- financeiro pendente/bloqueado mantém antecipação e saque desabilitados;
+- Portal direciona Conta Carioca Pay ao fluxo canônico /produtor/financeiro/;
+- nenhuma publicação deve ocorrer antes do backend CI e da conta teste final.
