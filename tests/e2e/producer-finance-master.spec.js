@@ -86,6 +86,42 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
     await expect(page.locator('#message')).toContainText('Nenhuma transferência foi executada');
   });
 
+
+  test('financeiro pendente bloqueia antecipacao e saque antes de qualquer mutacao',async({page})=>{
+    const state={advanceCalls:0,withdrawCalls:0};
+    await page.route('https://script.google.com/**',async route=>{
+      const p=new URLSearchParams(route.request().postData()||'');
+      const id=String(p.get('ctMinhaCariocaRequestId')||'');
+      const method=String(p.get('metodo')||'');
+      let resultado=null;
+      if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
+        resultado={sucesso:true,autenticado:true,autorizado:true,usuario:{id:'USR-PROD'},produtores:[{id:'PROD-E2E',nomeFantasia:'Produtor E2E',eventos:[{id:'EVT-E2E',nome:'Evento E2E'}]}]};
+      }else if(method==='ctContaCariocaPayPortalResumoPROD'){
+        resultado={sucesso:true,autorizado:true,produtorId:'PROD-E2E',eventoId:'EVT-E2E',perfil:'PRODUTOR_TITULAR',
+          financeiro:{configurado:true,status:'PENDENTE_CREDENCIAL',prontoParaOperar:false,movimentacaoRealHabilitada:false,aportePixHabilitado:false},
+          vendas:{confirmado:1800},ledger:{saldoOperacional:0,porOrigem:{}},
+          solicitacoes:{antecipacoesAbertas:0,saquesAbertos:0,pagamentosPlanejados:0,pagamentosAguardandoAprovacao:0},
+          antecipacao:{percentualMaximo:80,reservaPercentual:20,taxaCtPercentual:3.5,disponivelSolicitar:960,providerHabilitado:false},
+          saque:{minimoSolicitacao:500,saldoAutoritativoDisponivel:false,saldoConta:0,saldoDisponivel:0,jaSolicitadoAberto:0,saldoFonte:'ASAAS',saldoEscopo:'CONTA_ASAAS_PRODUTOR',saldoErro:'CT_CARIOCA_PAY_PORTAL_FINANCEIRO_NAO_ATIVO',exigeAprovacaoMaster:true,movimentacaoAutomatica:false},
+          atualizadoEm:'24/09/2026 20:00:00'};
+      }else if(method==='ctContaCariocaPayPortalSolicitarAntecipacaoPROD'){
+        state.advanceCalls++;throw new Error('MUTACAO_NAO_DEVERIA_SER_CHAMADA');
+      }else if(method==='ctContaCariocaPayPortalSolicitarSaquePROD'){
+        state.withdrawCalls++;throw new Error('MUTACAO_NAO_DEVERIA_SER_CHAMADA');
+      }else{
+        throw new Error('Método não previsto: '+method);
+      }
+      await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,true,resultado,'')+', "*");<\/script></body></html>'});
+    });
+    await seed(page,'CT-PROD-E2E');
+    await page.goto('/produtor/financeiro/',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#financialConfigured')).toContainText('PENDENTE_CREDENCIAL');
+    await expect(page.locator('#advanceButton')).toBeDisabled();
+    await expect(page.locator('#withdrawButton')).toBeDisabled();
+    expect(state.advanceCalls).toBe(0);
+    expect(state.withdrawCalls).toBe(0);
+  });
+
   test('Master enxerga saque, aprova e conclui externamente sem transferencia da plataforma',async({page})=>{
     const state={advanceCalls:0,withdrawCalls:0,advanceArgs:null,withdrawArgs:null,masterActions:[],saqueStatus:'SOLICITADA',lastReason:''};
     await installMock(page,state);await seed(page,'CT-MASTER-E2E');
