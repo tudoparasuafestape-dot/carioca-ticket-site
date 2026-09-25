@@ -303,6 +303,7 @@ if (contaCariocaPayPage) {
     'D+3 úteis',
     'movimentação real desabilitada',
     'ctContaCariocaPayPortalSolicitarAntecipacaoPROD',
+    'prontoParaOperar',
     'ctContaCariocaPayPortalSolicitarSaquePROD',
     'Solicitar saque',
     'Mínimo de R$ 500,00',
