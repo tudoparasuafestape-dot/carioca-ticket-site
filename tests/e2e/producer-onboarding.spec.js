@@ -114,6 +114,7 @@ async function installRpcMock(page, state) {
           state.status='ATIVO';
           resultado={
             sucesso:true,autorizado:true,produtorId:'PROD-E2E',
+            financeiro:{statusOnboarding:'PENDENTE_CREDENCIAL',recebimentoHabilitado:false,prontoParaVendas:false},
             indicacaoComercial:{sucesso:true,vinculou:true,parceiroId:'PCT-VINICIUS',produtorId:'PROD-E2E'},
             solicitacao:requestFixture('ATIVO')
           };
