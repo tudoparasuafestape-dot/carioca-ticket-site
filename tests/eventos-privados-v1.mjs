@@ -14,6 +14,7 @@ const master=read('backoffice/eventos/index.html');
 const backoffice=read('backoffice/index.html');
 
 ok(/<meta name="robots" content="noindex,nofollow,noarchive">/.test(convite),'convite deve ser noindex');
+ok(convite.includes("add('ctMinhaCariocaAction','publicRpc')"),'convite deve usar publicRpc');
 ok(convite.includes('ctEventoConviteCarregarPublicoPROD'),'convite sem carregamento seguro');
 ok(convite.includes('ctEventoConviteValidarPublicoPROD'),'convite sem validacao');
 ok(convite.includes("sessionStorage.setItem('CT_PRIVATE_GRANT_'"),'grant nao salvo em sessionStorage');
@@ -40,6 +41,7 @@ for(const metodo of [
   ok(produtor.includes(metodo),'portal de convidados sem '+metodo);
 }
 ok(produtor.includes('duplicatePolicy'),'importacao sem politica de duplicidade');
+ok(produtor.includes('data-copy-link'),'produtor sem copia do link ativo');
 ok(produtor.includes('IGNORAR')&&produtor.includes('ATUALIZAR'),'politicas de duplicidade incompletas');
 ok(produtorPortal.includes('/produtor/convidados/?evento='),'portal produtor sem acesso a convidados');
 
