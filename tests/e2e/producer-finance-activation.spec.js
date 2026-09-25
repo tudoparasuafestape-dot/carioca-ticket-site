@@ -27,7 +27,7 @@ async function installMock(page,state){
         resultado={sucesso:true,autorizado:true,ambienteProvider:'PRODUCAO',itens:[{
           financeiroId:'FIN-E2E',organizacaoId:'ORG-E2E',produtorId:'PROD-E2E',produtorNome:'Produtor E2E',
           provedor:'ASAAS',provedorAmbiente:'PRODUCAO',modoConta:'SUBCONTA_PLATAFORMA',
-          statusOnboarding:state.activated?'ATIVO':'PENDENTE_CREDENCIAL',
+          statusOnboarding:state.status||(state.activated?'ATIVO':'PENDENTE_CREDENCIAL'),
           credencialConfigurada:state.activated,recebimentoHabilitado:state.activated,splitHabilitado:false,
           termosVersao:state.activated?'CT-FIN-PROD-2026-09':'',prontoParaVendas:state.activated
         }],total:1,contagem:{pendentes:state.activated?0:1,prontos:state.activated?1:0},termosVersaoAtual:'CT-FIN-PROD-2026-09',segredoExposto:false};
@@ -45,6 +45,13 @@ async function installMock(page,state){
         expect(d.termosVersao).toBe('CT-FIN-PROD-2026-09');
         state.activated=true;
         resultado={sucesso:true,autorizado:true,produtorId:'PROD-E2E',configuracao:{statusOnboarding:'ATIVO',credencialConfigurada:true,recebimentoHabilitado:true,splitHabilitado:false},prontoParaVendas:true,providerValidado:true,segredoExposto:false,movimentouDinheiro:false,transferenciaCriada:false,splitHabilitado:false};
+      }else if(method==='ctFinanceiroProdutorMasterSuspenderPROD'){
+        state.suspendCalls=(state.suspendCalls||0)+1;
+        expect(String(args[1]||'')).toBe('PROD-E2E');
+        expect(String(args[2]||'')).toBe('SUSPENDER FINANCEIRO');
+        expect(String(args[3]||'').length).toBeGreaterThanOrEqual(3);
+        state.activated=false;state.status='BLOQUEADO';
+        resultado={sucesso:true,autorizado:true,produtorId:'PROD-E2E',configuracao:{statusOnboarding:'BLOQUEADO',credencialConfigurada:true,recebimentoHabilitado:false,splitHabilitado:false},prontoParaVendas:false,recebimentoHabilitado:false,splitHabilitado:false,movimentouDinheiro:false,transferenciaCriada:false};
       }else{
         throw new Error('Método não previsto: '+method);
       }
@@ -57,7 +64,7 @@ test.describe('Ativação financeira Master do Produtor',()=>{
   test.skip(!BRANCH_MODE,'Ativação financeira roda somente na branch local com backend simulado.');
 
   test('Master valida referencia opaca e ativa recebimento sem movimentacao financeira',async({page})=>{
-    const state={activated:false,validateCalls:0,activateCalls:0,ref:'',activateArgs:null};
+    const state={activated:false,status:'',validateCalls:0,activateCalls:0,suspendCalls:0,ref:'',activateArgs:null};
     await installMock(page,state);await seed(page,'CT-ADMIN-E2E');
     await page.goto('/backoffice/carioca-pay/produtores/?produtor=PROD-E2E',{waitUntil:'domcontentloaded'});
 
@@ -82,6 +89,16 @@ test.describe('Ativação financeira Master do Produtor',()=>{
     await expect(page.locator('#readyCount')).toHaveText('1');
     await expect(page.locator('#pendingCount')).toHaveText('0');
     await expect(page.getByText('Pronto para vendas').first()).toBeVisible();
+
+    await page.locator('#suspendReason').fill('Bloqueio operacional E2E');
+    await page.locator('#suspendConfirmation').fill('SUSPENDER FINANCEIRO');
+    await page.locator('#suspendButton').click();
+    await expect.poll(()=>state.suspendCalls).toBe(1);
+    expect(state.activated).toBe(false);
+    expect(state.status).toBe('BLOQUEADO');
+    await expect(page.locator('#readyCount')).toHaveText('0');
+    await expect(page.locator('#pendingCount')).toHaveText('1');
+    await expect(page.locator('#detail')).toContainText('BLOQUEADO');
   });
 
   test('referencia invalida ou provider nao validado nao habilita ativacao',async({page})=>{
