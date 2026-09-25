@@ -97,7 +97,7 @@ async function confirmDecision(){
   var r=await rpc('ctEventoGovernancaMasterDecidirPROD',[state.session.token,state.selected.eventoId,state.action,reason]);
   if(!r||r.sucesso!==true)throw new Error('A decisão não foi concluída.');
   if(r.movimentouDinheiro===true||r.publicouVendas===true)throw new Error('Gate de segurança violado.');
-  state.selected=r.evento||state.selected;closeDecision();toast(r.mensagem||'Decisão registrada.');await load();if(state.selected){var fresh=state.list.find(function(x){return x.eventoId===state.selected.eventoId});if(fresh){state.selected=fresh;renderList();renderDetail()}}
+  state.selected=r.evento||state.selected;state.busy=false;closeDecision();toast(r.mensagem||'Decisão registrada.');await load();if(state.selected){var fresh=state.list.find(function(x){return x.eventoId===state.selected.eventoId});if(fresh){state.selected=fresh;renderList();renderDetail()}}
  }catch(e){toast(e&&e.message?e.message:String(e))}
  finally{state.busy=false;$('confirmDecision').disabled=false}
 }
