@@ -120,7 +120,7 @@ function renderDetail(){
  var html='<h2>'+esc(s.nomeFantasia)+'</h2><div class="sub">'+esc(s.responsavelNome)+' · '+esc(s.email)+'</div><div class="data">'+data.map(function(k){return'<div class="kv"><span>'+esc(k[0])+'</span><strong>'+esc(k[1])+'</strong></div>'}).join('')+'</div>';
  if(s.pendenciaPublica)html+='<div class="note"><b>Pendência enviada:</b><br>'+esc(s.pendenciaPublica)+'</div>';
  if(s.produtorId&&!fin.prontoParaVendas){
-   html+='<div class="note"><b>Financeiro ainda não liberado para vendas.</b><br>A conta do produtor está ativa para navegação e configuração, mas a publicação de vendas permanece bloqueada até status financeiro ATIVO, credencial validada e recebimento habilitado.</div>';
+   html+='<div class="note"><b>Financeiro ainda não liberado para vendas.</b><br>A conta do produtor está ativa para navegação e configuração, mas a publicação de vendas permanece bloqueada até status financeiro ATIVO, credencial validada e recebimento habilitado.<div class="actions"><a class="btn gold" href="/backoffice/carioca-pay/produtores/?produtor='+encodeURIComponent(s.produtorId)+'">Configurar financeiro</a></div></div>';
  }
  html+='<div class="section"><h3>Histórico</h3>'+((s.historico||[]).length?(s.historico||[]).slice().reverse().map(function(h){return'<div class="history"><b>'+esc(h.de)+' → '+esc(h.para)+'</b><small>'+esc(h.em)+(h.observacao?' · '+esc(h.observacao):'')+'</small></div>'}).join(''):'<div class="empty">Sem histórico.</div>')+'</div>';
  html+='<div class="actions">'+actionsHtml(s.status)+'</div>';document.getElementById('detail').innerHTML=html;
