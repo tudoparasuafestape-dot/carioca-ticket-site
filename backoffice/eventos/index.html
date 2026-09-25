@@ -77,16 +77,16 @@ function renderDetail(){
 function actions(x){
  var s=String(x.riscoStatus||'').toUpperCase();
  if(x.publicacaoAutorizada)return'<div class="actions"><span class="badge ok">AUTORIZADO</span></div>';
- if(s==='BLOQUEADO')return'<div class="actions"><span class="badge bad">BLOQUEADO</span></div>';
+ if(s==='BLOQUEADO')return'<div class="actions"><span class="badge bad">BLOQUEADO</span><button class="btn" data-action="REABRIR_ANALISE" type="button">Reabrir análise</button></div>';
  if(s==='PENDENTE_ANALISE')return'<div class="actions"><button class="btn gold" data-action="INICIAR_ANALISE" type="button">Iniciar análise</button></div>';
  if(s==='EM_ANALISE')return'<div class="actions"><button class="btn gold" data-action="APROVAR" type="button" '+(x.financeiroPronto?'':'disabled')+'>Aprovar governança</button><button class="btn danger" data-action="REPROVAR" type="button">Bloquear</button></div>';
  return'';
 }
 function openDecision(a){
  if(!state.selected)return;state.action=a;
- var titles={INICIAR_ANALISE:'Iniciar análise',APROVAR:'Aprovar governança',REPROVAR:'Bloquear publicação'};
+ var titles={INICIAR_ANALISE:'Iniciar análise',REABRIR_ANALISE:'Reabrir análise',APROVAR:'Aprovar governança',REPROVAR:'Bloquear publicação'};
  $('decisionTitle').textContent=titles[a]||'Confirmar decisão';
- $('decisionText').textContent=a==='APROVAR'?'Aprovar libera somente o gate administrativo. Não publica vendas automaticamente.':a==='REPROVAR'?'Informe o motivo do bloqueio. A decisão ficará registrada na auditoria.':'O evento passará para Em análise.';
+ $('decisionText').textContent=a==='APROVAR'?'Aprovar libera somente o gate administrativo. Não publica vendas automaticamente.':a==='REPROVAR'?'Informe o motivo do bloqueio. A decisão ficará registrada na auditoria.':a==='REABRIR_ANALISE'?'O evento bloqueado voltará para Em análise.':'O evento passará para Em análise.';
  $('reason').value='';$('reason').classList.toggle('hidden',a!=='REPROVAR');$('decisionBackdrop').classList.remove('hidden');$('decisionBackdrop').setAttribute('aria-hidden','false')
 }
 function closeDecision(){if(state.busy)return;$('decisionBackdrop').classList.add('hidden');$('decisionBackdrop').setAttribute('aria-hidden','true');state.action=''}
