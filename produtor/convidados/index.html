@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Convidados · Portal do Produtor · Carioca Ticket</title>
+<title>Modalidade e convidados · Portal do Produtor · Carioca Ticket</title>
 <style>
 :root{--bg:#08090a;--card:#121316;--card2:#181a1e;--gold:#d4af37;--gold2:#efd46d;--text:#f7f7f8;--muted:#a5a9b2;--line:#2b2e34;--ok:#29a86b;--bad:#e65a63}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.hidden{display:none!important}.shell{width:min(1180px,100%);margin:auto;padding:18px}.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px}.brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none}.brand img{height:38px}.brand span{color:var(--muted);font-size:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}
@@ -17,14 +17,14 @@ button,.btn{border:1px solid var(--line);background:#18191d;color:#fff;border-ra
 <body>
 <div class="shell">
 <header class="top">
-  <a class="brand" href="/produtor-v2/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Portal do Produtor</strong><br><span>Eventos privados</span></div></a>
+  <a class="brand" href="/produtor-v2/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Portal do Produtor</strong><br><span>Modalidade e convidados</span></div></a>
   <div class="actions"><a class="btn" href="/produtor-v2/">Voltar ao portal</a><button id="refresh">Atualizar</button></div>
 </header>
 
 <section class="hero">
-  <div class="ey">Gestão de convidados</div>
-  <h1 id="eventName">Evento privado</h1>
-  <p>Cadastre, importe e gere convites individuais. Cada link é protegido e o limite é controlado pelo backend.</p>
+  <div class="ey">Configuração do evento</div>
+  <h1 id="eventName">Evento</h1>
+  <p>Defina a modalidade do evento. Em eventos privados, cadastre ou importe a lista e gere convites individuais protegidos.</p>
   <div class="stats">
     <div class="stat"><span>Convidados</span><b id="sGuests">0</b></div>
     <div class="stat"><span>Acessos permitidos</span><b id="sAllowed">0</b></div>
@@ -34,6 +34,45 @@ button,.btn{border:1px solid var(--line);background:#18191d;color:#fff;border-ra
 </section>
 
 <div id="message" class="msg hidden"></div>
+
+<section class="panel" style="margin-bottom:14px">
+  <h2>Modalidade do evento</h2>
+  <p class="muted">Esta configuração é do próprio evento. A taxa da Carioca Ticket não é alterada por esta tela.</p>
+  <div class="formgrid">
+    <div class="field">
+      <label>Modalidade</label>
+      <select id="accessMode">
+        <option value="PUBLICO">Público — aparece no catálogo</option>
+        <option value="NAO_LISTADO">Não listado — somente pelo link</option>
+        <option value="PRIVADO_CONVITE">Privado — somente convidados autorizados</option>
+      </select>
+    </div>
+    <div class="field" id="validationField">
+      <label>Validação do convite</label>
+      <select id="inviteValidation">
+        <option value="TOKEN_TELEFONE">Link individual + telefone</option>
+        <option value="TOKEN">Somente link individual</option>
+        <option value="TOKEN_CPF">Link individual + CPF</option>
+        <option value="TOKEN_TELEFONE_CPF">Link + telefone + CPF</option>
+      </select>
+    </div>
+    <div class="field full" id="inviteTitleField">
+      <label>Título da página de convite</label>
+      <input id="inviteTitle" maxlength="220" value="Você está convidado">
+    </div>
+    <div class="field full" id="inviteTextField">
+      <label>Mensagem do anfitrião</label>
+      <textarea id="inviteText" maxlength="1500" placeholder="Mensagem especial para os convidados"></textarea>
+    </div>
+    <div class="field" id="inviteCtaField">
+      <label>Texto do botão</label>
+      <input id="inviteCta" maxlength="80" value="Continuar">
+    </div>
+  </div>
+  <button id="saveAccess" class="gold" style="margin-top:14px">Salvar modalidade</button>
+</section>
+
+<div id="privateManagement">
 
 <section class="grid">
   <article class="panel">
@@ -74,12 +113,14 @@ button,.btn{border:1px solid var(--line);background:#18191d;color:#fff;border-ra
 </section>
 </div>
 
+</div>
+
 <script>
 (function(){
 'use strict';
 var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
-var pending={},state={session:null,eventId:'',guests:[],csv:'',csvName:'',checksum:'',generated:[]};
+var pending={},state={session:null,eventId:'',guests:[],csv:'',csvName:'',checksum:'',generated:[],access:null};
 function $(id){return document.getElementById(id)}
 function digits(v){return String(v||'').replace(/\D/g,'')}
 function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
@@ -89,18 +130,72 @@ window.addEventListener('message',function(ev){if(ev.origin!=='https://script.go
 function msg(text,kind){var x=$('message');x.textContent=text||'';x.className='msg '+(kind||'');x.classList.toggle('hidden',!text)}
 function download(name,content,type){var b=new Blob([content],{type:type||'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},800)}
 function copy(text){return navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(text):Promise.reject(new Error('Copie o link manualmente.'))}
+function activePrivateFields(isPrivate){
+  ['validationField','inviteTitleField','inviteTextField','inviteCtaField'].forEach(function(id){
+    $(id).classList.toggle('hidden',!isPrivate);
+  });
+  $('privateManagement').classList.toggle('hidden',!isPrivate);
+}
+function renderAccess(res){
+  state.access=res||{};
+  var p=(res&&res.configuracaoPersistida)||(res&&res.acesso)||{};
+  var mode=String(p.modoAcesso||'PUBLICO').toUpperCase();
+  $('accessMode').value=mode;
+  $('inviteValidation').value=p.validacaoConvite||'TOKEN_TELEFONE';
+  $('inviteTitle').value=p.mensagemConviteTitulo||'Você está convidado';
+  $('inviteText').value=p.mensagemConviteTexto||'';
+  $('inviteCta').value=p.ctaConviteTexto||'Continuar';
+  if(res&&res.evento&&res.evento.nome)$('eventName').textContent=res.evento.nome;
+  activePrivateFields(mode==='PRIVADO_CONVITE');
+}
+async function loadAccess(){
+  var r=await rpc('ctEventoAcessoProdutorObterPROD',[state.session.token,state.eventId]);
+  if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Não foi possível carregar a modalidade do evento.');
+  renderAccess(r);
+  return r;
+}
+async function saveAccess(){
+  try{
+    var mode=$('accessMode').value;
+    var r=await rpc('ctEventoAcessoProdutorSalvarPROD',[state.session.token,state.eventId,{
+      modoAcesso:mode,
+      validacaoConvite:$('inviteValidation').value,
+      mensagemConviteTitulo:$('inviteTitle').value,
+      mensagemConviteTexto:$('inviteText').value,
+      ctaConviteTexto:$('inviteCta').value,
+      exibirNomeConvidado:true,
+      exibirUnidade:true
+    }]);
+    if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar a modalidade.');
+    renderAccess(r);
+    msg(mode==='PRIVADO_CONVITE'?'Evento configurado como privado. Agora gerencie a lista de convidados.':'Modalidade do evento atualizada.','ok');
+    if(mode==='PRIVADO_CONVITE')await loadGuests();
+  }catch(e){msg(e.message||String(e),'err')}
+}
 function render(){var g=state.guests||[];$('sGuests').textContent=g.length;$('sAllowed').textContent=g.reduce(function(t,x){return t+Number(x.quantidadeMaxima||0)},0);$('sConsumed').textContent=g.reduce(function(t,x){return t+Number(x.quantidadeConsumida||0)},0);$('sInvites').textContent=g.filter(function(x){return x.convite&&['ATIVO','ACESSADO','PARCIAL'].includes(String(x.convite.status||'').toUpperCase())}).length;$('rows').innerHTML=g.map(function(x){var inv=x.convite?'<span class="tag">'+String(x.convite.status||'ATIVO')+'</span>':'—';var copyBtn=x.convite&&x.convite.link?'<button data-copy-link="'+esc(x.convite.link)+'">Copiar link</button>':'';return'<tr><td><div class="name">'+esc(x.nomeCompleto)+'</div><small>'+esc(x.categoria||'')+'</small></td><td>'+esc(x.whatsapp||'—')+'</td><td>'+esc(x.unidadeApartamento||'—')+'</td><td>'+Number(x.quantidadeMaxima||0)+'</td><td>'+Number(x.quantidadeConsumida||0)+'</td><td>'+inv+'</td><td><div class="rowactions">'+copyBtn+'<button data-invite="'+esc(x.convidadoId)+'">'+(x.convite?'Regenerar':'Gerar link')+'</button></div></td></tr>'}).join('')||'<tr><td colspan="7">Nenhum convidado cadastrado.</td></tr>';document.querySelectorAll('[data-copy-link]').forEach(function(b){b.onclick=async function(){try{await copy(b.dataset.copyLink);msg('Link do convite copiado sem alterar o convite já enviado.','ok')}catch(e){msg(e.message||String(e),'err')}}});document.querySelectorAll('[data-invite]').forEach(function(b){b.onclick=function(){generateOne(b.dataset.invite)}})}
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-async function load(){try{var r=await rpc('ctEventoConvidadosListarPROD',[state.session.token,state.eventId]);if(!r||r.sucesso!==true)throw new Error('Não foi possível carregar convidados.');$('eventName').textContent=r.eventoNome||'Evento privado';state.guests=r.convidados||[];render()}catch(e){msg(e.message||String(e),'err')}}
-async function saveGuest(){try{var r=await rpc('ctEventoConvidadosSalvarPROD',[state.session.token,{eventoId:state.eventId,nomeCompleto:$('name').value,whatsapp:digits($('phone').value),cpf:digits($('cpf').value),quantidadeMaxima:Number($('limit').value||1),unidadeApartamento:$('unit').value,categoria:$('category').value,observacao:$('note').value}]);if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar.');['name','phone','cpf','unit','category','note'].forEach(function(id){$(id).value=''});$('limit').value='1';msg('Convidado salvo.','ok');await load()}catch(e){msg(e.message||String(e),'err')}}
+async function loadGuests(){try{var r=await rpc('ctEventoConvidadosListarPROD',[state.session.token,state.eventId]);if(!r||r.sucesso!==true)throw new Error('Não foi possível carregar convidados.');if(!$('eventName').textContent||$('eventName').textContent==='Evento')$('eventName').textContent=r.eventoNome||'Evento';state.guests=r.convidados||[];render()}catch(e){msg(e.message||String(e),'err')}}
+async function load(){
+  try{
+    var access=await loadAccess();
+    var p=(access&&access.configuracaoPersistida)||(access&&access.acesso)||{};
+    if(String(p.modoAcesso||'PUBLICO').toUpperCase()==='PRIVADO_CONVITE'){
+      await loadGuests();
+    }else{
+      state.guests=[];
+      render();
+    }
+  }catch(e){msg(e.message||String(e),'err')}
+}
+async function saveGuest(){try{var r=await rpc('ctEventoConvidadosSalvarPROD',[state.session.token,{eventoId:state.eventId,nomeCompleto:$('name').value,whatsapp:digits($('phone').value),cpf:digits($('cpf').value),quantidadeMaxima:Number($('limit').value||1),unidadeApartamento:$('unit').value,categoria:$('category').value,observacao:$('note').value}]);if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar.');['name','phone','cpf','unit','category','note'].forEach(function(id){$(id).value=''});$('limit').value='1';msg('Convidado salvo.','ok');await loadGuests()}catch(e){msg(e.message||String(e),'err')}}
 async function template(){try{var r=await rpc('ctEventoImportacaoModeloCsvPROD',[state.session.token,state.eventId]);download(r.arquivoNome||'modelo-convidados.csv',r.conteudo||'',r.mimeType)}catch(e){msg(e.message||String(e),'err')}}
 function preview(r){$('importSummary').textContent=r.validas+' válidas · '+r.invalidas+' inválidas · '+r.duplicadas+' já cadastradas';$('importSummary').className='msg '+(r.invalidas?'err':'ok');$('importSummary').classList.remove('hidden');$('preview').innerHTML=(r.linhas||[]).map(function(x){return'<div class="line '+(x.valido?'good':'bad')+'">Linha '+x.numeroLinha+' · '+esc(x.nomeCompleto)+' · '+(x.valido?(x.duplicadoExistente?'já existe':'válida'):esc((x.erros||[]).join(', ')))+'</div>'}).join('');$('preview').classList.remove('hidden');$('importActions').classList.toggle('hidden',r.invalidas>0);state.checksum=r.checksum||''}
 async function validateFile(file){state.csvName=file.name;state.csv=await file.text();try{var r=await rpc('ctEventoImportacaoValidarCsvPROD',[state.session.token,state.eventId,state.csv,state.csvName]);preview(r)}catch(e){msg(e.message||String(e),'err')}}
-async function confirmImport(){try{var r=await rpc('ctEventoImportacaoConfirmarCsvPROD',[state.session.token,{eventoId:state.eventId,csv:state.csv,arquivoNome:state.csvName,checksumEsperado:state.checksum,politicaDuplicidade:$('duplicatePolicy').value,gerarConvites:$('generateOnImport').checked===true}]);state.generated=state.generated.concat(r.convitesGerados||[]);msg('Importação concluída: '+r.criados+' criados, '+r.atualizados+' atualizados e '+r.ignorados+' mantidos.','ok');$('importActions').classList.add('hidden');await load()}catch(e){msg(e.message||String(e),'err')}}
-async function generateOne(id){try{var r=await rpc('ctEventoConvidadosGerarConvitePROD',[state.session.token,state.eventId,id]);var inv=r&&r.convite;if(!inv||!inv.link)throw new Error('Link não retornado.');state.generated.push({convidadoId:id,nomeCompleto:(state.guests.find(function(x){return x.convidadoId===id})||{}).nomeCompleto||'',conviteId:inv.conviteId,link:inv.link});await copy(inv.link);msg('Novo link gerado e copiado. O link anterior, se existia, foi revogado.','ok');await load()}catch(e){msg(e.message||String(e),'err')}}
-async function generateBatch(){try{var r=await rpc('ctEventoConvidadosGerarConvitesLotePROD',[state.session.token,state.eventId]);state.generated=state.generated.concat((r.convites||[]).filter(function(x){return x.link}));msg('Processamento concluído. '+state.generated.length+' link(s) disponível(is) nesta sessão.','ok');await load()}catch(e){msg(e.message||String(e),'err')}}
+async function confirmImport(){try{var r=await rpc('ctEventoImportacaoConfirmarCsvPROD',[state.session.token,{eventoId:state.eventId,csv:state.csv,arquivoNome:state.csvName,checksumEsperado:state.checksum,politicaDuplicidade:$('duplicatePolicy').value,gerarConvites:$('generateOnImport').checked===true}]);state.generated=state.generated.concat(r.convitesGerados||[]);msg('Importação concluída: '+r.criados+' criados, '+r.atualizados+' atualizados e '+r.ignorados+' mantidos.','ok');$('importActions').classList.add('hidden');await loadGuests()}catch(e){msg(e.message||String(e),'err')}}
+async function generateOne(id){try{var r=await rpc('ctEventoConvidadosGerarConvitePROD',[state.session.token,state.eventId,id]);var inv=r&&r.convite;if(!inv||!inv.link)throw new Error('Link não retornado.');state.generated.push({convidadoId:id,nomeCompleto:(state.guests.find(function(x){return x.convidadoId===id})||{}).nomeCompleto||'',conviteId:inv.conviteId,link:inv.link});await copy(inv.link);msg('Novo link gerado e copiado. O link anterior, se existia, foi revogado.','ok');await loadGuests()}catch(e){msg(e.message||String(e),'err')}}
+async function generateBatch(){try{var r=await rpc('ctEventoConvidadosGerarConvitesLotePROD',[state.session.token,state.eventId]);state.generated=state.generated.concat((r.convites||[]).filter(function(x){return x.link}));msg('Processamento concluído. '+state.generated.length+' link(s) disponível(is) nesta sessão.','ok');await loadGuests()}catch(e){msg(e.message||String(e),'err')}}
 function exportLinks(){if(!state.generated.length){msg('Nenhum link novo foi gerado nesta sessão.','err');return}var lines=['NOME;CONVITE_ID;LINK'].concat(state.generated.map(function(x){return '"'+String(x.nomeCompleto||'').replace(/"/g,'""')+'";'+x.conviteId+';'+x.link}));download('convites-carioca-ticket.csv','\uFEFF'+lines.join('\r\n'),'text/csv;charset=utf-8')}
-$('refresh').onclick=load;$('saveGuest').onclick=saveGuest;$('downloadTemplate').onclick=template;$('csvFile').onchange=function(){if(this.files&&this.files[0])validateFile(this.files[0])};$('confirmImport').onclick=confirmImport;$('generateBatch').onclick=generateBatch;$('exportLinks').onclick=exportLinks;
+$('refresh').onclick=load;$('saveAccess').onclick=saveAccess;$('accessMode').onchange=function(){activePrivateFields(this.value==='PRIVADO_CONVITE')};$('saveGuest').onclick=saveGuest;$('downloadTemplate').onclick=template;$('csvFile').onchange=function(){if(this.files&&this.files[0])validateFile(this.files[0])};$('confirmImport').onclick=confirmImport;$('generateBatch').onclick=generateBatch;$('exportLinks').onclick=exportLinks;
 state.session=readSession();state.eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();if(!state.session){msg('Entre no Portal do Produtor antes de abrir esta área.','err')}else if(!state.eventId){msg('Abra esta área a partir de um evento selecionado no Portal do Produtor.','err')}else load();
 }());
 </script>
