@@ -149,6 +149,19 @@ function renderAnticipations(){
   document.getElementById('anticipations').innerHTML='<div class="empty"><p>As antecipações agora são solicitadas exclusivamente pela Conta Carioca Pay e passam pela análise do Administrador Master.</p><p><a class="btn gold" href="/produtor/financeiro/">Abrir Conta Carioca Pay</a></p></div>';
 }
 
+function renderHistory(){
+  var items=state.panel&&Array.isArray(state.panel.historico)?state.panel.historico:[];
+  if(!items.length){
+    document.getElementById('history').innerHTML='<div class="empty">Nenhuma operação financeira registrada.</div>';
+    return;
+  }
+  document.getElementById('history').innerHTML='<div class="table-wrap"><table class="table"><thead><tr><th>Data</th><th>Operação</th><th>Valor</th><th>Taxa CT</th><th>Status</th></tr></thead><tbody>'+
+    items.map(function(x){
+      return '<tr><td>'+esc(x.criadoEm||'—')+'</td><td>'+esc(x.tipo||'—')+'</td><td><strong>'+esc(x.valorBruto||'R$ 0,00')+'</strong></td><td>'+esc(x.tipo==='ANTECIPACAO'?x.taxaCtValor:'—')+'</td><td><span class="status '+statusClass(x.status)+'">'+esc(x.status||'—')+'</span></td></tr>';
+    }).join('')+
+    '</tbody></table></div>';
+}
+
 function renderCommercial(r){
   var x=r&&r.resumo||{};
   var paymentRows=Array.isArray(x.pagamentos)?x.pagamentos:[];
