@@ -1336,6 +1336,13 @@ type="button"
 >
 Atualizar painel
 </button>
+<button
+id="privateGuestsButton"
+class="refresh-btn"
+type="button"
+>
+Convidados / evento privado
+</button>
 </section>
 <div
 id="portalMessage"
@@ -1910,6 +1917,7 @@ function iniciar(){
 'producerSelect',
 'eventSelect',
 'refreshButton',
+'privateGuestsButton',
 'selectorsPanel',
 'onboardingPanel',
 'onboardingForm',
@@ -2018,6 +2026,32 @@ function(){
 
 carregarPainel(
 true
+);
+}
+);
+
+el.privateGuestsButton.addEventListener(
+'click',
+function(){
+
+var eventoId =
+String(
+el.eventSelect.value ||
+''
+).trim();
+
+if(!eventoId){
+mostrarMensagemPortal(
+'Selecione um evento antes de abrir a lista de convidados.',
+'erro'
+);
+return;
+}
+
+window.location.href =
+'/produtor/convidados/?evento=' +
+encodeURIComponent(
+eventoId
 );
 }
 );
