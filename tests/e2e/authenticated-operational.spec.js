@@ -573,7 +573,7 @@ function financeiroProdutorFixture() {
       taxasCtPendentes: 'R$ 0,00'
     },
     politica: {
-      taxaAntecipacaoCtPercentual: 2.5,
+      taxaAntecipacaoCtPercentual: 3.5,
       taxaAntecipacaoModo: 'LEDGER_CT',
       saqueModo: 'SOLICITACAO_INTERNA',
       saqueMovimentaDinheiroAutomaticamente: false,
