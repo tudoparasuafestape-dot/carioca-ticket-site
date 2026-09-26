@@ -13,6 +13,15 @@ const eventos=read('eventos-v2/index.html');
 const produtorPortal=read('produtor-v2/index.html');
 const modalidades=read('backoffice/modalidades/index.html');
 const governanca=read('backoffice/eventos/index.html');
+
+for(const [nome,html] of [
+  ['convite',convite],
+  ['convidados',produtor],
+  ['modalidades',modalidades]
+]){
+  ok(html.includes('APP_PROD')&&html.includes('APP_DEV'),'isolamento DEV/PROD ausente em '+nome);
+  ok(html.includes("cariocaticket\\.com\\.br")||html.includes('cariocaticket\.com\.br'),'selecao de ambiente ausente em '+nome);
+}
 const politica=read('backoffice/politicas-comerciais/index.html');
 const backoffice=read('backoffice/index.html');
 
