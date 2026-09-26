@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - audit-homologacao-automatica-20260920
+      - release/rc-produtor-modalidades-20260925
   schedule:
     - cron: '15 7 * * *'
 
@@ -31,6 +32,7 @@ jobs:
           node tests/journey-contracts.mjs
           node tests/full-surface-audit.mjs
           node tests/politica-comercial.contract.mjs
+          node tests/eventos-privados-v1.mjs
   publico-producao:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     name: Publico homologado ${{ matrix.viewport }}
