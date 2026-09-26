@@ -409,7 +409,8 @@
         privateFlow:false,
         feePreview:null,
         feeBusy:false,
-        feeSeq:0
+        feeSeq:0,
+        feeTimer:null
       };
 
       var el={};
@@ -808,7 +809,19 @@
         var seq=++state.feeSeq;
         state.feeBusy=true;
 
-        google.script.run
+        if(state.feeTimer){
+          clearTimeout(state.feeTimer);
+          state.feeTimer=null;
+        }
+
+        /*
+         * Preview e apenas UX; o backend recalcula o valor autoritativo no pagamento.
+         * Debounce evita rajada de RPC enquanto o cliente altera quantidade.
+         */
+        state.feeTimer=setTimeout(function(){
+          state.feeTimer=null;
+
+          google.script.run
           .withSuccessHandler(function(res){
             if(seq!==state.feeSeq)return;
             state.feeBusy=false;
@@ -858,11 +871,12 @@
             el.feeSummary.classList.add('hidden');
             el.summaryPrice.textContent=money(valorIngressos||0);
           })
-          .ctPoliticaComercialPreviewPublicoPROD({
-            eventoId:state.eventId,
-            precoUnitario:Number(precoUnitario||0),
-            quantidade:Number(quantidadeVendas||1)
-          });
+            .ctPoliticaComercialPreviewPublicoPROD({
+              eventoId:state.eventId,
+              precoUnitario:Number(precoUnitario||0),
+              quantidade:Number(quantidadeVendas||1)
+            });
+        },180);
       }
 
       function renderParticipants(count){
