@@ -262,6 +262,7 @@
       <div id="feeSummary" class="promo-summary hidden">
         <div class="promo-line"><span>Ingressos</span><span id="feeBase">R$ 0,00</span></div>
         <div class="promo-line"><span id="feeLabel">Taxa Carioca Ticket</span><span id="feePlatform">R$ 0,00</span></div>
+        <div id="feeAdditionalRow" class="promo-line hidden"><span>Encargos comerciais adicionais</span><span id="feeAdditional">R$ 0,00</span></div>
         <div class="promo-line total"><span>Total a pagar</span><span id="feeTotal">R$ 0,00</span></div>
         <div id="feeNote" class="help" style="margin-top:8px"></div>
       </div>
@@ -418,7 +419,7 @@
       [
         'loading','loadingTitle','loadingText','eventName','eventMeta','eventDescription','eventBack','checkoutCover','checkoutCoverImage','salePanel','buyerPanel','payActionPanel',
         'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',
-        'feeSummary','feeBase','feeLabel','feePlatform','feeTotal','feeNote',
+        'feeSummary','feeBase','feeLabel','feePlatform','feeAdditionalRow','feeAdditional','feeTotal','feeNote',
         'couponBox','couponToggle','couponArea','couponCode','couponApply','couponMessage','couponReplace','couponReplaceNo','couponReplaceYes','promoSummary','promoOriginal','promoLabel','promoDiscount','promoTotal','couponRemove',
         'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','buyerEmailLabel','buyerEmailHelp','marketing','paymentPix','paymentCard','payButton','payHelp',
         'pixPanel','pixStatus','qrImage','pixCode','copyButton','refreshButton','expiryText',
@@ -847,27 +848,35 @@
             var acrescimo=Math.max(0,taxaComprador+adicionais);
 
             el.feeBase.textContent=money(subtotal);
-            el.feePlatform.textContent=money(taxaCt);
+            el.feePlatform.textContent=money(taxaComprador);
+            el.feeAdditional.textContent=money(adicionais);
+            el.feeAdditionalRow.classList.toggle('hidden',adicionais<=0);
             el.feeTotal.textContent=money(total);
             el.summaryPrice.textContent=money(total);
 
             var pagador=String(resumo.pagadorTaxa||'COMPRADOR').toUpperCase();
-            if(pagador==='PRODUTOR'&&acrescimo<=0){
+            if(pagador==='PRODUTOR'){
               el.feeLabel.textContent='Taxa Carioca Ticket · paga pelo produtor';
-              el.feeNote.textContent='Nenhum acréscimo desta taxa será cobrado de você.';
+              el.feeNote.textContent=taxaCt>0
+                ?'O produtor absorve '+money(taxaCt)+'. Nenhuma parte da taxa CT foi adicionada ao seu total.'
+                :'Sem taxa adicional para o comprador.';
             }else if(pagador==='DIVIDIDA'){
-              el.feeLabel.textContent='Taxa Carioca Ticket · dividida';
-              el.feeNote.textContent=acrescimo>0?'Sua parte da taxa está incluída no total.':'Nenhum acréscimo desta taxa será cobrado de você.';
+              el.feeLabel.textContent='Sua parte da taxa Carioca Ticket';
+              el.feeNote.textContent='O produtor absorve '+money(Math.max(0,taxaCt-taxaComprador))+'.';
             }else{
               el.feeLabel.textContent='Taxa Carioca Ticket';
-              el.feeNote.textContent=acrescimo>0?'A taxa está incluída no total a pagar.':'Sem taxa adicional para o comprador.';
+              el.feeNote.textContent=taxaComprador>0?'A taxa está incluída no total a pagar.':'Sem taxa adicional para o comprador.';
+            }
+
+            if(adicionais>0){
+              el.feeNote.textContent+=' Encargos adicionais informados separadamente acima.';
             }
 
             if(res.degradado===true){
               el.feeNote.textContent='Sem taxa adicional para o comprador nesta operação.';
             }
 
-            el.feeSummary.classList.toggle('hidden',taxaCt<=0&&acrescimo<=0);
+            el.feeSummary.classList.toggle('hidden',taxaCt<=0&&adicionais<=0);
           })
           .withFailureHandler(function(){
             if(seq!==state.feeSeq)return;
