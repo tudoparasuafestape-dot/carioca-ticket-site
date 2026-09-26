@@ -17,6 +17,7 @@ const producer=read('produtor/comissoes/index.html');
 const portal=read('produtor/index.html');
 const event=read('evento-v2/index.html');
 const checkout=read('checkout-v2/index.html');
+const commissioned=read('comissionado/index.html');
 
 need('produtor/comissoes/index.html',producer,[
   'Promotores, influenciadores e vendedores',
@@ -59,6 +60,15 @@ need('checkout-v2/index.html',checkout,[
   "loc.parameter&&loc.parameter.refcode",
   'vendedorToken:state.vendedorToken',
   "q+='&seller='"
+]);
+
+need('comissionado/index.html',commissioned,[
+  'Meu link de divulgação',
+  'canalVendaOnline',
+  'preencherCanalVendaOnline',
+  'botaoCopiarLinkVendaOnline',
+  'botaoWhatsappLinkVendaOnline',
+  'As compras concluídas por ele serão atribuídas à sua conta'
 ]);
 
 for(const forbidden of [
