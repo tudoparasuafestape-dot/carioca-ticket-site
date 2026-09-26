@@ -834,6 +834,8 @@
         if(!state.politicaComercialAtiva){
           state.feeBusy=false;
           state.feeReady=true;
+          state.feeRevision='';
+          state.feeQuotedAt=0;
           state.feePreview=null;
           el.feeSummary.classList.add('hidden');
           el.summaryPrice.textContent=money(valorIngressos||0);
