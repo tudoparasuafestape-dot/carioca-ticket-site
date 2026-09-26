@@ -812,7 +812,9 @@ box-shadow:0 18px 45px rgba(0,0,0,.22)
 (function(){
   'use strict';
 
-  var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var APP_PROD='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var APP_DEV='https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
+var APP=/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname)?APP_PROD:APP_DEV;
   var pending={};
 
   function cleanup(id){
@@ -1335,6 +1337,13 @@ class="refresh-btn"
 type="button"
 >
 Atualizar painel
+</button>
+<button
+id="privateGuestsButton"
+class="refresh-btn"
+type="button"
+>
+Convidados / evento privado
 </button>
 </section>
 <div
@@ -1910,6 +1919,7 @@ function iniciar(){
 'producerSelect',
 'eventSelect',
 'refreshButton',
+'privateGuestsButton',
 'selectorsPanel',
 'onboardingPanel',
 'onboardingForm',
@@ -2018,6 +2028,32 @@ function(){
 
 carregarPainel(
 true
+);
+}
+);
+
+el.privateGuestsButton.addEventListener(
+'click',
+function(){
+
+var eventoId =
+String(
+el.eventSelect.value ||
+''
+).trim();
+
+if(!eventoId){
+mostrarMensagemPortal(
+'Selecione um evento antes de abrir a lista de convidados.',
+'erro'
+);
+return;
+}
+
+window.location.href =
+'/produtor/convidados/?evento=' +
+encodeURIComponent(
+eventoId
 );
 }
 );

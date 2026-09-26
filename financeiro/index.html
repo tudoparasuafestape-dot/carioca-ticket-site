@@ -47,28 +47,28 @@
 <section class="section">
   <div class="head"><div><h2>Política financeira</h2><p>Regras aplicadas antes de qualquer solicitação.</p></div></div>
   <div class="policy">
-    <div class="notice"><strong>Antecipação · taxa CT 2,5%</strong><br>A simulação consulta o Asaas em tempo real. A taxa CT é calculada sobre o valor bruto antecipado e mostrada antes da confirmação. Em conta própria do produtor, essa taxa fica registrada no financeiro da plataforma e não é debitada automaticamente pelo Asaas.</div>
+    <div class="notice safe"><strong>Antecipação migrada para a Conta Carioca Pay</strong><br>A regra vigente é 3,5%, com mínimo de R$ 500,00 em vendas elegíveis e análise do Administrador Master. Este painel legado não cria mais antecipações diretamente no provider.</div>
     <div class="notice safe"><strong>Saque protegido</strong><br>O botão abaixo registra uma solicitação auditável e reserva o valor. Nenhuma transferência Pix/TED é executada automaticamente nesta etapa; isso evita movimentação bancária sem validação financeira adicional.</div>
   </div>
 </section>
 
 <section class="section">
-  <div class="head"><div><h2>Antecipação de recebíveis</h2><p>Somente cobranças de cartão elegíveis aparecem aqui. Sempre simulamos novamente no Asaas antes de solicitar.</p></div></div>
-  <div class="panel" id="anticipations"><div class="empty">Carregando recebíveis...</div></div>
+  <div class="head"><div><h2>Antecipação de recebíveis</h2><p>Use o fluxo protegido da Conta Carioca Pay. A solicitação é registrada para análise Master e não executa transferência automaticamente.</p></div></div>
+  <div class="panel" id="anticipations"><div class="empty"><a class="btn gold" href="/produtor/financeiro/">Abrir Conta Carioca Pay</a></div></div>
 </section>
 
 <section class="section">
-  <div class="head"><div><h2>Solicitar saque</h2><p>Uma solicitação aberta por vez para reduzir duplicidade e conciliar o financeiro.</p></div></div>
+  <div class="head"><div><h2>Saque</h2><p>Fluxo temporariamente bloqueado até a homologação da análise pelo Administrador Master.</p></div></div>
   <div class="panel grid">
     <div class="box">
       <h3>Nova solicitação</h3>
-      <div class="field"><label for="withdrawValue">Valor do saque</label><input id="withdrawValue" type="number" min="1" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-      <div class="field"><label for="withdrawConfirm">Confirmação</label><input id="withdrawConfirm" autocomplete="off" placeholder="Digite SOLICITAR SAQUE"></div>
+      <div class="field"><label for="withdrawValue">Valor do saque</label><input id="withdrawValue" type="number" min="1" step="0.01" inputmode="decimal" placeholder="0,00" disabled></div>
+      <div class="field"><label for="withdrawConfirm">Confirmação</label><input id="withdrawConfirm" autocomplete="off" placeholder="Aguardando fluxo Master" disabled></div>
       <div class="actions"><button id="withdrawButton" class="btn gold" type="button" disabled>Registrar solicitação</button></div>
     </div>
     <div class="box">
       <h3>Como funciona</h3>
-      <p id="withdrawHelp" class="muted">A Carioca Ticket valida o saldo disponível da conta Asaas antes de registrar o pedido. O valor fica reservado no controle interno até processamento ou cancelamento.</p>
+      <p id="withdrawHelp" class="muted">Nenhuma solicitação de saque será registrada enquanto não existir tela Master, decisão auditável e homologação ponta a ponta.</p>
       <p id="permissionNote" class="muted"></p>
     </div>
   </div>
@@ -93,7 +93,7 @@
     <p class="lead">Os valores abaixo foram consultados no Asaas agora. Nenhuma antecipação é criada até a confirmação final.</p>
     <div id="simulation" class="sim-grid"></div>
     <div id="simulationNotice" class="notice"></div>
-    <label class="check"><input id="acceptFee" type="checkbox"><span>Li e aceito a taxa comercial Carioca Ticket de <strong>2,5%</strong> exibida nesta simulação.</span></label>
+    <label class="check"><input id="acceptFee" type="checkbox"><span>Li e aceito a taxa comercial Carioca Ticket de <strong>3,5%</strong> exibida nesta simulação.</span></label>
     <div class="field"><label for="anticipationConfirm">Confirmação de segurança</label><input id="anticipationConfirm" autocomplete="off" placeholder="Digite ANTECIPAR"></div>
     <div class="modal-actions"><button id="closeAnticipation" class="btn" type="button">Fechar</button><button id="executeAnticipation" class="btn gold" type="button" disabled>Solicitar antecipação</button></div>
   </section>
@@ -146,19 +146,20 @@ function renderPanel(r){
 }
 
 function renderAnticipations(){
-  var items=state.panel&&Array.isArray(state.panel.antecipacoesElegiveis)?state.panel.antecipacoesElegiveis:[];
-  var canMove=state.panel&&state.panel.podeMovimentar===true;
-  if(!items.length){document.getElementById('anticipations').innerHTML='<div class="empty">Nenhum recebível de cartão elegível para antecipação neste momento.</div>';return}
-  document.getElementById('anticipations').innerHTML='<div class="table-wrap"><table class="table"><thead><tr><th>Pedido</th><th>Valor</th><th>Status Asaas</th><th>Ação</th></tr></thead><tbody>'+items.map(function(x,i){return '<tr><td>…'+esc(x.pedidoFinal||'')+'</td><td><strong>'+esc(x.valor||'R$ 0,00')+'</strong></td><td><span class="status warn">'+esc(x.statusProvider||'CONFIRMED')+'</span></td><td><button class="btn simulate" data-index="'+i+'" type="button" '+(canMove?'':'disabled')+'>Simular</button></td></tr>'}).join('')+'</tbody></table></div>';
-  document.querySelectorAll('.simulate').forEach(function(btn){btn.addEventListener('click',function(){simulate(Number(btn.getAttribute('data-index')))})});
+  document.getElementById('anticipations').innerHTML='<div class="empty"><p>As antecipações agora são solicitadas exclusivamente pela Conta Carioca Pay e passam pela análise do Administrador Master.</p><p><a class="btn gold" href="/produtor/financeiro/">Abrir Conta Carioca Pay</a></p></div>';
 }
 
 function renderHistory(){
   var items=state.panel&&Array.isArray(state.panel.historico)?state.panel.historico:[];
-  if(!items.length){document.getElementById('history').innerHTML='<div class="empty">Nenhuma antecipação ou solicitação de saque registrada.</div>';return}
-  var canMove=state.panel&&state.panel.podeMovimentar===true;
-  document.getElementById('history').innerHTML='<div class="table-wrap"><table class="table"><thead><tr><th>Data</th><th>Operação</th><th>Valor</th><th>Taxa CT</th><th>Status</th><th>Ação</th></tr></thead><tbody>'+items.map(function(x){var cancel=canMove&&x.tipo==='SAQUE'&&x.status==='SOLICITADO';return '<tr><td>'+esc(x.criadoEm||'—')+'</td><td>'+esc(x.tipo||'—')+'</td><td><strong>'+esc(x.valorBruto||'R$ 0,00')+'</strong></td><td>'+esc(x.tipo==='ANTECIPACAO'?x.taxaCtValor:'—')+'</td><td><span class="status '+statusClass(x.status)+'">'+esc(x.status||'—')+'</span></td><td>'+(cancel?'<button class="btn danger cancel-withdraw" data-id="'+esc(x.operacaoId)+'" type="button">Cancelar</button>':'—')+'</td></tr>'}).join('')+'</tbody></table></div>';
-  document.querySelectorAll('.cancel-withdraw').forEach(function(btn){btn.addEventListener('click',function(){cancelWithdraw(String(btn.getAttribute('data-id')||''))})});
+  if(!items.length){
+    document.getElementById('history').innerHTML='<div class="empty">Nenhuma operação financeira registrada.</div>';
+    return;
+  }
+  document.getElementById('history').innerHTML='<div class="table-wrap"><table class="table"><thead><tr><th>Data</th><th>Operação</th><th>Valor</th><th>Taxa CT</th><th>Status</th></tr></thead><tbody>'+
+    items.map(function(x){
+      return '<tr><td>'+esc(x.criadoEm||'—')+'</td><td>'+esc(x.tipo||'—')+'</td><td><strong>'+esc(x.valorBruto||'R$ 0,00')+'</strong></td><td>'+esc(x.tipo==='ANTECIPACAO'?x.taxaCtValor:'—')+'</td><td><span class="status '+statusClass(x.status)+'">'+esc(x.status||'—')+'</span></td></tr>';
+    }).join('')+
+    '</tbody></table></div>';
 }
 
 function renderCommercial(r){
@@ -180,52 +181,25 @@ async function load(){
   finally{state.busy=false;document.getElementById('refresh').disabled=false}
 }
 
-async function simulate(index){
-  var items=state.panel&&Array.isArray(state.panel.antecipacoesElegiveis)?state.panel.antecipacoesElegiveis:[];
-  var item=items[index];if(!item)return;
-  state.paymentId=String(item.pagamentoId||'');state.simulation=null;acceptFee.checked=false;anticipationConfirm.value='';executeAnticipation.disabled=true;
-  modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');
-  document.getElementById('simulation').innerHTML='<div class="sim"><span>Status</span><strong>Consultando Asaas…</strong></div>';
-  document.getElementById('simulationNotice').className='notice';document.getElementById('simulationNotice').textContent='Aguarde. Estamos recalculando as condições diretamente no Asaas.';
-  try{
-    var r=await rpc('ctFinanceiroProdutorSimularAntecipacaoPROD',[String(state.session.token),state.eventId,state.paymentId]);
-    if(!r||r.sucesso!==true)throw new Error('Não foi possível simular a antecipação.');
-    state.simulation=r;var x=r.resumo||{};
-    document.getElementById('simulation').innerHTML=
-      '<div class="sim"><span>Valor bruto</span><strong>'+esc(x.valorBruto||'—')+'</strong></div>'+
-      '<div class="sim"><span>Taxa Asaas</span><strong>'+esc(x.taxaProvider||'—')+'</strong></div>'+
-      '<div class="sim"><span>Líquido Asaas</span><strong>'+esc(x.liquidoProvider||'—')+'</strong></div>'+
-      '<div class="sim"><span>Taxa CT · 2,5%</span><strong>'+esc(x.taxaCtValor||'—')+'</strong></div>'+
-      '<div class="sim highlight"><span>Líquido econômico estimado</span><strong>'+esc(x.liquidoEconomico||'—')+'</strong></div>'+
-      '<div class="sim"><span>Crédito previsto</span><strong>'+esc(x.dataPrevista||'Conforme análise Asaas')+'</strong></div>';
-    var n=document.getElementById('simulationNotice');
-    if(x.documentacaoObrigatoria===true){n.className='notice';n.innerHTML='<strong>Documentação obrigatória.</strong><br>O Asaas exige documentos para esta antecipação. A solicitação fica bloqueada no portal até essa etapa ser tratada.'}
-    else{n.className='notice safe';n.innerHTML='<strong>Simulação pronta.</strong><br>'+esc(r.mensagemTaxa||'Revise os valores antes de confirmar.')}
-    updateAnticipationButton();
-  }catch(e){document.getElementById('simulationNotice').className='notice';document.getElementById('simulationNotice').textContent=e&&e.message?e.message:String(e)}
+async function simulate(){
+  toast('Antecipação migrada para a Conta Carioca Pay.');
+  window.location.href='/produtor/financeiro/';
 }
 
 function updateAnticipationButton(){
-  var x=state.simulation&&state.simulation.resumo||{};
-  executeAnticipation.disabled=!(state.simulation&&x.documentacaoObrigatoria!==true&&acceptFee.checked===true&&String(anticipationConfirm.value||'').trim().toUpperCase()==='ANTECIPAR'&&!state.busy);
+  if(executeAnticipation)executeAnticipation.disabled=true;
 }
 
 async function requestAnticipation(){
-  if(executeAnticipation.disabled||!state.paymentId)return;
-  state.busy=true;executeAnticipation.disabled=true;executeAnticipation.textContent='Solicitando…';
-  try{
-    var r=await rpc('ctFinanceiroProdutorSolicitarAntecipacaoPROD',[String(state.session.token),state.eventId,state.paymentId,String(anticipationConfirm.value||''),acceptFee.checked===true]);
-    if(!r||r.sucesso!==true)throw new Error('A antecipação não foi registrada.');
-    closeModal();toast(r.mensagem||'Antecipação solicitada.');state.busy=false;await load();
-  }catch(e){toast(e&&e.message?e.message:String(e))}
-  finally{state.busy=false;executeAnticipation.textContent='Solicitar antecipação';updateAnticipationButton()}
+  toast('Use a Conta Carioca Pay para solicitar antecipação.');
+  window.location.href='/produtor/financeiro/';
 }
 
 function updateWithdrawButton(){
   var canMove=state.panel&&state.panel.podeMovimentar===true;
   var value=Number(document.getElementById('withdrawValue').value||0);
   var confirm=String(document.getElementById('withdrawConfirm').value||'').trim().toUpperCase();
-  document.getElementById('withdrawButton').disabled=!(canMove&&value>=1&&confirm==='SOLICITAR SAQUE'&&!state.busy);
+  document.getElementById('withdrawButton').disabled=true;
 }
 
 async function requestWithdraw(){

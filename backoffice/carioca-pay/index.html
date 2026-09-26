@@ -37,7 +37,7 @@ button,input,textarea,select{font:inherit}.hidden{display:none!important}
 <div id="app" class="hidden">
 <header class="top"><div class="topin">
   <a class="brand" href="/backoffice/"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket"><div><b>Conta Carioca Pay</b><small>Backoffice Master</small></div></a>
-  <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn gold" href="/backoffice/carioca-pay/saldo-extrato/">Saldo & Extrato</a><a class="btn gold" href="/backoffice/carioca-pay/baas-sandbox/">BaaS Sandbox</a><a class="btn" href="/backoffice/">Voltar ao Backoffice</a></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn gold" href="/backoffice/carioca-pay/produtores/">Financeiro de Produtores</a><a class="btn gold" href="/backoffice/carioca-pay/saldo-extrato/">Saldo & Extrato</a><a class="btn gold" href="/backoffice/carioca-pay/baas-sandbox/">BaaS Sandbox</a><a class="btn" href="/backoffice/">Voltar ao Backoffice</a></div>
 </div></header>
 
 <main class="wrap">
@@ -116,7 +116,7 @@ window.addEventListener('message',function(ev){if(ev.origin!=='https://script.go
 
 function toast(msg){$('toast').textContent=String(msg||'');$('toast').classList.remove('hidden');setTimeout(function(){$('toast').classList.add('hidden')},4000)}
 function message(msg){$('message').textContent=String(msg||'');$('message').className='message'+(msg?' show error':'')}
-function human(s){return String(s||'').replace('EM_ANALISE','EM ANÁLISE').replace('APROVADA_MASTER','APROVADA MASTER')}
+function human(s){return String(s||'').replace('EM_ANALISE','EM ANÁLISE').replace('APROVADA_MASTER','APROVADA MASTER').replace('ANTECIPACAO','ANTECIPAÇÃO').replace('SAQUE','SAQUE')}
 function date(v){if(!v)return'—';var d=new Date(v);return isNaN(d.getTime())?String(v):d.toLocaleString('pt-BR')}
 function statusClass(s){return's-'+String(s||'').trim().toUpperCase()}
 
@@ -153,7 +153,7 @@ function renderList(){
   $('list').innerHTML=state.list.map(function(x){
     return '<button class="item'+(state.selected&&state.selected.solicitacaoId===x.solicitacaoId?' on':'')+'" type="button" data-id="'+esc(x.solicitacaoId)+'">'+
       '<div class="row"><b>'+esc(x.produtorNome||x.produtorId)+'</b><span class="status '+statusClass(x.status)+'">'+esc(human(x.status))+'</span></div>'+
-      '<small>'+esc(x.evento&&x.evento.nome||x.eventoId)+' · '+money(x.valor)+'</small>'+
+      '<small>'+esc(human(x.tipo))+' · '+esc(x.evento&&x.evento.nome||x.eventoId)+' · '+money(x.valor)+'</small>'+
       '<small>'+date(x.criadoEm)+'</small></button>'
   }).join('');
   $('list').querySelectorAll('[data-id]').forEach(function(b){b.addEventListener('click',function(){detail(this.dataset.id)})});
@@ -174,23 +174,33 @@ function renderDetail(){
   $('detailStatus').textContent=human(s.status);
   $('detailStatus').className='badge status '+statusClass(s.status);
   var f=s.financeiro||{};
+  var tipo=String(s.tipo||'').toUpperCase();
+  var financeiroHtml=tipo==='SAQUE'
+    ? '<div class="finance">'+
+        fin('Saldo disponível no pedido',money(f.saldoDisponivelNoMomento))+
+        fin('Mínimo para saque',money(f.saldoMinimoSolicitacao||500))+
+        fin('Valor solicitado',money(s.valor))+
+        fin('Transferência automática','Não')+
+      '</div>'
+    : '<div class="finance">'+
+        fin('Vendas elegíveis',money(f.vendasElegiveis))+
+        fin('Máximo antecipável',money(f.maximoAntecipavel))+
+        fin('Reserva',money(f.reservaSeguranca))+
+        fin('Taxa CT',money(f.taxaCtValor)+' · '+Number(f.taxaCtPercentual||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'%')+
+        fin('Líquido produtor',money(f.valorLiquidoProdutor))+
+        fin('Custo provider','Integração bloqueada')+
+      '</div>';
   var html='<h2>'+esc(s.produtorNome||s.produtorId)+'</h2>'+
-    '<div class="sub">'+esc(s.evento&&s.evento.nome||s.eventoId)+' · '+date(s.criadoEm)+'</div>'+
+    '<div class="sub">'+esc(human(tipo))+' · '+esc(s.evento&&s.evento.nome||s.eventoId)+' · '+date(s.criadoEm)+'</div>'+
     '<div class="kvgrid">'+
       kv('Solicitação',s.solicitacaoId)+
+      kv('Tipo',human(tipo))+
       kv('Valor solicitado',money(s.valor))+
       kv('Status',human(s.status))+
       kv('Perfil solicitante',s.solicitadoPorPerfil||'—')+
     '</div>'+
-    '<div class="finance">'+
-      fin('Vendas elegíveis',money(f.vendasElegiveis))+
-      fin('Máximo antecipável',money(f.maximoAntecipavel))+
-      fin('Reserva',money(f.reservaSeguranca))+
-      fin('Taxa CT',money(f.taxaCtValor)+' · '+Number(f.taxaCtPercentual||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'%')+
-      fin('Líquido produtor',money(f.valorLiquidoProdutor))+
-      fin('Custo provider','P4 / sandbox')+
-    '</div>'+
-    '<div class="note">Aprovar nesta tela <b>não envia dinheiro</b>. A integração com provider/transferência permanece bloqueada até a P4 BaaS.</div>'+
+    financeiroHtml+
+    '<div class="note">Aprovar nesta tela <b>não envia dinheiro</b>. Nenhuma antecipação, Pix, TED ou transferência é executada automaticamente.</div>'+
     actions(s.status);
   $('detail').innerHTML=html;
   $('detail').querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){openDecision(this.dataset.action)})});
@@ -201,21 +211,25 @@ function actions(status){
   status=String(status||'').toUpperCase();
   if(status==='SOLICITADA')return'<div class="actions"><button class="btn gold" data-action="INICIAR_ANALISE" type="button">Iniciar análise</button></div>';
   if(status==='EM_ANALISE')return'<div class="actions"><button class="btn gold" data-action="APROVAR" type="button">Aprovar</button><button class="btn danger" data-action="RECUSAR" type="button">Recusar</button></div>';
+  if(status==='APROVADA_MASTER'&&state.selected&&String(state.selected.tipo||'').toUpperCase()==='SAQUE')return'<div class="actions"><button class="btn gold" data-action="CONCLUIR" type="button">Marcar saque como processado</button></div>';
   return'';
 }
 
 function openDecision(action){
   if(!state.selected)return;
   state.action=action;
-  var titles={INICIAR_ANALISE:'Iniciar análise',APROVAR:'Aprovar solicitação',RECUSAR:'Recusar solicitação'};
+  var titles={INICIAR_ANALISE:'Iniciar análise',APROVAR:'Aprovar solicitação',RECUSAR:'Recusar solicitação',CONCLUIR:'Confirmar processamento externo'};
   $('decisionTitle').textContent=titles[action]||'Confirmar decisão';
   $('decisionText').textContent=action==='APROVAR'
-    ? 'A aprovação será registrada, mas não executará antecipação nem transferência nesta fase.'
+    ? 'A aprovação será registrada, mas não executará antecipação, saque nem transferência automaticamente.'
     : action==='RECUSAR'
       ? 'Informe o motivo da recusa. A decisão será registrada na auditoria.'
-      : 'A solicitação passará para o status Em análise.';
+      : action==='CONCLUIR'
+        ? 'Use somente após o saque ter sido efetivamente pago fora da plataforma. Informe uma referência externa/comprovante; esta ação apenas concilia o ledger e não envia dinheiro.'
+        : 'A solicitação passará para o status Em análise.';
   $('reason').value='';
-  $('reasonBox').classList.toggle('hidden',action!=='RECUSAR');
+  $('reason').placeholder=action==='CONCLUIR'?'Referência externa, comprovante ou observação do pagamento':'Informe o motivo da recusa';
+  $('reasonBox').classList.toggle('hidden',action!=='RECUSAR'&&action!=='CONCLUIR');
   $('decisionBackdrop').classList.remove('hidden');$('decisionBackdrop').setAttribute('aria-hidden','false');
 }
 function closeDecision(){$('decisionBackdrop').classList.add('hidden');$('decisionBackdrop').setAttribute('aria-hidden','true');state.action=''}
@@ -224,6 +238,7 @@ async function confirmDecision(){
   if(!state.selected||!state.action||state.busy)return;
   var reason=$('reason').value.trim();
   if(state.action==='RECUSAR'&&reason.length<3){toast('Informe o motivo da recusa.');return}
+  if(state.action==='CONCLUIR'&&reason.length<3){toast('Informe a referência externa do pagamento.');return}
   state.busy=true;$('decisionConfirm').disabled=true;
   try{
     var r=await rpc('ctContaCariocaPayMasterDecidirPROD',[state.session.token,state.selected.solicitacaoId,state.action,reason]);

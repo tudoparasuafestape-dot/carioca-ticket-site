@@ -1391,10 +1391,18 @@ Usuários
 <a
 id="cariocaPayLink"
 class="ghost hidden"
-href="/produtor/carioca-pay/"
+href="/produtor/financeiro/"
 target="_top"
 >
 Conta Carioca Pay
+</a>
+<a
+id="commercialPolicyLink"
+class="ghost hidden"
+href="/produtor/politica-comercial/"
+target="_top"
+>
+Política comercial
 </a>
 <a
 id="partnerPortalLink"
@@ -2105,6 +2113,7 @@ function iniciar(){
 'centralMobileLink',
 'accessManagementLink',
 'cariocaPayLink',
+'commercialPolicyLink',
 'partnerPortalLink',
 'partnerAdminLink',
 'backofficeMasterLink',
@@ -4188,6 +4197,11 @@ perfil === 'FINANCEIRO'
 );
 
 el.cariocaPayLink.classList.toggle(
+'hidden',
+!podeFinanceiro
+);
+
+el.commercialPolicyLink.classList.toggle(
 'hidden',
 !podeFinanceiro
 );
