@@ -525,7 +525,7 @@
     (function(){
       'use strict';
 
-      var state={eventoId:'',data:null,cupomCodigo:'',campanhaOrigem:'',campanhaSessaoId:'',shareToastTimer:null};
+      var state={eventoId:'',data:null,cupomCodigo:'',campanhaOrigem:'',campanhaSessaoId:'',vendedorToken:'',vendedorCodigo:'',shareToastTimer:null};
       var $=function(id){return document.getElementById(id);};
 
       function campanhaSessao(codigo){
@@ -552,8 +552,19 @@
       }
 
       function queryCampanha(){
-        if(!state.cupomCodigo)return'';
-        return '&cupom='+encodeURIComponent(state.cupomCodigo)+'&src='+encodeURIComponent(state.campanhaOrigem||'direto')+'&csid='+encodeURIComponent(state.campanhaSessaoId||'');
+        var q='';
+        if(state.cupomCodigo){
+          q+='&cupom='+encodeURIComponent(state.cupomCodigo)+
+            '&src='+encodeURIComponent(state.campanhaOrigem||'direto')+
+            '&csid='+encodeURIComponent(state.campanhaSessaoId||'');
+        }
+        if(state.vendedorToken){
+          q+='&seller='+encodeURIComponent(state.vendedorToken);
+          if(state.vendedorCodigo){
+            q+='&refcode='+encodeURIComponent(state.vendedorCodigo);
+          }
+        }
+        return q;
       }
 
       function esc(v){
@@ -787,6 +798,8 @@
           state.cupomCodigo=String((loc.parameter&&loc.parameter.cupom)||'').trim().toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9_-]/g,'').substring(0,80);
           state.campanhaOrigem=String((loc.parameter&&loc.parameter.src)||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').substring(0,60);
           state.campanhaSessaoId=String((loc.parameter&&loc.parameter.csid)||'').trim().replace(/[^A-Za-z0-9._:-]/g,'').substring(0,120);
+          state.vendedorToken=String((loc.parameter&&loc.parameter.seller)||'').trim().substring(0,3000);
+          state.vendedorCodigo=String((loc.parameter&&loc.parameter.refcode)||'').trim().toUpperCase().replace(/[^A-Z0-9-]/g,'').substring(0,50);
           if(state.cupomCodigo&&!state.campanhaSessaoId)state.campanhaSessaoId=campanhaSessao(state.cupomCodigo);
           if(!state.eventoId){
             showError('O link não informou qual evento deve ser aberto.');
