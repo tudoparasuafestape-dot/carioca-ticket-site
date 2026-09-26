@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Modalidades & Convites | Backoffice Master</title>
+<link rel="icon" href="/assets/carioca-ticket-icon-192.png">
+<style>
+:root{--bg:#090b0f;--card:#11151c;--line:#282f3a;--gold:#e8b34b;--gold2:#f3cb72;--text:#f4f4f4;--muted:#9ca5b3;--bad:#ef6464}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}.hidden{display:none!important}.shell{width:min(1040px,calc(100% - 28px));margin:auto;padding:22px 0 60px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;color:inherit}.brand img{width:42px}.btn,button{border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--text);padding:11px 13px;font-weight:850;text-decoration:none;cursor:pointer}.gold{border-color:rgba(232,179,75,.45);color:var(--gold2)}.hero,.panel{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:18px;margin-top:16px}.hero{border-color:rgba(232,179,75,.25)}.hero h1{margin:7px 0}.hero p,.muted{color:var(--muted);line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin-top:11px}.field label{display:block;color:var(--muted);font-size:11px;margin-bottom:6px;font-weight:800}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:#0c1016;color:var(--text);padding:11px}.field textarea{min-height:92px}.full{grid-column:1/-1}.msg{margin-top:12px;padding:11px;border-radius:10px;border:1px solid var(--line)}.warn{color:#f4d477}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.check{display:flex;gap:8px;align-items:center;margin-top:10px}.check input{width:auto}.gate{min-height:60vh;display:grid;place-items:center}.gatebox{text-align:center}.safe{font-size:11px;color:#add0ff;border:1px solid rgba(101,167,255,.3);padding:9px;border-radius:10px;margin-top:12px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.top{align-items:flex-start;flex-direction:column}}
+</style></head>
+<body>
+<section id="gate" class="gate"><div class="gatebox"><h1>Modalidades & Convites</h1><p id="gateText">Validando acesso Master…</p><a class="btn" href="/backoffice/">Voltar</a></div></section>
+<div id="app" class="shell hidden">
+<header class="top"><a class="brand" href="/backoffice/"><img src="/assets/carioca-ticket-icon-192.png"><div><b>Modalidades & Convites</b><div class="muted">Backoffice Master</div></div></a><div><a class="btn" href="/backoffice/eventos/">Governança</a> <a class="btn gold" href="/backoffice/politicas-comerciais/">Políticas Comerciais</a></div></header>
+<section class="hero"><div style="color:var(--gold2);font-weight:900">ACESSO AO EVENTO</div><h1>Público, não listado ou privado</h1><p>A modalidade controla descoberta e convite. A taxa financeira é configurada separadamente em Políticas Comerciais, evitando dois motores financeiros concorrentes.</p><div class="safe">Nenhuma ação desta tela cria cobrança, venda, ingresso ou movimentação financeira.</div></section>
+<div id="message" class="msg hidden"></div>
+<section class="panel">
+<div class="grid"><div class="field full"><label>Evento</label><select id="eventSelect"><option value="">Selecione</option></select></div></div>
+<div id="editor" class="hidden">
+<div class="grid">
+<div class="field"><label>Modalidade</label><select id="accessMode"><option value="PUBLICO">Público</option><option value="NAO_LISTADO">Não listado</option><option value="PRIVADO_CONVITE">Privado por convite</option></select></div>
+<div class="field private"><label>Validação do convite</label><select id="validation"><option value="TOKEN">Somente token</option><option value="TOKEN_TELEFONE">Token + telefone</option><option value="TOKEN_CPF">Token + CPF</option><option value="TOKEN_TELEFONE_CPF">Token + telefone + CPF</option></select></div>
+<div class="field full private"><label>Título da página de convite</label><input id="inviteTitle"></div>
+<div class="field full private"><label>Mensagem do anfitrião</label><textarea id="inviteText"></textarea></div>
+<div class="field private"><label>Texto do botão</label><input id="inviteCta"></div>
+</div>
+<label class="check private"><input id="showName" type="checkbox" checked> Mostrar nome do convidado</label>
+<label class="check private"><input id="showUnit" type="checkbox" checked> Mostrar unidade/apartamento</label>
+<div class="actions"><button id="saveAccess" class="gold">Salvar modalidade</button><a id="commercialLink" class="btn" href="/backoffice/politicas-comerciais/">Configurar política comercial</a></div>
+</div>
+</section>
+<section class="panel"><h2>Kill switches globais</h2><p class="muted">Uso apenas emergencial. Não existe liberação Master por evento para modalidade normal.</p>
+<label class="check"><input id="flagModes" type="checkbox"> Modalidades V1 disponíveis</label>
+<label class="check"><input id="flagPrivate" type="checkbox"> Eventos privados V1 disponíveis</label>
+<div class="actions"><button id="applyFlags" class="gold">Aplicar</button><button id="rollback">Desligar V1</button></div></section>
+</div>
+<script>
+(function(){'use strict';
+var APP_PROD='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var APP_DEV='https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
+var APP=/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname)?APP_PROD:APP_DEV;
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1',pending={},state={session:null,list:null,eventId:''};
+function $(x){return document.getElementById(x)}
+function session(){try{var r=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=r?JSON.parse(r):null;return d&&d.token?d:null}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(m,a){return new Promise(function(resolve,reject){var id='MOD-'+Date.now()+'-'+Math.random(),n='m'+id.replace(/[^A-Za-z0-9_]/g,''),fr=document.createElement('iframe'),fo=document.createElement('form');fr.name=n;fr.style.display='none';fo.method='POST';fo.action=APP;fo.target=n;fo.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);fo.appendChild(i)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',m);add('argsJson',JSON.stringify(a||[]));document.body.append(fr,fo);pending[id]={frame:fr,form:fo,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('Tempo esgotado.'))},45000)};fo.submit()})}
+window.addEventListener('message',function(e){if(e.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(e.origin||''))return;var x=e.data;if(!x||x.ctMinhaCariocaPost!==true||!pending[x.id])return;var p=cleanup(x.id);x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Falha.')))});
+function msg(t,k){var e=$('message');e.textContent=t||'';e.className='msg '+(k||'');e.classList.toggle('hidden',!t)}
+function privateFields(){var on=$('accessMode').value==='PRIVADO_CONVITE';document.querySelectorAll('.private').forEach(function(x){x.classList.toggle('hidden',!on)})}
+async function loadList(){var r=await rpc('ctEventoAcessoMasterListarPROD',[state.session.token]);if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Acesso Master não autorizado.');state.list=r;var s=$('eventSelect');s.innerHTML='<option value="">Selecione</option>';(r.eventos||[]).forEach(function(e){var o=document.createElement('option');o.value=e.eventoId;o.textContent=(e.nome||e.eventoId)+' · '+(e.data||'');s.appendChild(o)});var f=r.flags||{};$('flagModes').checked=f.modalidades===true;$('flagPrivate').checked=f.privado===true}
+async function loadEvent(){state.eventId=$('eventSelect').value;if(!state.eventId){$('editor').classList.add('hidden');return}var r=await rpc('ctEventoAcessoMasterObterPROD',[state.session.token,state.eventId]);if(!r||r.sucesso!==true)throw new Error('Evento indisponível.');var p=r.configuracaoPersistida||r.acesso||{};$('accessMode').value=p.modoAcesso||'PUBLICO';$('validation').value=p.validacaoConvite||'TOKEN_TELEFONE';$('inviteTitle').value=p.mensagemConviteTitulo||'Você está convidado';$('inviteText').value=p.mensagemConviteTexto||'';$('inviteCta').value=p.ctaConviteTexto||'Continuar';$('showName').checked=p.exibirNomeConvidado!==false;$('showUnit').checked=p.exibirUnidade!==false;$('commercialLink').href='/backoffice/politicas-comerciais/?evento='+encodeURIComponent(state.eventId);privateFields();$('editor').classList.remove('hidden')}
+async function save(){try{var r=await rpc('ctEventoAcessoMasterSalvarPROD',[state.session.token,{eventoId:state.eventId,modoAcesso:$('accessMode').value,validacaoConvite:$('validation').value,mensagemConviteTitulo:$('inviteTitle').value,mensagemConviteTexto:$('inviteText').value,ctaConviteTexto:$('inviteCta').value,exibirNomeConvidado:$('showName').checked,exibirUnidade:$('showUnit').checked}]);if(!r||r.sucesso!==true)throw new Error('Modalidade não salva.');msg('Modalidade atualizada.','ok');await loadEvent()}catch(e){msg(e.message||String(e),'err')}}
+async function flags(off){try{var r=await rpc('ctEventoAcessoMasterConfigurarAtivacaoPROD',[state.session.token,{eventoId:state.eventId||'',habilitarEvento:false,modalidadesAtivo:off?false:$('flagModes').checked,privadoAtivo:off?false:$('flagPrivate').checked,taxasAtivo:false}]);if(!r||r.sucesso!==true)throw new Error('Kill switch não confirmado.');msg('Configuração global atualizada.','ok');await loadList()}catch(e){msg(e.message||String(e),'err')}}
+$('accessMode').onchange=privateFields;$('eventSelect').onchange=function(){loadEvent().catch(function(e){msg(e.message||String(e),'err')})};$('saveAccess').onclick=save;$('applyFlags').onclick=function(){flags(false)};$('rollback').onclick=function(){flags(true)};
+state.session=session();if(!state.session){$('gateText').textContent='Entre com uma conta administradora.'}else{loadList().then(function(){$('gate').classList.add('hidden');$('app').classList.remove('hidden')}).catch(function(e){$('gateText').textContent=e.message||String(e)})}
+}());
+</script></body></html>
