@@ -66,6 +66,8 @@ for(const s of ['id="commercialPolicyLink"','href="/produtor/politica-comercial/
 const checkout=read('checkout-v2/index.html');
 for(const s of [
   'feeReady:false',
+  'politicaComercialAtiva:false',
+  'if(!state.politicaComercialAtiva)',
   'state.feeReady=false;',
   'state.feeReady=true;',
   'if(state.feeBusy||state.feeReady!==true)',
