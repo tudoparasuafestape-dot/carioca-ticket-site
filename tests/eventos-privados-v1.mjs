@@ -31,6 +31,7 @@ ok(convite.includes('ctEventoConviteCarregarPublicoPROD'),'convite sem carregame
 ok(convite.includes('ctEventoConviteValidarPublicoPROD'),'convite sem validacao');
 ok(convite.includes("sessionStorage.setItem('CT_PRIVATE_GRANT_'"),'grant nao salvo em sessionStorage');
 ok(convite.includes("get('ctenv')==='dev'"),'convite nao honra ambiente DEV explicito');
+ok(convite.includes("(CT_FORCE_DEV?'&ctenv=dev':'')"),'convite perde ambiente DEV ao abrir checkout');
 ok(checkout.includes("get('ctenv')==='dev'"),'checkout nao honra ambiente DEV explicito');
 ok(!/checkout-v2\/\?evento=.*accessGrant/.test(convite),'grant nao deve ir na URL');
 ok(convite.includes('Convite privado'),'pagina comercial do convite ausente');
