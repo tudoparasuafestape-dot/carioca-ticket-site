@@ -1018,6 +1018,37 @@
       </section>
 
       <section
+        id="canalVendaOnlineBox"
+        class="cartao oculto"
+        style="margin-bottom:18px;"
+      >
+        <div class="cartao-topo">
+          <h2>Meu link de divulgação</h2>
+          <p id="canalVendaOnlineMensagem">
+            O produtor ainda não liberou um link individual para este evento.
+          </p>
+        </div>
+        <div
+          id="canalVendaOnlineAcoes"
+          class="oculto"
+          style="display:flex;gap:10px;flex-wrap:wrap;"
+        >
+          <button
+            id="botaoCopiarLinkVendaOnline"
+            type="button"
+          >
+            Copiar link
+          </button>
+          <button
+            id="botaoWhatsappLinkVendaOnline"
+            type="button"
+          >
+            Compartilhar no WhatsApp
+          </button>
+        </div>
+      </section>
+
+      <section
         id="historicoProprio"
         class="cartao"
         style="margin-bottom:18px;"
@@ -1546,6 +1577,10 @@
         dados.comissao || {}
       );
 
+      preencherCanalVendaOnline(
+        dados.canalVendaOnline || {}
+      );
+
       preencherMinhasVendas(
         dados.minhasVendas || {}
       );
@@ -1727,6 +1762,131 @@
       el.textContent =
         partes.join(' ');
     }
+
+    function preencherCanalVendaOnline(canal) {
+      var box =
+        document.getElementById(
+          'canalVendaOnlineBox'
+        );
+
+      var mensagem =
+        document.getElementById(
+          'canalVendaOnlineMensagem'
+        );
+
+      var acoes =
+        document.getElementById(
+          'canalVendaOnlineAcoes'
+        );
+
+      var copiar =
+        document.getElementById(
+          'botaoCopiarLinkVendaOnline'
+        );
+
+      var whatsapp =
+        document.getElementById(
+          'botaoWhatsappLinkVendaOnline'
+        );
+
+      if (
+        !box ||
+        !mensagem ||
+        !acoes ||
+        !copiar ||
+        !whatsapp
+      ) {
+        return;
+      }
+
+      box.classList.remove('oculto');
+
+      var link =
+        String(
+          canal &&
+          canal.link ||
+          ''
+        ).trim();
+
+      if (
+        canal &&
+        canal.linkDisponivel === true &&
+        link
+      ) {
+        mensagem.textContent =
+          'Divulgue este link. As compras concluídas por ele serão atribuídas à sua conta e usarão a regra de comissão ativa do evento.';
+
+        acoes.classList.remove('oculto');
+
+        copiar.onclick =
+          async function() {
+            try {
+              if (
+                navigator.clipboard &&
+                window.isSecureContext
+              ) {
+                await navigator.clipboard.writeText(link);
+              } else {
+                var area =
+                  document.createElement('textarea');
+
+                area.value = link;
+                area.setAttribute('readonly','');
+                area.style.position = 'fixed';
+                area.style.opacity = '0';
+                document.body.appendChild(area);
+                area.select();
+
+                if (!document.execCommand('copy')) {
+                  throw new Error('CT_COMISSIONADO_COPY_FAILED');
+                }
+
+                area.remove();
+              }
+
+              mostrarMensagem(
+                'Link individual copiado.',
+                'sucesso'
+              );
+            } catch (_) {
+              mostrarMensagem(
+                'Não foi possível copiar automaticamente.',
+                'erro'
+              );
+            }
+          };
+
+        whatsapp.onclick =
+          function() {
+            var texto =
+              'Garanta seu ingresso pela Carioca Ticket:\n\n' +
+              link;
+
+            window.open(
+              'https://wa.me/?text=' +
+                encodeURIComponent(texto),
+              '_blank'
+            );
+          };
+
+        return;
+      }
+
+      acoes.classList.add('oculto');
+
+      if (
+        canal &&
+        canal.configurado === true &&
+        canal.ativo === true
+      ) {
+        mensagem.textContent =
+          'Seu canal está configurado, mas o link online não está disponível. Verifique a regra de comissão ou a modalidade do evento com o produtor.';
+      } else {
+        mensagem.textContent =
+          'O produtor ainda não liberou um link individual para este evento.';
+      }
+    }
+
 
     function preencherMinhasVendas(resumo) {
       var area =

@@ -408,6 +408,8 @@
         cupomDoLink:'',
         campanhaOrigem:'',
         campanhaSessaoId:'',
+        vendedorToken:'',
+        vendedorCodigo:'',
         autoCupomDispensado:false,
         accessGrant:'',
         privateFlow:false,
@@ -498,8 +500,19 @@
       }
 
       function queryCampanha(){
-        if(!state.cupomDoLink)return'';
-        return '&cupom='+encodeURIComponent(state.cupomDoLink)+'&src='+encodeURIComponent(state.campanhaOrigem||'direto')+'&csid='+encodeURIComponent(state.campanhaSessaoId||'');
+        var q='';
+        if(state.cupomDoLink){
+          q+='&cupom='+encodeURIComponent(state.cupomDoLink)+
+            '&src='+encodeURIComponent(state.campanhaOrigem||'direto')+
+            '&csid='+encodeURIComponent(state.campanhaSessaoId||'');
+        }
+        if(state.vendedorToken){
+          q+='&seller='+encodeURIComponent(state.vendedorToken);
+          if(state.vendedorCodigo){
+            q+='&refcode='+encodeURIComponent(state.vendedorCodigo);
+          }
+        }
+        return q;
       }
 
       function storageKey(){return 'CT_CHECKOUT_RECOVERY_'+state.eventId;}
@@ -560,6 +573,8 @@
           state.cupomDoLink=String((loc.parameter&&loc.parameter.cupom)||'').trim().toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9_-]/g,'').substring(0,80);
           state.campanhaOrigem=String((loc.parameter&&loc.parameter.src)||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').substring(0,60);
           state.campanhaSessaoId=String((loc.parameter&&loc.parameter.csid)||'').trim().replace(/[^A-Za-z0-9._:-]/g,'').substring(0,120);
+          state.vendedorToken=String((loc.parameter&&loc.parameter.seller)||'').trim().substring(0,3000);
+          state.vendedorCodigo=String((loc.parameter&&loc.parameter.refcode)||'').trim().toUpperCase().replace(/[^A-Z0-9-]/g,'').substring(0,50);
           state.privateFlow=String((loc.parameter&&loc.parameter.privado)||'').trim()==='1';
           state.accessGrant=String((loc.parameter&&loc.parameter.accessGrant)||'').trim();
           if(!state.accessGrant&&state.eventId){
@@ -1074,6 +1089,7 @@
           cupomCodigo:state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'',
           campanhaOrigem:state.promotion&&state.promotion.cupom&&String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink?state.campanhaOrigem:'',
           campanhaSessaoId:state.promotion&&state.promotion.cupom&&String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink?state.campanhaSessaoId:'',
+          vendedorToken:state.vendedorToken,
           accessGrant:state.accessGrant,
           politicaRevisaoVista:state.feeRevision,
           idempotenciaChave:getOrCreateIdempotency()

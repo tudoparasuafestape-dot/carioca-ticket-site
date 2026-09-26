@@ -494,6 +494,50 @@ if(!campanhaPublica.includes('id="whatsapp"')){
   failures.push('campanha/index.html: WhatsApp obrigatório da participação ausente');
 }
 
+// COMISSÕES DO PRODUTOR — gestão de promotores/influenciadores sobre o motor existente.
+const comissoesProdutor=read('produtor/comissoes/index.html');
+requireAll('produtor/comissoes/index.html',comissoesProdutor,[
+  'Promotores, influenciadores e vendedores',
+  'ctComissoesPromotoresCarregarPROD',
+  'ctGestaoAcessosAdicionarUsuarioPROD',
+  'ctComissoesPromotoresSalvarCanalPROD',
+  'ctComissoesEventoSalvarRegraPROD',
+  'ctComissoesPromotoresSalvarMetaPROD',
+  'ctComissoesPromotoresRegistrarPagamentoPROD',
+  'COMISSIONADO',
+  'Copiar link',
+  'WhatsApp',
+  'Registrar pagamento',
+  'A Carioca Ticket não transfere dinheiro automaticamente nesta versão',
+  'Esta comissão é do produtor e permanece totalmente separada da comissão vitalícia do Parceiro CT.'
+]);
+for(const proibido of [
+  'ctAsaasProvider',
+  'criarCobranca',
+  '/transfers',
+  'ctParceiroCT'
+]){
+  if(comissoesProdutor.includes(proibido)){
+    failures.push('produtor/comissoes/index.html: gestão de comissionado não pode movimentar pagamento/Parceiro CT -> '+proibido);
+  }
+}
+
+const eventoComissionado=read('evento-v2/index.html');
+requireAll('evento-v2/index.html',eventoComissionado,[
+  "loc.parameter&&loc.parameter.seller",
+  "loc.parameter&&loc.parameter.refcode",
+  "q+='&seller='",
+  "q+='&refcode='"
+]);
+
+const checkoutComissionado=read('checkout-v2/index.html');
+requireAll('checkout-v2/index.html',checkoutComissionado,[
+  "loc.parameter&&loc.parameter.seller",
+  "loc.parameter&&loc.parameter.refcode",
+  'vendedorToken:state.vendedorToken',
+  "q+='&seller='"
+]);
+
 const produtor=read('produtor/index.html');
 requireLink('produtor/index.html',produtor,'partnerPortalLink','/parceiro/');
 requireLink('produtor/index.html',produtor,'partnerAdminLink','/parceiro/admin/');
@@ -505,7 +549,9 @@ requireAll('produtor/index.html',produtor,[
   'id="courtesyLink"',
   'href="/produtor/cortesias/"',
   'id="campaignsLink"',
-  'href="/produtor/campanhas/"'
+  'href="/produtor/campanhas/"',
+  'id="commissionsLink"',
+  'href="/produtor/comissoes/"'
 ]);
 
 
