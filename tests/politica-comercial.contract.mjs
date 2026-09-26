@@ -49,6 +49,19 @@ for(const s of ['id="commercialPolicyLink"','href="/produtor/politica-comercial/
   if(!portal.includes(s))throw new Error('Portal produtor sem politica comercial: '+s);
 }
 
+
+const checkout=read('checkout-v2/index.html');
+for(const s of [
+  'feeReady:false',
+  'state.feeReady=false;',
+  'state.feeReady=true;',
+  'if(state.feeBusy||state.feeReady!==true)',
+  'Confirmando o total',
+  'ctPoliticaComercialPreviewPublicoPROD'
+]){
+  if(!checkout.includes(s))throw new Error('Checkout sem gate de transparencia comercial: '+s);
+}
+
 const finance=read('produtor/financeiro/index.html');
 if(!finance.includes('href="/produtor/politica-comercial/"'))throw new Error('Financeiro produtor sem acesso a politica comercial');
 
