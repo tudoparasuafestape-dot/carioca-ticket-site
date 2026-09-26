@@ -11,7 +11,8 @@ const checkout=read('checkout-v2/index.html');
 const produtor=read('produtor/convidados/index.html');
 const eventos=read('eventos-v2/index.html');
 const produtorPortal=read('produtor-v2/index.html');
-const master=read('backoffice/eventos/index.html');
+const master=read('backoffice/modalidades/index.html');
+const commercial=read('backoffice/politicas-comerciais/index.html');
 const backoffice=read('backoffice/index.html');
 
 ok(/<meta name="robots" content="noindex,nofollow,noarchive">/.test(convite),'convite deve ser noindex');
@@ -67,17 +68,24 @@ for(const metodo of [
   'ctEventoAcessoMasterListarPROD',
   'ctEventoAcessoMasterObterPROD',
   'ctEventoAcessoMasterSalvarPROD',
-  'ctTaxasEventoMasterObterPROD',
-  'ctTaxasEventoMasterSalvarPROD',
   'ctEventoAcessoMasterConfigurarAtivacaoPROD'
 ]){
-  ok(master.includes(metodo),'backoffice de eventos sem '+metodo);
+  ok(master.includes(metodo),'backoffice de modalidades sem '+metodo);
 }
 ok(master.includes('PUBLICO')&&master.includes('NAO_LISTADO')&&master.includes('PRIVADO_CONVITE'),'3 modalidades nao aparecem no Master');
-ok(master.includes('COMPRADOR')&&master.includes('EVENTO')&&master.includes('RATEIO'),'responsaveis de taxa incompletos');
-ok(master.includes('Rollback global da V1'),'rollback global nao exposto no Master');
-ok(master.includes('Kill switches de segurança'),'kill switches globais nao expostos');
-ok(!master.includes('eventEnabled'),'Backoffice nao deve exigir liberacao por evento');
-ok(backoffice.includes('/backoffice/eventos/'),'Backoffice principal sem link Eventos & Taxas');
+ok(master.includes('Kill switches globais'),'kill switches globais nao expostos');
+ok(!master.includes('ctTaxasEventoMasterSalvarPROD'),'modalidades nao pode manter segundo editor financeiro');
+ok(master.includes('/backoffice/politicas-comerciais/'),'modalidades sem acesso ao motor comercial canonico');
+for(const token of ['10% é o padrão da plataforma','COMPRADOR','PRODUTOR','DIVIDIDA','ctPoliticaComercialMasterSalvarPROD']){
+  ok(commercial.includes(token),'politica comercial canonica incompleta: '+token);
+}
+ok(backoffice.includes('/backoffice/eventos/'),'Backoffice principal sem governanca de eventos');
+ok(backoffice.includes('/backoffice/modalidades/'),'Backoffice principal sem modalidades e convites');
+ok(backoffice.includes('/backoffice/politicas-comerciais/'),'Backoffice principal sem politicas comerciais');
+
+for(const [nome,html] of [['convite',convite],['checkout',checkout],['eventos',eventos],['produtor',produtor],['produtorPortal',produtorPortal],['master',master]]){
+  ok(html.includes('APP_DEV'),'tela '+nome+' sem resolucao DEV explicita');
+  ok(html.includes('cariocaticket.com.br'),'tela '+nome+' sem gate de dominio oficial para PROD');
+}
 
 console.log('OK frontend eventos privados V1: contratos estruturais protegidos');
