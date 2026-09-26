@@ -27,6 +27,9 @@ ok(convite.includes('Convite privado'),'pagina comercial do convite ausente');
 ok(checkout.includes('CT_PRIVATE_GRANT_'),'checkout nao recupera grant privado');
 ok(checkout.includes('state.accessGrant'),'checkout nao envia grant');
 ok(checkout.includes('ctPoliticaComercialPreviewPublicoPROD'),'checkout sem preview da politica comercial canonica');
+ok(checkout.includes('feeTimer:null'),'checkout sem debounce do preview comercial');
+ok(checkout.includes('setTimeout(function(){')&&checkout.includes('},180);'),'preview comercial sem debounce curto');
+
 ok(!checkout.includes('ctTaxasEventoPublicoSimularPROD'),'checkout ainda chama motor legado de taxa');
 ok(checkout.includes('Taxa Carioca Ticket · paga pelo produtor'),'checkout sem mensagem de taxa absorvida');
 ok(checkout.includes('Taxa Carioca Ticket · dividida'),'checkout sem mensagem de taxa dividida');
