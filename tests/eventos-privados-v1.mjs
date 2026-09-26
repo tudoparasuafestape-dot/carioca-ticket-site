@@ -65,6 +65,9 @@ for(const metodo of [
 }
 ok(modalidades.includes('PUBLICO')&&modalidades.includes('NAO_LISTADO')&&modalidades.includes('PRIVADO_CONVITE'),'3 modalidades nao aparecem no Master');
 ok(modalidades.includes('/backoffice/politicas-comerciais/'),'modalidades sem acesso a politica comercial');
+ok(!modalidades.includes('taxasAtivo'),'modalidades ainda envia flag legada de taxa');
+ok(!modalidades.includes('habilitarEvento'),'modalidades ainda envia allowlist por evento');
+
 ok(!modalidades.includes('ctTaxasEventoMasterSalvarPROD'),'modalidades nao pode editar motor legado de taxa');
 ok(modalidades.includes('Rollback global da V1'),'rollback global de modalidades nao exposto');
 
