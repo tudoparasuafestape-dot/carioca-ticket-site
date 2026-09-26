@@ -17,9 +17,9 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}.top{bo
 <body>
 <section id="gate" class="gate"><div class="gatebox"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket" width="58"><h1>Políticas Comerciais</h1><p id="gateText">Validando acesso Master…</p><a class="btn" href="/backoffice/">Voltar ao Backoffice</a></div></section>
 <div id="app" class="hidden">
-<header class="top"><div class="topin"><a class="brand" href="/backoffice/"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket"><div><b>Políticas Comerciais</b><small>Backoffice Master</small></div></a><div><a class="btn" href="/backoffice/">Backoffice</a> <button id="refresh" class="btn gold" type="button">Atualizar</button></div></div></header>
+<header class="top"><div class="topin"><a class="brand" href="/backoffice/"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket"><div><b>Políticas Comerciais</b><small>Backoffice Master</small></div></a><div><a class="btn" href="/backoffice/">Backoffice</a> <button id="activation" class="btn bad" type="button">Cobrança comercial desligada</button> <button id="refresh" class="btn gold" type="button">Atualizar</button></div></div></header>
 <main class="wrap">
-<section class="hero"><div class="ey">Contratação flexível</div><h1>Taxa, pagador e remunerações</h1><p>10% é o padrão da plataforma. Exceções comerciais podem ser definidas por produtor, evento, ingresso, lote ou campanha, sem alterar vendas anteriores.</p><div class="safe">Homologação segura • snapshot por venda • nenhuma movimentação financeira nesta tela</div></section>
+<section class="hero"><div class="ey">Contratação flexível</div><h1>Taxa, pagador e remunerações</h1><p>10% é o padrão da plataforma. Exceções comerciais podem ser definidas por produtor, evento, ingresso, lote ou campanha, sem alterar vendas anteriores.</p><div id="activationStatus" class="safe">Cobrança comercial: verificando…</div></section>
 <div class="layout">
 <section class="panel"><div class="head"><b>Políticas cadastradas</b><span id="count" class="badge">0</span></div><div id="list" class="list"><div class="empty">Carregando…</div></div></section>
 <section class="panel"><div class="head"><b>Nova condição comercial</b><span class="badge">MASTER</span></div><div class="body">
@@ -48,7 +48,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}.top{bo
 var APP_PROD='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 var APP_DEV='https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
 var APP=/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname)?APP_PROD:APP_DEV;
-var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1',pending={},state={session:null,policies:[],busy:false};
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1',pending={},state={session:null,policies:[],busy:false,activation:false};
 function $(x){return document.getElementById(x)}function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
 function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
@@ -92,10 +92,31 @@ async function deactivatePolicy(p){
  }catch(e){toast(e&&e.message?e.message:String(e))}
  finally{state.busy=false}
 }
-async function load(){if(state.busy)return;state.busy=true;try{var r=await rpc('ctPoliticaComercialMasterListarPROD',[state.session.token,{}]);if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Acesso Master não autorizado.');state.policies=Array.isArray(r.politicas)?r.politicas:[];$('count').textContent=String(state.policies.length);renderList();$('gate').classList.add('hidden');$('app').classList.remove('hidden')}catch(e){$('gateText').textContent=e&&e.message?e.message:String(e)}finally{state.busy=false}}
+function renderActivation(){
+ var on=state.activation===true;
+ $('activation').textContent=on?'Cobrança comercial ativa':'Cobrança comercial desligada';
+ $('activation').className='btn '+(on?'gold':'bad');
+ $('activationStatus').textContent=on?'Cobrança comercial ativa • padrão 10% sujeito às políticas cadastradas':'Cobrança comercial desligada • preços legados preservados';
+}
+async function load(){if(state.busy)return;state.busy=true;try{var r=await rpc('ctPoliticaComercialMasterListarPROD',[state.session.token,{}]);if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Acesso Master não autorizado.');state.policies=Array.isArray(r.politicas)?r.politicas:[];state.activation=!!(r.ativacao&&r.ativacao.ativa);$('count').textContent=String(state.policies.length);renderList();renderActivation();$('gate').classList.add('hidden');$('app').classList.remove('hidden')}catch(e){$('gateText').textContent=e&&e.message?e.message:String(e)}finally{state.busy=false}}
+async function toggleActivation(){
+ if(state.busy)return;
+ var motivo=String($('reason').value||'').trim();
+ if(motivo.length<3){toast('Informe no campo de motivo a razão da ativação ou desativação.');return}
+ state.busy=true;$('activation').disabled=true;
+ try{
+   var alvo=!state.activation;
+   var r=await rpc('ctPoliticaComercialMasterConfigurarAtivacaoPROD',[state.session.token,{ativa:alvo,motivo:motivo}]);
+   if(!r||r.sucesso!==true||r.movimentouDinheiro===true)throw new Error('Não foi possível alterar a ativação com segurança.');
+   state.activation=r.ativa===true;
+   renderActivation();
+   toast(state.activation?'Cobrança comercial ativada.':'Cobrança comercial desativada; preços legados preservados.');
+ }catch(e){toast(e&&e.message?e.message:String(e))}
+ finally{state.busy=false;$('activation').disabled=false}
+}
 async function save(){if(state.busy)return;var p=payload();if(p.motivoComercial.length<3){toast('Informe o motivo ou condição contratual.');return}state.busy=true;$('save').disabled=true;try{var r=await rpc('ctPoliticaComercialMasterSalvarPROD',[state.session.token,p]);if(!r||r.sucesso!==true||r.movimentouDinheiro===true)throw new Error('A política não foi salva com segurança.');toast('Nova versão da política comercial salva.');await load()}catch(e){toast(e&&e.message?e.message:String(e))}finally{state.busy=false;$('save').disabled=false}}
 async function simulate(){if(state.busy)return;var p=payload();p.precoUnitario=Number($('simPrice').value||0);p.quantidade=Number($('simQty').value||1);state.busy=true;try{var r=await rpc('ctPoliticaComercialSimularPROD',[state.session.token,p]);if(!r||r.sucesso!==true||r.movimentouDinheiro===true)throw new Error('A simulação não foi concluída.');var c=r.calculo||{};$('simulation').innerHTML='<div class="metric"><small>Comprador paga</small><strong>'+money(c.totalComprador)+'</strong></div><div class="metric"><small>Taxa CT</small><strong>'+money(c.taxaCtTotal)+'</strong></div><div class="metric"><small>Produtor absorve</small><strong>'+money(c.taxaProdutor+c.comissoesProdutor)+'</strong></div><div class="metric"><small>Líquido comercial</small><strong>'+money(c.liquidoComercialProdutor)+'</strong></div>';toast('Simulação concluída sem cobrança.')}catch(e){toast(e&&e.message?e.message:String(e))}finally{state.busy=false}}
-$('payer').onchange=function(){$('buyerShareField').classList.toggle('hidden',this.value!=='DIVIDIDA')};$('addBenefit').onclick=function(){benefitRow({})};$('save').onclick=save;$('simulate').onclick=simulate;$('refresh').onclick=load;
+$('payer').onchange=function(){$('buyerShareField').classList.toggle('hidden',this.value!=='DIVIDIDA')};$('addBenefit').onclick=function(){benefitRow({})};$('save').onclick=save;$('simulate').onclick=simulate;$('activation').onclick=toggleActivation;$('refresh').onclick=load;
 state.session=readSession();if(!state.session)$('gateText').textContent='Entre no Portal do Produtor com uma conta administradora antes de abrir esta página.';else load();
 }());
 </script></body></html>
