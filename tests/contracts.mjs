@@ -1064,8 +1064,15 @@ if (parceiroAtivar) {
     'ctParceiroOnboardingPrepararAtivacaoPROD',
     'ctParceiroOnboardingAtivarPROD',
     'createUserWithEmailAndPassword',
+    'signInWithEmailAndPassword',
     'sendEmailVerification',
-    'getIdToken'
+    'getIdToken',
+    "document.getElementById('verifiedButton').disabled=true",
+    'const cred=await signInWithEmailAndPassword(auth,email,p)',
+    'await reload(current)',
+    'await finalize(current,email)',
+    'Sua sessão de verificação expirou',
+    'vínculo de acesso anterior'
   ]) {
     if (!parceiroAtivar.includes(required)) {
       fail('parceiro/ativar/index.html', 'ativacao Parceiro CT incompleta: ' + required);
