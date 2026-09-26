@@ -25,7 +25,7 @@ test.describe('Parceiro CT publicado', () => {
     await expect(page.locator('#heroCommission')).toHaveText('1', { timeout: 60000 });
     await expect(page.locator('#serviceFee')).toHaveText('10');
     await expect(page.locator('#anticipationMax')).toHaveText('80');
-    await expect(page.locator('#anticipationFee')).toHaveText('2,5');
+    await expect(page.locator('#anticipationFee')).toHaveText('3,5');
     await expect(page.locator('#materialsGrid')).toContainText('Tabela Comercial para Produtores');
     await expect(page.locator('#materialsGrid')).toContainText('Regulamento do Programa');
 
