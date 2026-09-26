@@ -252,7 +252,7 @@ test.describe('Comissões de promotores',()=>{
     await page.locator('#saveChannel').click();
     await expect.poll(()=>state.channelCalls).toBe(1);
 
-    await expect(page.getByText('PROMO-E2E')).toBeVisible();
+    await expect(page.getByText('PROMO-E2E',{exact:true}).first()).toBeVisible();
     await expect(page.getByText(/seller=ASSINADO.E2E/)).toBeVisible();
 
     expect(state.methods.some(x=>/Asaas|transfer|ParceiroCT/i.test(x))).toBe(false);
