@@ -88,7 +88,8 @@
 'use strict';
 var APP_PROD='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 var APP_DEV='https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
-var APP=/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname)?APP_PROD:APP_DEV;
+var CT_FORCE_DEV=new URLSearchParams(window.location.search).get('ctenv')==='dev';
+var APP=CT_FORCE_DEV||!/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname)?APP_DEV:APP_PROD;
 var pending={},state={token:'',data:null,busy:false};
 function $(id){return document.getElementById(id)}
 function onlyDigits(v){return String(v||'').replace(/\D/g,'')}
