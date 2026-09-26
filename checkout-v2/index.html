@@ -814,26 +814,42 @@
             state.feeBusy=false;
             state.feePreview=res||null;
 
-            if(!res||res.sucesso!==true||res.aplicar!==true){
+            var resumo=res&&res.resumo?res.resumo:null;
+            if(!res||res.sucesso!==true||!resumo){
               el.feeSummary.classList.add('hidden');
               el.summaryPrice.textContent=money(valorIngressos||0);
               return;
             }
 
-            el.feeBase.textContent=money(res.valorIngressos||0);
-            el.feePlatform.textContent=money(res.taxaCtValor||0);
-            el.feeTotal.textContent=money(res.valorCobradoComprador||0);
-            el.summaryPrice.textContent=money(res.valorCobradoComprador||0);
+            var subtotal=Number(resumo.subtotalIngressos||valorIngressos||0);
+            var taxaCt=Number(resumo.taxaCtTotal||0);
+            var taxaComprador=Number(resumo.taxaComprador||0);
+            var adicionais=Number(resumo.adicionaisComprador||0);
+            var total=Number(resumo.totalComprador||subtotal);
+            var acrescimo=Math.max(0,taxaComprador+adicionais);
 
-            if(String(res.responsavelTaxa||'').toUpperCase()==='EVENTO'){
-              el.feeLabel.textContent='Taxa Carioca Ticket · paga pelo evento';
+            el.feeBase.textContent=money(subtotal);
+            el.feePlatform.textContent=money(taxaCt);
+            el.feeTotal.textContent=money(total);
+            el.summaryPrice.textContent=money(total);
+
+            var pagador=String(resumo.pagadorTaxa||'COMPRADOR').toUpperCase();
+            if(pagador==='PRODUTOR'&&acrescimo<=0){
+              el.feeLabel.textContent='Taxa Carioca Ticket · paga pelo produtor';
               el.feeNote.textContent='Nenhum acréscimo desta taxa será cobrado de você.';
+            }else if(pagador==='DIVIDIDA'){
+              el.feeLabel.textContent='Taxa Carioca Ticket · dividida';
+              el.feeNote.textContent=acrescimo>0?'Sua parte da taxa está incluída no total.':'Nenhum acréscimo desta taxa será cobrado de você.';
             }else{
               el.feeLabel.textContent='Taxa Carioca Ticket';
-              el.feeNote.textContent='A taxa está incluída no total a pagar.';
+              el.feeNote.textContent=acrescimo>0?'A taxa está incluída no total a pagar.':'Sem taxa adicional para o comprador.';
             }
 
-            el.feeSummary.classList.remove('hidden');
+            if(res.degradado===true){
+              el.feeNote.textContent='Sem taxa adicional para o comprador nesta operação.';
+            }
+
+            el.feeSummary.classList.toggle('hidden',taxaCt<=0&&acrescimo<=0);
           })
           .withFailureHandler(function(){
             if(seq!==state.feeSeq)return;
@@ -842,12 +858,10 @@
             el.feeSummary.classList.add('hidden');
             el.summaryPrice.textContent=money(valorIngressos||0);
           })
-          .ctTaxasEventoPublicoSimularPROD({
+          .ctPoliticaComercialPreviewPublicoPROD({
             eventoId:state.eventId,
-            valorIngressos:Number(valorIngressos||0),
             precoUnitario:Number(precoUnitario||0),
-            quantidadeVendas:Number(quantidadeVendas||1),
-            formaPagamento:state.paymentMethod
+            quantidade:Number(quantidadeVendas||1)
           });
       }
 
