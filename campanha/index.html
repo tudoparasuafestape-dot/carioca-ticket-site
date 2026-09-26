@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080a0e">
+<meta property="og:title" content="Campanha Promocional | Carioca Ticket">
+<meta property="og:description" content="Participe da campanha e receba sua recompensa pela Carioca Ticket.">
+<meta property="og:image" content="https://cariocaticket.com.br/assets/carioca-ticket-preview-oficial-v9.jpg">
+<meta property="og:type" content="website">
+<title>Campanha Promocional | Carioca Ticket</title>
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+<style>
+:root{--bg:#080a0e;--card:#11151c;--line:#29313c;--gold:#e8b34b;--gold2:#f3cb72;--text:#f5f5f5;--muted:#a0a9b6;--ok:#55c789;--bad:#ef6464}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,rgba(232,179,75,.18),transparent 30%),linear-gradient(180deg,#080a0e,#07090c 72%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{width:min(760px,calc(100% - 28px));margin:auto;padding:28px 0 60px}.logo{display:block;width:150px;max-height:92px;object-fit:contain;margin:0 auto 18px}.hero{border:1px solid rgba(232,179,75,.35);background:linear-gradient(145deg,rgba(232,179,75,.12),rgba(17,21,28,.96) 40%);border-radius:24px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.28)}.ey{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);font-weight:900}.hero h1{font-size:clamp(32px,7vw,52px);line-height:1.03;margin:8px 0 10px}.event{font-size:13px;font-weight:850;color:var(--gold2);margin-bottom:10px}.hero p{color:var(--muted);line-height:1.65;margin:0}.stock{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}.pill{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:10px;font-weight:850;background:rgba(7,10,14,.65)}.pill.ok{border-color:#285d41;color:#baf0d1}.pill.warn{border-color:#6a5629;color:#f4d58b}
+.card{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:18px;margin-top:14px}.card h2{margin:0 0 7px;font-size:20px}.card p{margin:0 0 12px;color:var(--muted);font-size:12px;line-height:1.6}.req{border:1px solid rgba(232,179,75,.25);background:rgba(232,179,75,.07);border-radius:13px;padding:13px;color:#f1dfb4;font-size:12px;line-height:1.55;margin-bottom:13px}
+.field{margin-bottom:11px}.field label{display:block;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}.field input,.field textarea{width:100%;min-height:48px;border:1px solid var(--line);border-radius:12px;background:#0c1016;color:var(--text);padding:11px 12px;outline:none;font:inherit}.field textarea{min-height:90px;resize:vertical}.field input:focus,.field textarea:focus{border-color:var(--gold)}
+.btn{width:100%;min-height:50px;border:1px solid rgba(232,179,75,.5);border-radius:13px;background:linear-gradient(135deg,#e0a63d,#f2c865);color:#111;font-weight:950;cursor:pointer}.btn:disabled{opacity:.45;cursor:not-allowed}.message{display:none;padding:13px;border-radius:12px;margin-top:12px;font-size:12px;line-height:1.55}.message.show{display:block}.message.ok{border:1px solid rgba(85,199,137,.35);background:rgba(85,199,137,.09);color:#bcf2d4}.message.error{border:1px solid rgba(239,100,100,.35);background:rgba(239,100,100,.09);color:#ffc0c0}.message.info{border:1px solid rgba(232,179,75,.3);background:rgba(232,179,75,.08);color:#f3dfb1}
+.ticket{border:1px solid rgba(85,199,137,.34);background:rgba(85,199,137,.07);border-radius:14px;padding:14px;margin-top:10px}.ticket b{display:block}.ticket small{display:block;color:var(--muted);margin-top:3px}.ticketActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.ticketActions a,.ticketActions button{min-height:42px;border:1px solid var(--line);background:#0d1117;color:var(--text);border-radius:11px;text-decoration:none;font-weight:850;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0 10px}
+.footer{text-align:center;color:#68717d;font-size:10px;margin-top:22px;line-height:1.6}.hidden{display:none!important}.loading{position:fixed;inset:0;background:rgba(5,7,10,.74);display:none;place-items:center;z-index:40}.loading.show{display:grid}.loader{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px 20px;color:var(--muted);font-size:12px}
+@media(max-width:540px){.wrap{width:min(100% - 20px,760px);padding-top:20px}.hero{padding:20px}.ticketActions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<img class="logo" src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket">
+<section id="hero" class="hero">
+  <div class="ey">Campanha promocional</div>
+  <h1 id="campaignName">Carregando campanha...</h1>
+  <div id="eventName" class="event"></div>
+  <p id="campaignDescription"></p>
+  <div class="stock"><span id="statusPill" class="pill warn">Carregando</span><span id="stockPill" class="pill hidden"></span></div>
+</section>
+
+<section id="formCard" class="card hidden">
+  <h2>Participe</h2>
+  <p id="modeText"></p>
+  <div id="requirements" class="req hidden"></div>
+  <div class="field"><label for="name">Seu nome completo</label><input id="name" maxlength="180" autocomplete="name"></div>
+  <div class="field"><label for="whatsapp">Seu WhatsApp</label><input id="whatsapp" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="81999999999"></div>
+  <div class="field"><label for="email">E-mail (opcional)</label><input id="email" maxlength="220" type="email" autocomplete="email"></div>
+  <div id="proofField" class="field hidden"><label id="proofLabel" for="proof">Comprovação</label><textarea id="proof" maxlength="1000"></textarea></div>
+  <button id="submitButton" class="btn" type="button">Quero participar</button>
+  <div id="message" class="message"></div>
+  <div id="tickets"></div>
+</section>
+
+<section id="unavailable" class="card hidden">
+  <h2>Campanha indisponível</h2>
+  <p id="unavailableText">Esta campanha não está disponível para novas participações no momento.</p>
+</section>
+
+<div class="footer">Carioca Ticket · tecnologia, acesso e experiências<br>Uma participação não representa compra e não gera cobrança.</div>
+</div>
+<div id="loading" class="loading"><div class="loader">Processando sua participação...</div></div>
+<script>
+(function(){
+'use strict';
+var APP_PROD='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var APP_DEV='https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
+var APP=/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname)?APP_PROD:APP_DEV;
+var pending={},state={id:'',data:null,busy:false};
+function $(id){return document.getElementById(id)}
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function digits(v){return String(v||'').replace(/\D/g,'')}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){return new Promise(function(resolve,reject){var id='CTPUBCMP-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='ctpubcmp_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},90000)};form.submit()})}
+window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível concluir.')))});
+function loading(on){$('loading').classList.toggle('show',!!on)}
+function message(text,kind){var e=$('message');e.textContent=text||'';e.className='message '+(kind||'');e.classList.toggle('show',!!text)}
+function key(){var k='CT_CAMP_RECOMP_KEY_'+state.id;var v=sessionStorage.getItem(k);if(!v){v='PUB-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem(k,v)}return v}
+function render(data){state.data=data;var r=data.recompensa||{};$('campaignName').textContent=r.nome||'Campanha';$('eventName').textContent=data.evento&&data.evento.nome||'';$('campaignDescription').textContent=r.descricao||'';$('statusPill').textContent=String(r.status||'').replace(/_/g,' ');$('statusPill').className='pill '+(data.disponivel?'ok':'warn');if(Number.isFinite(Number(r.disponiveis))){$('stockPill').classList.remove('hidden');$('stockPill').textContent=Number(r.disponiveis)+' recompensa(s) disponível(is)'}if(!data.disponivel){$('unavailable').classList.remove('hidden');return}$('formCard').classList.remove('hidden');$('modeText').textContent=r.modoValidacao==='AUTO_CLAIM'?'Se você estiver dentro do limite disponível, a recompensa será emitida automaticamente.':'Sua participação será enviada para validação do produtor antes da emissão da recompensa.';var req=r.requisitos||{};if(req.provaRotulo){$('requirements').classList.remove('hidden');$('requirements').textContent='Importante: '+req.provaRotulo;$('proofField').classList.remove('hidden');$('proofLabel').textContent=req.provaRotulo}$('submitButton').textContent=r.ctaTexto||'Participar'}
+function renderParticipation(p){if(!p)return;var status=String(p.status||'');if(status==='PREMIADA'){message('Participação aprovada! Sua cortesia já foi emitida.','ok');var list=Array.isArray(p.ingressos)?p.ingressos:[];$('tickets').innerHTML=list.map(function(t){var msg='🎟️ Minha cortesia Carioca Ticket\n\n'+(t.nome||'Ingresso')+'\n\nAbrir ingresso: '+(t.link||'');return'<div class="ticket"><b>'+esc(t.nome||'Ingresso')+' · '+esc(t.codigo||'')+'</b><small>'+esc(t.tipo||'')+' · '+esc(t.loteNome||'')+'</small><div class="ticketActions">'+(t.link?'<a href="'+esc(t.link)+'" target="_blank" rel="noopener">Abrir ingresso</a><a href="https://wa.me/?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">Compartilhar</a>':'')+'</div></div>'}).join('');$('submitButton').disabled=true;return}if(status==='AGUARDANDO_VALIDACAO'){message('Participação recebida. O produtor fará a validação antes da entrega da recompensa.','info');$('submitButton').disabled=true;return}if(status==='EMISSAO_PENDENTE'){message('Sua recompensa foi reservada e a emissão está sendo concluída. Não envie novamente.','info');$('submitButton').disabled=true;return}if(status==='REPROVADA'){message(p.motivo||'A participação não foi aprovada.','error');return}message('Participação registrada.','info')}
+async function submit(){if(state.busy)return;var nome=$('name').value.trim(),whatsapp=digits($('whatsapp').value),email=$('email').value.trim(),proof=$('proof').value.trim(),req=state.data&&state.data.recompensa&&state.data.recompensa.requisitos||{};if(nome.length<3||whatsapp.length<10){message('Informe seu nome e um WhatsApp válido.','error');return}if(req.provaObrigatoria&&!proof){message('Preencha a comprovação solicitada.','error');return}state.busy=true;$('submitButton').disabled=true;loading(true);try{var r=await rpc('ctCampanhasRecompensasPublicoParticiparPROD',[state.id,{chaveIdempotencia:key(),nome:nome,whatsapp:whatsapp,email:email,prova:{texto:proof}}]);if(!r||r.sucesso!==true)throw new Error('Não foi possível registrar sua participação.');renderParticipation(r.participacao)}catch(e){message(e.message||String(e),'error');$('submitButton').disabled=false}finally{state.busy=false;loading(false)}}
+async function boot(){state.id=String(new URL(location.href).searchParams.get('id')||'').trim();if(!state.id){$('campaignName').textContent='Campanha não encontrada';$('unavailable').classList.remove('hidden');return}loading(true);try{var r=await rpc('ctCampanhasRecompensasPublicoCarregarPROD',[state.id]);if(!r||r.sucesso!==true||r.encontrada!==true){$('campaignName').textContent='Campanha não encontrada';$('unavailable').classList.remove('hidden');return}render(r)}catch(_){$('campaignName').textContent='Campanha indisponível';$('unavailable').classList.remove('hidden')}finally{loading(false)}}
+$('submitButton').onclick=submit;boot();
+}());
+</script>
+</body>
+</html>
