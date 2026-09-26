@@ -771,7 +771,9 @@
 (function(){
   'use strict';
 
-  var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var APP_PROD='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var APP_DEV='https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
+var APP=/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname)?APP_PROD:APP_DEV;
   var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
   var pending={};
 
