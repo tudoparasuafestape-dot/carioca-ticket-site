@@ -411,6 +411,7 @@
         autoCupomDispensado:false,
         accessGrant:'',
         privateFlow:false,
+        politicaComercialAtiva:false,
         feePreview:null,
         feeBusy:false,
         feeReady:false,
@@ -591,6 +592,11 @@
               return;
             }
             state.catalog=res;
+            state.politicaComercialAtiva=
+              !!(
+                res.politicaComercial &&
+                res.politicaComercial.ativa === true
+              );
             renderCatalog();
             registrarAcessoCampanha();
             var recovery=readRecovery();
@@ -814,13 +820,28 @@
 
       function atualizarTaxa(valorIngressos,precoUnitario,quantidadeVendas){
         var seq=++state.feeSeq;
-        state.feeBusy=true;
-        state.feeReady=false;
 
         if(state.feeTimer){
           clearTimeout(state.feeTimer);
           state.feeTimer=null;
         }
+
+        /*
+         * Rollout inativo = caminho legado sem RPC adicional.
+         * O backend continua autoritativo e, quando o Master ativar a politica,
+         * o proprio catalogo muda de revisao e habilita o preview abaixo.
+         */
+        if(!state.politicaComercialAtiva){
+          state.feeBusy=false;
+          state.feeReady=true;
+          state.feePreview=null;
+          el.feeSummary.classList.add('hidden');
+          el.summaryPrice.textContent=money(valorIngressos||0);
+          return;
+        }
+
+        state.feeBusy=true;
+        state.feeReady=false;
 
         /*
          * Preview e apenas UX; o backend recalcula o valor autoritativo no pagamento.
