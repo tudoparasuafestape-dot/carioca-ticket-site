@@ -412,6 +412,31 @@ requireAll('cupons/admin/index.html',cuponsAdmin,[
   'href="/produtor/"'
 ]);
 
+const cortesias=read('produtor/cortesias/index.html');
+requireAll('produtor/cortesias/index.html',cortesias,[
+  'Cortesias do evento',
+  'ctCortesiasCarregarPROD',
+  'ctCortesiasSalvarConfigPROD',
+  'ctCortesiasEmitirPROD',
+  'ctCortesiasCancelarPROD',
+  'chaveIdempotencia',
+  'consome capacidade',
+  'não gera pagamento, taxa Carioca Ticket, comissão ou faturamento',
+  'reconciliacao',
+  'valorCobradoCortesiaNumero',
+  '/produtor/convidados/?evento=',
+  'sig=ASSINADA'
+].filter(x=>x!=='sig=ASSINADA'));
+if(!cortesias.includes("state.issueKey='CRTUI-'")){
+  failures.push('produtor/cortesias/index.html: emissão sem chave idempotente da interface');
+}
+if(!cortesias.includes("state.issueBusy")){
+  failures.push('produtor/cortesias/index.html: emissão sem trava de duplo clique');
+}
+if(!cortesias.includes("reconciliacao.consistente!==true")){
+  failures.push('produtor/cortesias/index.html: emissão não bloqueia divergência de reconciliação');
+}
+
 const produtor=read('produtor/index.html');
 requireLink('produtor/index.html',produtor,'partnerPortalLink','/parceiro/');
 requireLink('produtor/index.html',produtor,'partnerAdminLink','/parceiro/admin/');
@@ -419,7 +444,9 @@ requireLink('produtor/index.html',produtor,'backofficeMasterLink','/backoffice/'
 requireAll('produtor/index.html',produtor,[
   'Portal Parceiro CT',
   'Gestão Parceiros CT',
-  'id="logoutButton"'
+  'id="logoutButton"',
+  'id="courtesyLink"',
+  'href="/produtor/cortesias/"'
 ]);
 
 
