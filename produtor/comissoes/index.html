@@ -52,6 +52,7 @@
 
 <div id="message" class="message"></div>
 <section id="content" class="hidden">
+  <div id="privateLinkNote" class="note hidden" style="margin-bottom:14px"><b>Evento privado:</b> links públicos de promotor ficam desabilitados para não contornar a lista individual de convidados. As regras e o acompanhamento de comissões continuam disponíveis para vendas próprias autorizadas.</div>
   <section class="card">
     <h2>Adicionar promotor ou influenciador</h2>
     <p>A pessoa precisa possuir uma conta Carioca Ticket. O vínculo é feito pelo e-mail e usa o perfil operacional COMISSIONADO.</p>
@@ -176,6 +177,7 @@ function card(p){
 }
 function render(){
   $('content').classList.remove('hidden');
+  $('privateLinkNote').classList.toggle('hidden',!(state.data&&state.data.linkOnlinePermitido===false));
   var list=state.data&&state.data.comissionados||[];
   $('people').innerHTML=list.map(card).join('')||'<div class="note">Ainda não há usuários COMISSIONADOS vinculados a este produtor.</div>';
   document.querySelectorAll('[data-channel]').forEach(b=>b.onclick=()=>openChannel(b.dataset.channel));
