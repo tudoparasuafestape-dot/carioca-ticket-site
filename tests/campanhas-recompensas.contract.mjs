@@ -39,6 +39,7 @@ need('produtor/campanhas/index.html',producer,[
 ]);
 
 need('campanha/index.html',publicPage,[
+  "'ctMinhaCariocaAction','publicRpc'",
   'ctCampanhasRecompensasPublicoCarregarPROD',
   'ctCampanhasRecompensasPublicoParticiparPROD',
   'trafficSession()',
