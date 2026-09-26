@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+<title>Campanhas Promocionais | Carioca Ticket</title>
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+<link rel="manifest" href="/manifest-produtor.webmanifest">
+<script src="/pwa-register.js" defer></script>
+<style>
+:root{--bg:#080a0e;--card:#11151c;--card2:#171c24;--line:#29313c;--gold:#e8b34b;--gold2:#f3cb72;--text:#f4f4f4;--muted:#a0a9b6;--ok:#55c789;--bad:#ef6464;--blue:#65a7ff}
+*{box-sizing:border-box}.hidden{display:none!important}body{margin:0;min-height:100vh;background:radial-gradient(circle at 88% 0,rgba(232,179,75,.14),transparent 25%),linear-gradient(180deg,#090b0f,#07090c 76%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}
+.top{position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line);background:rgba(8,10,14,.95);backdrop-filter:blur(12px)}.topin,.wrap{width:min(1220px,calc(100% - 28px));margin:auto}.topin{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:10px}.brand img{width:43px;height:43px;object-fit:contain}.brand b{display:block}.brand small{display:block;color:var(--muted);font-size:10px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{min-height:42px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--text);padding:0 13px;font-weight:850;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}.btn.gold{border-color:rgba(232,179,75,.46);background:linear-gradient(135deg,rgba(232,179,75,.16),rgba(232,179,75,.07));color:var(--gold2)}.btn.danger{border-color:rgba(239,100,100,.38);color:#ffb8b8}.btn:disabled{opacity:.45;cursor:not-allowed}
+.wrap{padding:28px 0 60px}.hero{border:1px solid rgba(232,179,75,.28);background:linear-gradient(135deg,rgba(232,179,75,.11),rgba(17,21,28,.97) 44%);border-radius:23px;padding:23px;margin-bottom:16px}.ey{color:var(--gold2);font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.hero h1{font-size:clamp(30px,5vw,46px);line-height:1.05;margin:8px 0}.hero p{margin:0;color:var(--muted);line-height:1.55;max-width:920px}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:16px}.step{border:1px solid var(--line);border-radius:13px;padding:11px;background:rgba(10,13,18,.72)}.step b{display:block;font-size:12px}.step span{display:block;color:var(--muted);font-size:10px;margin-top:4px;line-height:1.4}
+.selectors{display:grid;grid-template-columns:1fr 1.4fr auto auto;gap:10px;border:1px solid var(--line);background:var(--card);padding:14px;border-radius:17px;margin-bottom:14px}.field label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:850;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;min-height:45px;border:1px solid var(--line);border-radius:11px;background:#0c1016;color:var(--text);padding:10px 12px;outline:none}.field textarea{min-height:90px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.message{display:none;padding:12px 14px;border-radius:12px;margin-bottom:14px;font-size:12px;line-height:1.5}.message.show{display:block}.message.ok{border:1px solid rgba(85,199,137,.35);background:rgba(85,199,137,.09);color:#bcf2d4}.message.error{border:1px solid rgba(239,100,100,.35);background:rgba(239,100,100,.09);color:#ffc0c0}.message.info{border:1px solid rgba(101,167,255,.3);background:rgba(101,167,255,.08);color:#b6d5ff}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;min-width:0}.grid>*{min-width:0}.card{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:18px;margin-bottom:14px;min-width:0}.card h2,.card h3{margin:0 0 6px}.card p{color:var(--muted);font-size:11px;line-height:1.55;margin:0 0 12px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.check{display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--muted)}.check input{width:18px;height:18px}
+.campaigns{display:grid;gap:10px}.campaign{border:1px solid var(--line);background:var(--card2);border-radius:15px;padding:14px}.campaignHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.campaign h3{margin:0}.campaign small{color:var(--muted)}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.tag{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:4px 7px;font-size:9px;font-weight:850}.tag.ok{color:#baf0d1;border-color:#285d41}.tag.warn{color:#f4d58b;border-color:#6a5629}.tag.bad{color:#ffc0c0;border-color:#643038}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:11px 0}.metric{border:1px solid var(--line);border-radius:10px;padding:9px}.metric small{display:block;color:var(--muted);font-size:8px;text-transform:uppercase}.metric b{display:block;font-size:15px;margin-top:4px}.campaignActions{display:flex;gap:6px;flex-wrap:wrap}
+.tablewrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch}.tablewrap table{width:100%;border-collapse:collapse;min-width:980px}.tablewrap th,.tablewrap td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:11px;vertical-align:top}.tablewrap th{color:var(--muted);text-transform:uppercase;font-size:9px}.rowactions{display:flex;gap:5px;flex-wrap:wrap}.rowactions .btn{min-height:34px;padding:0 9px;font-size:10px}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(4,5,8,.78);display:none;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.dialog{width:min(860px,100%);max-height:92vh;overflow:auto;background:#0d1117;border:1px solid var(--line);border-radius:19px;padding:20px}.dialogHead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:15px}.dialogHead h2{margin:0}.note{border:1px solid rgba(232,179,75,.25);background:rgba(232,179,75,.07);border-radius:12px;padding:12px;color:#f3dfb1;font-size:11px;line-height:1.5}
+.loading{position:fixed;inset:0;z-index:70;background:rgba(6,8,11,.74);display:none;place-items:center}.loading.show{display:grid}.loader{border:1px solid var(--line);background:var(--card);padding:18px 22px;border-radius:15px;color:var(--muted);font-size:12px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.selectors{grid-template-columns:1fr 1fr}.selectors .btn{grid-column:auto}.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){html,body{max-width:100%;overflow-x:hidden}.topin{flex-direction:column;align-items:stretch;padding:9px 0}.actions{display:grid;grid-template-columns:1fr 1fr}.selectors,.formgrid{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.full,.selectors .btn{grid-column:auto}.metrics{grid-template-columns:1fr 1fr}.campaignHead{display:block}.campaignHead .tag{margin-top:8px}.tablewrap{max-width:calc(100vw - 64px)}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket"><div><b>Campanhas Promocionais</b><small>Portal do Produtor</small></div></div><div class="actions"><a class="btn" href="/produtor/">Voltar ao Portal</a><a class="btn" href="/produtor/cortesias/">Cortesias</a><button id="refreshButton" class="btn gold" type="button">Atualizar</button></div></div></header>
+
+<main class="wrap">
+<section class="hero">
+  <div class="ey">Motor de campanhas</div>
+  <h1>Campanhas com recompensa</h1>
+  <p>Crie ações promocionais que terminam em uma recompensa real. A primeira recompensa integrada é a Cortesia Carioca Ticket, emitida com QR Code, capacidade e relatórios do mesmo motor operacional.</p>
+  <div class="flow">
+    <div class="step"><b>1. Crie a campanha</b><span>Defina regra, período, prêmio e limite.</span></div>
+    <div class="step"><b>2. Compartilhe o link</b><span>WhatsApp, Instagram, tráfego pago ou outro canal.</span></div>
+    <div class="step"><b>3. Valide a participação</b><span>Automática nos 1ºs elegíveis ou manual pelo produtor.</span></div>
+    <div class="step"><b>4. Entregue a cortesia</b><span>Ingresso com QR Code e relatório separado de vendas.</span></div>
+  </div>
+</section>
+
+<section class="selectors">
+  <div class="field"><label for="producerSelect">Produtor</label><select id="producerSelect"></select></div>
+  <div class="field"><label for="eventSelect">Evento</label><select id="eventSelect"></select></div>
+  <button id="loadButton" class="btn" type="button">Carregar</button>
+  <button id="newButton" class="btn gold" type="button">+ Nova campanha</button>
+</section>
+
+<div id="message" class="message"></div>
+
+<section id="content" class="hidden">
+<div class="grid">
+  <div>
+    <section class="card"><h2>Campanhas do evento</h2><p>Campanhas de recompensa não alteram preço nem passam pelo checkout pago.</p><div id="campaignList" class="campaigns"></div></section>
+  </div>
+  <aside>
+    <section class="card"><h3>Regras desta versão</h3><div class="note"><b>Automática:</b> ideal para “os primeiros N ganham”.<br><br><b>Manual:</b> ideal quando existe uma ação externa que o produtor precisa conferir, como postagem, marcação ou outra comprovação.<br><br>Evento privado continua usando o fluxo de Convidados + Cortesias, sem burlar convite individual.</div></section>
+    <section class="card"><h3>Integração financeira</h3><p>A recompensa em Cortesia:</p><div class="tags"><span class="tag ok">R$ 0 receita</span><span class="tag ok">R$ 0 taxa</span><span class="tag ok">R$ 0 comissão</span><span class="tag warn">Consome capacidade</span></div></section>
+  </aside>
+</div>
+
+<section id="participantsCard" class="card hidden">
+  <h2>Participações — <span id="participantsCampaignName"></span></h2>
+  <p>Dados sensíveis não são expostos; o produtor vê apenas informações mascaradas necessárias para a gestão.</p>
+  <div class="tablewrap"><table><thead><tr><th>Participante</th><th>Contato</th><th>Prova</th><th>Status</th><th>Ingresso</th><th>Ações</th></tr></thead><tbody id="participantsRows"></tbody></table></div>
+</section>
+</section>
+</main>
+
+<div id="campaignModal" class="modal"><div class="dialog"><div class="dialogHead"><h2 id="modalTitle">Nova campanha</h2><button id="closeModal" class="btn" type="button">Fechar</button></div>
+  <div class="formgrid">
+    <input id="rewardId" type="hidden">
+    <div class="field full"><label for="campaignName">Nome público da campanha</label><input id="campaignName" maxlength="220" placeholder="Ex.: 100 cortesias — Eu vou!"></div>
+    <div class="field full"><label for="campaignDescription">Descrição / instruções públicas</label><textarea id="campaignDescription" maxlength="1200" placeholder="Explique de forma simples o que a pessoa precisa fazer e qual prêmio receberá."></textarea></div>
+    <div class="field"><label for="campaignCode">Código interno/divulgação</label><input id="campaignCode" maxlength="80" placeholder="EUVOUSAMBA"></div>
+    <div class="field"><label for="validationMode">Validação</label><select id="validationMode"><option value="AUTO_CLAIM">Automática — primeiros elegíveis</option><option value="MANUAL">Manual — produtor aprova</option></select></div>
+    <div class="field"><label for="typeSelect">Tipo de ingresso da cortesia</label><select id="typeSelect"></select></div>
+    <div class="field"><label for="lotSelect">Lote da cortesia</label><select id="lotSelect"></select></div>
+    <div class="field"><label for="rewardQty">Ingressos por premiado</label><input id="rewardQty" type="number" min="1" max="20" value="1"></div>
+    <div class="field"><label for="totalLimit">Total de premiados</label><input id="totalLimit" type="number" min="1" max="100000" value="100"></div>
+    <div class="field"><label for="personLimit">Limite por pessoa</label><input id="personLimit" type="number" min="1" value="1"></div>
+    <div class="field"><label for="startAt">Início</label><input id="startAt" type="datetime-local"></div>
+    <div class="field"><label for="endAt">Fim</label><input id="endAt" type="datetime-local"></div>
+    <div class="field full"><label for="proofLabel">O que pedir como comprovação? (opcional)</label><input id="proofLabel" maxlength="220" placeholder="Ex.: informe seu @ do Instagram ou cole o link da publicação"></div>
+    <div class="field full"><label for="ctaText">Texto do botão público</label><input id="ctaText" maxlength="100" value="Quero participar"></div>
+    <div class="field full"><label class="check"><input id="activateNow" type="checkbox"> Ativar/agendar a campanha ao salvar</label></div>
+  </div>
+  <div class="note" style="margin-top:12px">A campanha automática entrega a cortesia imediatamente enquanto houver prêmio disponível. A campanha manual apenas registra a participação; a cortesia só é emitida após sua aprovação.</div>
+  <button id="saveButton" class="btn gold" type="button" style="width:100%;margin-top:14px">Salvar campanha</button>
+</div></div>
+
+<div id="loading" class="loading"><div class="loader">Processando campanha...</div></div>
+
+<script>
+(function(){
+'use strict';
+var APP_PROD='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var APP_DEV='https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
+var APP=/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname)?APP_PROD:APP_DEV;
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var pending={};
+var state={session:null,produtores:[],produtor:null,evento:null,data:null,selected:null,participantsRewardId:''};
+
+function $(id){return document.getElementById(id)}
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){return new Promise(function(resolve,reject){var id='CTCMP-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name='ctcmp_'+id.replace(/[^A-Za-z0-9_]/g,''),frame=document.createElement('iframe'),form=document.createElement('form');frame.name=name;frame.style.display='none';form.method='POST';form.action=APP;form.target=name;form.style.display='none';function add(k,v){var i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v==null?'':v);form.appendChild(i)}add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));document.body.append(frame,form);pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},90000)};form.submit()})}
+window.addEventListener('message',function(ev){if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;var x=ev.data;if(!x||x.ctMinhaCariocaPost!==true||!x.id||!pending[x.id])return;var p=cleanup(x.id);if(!p)return;x.ok===true?p.resolve(x.resultado):p.reject(new Error(String(x.erro||'Não foi possível concluir a operação.')))});
+function message(text,kind){var e=$('message');e.textContent=text||'';e.className='message '+(kind||'');e.classList.toggle('show',!!text)}
+function loading(on){$('loading').classList.toggle('show',!!on)}
+function query(name){return String(new URL(location.href).searchParams.get(name)||'').trim()}
+function publicLink(id){return location.origin+'/campanha/?id='+encodeURIComponent(id)}
+function statusTag(status){status=String(status||'').toUpperCase();var c=['ATIVA','PREMIADA'].includes(status)?'ok':['PAUSADA','RASCUNHO','AGENDADA','AGUARDANDO_VALIDACAO','EMISSAO_PENDENTE'].includes(status)?'warn':'bad';return'<span class="tag '+c+'">'+esc(status.replace(/_/g,' '))+'</span>'}
+function fillProducers(){ $('producerSelect').innerHTML=state.produtores.map(function(p){return'<option value="'+esc(p.id)+'">'+esc(p.nomeFantasia||p.responsavelNome||p.nome||p.id)+'</option>'}).join('');state.produtor=state.produtores[0]||null;fillEvents()}
+function fillEvents(){var ev=state.produtor&&Array.isArray(state.produtor.eventos)?state.produtor.eventos:[];$('eventSelect').innerHTML=ev.map(function(e){return'<option value="'+esc(e.id||e.eventoId)+'">'+esc(e.nome||e.eventoNome||e.id)+'</option>'}).join('');var wanted=query('evento');state.evento=ev.find(function(e){return String(e.id||e.eventoId)===wanted})||ev[0]||null;if(state.evento)$('eventSelect').value=String(state.evento.id||state.evento.eventoId)}
+function lotForType(){var data=state.data||{},type=$('typeSelect').value,lots=(data.lotes||[]).filter(function(x){return String(x.tipoId||'')===String(type)});$('lotSelect').innerHTML=lots.map(function(l){return'<option value="'+esc(l.id)+'">'+esc(l.nome||l.id)+' · '+money(l.precoNumero)+'</option>'}).join('')}
+function openModal(c){state.selected=c||null;$('modalTitle').textContent=c?'Editar campanha':'Nova campanha';$('rewardId').value=c&&c.recompensaId||'';$('campaignName').value=c&&c.nome||'';$('campaignDescription').value=c&&c.descricao||'';$('campaignCode').value=c&&c.codigo||'';$('validationMode').value=c&&c.modoValidacao||'AUTO_CLAIM';$('rewardQty').value=c&&c.quantidadeVendas||1;$('totalLimit').value=c&&c.limiteTotalPremios||100;$('personLimit').value=c&&c.limitePorPessoa||1;$('startAt').value=toLocal(c&&c.inicioEm);$('endAt').value=toLocal(c&&c.fimEm);$('proofLabel').value=c&&c.requisitos&&c.requisitos.provaRotulo||'';$('ctaText').value=c&&c.ctaTexto||'Quero participar';$('activateNow').checked=!!(c&&['ATIVA','AGENDADA'].includes(c.status));fillTypeOptions(c&&c.tipoId,c&&c.loteId);$('campaignModal').classList.add('show')}
+function closeModal(){$('campaignModal').classList.remove('show')}
+function toLocal(v){if(!v)return'';var d=new Date(v);if(isNaN(d.getTime()))return'';var z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes())}
+function fillTypeOptions(typeId,lotId){var d=state.data||{};$('typeSelect').innerHTML=(d.tipos||[]).filter(function(x){return String(x.status||'').toUpperCase()==='ATIVO'}).map(function(t){return'<option value="'+esc(t.id)+'">'+esc(t.nome||t.id)+'</option>'}).join('');if(typeId)$('typeSelect').value=typeId;lotForType();if(lotId)$('lotSelect').value=lotId}
+function campaignCard(c){
+  var m=c.metricas||{},traf=m.trafego||{},link=publicLink(c.recompensaId);
+  var canPause=['ATIVA','AGENDADA'].includes(c.status);
+  var canActivate=['RASCUNHO','PAUSADA','AGENDADA'].includes(c.status);
+  var clicks=Number(traf.cliques||0);
+  var conversion=clicks>0?Math.min(100,(Number(m.premiadas||0)/clicks)*100):0;
+  return '<article class="campaign"><div class="campaignHead"><div><h3>'+esc(c.nome)+'</h3><small>'+esc(c.descricao||'')+'</small></div>'+statusTag(c.status)+'</div>'+
+    '<div class="tags"><span class="tag">'+(c.modoValidacao==='AUTO_CLAIM'?'Automática':'Validação manual')+'</span><span class="tag">'+Number(c.quantidadeVendas||1)+' ingresso(s) por premiado</span></div>'+
+    '<div class="metrics"><div class="metric"><small>Participações</small><b>'+Number(m.participacoes||0)+'</b></div><div class="metric"><small>Premiadas</small><b>'+Number(m.premiadas||0)+'</b></div><div class="metric"><small>Cliques no link</small><b>'+clicks+'</b></div><div class="metric"><small>Conversão prêmio/clique</small><b>'+conversion.toFixed(1)+'%</b></div><div class="metric"><small>Disponíveis</small><b>'+Number(c.disponiveis||0)+'</b></div><div class="metric"><small>Valor nominal</small><b>'+money(m.valorNominalTotal||0)+'</b></div></div>'+
+    '<div class="campaignActions"><button class="btn" data-edit="'+esc(c.recompensaId)+'">Editar</button><button class="btn" data-parts="'+esc(c.recompensaId)+'">Participações</button><button class="btn" data-copy="'+esc(link)+'" data-campaign="'+esc(c.campanhaId)+'">Copiar link</button><button class="btn" data-wa="'+esc(link)+'" data-name="'+esc(c.nome)+'" data-campaign="'+esc(c.campanhaId)+'">WhatsApp</button>'+
+    (canPause?'<button class="btn" data-status="'+esc(c.recompensaId)+'" data-action="PAUSAR">Pausar</button>':'')+
+    (canActivate?'<button class="btn gold" data-status="'+esc(c.recompensaId)+'" data-action="ATIVAR">Ativar</button>':'')+
+    (c.status!=='ENCERRADA'?'<button class="btn danger" data-status="'+esc(c.recompensaId)+'" data-action="ENCERRAR">Encerrar</button>':'')+
+    '</div></article>';
+}
+function render(){
+  var d=state.data||{},list=d.recompensas||[];
+  $('content').classList.remove('hidden');
+  $('campaignList').innerHTML=list.map(campaignCard).join('')||'<div class="note">Nenhuma campanha com recompensa criada para este evento.</div>';
+  document.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){openModal(list.find(function(x){return x.recompensaId===b.dataset.edit}))}});
+  document.querySelectorAll('[data-parts]').forEach(function(b){b.onclick=function(){loadParticipants(b.dataset.parts)}});
+  document.querySelectorAll('[data-copy]').forEach(function(b){b.onclick=async function(){
+    try{
+      await navigator.clipboard.writeText(b.dataset.copy);
+      await trackShare(b.dataset.campaign,'LINK');
+      message('Link público copiado.','ok');
+    }catch(_){message('Não foi possível copiar automaticamente.','error')}
+  }});
+  document.querySelectorAll('[data-wa]').forEach(function(b){b.onclick=async function(){
+    await trackShare(b.dataset.campaign,'WHATSAPP');
+    var texto='Participe da campanha '+b.dataset.name+' da Carioca Ticket: '+b.dataset.wa;
+    window.open('https://wa.me/?text='+encodeURIComponent(texto),'_blank','noopener');
+  }});
+  document.querySelectorAll('[data-status]').forEach(function(b){b.onclick=function(){changeStatus(b.dataset.status,b.dataset.action)}});
+}
+async function trackShare(campanhaId,acao){
+  if(!state.evento||!campanhaId)return;
+  try{
+    var eventId=String(state.evento.id||state.evento.eventoId||'');
+    await rpc('ctCuponsCampanhasRegistrarCompartilhamentoPROD',[state.session.token,eventId,campanhaId,acao]);
+  }catch(_){}
+}
+async function load(){if(!state.evento)return;loading(true);try{var id=String(state.evento.id||state.evento.eventoId||''),r=await rpc('ctCampanhasRecompensasListarPROD',[state.session.token,id]);if(!r||r.sucesso!==true)throw new Error('Não foi possível carregar as campanhas.');state.data=r;render();message('Campanhas carregadas.','ok')}catch(e){message(e.message||String(e),'error');$('content').classList.add('hidden')}finally{loading(false)}}
+async function save(){if(!state.evento)return;var payload={recompensaId:$('rewardId').value.trim(),nome:$('campaignName').value.trim(),descricao:$('campaignDescription').value.trim(),codigo:$('campaignCode').value.trim(),modoValidacao:$('validationMode').value,tipoId:$('typeSelect').value,loteId:$('lotSelect').value,quantidadeVendas:Number($('rewardQty').value||1),limiteTotalPremios:Number($('totalLimit').value||0),limitePorPessoa:Number($('personLimit').value||1),inicioEm:$('startAt').value||'',fimEm:$('endAt').value||'',requisitos:{provaRotulo:$('proofLabel').value.trim(),provaObrigatoria:$('validationMode').value==='MANUAL'&&!!$('proofLabel').value.trim()},ctaTexto:$('ctaText').value.trim(),ativar:$('activateNow').checked};if(!payload.nome||!payload.descricao||!payload.codigo||!payload.tipoId||!payload.loteId){message('Preencha nome, descrição, código, tipo e lote.','error');return}loading(true);try{var eventId=String(state.evento.id||state.evento.eventoId||''),r=await rpc('ctCampanhasRecompensasSalvarPROD',[state.session.token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar.');closeModal();message('Campanha salva com sucesso.','ok');await load()}catch(e){message(e.message||String(e),'error')}finally{loading(false)}}
+async function changeStatus(id,action){if(action==='ENCERRAR'&&!confirm('Encerrar definitivamente esta campanha?'))return;loading(true);try{var eventId=String(state.evento.id||state.evento.eventoId||''),r=await rpc('ctCampanhasRecompensasAlterarStatusPROD',[state.session.token,eventId,id,action]);if(!r||r.sucesso!==true)throw new Error('Não foi possível alterar o status.');message('Status atualizado.','ok');await load()}catch(e){message(e.message||String(e),'error')}finally{loading(false)}}
+async function loadParticipants(id){state.participantsRewardId=id;loading(true);try{var eventId=String(state.evento.id||state.evento.eventoId||''),r=await rpc('ctCampanhasRecompensasParticipacoesPROD',[state.session.token,eventId,id]);if(!r||r.sucesso!==true)throw new Error('Não foi possível carregar participantes.');$('participantsCard').classList.remove('hidden');$('participantsCampaignName').textContent=r.recompensa.nome;renderParticipants(r.participacoes||[]);$('participantsCard').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){message(e.message||String(e),'error')}finally{loading(false)}}
+function renderParticipants(rows){$('participantsRows').innerHTML=rows.map(function(p){var proof=p.prova&&p.prova.texto||'';var links=(p.ingressos||[]).map(function(i){return i.link?'<a href="'+esc(i.link)+'" target="_blank" rel="noopener">'+esc(i.codigo||'Ingresso')+'</a>':esc(i.codigo||'')}).join('<br>');var actions='';if(p.status==='AGUARDANDO_VALIDACAO'){actions='<button class="btn gold" data-approve="'+esc(p.participacaoId)+'">Aprovar</button><button class="btn danger" data-reject="'+esc(p.participacaoId)+'">Reprovar</button>'}if(p.status==='EMISSAO_PENDENTE'){actions='<button class="btn" data-retry="'+esc(p.participacaoId)+'">Reprocessar emissão</button>'}return'<tr><td><b>'+esc(p.nome)+'</b><br><small>'+esc(p.criadoEm||'')+'</small></td><td>'+esc(p.whatsapp||'')+'<br>'+esc(p.email||'')+'</td><td>'+esc(proof||'—')+'</td><td>'+statusTag(p.status)+(p.ultimoErro?'<br><small>'+esc(p.ultimoErro)+'</small>':'')+'</td><td>'+links+'</td><td><div class="rowactions">'+actions+'</div></td></tr>'}).join('')||'<tr><td colspan="6">Nenhuma participação registrada.</td></tr>';document.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>validatePart(b.dataset.approve,'APROVAR'));document.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>validatePart(b.dataset.reject,'REPROVAR'));document.querySelectorAll('[data-retry]').forEach(b=>b.onclick=()=>retryPart(b.dataset.retry))}
+async function validatePart(id,action){var motivo=action==='REPROVAR'?prompt('Motivo da reprovação:'):'Aprovada pelo produtor';if(action==='REPROVAR'&&!motivo)return;loading(true);try{var eventId=String(state.evento.id||state.evento.eventoId||''),r=await rpc('ctCampanhasRecompensasValidarPROD',[state.session.token,eventId,id,action,motivo]);if(!r||r.sucesso!==true)throw new Error('Não foi possível validar a participação.');message(action==='APROVAR'?'Participação aprovada.':'Participação reprovada.','ok');await load();if(state.participantsRewardId)await loadParticipants(state.participantsRewardId)}catch(e){message(e.message||String(e),'error')}finally{loading(false)}}
+async function retryPart(id){loading(true);try{var eventId=String(state.evento.id||state.evento.eventoId||''),r=await rpc('ctCampanhasRecompensasReprocessarPROD',[state.session.token,eventId,id]);if(!r||r.sucesso!==true)throw new Error('Não foi possível reprocessar.');message('Reprocessamento concluído.','ok');await load();if(state.participantsRewardId)await loadParticipants(state.participantsRewardId)}catch(e){message(e.message||String(e),'error')}finally{loading(false)}}
+async function boot(){state.session=readSession();if(!state.session){location.replace('/produtor/');return}loading(true);try{var r=await rpc('ctPortalProdutorRestaurarSessaoIsoladaPROD',[state.session.token]);if(!r||r.autenticado!==true){location.replace('/produtor/');return}state.produtores=Array.isArray(r.produtores)?r.produtores:[];if(!state.produtores.length)throw new Error('Nenhum produtor autorizado foi encontrado.');fillProducers();if(state.evento)await load()}catch(e){message(e.message||String(e),'error')}finally{loading(false)}}
+
+$('producerSelect').onchange=function(){state.produtor=state.produtores.find(p=>String(p.id)===String($('producerSelect').value))||null;fillEvents();load()};$('eventSelect').onchange=function(){var ev=state.produtor&&Array.isArray(state.produtor.eventos)?state.produtor.eventos:[];state.evento=ev.find(e=>String(e.id||e.eventoId)===String($('eventSelect').value))||null;load()};$('loadButton').onclick=load;$('refreshButton').onclick=load;$('newButton').onclick=function(){openModal(null)};$('closeModal').onclick=closeModal;$('saveButton').onclick=save;$('typeSelect').onchange=lotForType;$('campaignModal').addEventListener('click',function(e){if(e.target===$('campaignModal'))closeModal()});
+boot();
+}());
+</script>
+</body>
+</html>

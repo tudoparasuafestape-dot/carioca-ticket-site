@@ -437,6 +437,63 @@ if(!cortesias.includes("reconciliacao.consistente!==true")){
   failures.push('produtor/cortesias/index.html: emissão não bloqueia divergência de reconciliação');
 }
 
+// CAMPANHAS COM RECOMPENSA — gestão do produtor e participação pública
+// devem permanecer separadas do checkout e reaproveitar o motor de Cortesias.
+const campanhasProdutor=read('produtor/campanhas/index.html');
+requireAll('produtor/campanhas/index.html',campanhasProdutor,[
+  'Campanhas com recompensa',
+  'ctCampanhasRecompensasListarPROD',
+  'ctCampanhasRecompensasSalvarPROD',
+  'ctCampanhasRecompensasAlterarStatusPROD',
+  'ctCampanhasRecompensasParticipacoesPROD',
+  'ctCampanhasRecompensasValidarPROD',
+  'ctCampanhasRecompensasReprocessarPROD',
+  'ctCuponsCampanhasRegistrarCompartilhamentoPROD',
+  'Automática — primeiros elegíveis',
+  'Manual — produtor aprova',
+  'Evento privado continua usando o fluxo de Convidados + Cortesias',
+  '/campanha/?id=',
+  'Valor nominal'
+]);
+for(const proibido of [
+  'ctCheckoutPixPublico',
+  'ctAsaas',
+  'criarCobranca'
+]){
+  if(campanhasProdutor.includes(proibido)){
+    failures.push('produtor/campanhas/index.html: gestão de recompensa não pode acionar checkout/pagamento -> '+proibido);
+  }
+}
+
+const campanhaPublica=read('campanha/index.html');
+requireAll('campanha/index.html',campanhaPublica,[
+  'Campanha Promocional | Carioca Ticket',
+  'carioca-ticket-preview-oficial-v9.jpg',
+  'ctCampanhasRecompensasPublicoCarregarPROD',
+  'ctCampanhasRecompensasPublicoParticiparPROD',
+  'trafficSession()',
+  'trafficOrigin()',
+  'chaveIdempotencia:key()',
+  'participou===false',
+  'AGUARDANDO_VALIDACAO',
+  'EMISSAO_PENDENTE',
+  'PREMIADA',
+  'Uma participação não representa compra e não gera cobrança.'
+]);
+for(const proibido of [
+  'ctCheckoutPixPublico',
+  'ctAsaas',
+  'criarCobranca',
+  '/checkout/'
+]){
+  if(campanhaPublica.includes(proibido)){
+    failures.push('campanha/index.html: participação pública não pode criar jornada de compra -> '+proibido);
+  }
+}
+if(!campanhaPublica.includes('id="whatsapp"')){
+  failures.push('campanha/index.html: WhatsApp obrigatório da participação ausente');
+}
+
 const produtor=read('produtor/index.html');
 requireLink('produtor/index.html',produtor,'partnerPortalLink','/parceiro/');
 requireLink('produtor/index.html',produtor,'partnerAdminLink','/parceiro/admin/');
@@ -446,7 +503,9 @@ requireAll('produtor/index.html',produtor,[
   'Gestão Parceiros CT',
   'id="logoutButton"',
   'id="courtesyLink"',
-  'href="/produtor/cortesias/"'
+  'href="/produtor/cortesias/"',
+  'id="campaignsLink"',
+  'href="/produtor/campanhas/"'
 ]);
 
 

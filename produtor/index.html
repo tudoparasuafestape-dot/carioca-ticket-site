@@ -1405,6 +1405,14 @@ target="_top"
 Cortesias
 </a>
 <a
+id="campaignsLink"
+class="ghost hidden"
+href="/produtor/campanhas/"
+target="_top"
+>
+Campanhas
+</a>
+<a
 id="commercialPolicyLink"
 class="ghost hidden"
 href="/produtor/politica-comercial/"
@@ -2122,6 +2130,7 @@ function iniciar(){
 'accessManagementLink',
 'cariocaPayLink',
 'courtesyLink',
+'campaignsLink',
 'commercialPolicyLink',
 'partnerPortalLink',
 'partnerAdminLink',
@@ -4232,6 +4241,11 @@ perfil === 'PRODUTOR_TITULAR'
 );
 
 el.courtesyLink.classList.toggle(
+'hidden',
+!podeCortesias
+);
+
+el.campaignsLink.classList.toggle(
 'hidden',
 !podeCortesias
 );
