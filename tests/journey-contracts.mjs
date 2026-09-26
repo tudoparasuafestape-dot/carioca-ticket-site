@@ -423,6 +423,25 @@ requireAll('produtor/index.html',produtor,[
 ]);
 
 
+const eventosProdutor=read('eventos-v2/index.html');
+requireAll('eventos-v2/index.html',eventosProdutor,[
+  "case 'ctEventosPublicacaoStatusPROD':",
+  "method:'ctEventosOperacionalStatusPublicacaoSeguraPROD'",
+  'a solicitação de autorização é criada automaticamente',
+  'Você não precisa pedir liberação em outra tela.',
+  'Ver situação e publicar',
+  'function montarMensagemSituacaoPublicacao(',
+  'function confirmarPublicacaoEvento(',
+  '.ctEventosPublicacaoStatusPROD(',
+  'A autorização já foi solicitada automaticamente',
+  'Seu evento já está em análise pela Carioca Ticket',
+  'A autorização da Carioca Ticket já foi aprovada'
+]);
+if(eventosProdutor.includes("'COM PENDÊNCIAS'")){
+  failures.push('eventos-v2/index.html: listagem rápida voltou a afirmar pendências sem validação completa');
+}
+
+
 // PERFORMANCE P0 — o Portal do Produtor não pode depender de RPC/Drive
 // para renderizar a identidade visual na tela de login.
 {

@@ -79,3 +79,102 @@ test.describe('Governança Master de eventos',()=>{
     expect(state.authorized).toBe(false);
   });
 });
+
+
+async function installProducerEventMock(page,state){
+  await page.route('https://script.google.com/**',async route=>{
+    const p=new URLSearchParams(route.request().postData()||'');
+    const id=String(p.get('ctMinhaCariocaRequestId')||'');
+    const method=String(p.get('metodo')||'');
+    let args=[];try{args=JSON.parse(p.get('argsJson')||'[]')}catch(_){}
+    let ok=true,resultado=null,erro='';
+    try{
+      if(method==='ctEventosOperacionalListarSeguraPROD'){
+        resultado={
+          sucesso:true,autenticado:true,autorizado:true,total:1,publicados:state.published?1:0,
+          eventoAtivo:null,eventoSelecionado:null,listagemRapida:true,
+          eventos:[{
+            id:'EVT-PROD-E2E',nome:'Evento do Produtor',data:'20/11/2026',horario:'18:00 - 23:00',
+            local:'Espaço Teste',cidade:'Jaboatão dos Guararapes',uf:'PE',capacidade:200,
+            status:'RASCUNHO',ativo:false,atualizadoEm:'26/09/2026 01:00',
+            publicacao:{
+              sucesso:true,eventoId:'EVT-PROD-E2E',publicado:state.published,
+              prontoPublicar:state.published,pendencias:[],checkoutUrl:'https://cariocaticket.com.br/checkout/?evento=EVT-PROD-E2E',
+              validacaoCompleta:false
+            }
+          }]
+        };
+      }else if(method==='ctEventosOperacionalStatusPublicacaoSeguraPROD'){
+        expect(String(args[0]||'')).toBe('CT-ADMIN-E2E');
+        expect(String(args[1]||'')).toBe('EVT-PROD-E2E');
+        state.statusCalls+=1;
+        resultado={
+          sucesso:true,eventoId:'EVT-PROD-E2E',publicado:state.published,
+          prontoPublicar:state.ready,
+          pendencias:state.ready?[]:[
+            'A autorização de risco/financeiro para publicação ainda está pendente.'
+          ],
+          governancaRisco:{
+            sucesso:state.ready,
+            governanca:{
+              eventoId:'EVT-PROD-E2E',
+              riscoStatus:state.ready?'APROVADO':'PENDENTE_ANALISE',
+              publicacaoAutorizada:state.ready
+            },
+            pendencias:state.ready?[]:[
+              'A autorização de risco/financeiro para publicação ainda está pendente.'
+            ]
+          },
+          checkoutUrl:'https://cariocaticket.com.br/checkout/?evento=EVT-PROD-E2E'
+        };
+      }else if(method==='ctEventosOperacionalPublicarSeguraPROD'){
+        expect(String(args[0]||'')).toBe('CT-ADMIN-E2E');
+        expect(String(args[1]||'')).toBe('EVT-PROD-E2E');
+        if(!state.ready)throw new Error('EVENTO_NAO_PRONTO_PARA_PUBLICAR');
+        state.publishCalls+=1;state.published=true;
+        resultado={sucesso:true,mensagem:'Vendas publicadas com sucesso.',publicacao:{publicado:true,prontoPublicar:true,pendencias:[]}};
+      }else{
+        throw new Error('Método não previsto no produtor: '+method);
+      }
+    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    await route.fulfill({
+      status:200,
+      contentType:'text/html; charset=utf-8',
+      body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,ok,resultado,erro)+', "*");<\/script></body></html>'
+    });
+  });
+}
+
+test.describe('Jornada do produtor até publicação',()=>{
+  test.skip(!BRANCH_MODE,'Jornada mutável roda somente na branch local simulada.');
+
+  test('evento aguardando análise informa autorização automática e não publica',async({page})=>{
+    const state={ready:false,published:false,statusCalls:0,publishCalls:0};
+    await installProducerEventMock(page,state);await seed(page);
+    const dialogs=[];
+    page.on('dialog',async dialog=>{dialogs.push(dialog.message());await dialog.dismiss()});
+    await page.goto('/eventos-v2/',{waitUntil:'domcontentloaded'});
+
+    await expect(page.getByRole('button',{name:'Ver situação e publicar'})).toBeVisible();
+    await page.getByRole('button',{name:'Ver situação e publicar'}).click();
+
+    await expect.poll(()=>state.statusCalls).toBe(1);
+    await expect.poll(()=>dialogs.join('\n')).toContain('autorização já foi solicitada automaticamente');
+    expect(state.publishCalls).toBe(0);
+  });
+
+  test('evento pronto consulta gates antes de confirmar e publicar',async({page})=>{
+    const state={ready:true,published:false,statusCalls:0,publishCalls:0};
+    await installProducerEventMock(page,state);await seed(page);
+    const dialogs=[];
+    page.on('dialog',async dialog=>{dialogs.push(dialog.message());await dialog.accept()});
+    await page.goto('/eventos-v2/',{waitUntil:'domcontentloaded'});
+
+    await page.getByRole('button',{name:'Ver situação e publicar'}).click();
+
+    await expect.poll(()=>state.statusCalls).toBe(1);
+    await expect.poll(()=>state.publishCalls).toBe(1);
+    expect(dialogs.some(x=>x.includes('Todos os requisitos foram atendidos'))).toBe(true);
+    expect(dialogs.some(x=>x.includes('Vendas publicadas com sucesso.'))).toBe(true);
+  });
+});
