@@ -24,12 +24,25 @@ const master=requireAll('backoffice/politicas-comerciais/index.html',[
   'ctPoliticaComercialMasterListarPROD',
   'ctPoliticaComercialMasterSalvarPROD',
   'ctPoliticaComercialMasterDesativarPROD',
+  'ctPoliticaComercialMasterConfigurarAtivacaoPROD',
   'ctPoliticaComercialSimularPROD',
   'movimentouDinheiro===true',
   'validFrom','validUntil','Usar como base','Desativar',
   'APP_DEV',
   'AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg'
 ]);
+
+
+for(const s of [
+  'id="activation"',
+  'id="activationStatus"',
+  'state.activation',
+  'toggleActivation',
+  'Cobrança comercial desligada',
+  'preços legados preservados'
+]){
+  if(!master.includes(s))throw new Error('Backoffice sem rollout comercial seguro: '+s);
+}
 
 const producer=requireAll('produtor/politica-comercial/index.html',[
   '<title>Política Comercial | Portal do Produtor</title>',
