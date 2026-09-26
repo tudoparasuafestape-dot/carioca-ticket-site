@@ -33,7 +33,7 @@
 <div id="gate" class="gate"><div class="gatebox"><img src="/assets/carioca-ticket-logo.png" alt=""><h1>Validando acesso</h1><p id="gateText">Conferindo sua sessão administrativa.</p></div></div>
 
 <main id="app" class="wrap hidden">
-<section class="hero"><div class="eyebrow">Gestão de produtores</div><h1>Solicitações e liberações</h1><p>Analise os dados antes de criar o produtor. A aprovação cria o produtor, vincula o titular e converte a indicação comercial pendente automaticamente.</p></section>
+<section class="hero"><div class="eyebrow">Gestão de produtores</div><h1>Solicitações e liberações</h1><p>Analise os dados antes de criar o produtor. A aprovação cria o produtor, vincula o titular, prepara organização e financeiro pendente e converte a indicação comercial pendente automaticamente. Vendas só são publicadas após o financeiro ficar pronto.</p></section>
 <section class="metrics">
  <div class="metric"><small>Enviados</small><strong id="cSent">0</strong></div>
  <div class="metric"><small>Em análise</small><strong id="cReview">0</strong></div>
@@ -111,15 +111,23 @@ async function detail(id,fromLoad){
 }
 function renderDetail(){
  var s=state.selected;if(!s)return;var st=document.getElementById('detailStatus');st.textContent=human(s.status);st.className='badge '+badgeClass(s.status);
+ var fin=s.financeiro||{};
  var data=[['Solicitação',s.solicitacaoId],['Empresa / marca',s.nomeFantasia],['Razão social',s.razaoSocial||'—'],['CPF / CNPJ',s.cpfCnpj],['Responsável',s.responsavelNome],['E-mail',s.email],['WhatsApp',s.whatsapp],['Cidade',s.cidade+' / '+s.uf],['Instagram',s.instagram||'—'],['Indicação',s.codigoIndicacao||'Sem indicação'],['Produtor ID',s.produtorId||'Ainda não criado']];
+ if(s.produtorId){
+   data.push(['Financeiro',fin.prontoParaVendas?'PRONTO PARA VENDAS':(fin.statusOnboarding||'PENDENTE')]);
+   data.push(['Recebimento',fin.recebimentoHabilitado?'HABILITADO':'BLOQUEADO']);
+ }
  var html='<h2>'+esc(s.nomeFantasia)+'</h2><div class="sub">'+esc(s.responsavelNome)+' · '+esc(s.email)+'</div><div class="data">'+data.map(function(k){return'<div class="kv"><span>'+esc(k[0])+'</span><strong>'+esc(k[1])+'</strong></div>'}).join('')+'</div>';
  if(s.pendenciaPublica)html+='<div class="note"><b>Pendência enviada:</b><br>'+esc(s.pendenciaPublica)+'</div>';
+ if(s.produtorId&&!fin.prontoParaVendas){
+   html+='<div class="note"><b>Financeiro ainda não liberado para vendas.</b><br>A conta do produtor está ativa para navegação e configuração, mas a publicação de vendas permanece bloqueada até status financeiro ATIVO, credencial validada e recebimento habilitado.<div class="actions"><a class="btn gold" href="/backoffice/carioca-pay/produtores/?produtor='+encodeURIComponent(s.produtorId)+'">Configurar financeiro</a></div></div>';
+ }
  html+='<div class="section"><h3>Histórico</h3>'+((s.historico||[]).length?(s.historico||[]).slice().reverse().map(function(h){return'<div class="history"><b>'+esc(h.de)+' → '+esc(h.para)+'</b><small>'+esc(h.em)+(h.observacao?' · '+esc(h.observacao):'')+'</small></div>'}).join(''):'<div class="empty">Sem histórico.</div>')+'</div>';
  html+='<div class="actions">'+actionsHtml(s.status)+'</div>';document.getElementById('detail').innerHTML=html;
  document.getElementById('detail').querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){openAction(String(b.dataset.action||''))})});
 }
 function actionsHtml(status){status=String(status||'').toUpperCase();if(status==='ENVIADO')return'<button class="btn gold" data-action="INICIAR_ANALISE">Iniciar análise</button>';if(status==='EM_ANALISE')return'<button class="btn" data-action="SOLICITAR_PENDENCIA">Solicitar pendência</button><button class="btn gold" data-action="APROVAR">Aprovar e ativar</button><button class="btn danger" data-action="REPROVAR">Reprovar</button>';if(status==='PENDENCIA')return'<span class="note">Aguardando o produtor reenviar os dados.</span>';if(status==='ATIVO')return'<a class="btn gold" href="/produtor/">Produtor ativo</a>';return''}
-function openAction(a){state.action=a;var titles={INICIAR_ANALISE:'Iniciar análise',SOLICITAR_PENDENCIA:'Solicitar pendência',APROVAR:'Aprovar e ativar produtor',REPROVAR:'Reprovar solicitação'};document.getElementById('actionTitle').textContent=titles[a]||'Confirmar ação';document.getElementById('actionHelp').textContent=a==='APROVAR'?'A aprovação cria o produtor, vincula o titular e processa a indicação comercial pendente.':'A decisão será registrada no histórico e auditoria.';document.getElementById('internalNote').value='';document.getElementById('publicPending').value='';document.getElementById('publicPendingField').classList.toggle('hidden',a!=='SOLICITAR_PENDENCIA');document.getElementById('actionBackdrop').classList.remove('hidden');document.getElementById('actionBackdrop').setAttribute('aria-hidden','false')}
+function openAction(a){state.action=a;var titles={INICIAR_ANALISE:'Iniciar análise',SOLICITAR_PENDENCIA:'Solicitar pendência',APROVAR:'Aprovar e ativar produtor',REPROVAR:'Reprovar solicitação'};document.getElementById('actionTitle').textContent=titles[a]||'Confirmar ação';document.getElementById('actionHelp').textContent=a==='APROVAR'?'A aprovação cria o produtor, vincula o titular, prepara organização/financeiro pendente e processa a indicação comercial. Isso não habilita vendas automaticamente.':'A decisão será registrada no histórico e auditoria.';document.getElementById('internalNote').value='';document.getElementById('publicPending').value='';document.getElementById('publicPendingField').classList.toggle('hidden',a!=='SOLICITAR_PENDENCIA');document.getElementById('actionBackdrop').classList.remove('hidden');document.getElementById('actionBackdrop').setAttribute('aria-hidden','false')}
 function closeAction(){if(state.busy)return;document.getElementById('actionBackdrop').classList.add('hidden');document.getElementById('actionBackdrop').setAttribute('aria-hidden','true');state.action=''}
 async function doAction(){
  if(!state.selected||!state.action||state.busy)return;var note=String(document.getElementById('internalNote').value||'').trim(),pub=String(document.getElementById('publicPending').value||'').trim();
@@ -128,11 +136,17 @@ async function doAction(){
  var id=state.selected.solicitacaoId;state.busy=true;document.getElementById('confirmAction').disabled=true;
  try{var r=await rpc('ctProdutorOnboardingAdminDecidirPROD',[state.session.token,id,state.action,{observacaoInterna:note,pendenciaPublica:pub}]);if(!r||r.sucesso!==true)throw new Error('A decisão não foi concluída.');
   document.getElementById('actionBackdrop').classList.add('hidden');state.action='';
-  if(r.solicitacao)reconcileDecisionState(id,r.solicitacao);
+  if(r.solicitacao){
+    if(r.financeiro)r.solicitacao.financeiro=r.financeiro;
+    reconcileDecisionState(id,r.solicitacao);
+  }
   state.busy=false;
   await load({skipDetail:true});
-  if(r.solicitacao)reconcileDecisionState(id,r.solicitacao)
-  toast(r.produtorId?'Produtor ativado e vínculo comercial processado.':'Ação concluída com auditoria.')}
+  if(r.solicitacao){
+    if(r.financeiro)r.solicitacao.financeiro=r.financeiro;
+    reconcileDecisionState(id,r.solicitacao);
+  }
+  toast(r.produtorId?'Produtor ativado. Financeiro preparado; vendas continuam bloqueadas até a configuração financeira ficar pronta.':'Ação concluída com auditoria.')}
  catch(e){toast(e&&e.message?e.message:String(e))}
  finally{state.busy=false;document.getElementById('confirmAction').disabled=false}
 }

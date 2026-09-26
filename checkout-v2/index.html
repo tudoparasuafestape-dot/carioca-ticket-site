@@ -105,7 +105,10 @@
 (function(){
   'use strict';
 
-  var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var APP_PROD='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+  var APP_DEV='https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
+  var CT_OFFICIAL_HOST=/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname);
+  var APP=CT_OFFICIAL_HOST?APP_PROD:APP_DEV;
   var pending={};
 
   function cleanup(id){
@@ -259,6 +262,13 @@
         <div><small>SEU PEDIDO</small><b id="summaryTitle">—</b><div id="summaryAccess" class="help"></div></div>
         <div style="text-align:right"><small>TOTAL</small><b id="summaryPrice">R$ 0,00</b></div>
       </div>
+      <div id="feeSummary" class="promo-summary hidden">
+        <div class="promo-line"><span>Ingressos</span><span id="feeBase">R$ 0,00</span></div>
+        <div class="promo-line"><span id="feeLabel">Taxa Carioca Ticket</span><span id="feePlatform">R$ 0,00</span></div>
+        <div id="feeAdditionalRow" class="promo-line hidden"><span>Encargos comerciais adicionais</span><span id="feeAdditional">R$ 0,00</span></div>
+        <div class="promo-line total"><span>Total a pagar</span><span id="feeTotal">R$ 0,00</span></div>
+        <div id="feeNote" class="help" style="margin-top:8px"></div>
+      </div>
       <div id="couponBox" class="coupon-box">
         <button id="couponToggle" class="coupon-toggle" type="button">Tem um cupom?</button>
         <div id="couponArea" class="hidden">
@@ -398,13 +408,24 @@
         cupomDoLink:'',
         campanhaOrigem:'',
         campanhaSessaoId:'',
-        autoCupomDispensado:false
+        autoCupomDispensado:false,
+        accessGrant:'',
+        privateFlow:false,
+        politicaComercialAtiva:false,
+        feePreview:null,
+        feeBusy:false,
+        feeReady:false,
+        feeRevision:'',
+        feeQuotedAt:0,
+        feeSeq:0,
+        feeTimer:null
       };
 
       var el={};
       [
         'loading','loadingTitle','loadingText','eventName','eventMeta','eventDescription','eventBack','checkoutCover','checkoutCoverImage','salePanel','buyerPanel','payActionPanel',
         'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',
+        'feeSummary','feeBase','feeLabel','feePlatform','feeAdditionalRow','feeAdditional','feeTotal','feeNote',
         'couponBox','couponToggle','couponArea','couponCode','couponApply','couponMessage','couponReplace','couponReplaceNo','couponReplaceYes','promoSummary','promoOriginal','promoLabel','promoDiscount','promoTotal','couponRemove',
         'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','buyerEmailLabel','buyerEmailHelp','marketing','paymentPix','paymentCard','payButton','payHelp',
         'pixPanel','pixStatus','qrImage','pixCode','copyButton','refreshButton','expiryText',
@@ -442,10 +463,14 @@
       }
 
       function getLocation(cb){
-        if(google && google.script && google.script.url && google.script.url.getLocation){
+        if(typeof google!=='undefined' && google.script && google.script.url && google.script.url.getLocation){
           google.script.url.getLocation(function(loc){cb(loc||{});});
         }else{
-          cb({parameter:{}});
+          var p={};
+          try{
+            new URLSearchParams(window.location.search).forEach(function(v,k){p[k]=v;});
+          }catch(_){}
+          cb({parameter:p});
         }
       }
 
@@ -535,6 +560,20 @@
           state.cupomDoLink=String((loc.parameter&&loc.parameter.cupom)||'').trim().toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9_-]/g,'').substring(0,80);
           state.campanhaOrigem=String((loc.parameter&&loc.parameter.src)||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').substring(0,60);
           state.campanhaSessaoId=String((loc.parameter&&loc.parameter.csid)||'').trim().replace(/[^A-Za-z0-9._:-]/g,'').substring(0,120);
+          state.privateFlow=String((loc.parameter&&loc.parameter.privado)||'').trim()==='1';
+          state.accessGrant=String((loc.parameter&&loc.parameter.accessGrant)||'').trim();
+          if(!state.accessGrant&&state.eventId){
+            try{
+              var rawGrant=sessionStorage.getItem('CT_PRIVATE_GRANT_'+state.eventId);
+              var objGrant=rawGrant?JSON.parse(rawGrant):null;
+              if(objGrant&&objGrant.grant&&(!objGrant.expiraEmEpoch||Number(objGrant.expiraEmEpoch)*1000>Date.now())){
+                state.accessGrant=String(objGrant.grant);
+                state.privateFlow=true;
+              }else if(rawGrant){
+                sessionStorage.removeItem('CT_PRIVATE_GRANT_'+state.eventId);
+              }
+            }catch(_){}
+          }
           if(state.cupomDoLink&&!state.campanhaSessaoId)state.campanhaSessaoId=campanhaSessao(state.cupomDoLink);
           if(!state.eventId){
             showClosed('O link de compra não informou qual evento deve ser aberto.');
@@ -553,6 +592,11 @@
               return;
             }
             state.catalog=res;
+            state.politicaComercialAtiva=
+              !!(
+                res.politicaComercial &&
+                res.politicaComercial.ativa === true
+              );
             renderCatalog();
             registrarAcessoCampanha();
             var recovery=readRecovery();
@@ -565,7 +609,10 @@
           .withFailureHandler(function(){
             showClosed('Não foi possível carregar a venda online agora. Tente novamente mais tarde.');
           })
-          .ctCheckoutPublicoCarregarEventoPROD(state.eventId);
+          .ctCheckoutPublicoCarregarEventoPROD(
+            state.eventId,
+            state.accessGrant
+          );
       }
 
       function showClosed(message){
@@ -594,7 +641,12 @@
         el.eventName.textContent=e.nome||'Comprar ingressos';
         el.eventMeta.textContent=[e.data,e.horario,e.local,[e.cidade,e.uf].filter(Boolean).join(' / ')].filter(Boolean).join(' · ');
         el.eventDescription.textContent=visual.descricaoCurta||'Escolha seu ingresso e finalize sua compra com segurança.';
-        el.eventBack.href='/evento-v2/?evento='+encodeURIComponent(state.eventId)+queryCampanha();
+        if(state.privateFlow&&state.accessGrant){
+          el.eventBack.href='#';
+          el.eventBack.onclick=function(ev){ev.preventDefault();history.back();};
+        }else{
+          el.eventBack.href='/evento-v2/?evento='+encodeURIComponent(state.eventId)+queryCampanha();
+        }
 
         if(visual.capaUrl){
           el.checkoutCoverImage.src=visual.capaUrl;
@@ -753,6 +805,133 @@
         el.summary.classList.remove('hidden');
         renderPromotion();
         renderParticipants(Math.max(0,accesses-1));
+
+        var baseFinanceira=
+          state.promotion&&state.promotion.calculo
+            ?Number(state.promotion.calculo.valorFinalTotal||0)
+            :total;
+
+        atualizarTaxa(
+          baseFinanceira,
+          q>0?baseFinanceira/q:baseFinanceira,
+          q
+        );
+      }
+
+      function atualizarTaxa(valorIngressos,precoUnitario,quantidadeVendas){
+        var seq=++state.feeSeq;
+
+        if(state.feeTimer){
+          clearTimeout(state.feeTimer);
+          state.feeTimer=null;
+        }
+
+        /*
+         * Rollout inativo = caminho legado sem RPC adicional.
+         * O backend continua autoritativo e, quando o Master ativar a politica,
+         * o proprio catalogo muda de revisao e habilita o preview abaixo.
+         */
+        if(!state.politicaComercialAtiva){
+          state.feeBusy=false;
+          state.feeReady=true;
+          state.feeRevision='';
+          state.feeQuotedAt=0;
+          state.feePreview=null;
+          el.feeSummary.classList.add('hidden');
+          el.summaryPrice.textContent=money(valorIngressos||0);
+          return;
+        }
+
+        state.feeBusy=true;
+        state.feeReady=false;
+
+        /*
+         * Preview e apenas UX; o backend recalcula o valor autoritativo no pagamento.
+         * Debounce evita rajada de RPC enquanto o cliente altera quantidade.
+         */
+        state.feeTimer=setTimeout(function(){
+          state.feeTimer=null;
+
+          google.script.run
+          .withSuccessHandler(function(res){
+            if(seq!==state.feeSeq)return;
+            state.feeBusy=false;
+            state.feePreview=res||null;
+            state.feeRevision=String(res&&res.revisao||'');
+            state.feeQuotedAt=Date.now();
+
+            var resumo=res&&res.resumo?res.resumo:null;
+            if(!res||res.sucesso!==true||!resumo){
+              state.feeReady=false;
+              el.feeSummary.classList.add('hidden');
+              el.summaryPrice.textContent=money(valorIngressos||0);
+              return;
+            }
+
+            state.feeReady=true;
+
+            var subtotal=Number(resumo.subtotalIngressos||valorIngressos||0);
+            var taxaCt=Number(resumo.taxaCtTotal||0);
+            var taxaComprador=Number(resumo.taxaComprador||0);
+            var adicionais=Number(resumo.adicionaisComprador||0);
+            var total=Number(resumo.totalComprador||subtotal);
+            var acrescimo=Math.max(0,taxaComprador+adicionais);
+
+            el.feeBase.textContent=money(subtotal);
+            el.feePlatform.textContent=money(taxaComprador);
+            el.feeAdditional.textContent=money(adicionais);
+            el.feeAdditionalRow.classList.toggle('hidden',adicionais<=0);
+            el.feeTotal.textContent=money(total);
+            el.summaryPrice.textContent=money(total);
+
+            var pagador=String(resumo.pagadorTaxa||'COMPRADOR').toUpperCase();
+            if(pagador==='PRODUTOR'){
+              el.feeLabel.textContent='Taxa Carioca Ticket · paga pelo produtor';
+              el.feeNote.textContent=taxaCt>0
+                ?'O produtor absorve '+money(taxaCt)+'. Nenhuma parte da taxa CT foi adicionada ao seu total.'
+                :'Sem taxa adicional para o comprador.';
+            }else if(pagador==='DIVIDIDA'){
+              el.feeLabel.textContent='Sua parte da taxa Carioca Ticket';
+              el.feeNote.textContent='O produtor absorve '+money(Math.max(0,taxaCt-taxaComprador))+'.';
+            }else{
+              el.feeLabel.textContent='Taxa Carioca Ticket';
+              el.feeNote.textContent=taxaComprador>0?'A taxa está incluída no total a pagar.':'Sem taxa adicional para o comprador.';
+            }
+
+            if(adicionais>0){
+              el.feeNote.textContent+=' Encargos adicionais informados separadamente acima.';
+            }
+
+            if(res.degradado===true){
+              el.feeNote.textContent='Sem taxa adicional para o comprador nesta operação.';
+            }
+
+            el.feeSummary.classList.toggle('hidden',taxaCt<=0&&adicionais<=0);
+          })
+          .withFailureHandler(function(){
+            if(seq!==state.feeSeq)return;
+            state.feeBusy=false;
+            state.feeReady=false;
+            state.feeRevision='';
+            state.feeQuotedAt=0;
+            state.feePreview=null;
+            el.feeSummary.classList.add('hidden');
+            el.summaryPrice.textContent=money(valorIngressos||0);
+          })
+            .ctPoliticaComercialPreviewPublicoPROD({
+              eventoId:state.eventId,
+              tipoIngressoId:state.type?state.type.id:'',
+              loteId:state.lot?state.lot.id:'',
+              campanhaId:
+                state.promotion&&
+                state.promotion.cupom&&
+                String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink
+                  ?state.campanhaOrigem
+                  :'',
+              precoUnitario:Number(precoUnitario||0),
+              quantidade:Number(quantidadeVendas||1)
+            });
+        },180);
       }
 
       function renderParticipants(count){
@@ -839,6 +1018,33 @@
 
       function createPayment(){
         if(state.busy)return;
+
+        /*
+         * Transparencia de preco:
+         * nunca cria pedido/cobranca antes de a UI confirmar o mesmo total
+         * comercial que esta sendo exibido para a selecao atual.
+         */
+        if(
+          state.feeBusy||
+          state.feeReady!==true||
+          (
+            state.politicaComercialAtiva&&
+            (
+              !state.feeQuotedAt||
+              (Date.now()-state.feeQuotedAt)>30000
+            )
+          )
+        ){
+          if(!state.feeBusy){
+            updateSummary();
+          }
+          modal(
+            'Confirmando o total',
+            'Aguarde a atualização do valor final antes de continuar para o pagamento.'
+          );
+          return;
+        }
+
         var err=validate();
         if(err){modal('Revise seus dados',err);return;}
 
@@ -868,6 +1074,8 @@
           cupomCodigo:state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'',
           campanhaOrigem:state.promotion&&state.promotion.cupom&&String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink?state.campanhaOrigem:'',
           campanhaSessaoId:state.promotion&&state.promotion.cupom&&String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink?state.campanhaSessaoId:'',
+          accessGrant:state.accessGrant,
+          politicaRevisaoVista:state.feeRevision,
           idempotenciaChave:getOrCreateIdempotency()
         };
 

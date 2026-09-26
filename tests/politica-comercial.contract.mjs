@@ -1,0 +1,100 @@
+import fs from 'node:fs';
+
+function read(path){
+  if(!fs.existsSync(path)) throw new Error('Arquivo ausente: '+path);
+  return fs.readFileSync(path,'utf8');
+}
+function requireAll(path,items){
+  const c=read(path);
+  for(const item of items){
+    if(!c.includes(item)) throw new Error(path+' incompleto: '+item);
+  }
+  if(/window\.(?:alert|confirm|prompt)\s*\(/i.test(c)){
+    throw new Error(path+' usa dialogo nativo');
+  }
+  return c;
+}
+
+const master=requireAll('backoffice/politicas-comerciais/index.html',[
+  '<title>Políticas Comerciais | Backoffice Master</title>',
+  '10% é o padrão da plataforma',
+  'COMPRADOR','PRODUTOR','DIVIDIDA',
+  'PARCEIRO_CT','PROMOTOR','INFLUENCIADOR','AGENCIA','VENDEDOR','OUTRO',
+  'MARGEM_CT','PERCENTUAL_INGRESSOS','PERCENTUAL_TAXA_CT','FIXO_POR_INGRESSO',
+  'ctPoliticaComercialMasterListarPROD',
+  'ctPoliticaComercialMasterSalvarPROD',
+  'ctPoliticaComercialMasterDesativarPROD',
+  'ctPoliticaComercialMasterConfigurarAtivacaoPROD',
+  'ctPoliticaComercialSimularPROD',
+  'movimentouDinheiro===true',
+  'validFrom','validUntil','Usar como base','Desativar',
+  'APP_DEV',
+  'AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg'
+]);
+
+
+for(const s of [
+  'id="activation"',
+  'id="activationStatus"',
+  'state.activation',
+  'toggleActivation',
+  'Cobrança comercial desligada',
+  'preços legados preservados'
+]){
+  if(!master.includes(s))throw new Error('Backoffice sem rollout comercial seguro: '+s);
+}
+
+const producer=requireAll('produtor/politica-comercial/index.html',[
+  '<title>Política Comercial | Portal do Produtor</title>',
+  'Somente leitura',
+  'ctPortalProdutorRestaurarSessaoIsoladaPROD',
+  'ctPoliticaComercialProdutorResumoPROD',
+  'ctPoliticaComercialSimularPROD',
+  'movimentouDinheiro===true',
+  'APP_DEV'
+]);
+
+const backoffice=read('backoffice/index.html');
+if(!backoffice.includes('href="/backoffice/politicas-comerciais/"'))throw new Error('Backoffice sem acesso a politicas comerciais');
+
+const portal=read('produtor/index.html');
+for(const s of ['id="commercialPolicyLink"','href="/produtor/politica-comercial/"','el.commercialPolicyLink.classList.toggle']){
+  if(!portal.includes(s))throw new Error('Portal produtor sem politica comercial: '+s);
+}
+
+
+const checkout=read('checkout-v2/index.html');
+for(const s of [
+  'feeReady:false',
+  'politicaComercialAtiva:false',
+  'if(!state.politicaComercialAtiva)',
+  'state.feeReady=false;',
+  'state.feeReady=true;',
+  'state.feeBusy||',
+  'state.feeReady!==true',
+  'Confirmando o total',
+  'ctPoliticaComercialPreviewPublicoPROD',
+  'feeRevision',
+  'feeQuotedAt',
+  'state.politicaComercialAtiva&&',
+  '(Date.now()-state.feeQuotedAt)>30000',
+  "state.feeRevision='';",
+  'state.feeQuotedAt=0;',
+  'politicaRevisaoVista:state.feeRevision',
+  'tipoIngressoId:state.type?state.type.id',
+  'loteId:state.lot?state.lot.id',
+  'campanhaId:',
+  'feeAdditionalRow',
+  'Encargos comerciais adicionais',
+  "el.feePlatform.textContent=money(taxaComprador)"
+]){
+  if(!checkout.includes(s))throw new Error('Checkout sem gate de transparencia comercial: '+s);
+}
+
+const finance=read('produtor/financeiro/index.html');
+if(!finance.includes('href="/produtor/politica-comercial/"'))throw new Error('Financeiro produtor sem acesso a politica comercial');
+
+if(master.includes('/transfers')||producer.includes('/transfers'))throw new Error('Politica comercial nao pode transferir dinheiro');
+if(master.includes('ctAsaasProvider')||producer.includes('ctAsaasProvider'))throw new Error('UI comercial nao pode acionar provider');
+
+console.log('CT_SITE_POLITICA_COMERCIAL_CONTRACT_OK');
