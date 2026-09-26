@@ -420,7 +420,7 @@ requireAll('produtor/cortesias/index.html',cortesias,[
   'ctCortesiasEmitirPROD',
   'ctCortesiasCancelarPROD',
   'chaveIdempotencia',
-  'consome capacidade',
+  'Consome capacidade',
   'não gera pagamento, taxa Carioca Ticket, comissão ou faturamento',
   'reconciliacao',
   'valorCobradoCortesiaNumero',
