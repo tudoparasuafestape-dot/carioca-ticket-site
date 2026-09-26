@@ -213,7 +213,7 @@ async function addMember(){
       }
       throw new Error(r&&r.mensagem||'Não foi possível adicionar o usuário.');
     }
-    $('newEmail').value='';message('Comissionado adicionado à equipe. Agora configure a comissão e o canal.','ok');await load();
+    $('newEmail').value='';await load();message('Comissionado adicionado à equipe. Agora configure a comissão e o canal.','ok');
   }catch(e){message(e.message||String(e),'error')}
   finally{loading(false)}
 }
@@ -228,7 +228,7 @@ async function saveChannel(){
     var eventId=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctComissoesPromotoresSalvarCanalPROD',[state.session.token,eventId,{usuarioComissionadoId:id,papelComercial:$('channelRole').value,codigoPublico:$('channelCode').value,status:$('channelStatus').value}]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar o canal.');
-    closeModal('channelModal');message('Canal salvo.','ok');await load();
+    closeModal('channelModal');await load();message('Canal salvo.','ok');
   }catch(e){message(e.message||String(e),'error')}finally{loading(false)}
 }
 function openRule(id){
@@ -246,7 +246,7 @@ async function saveRule(){
     var eventId=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctComissoesEventoSalvarRegraPROD',[state.session.token,eventId,{usuarioComissionadoId:id,tipoRegra:$('ruleType').value,valorRegra:val,tipoIngressoId:$('ticketType').value,loteId:$('ticketLot').value,beneficiarioNome:$('beneficiaryName').value.trim(),cpfCnpj:$('cpfCnpj').value,pixTipo:$('pixType').value,pixChave:$('pixKey').value.trim(),inicioEm:$('ruleStart').value||'',fimEm:$('ruleEnd').value||'',observacao:$('ruleNote').value.trim()}]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar a regra.');
-    closeModal('ruleModal');message('Regra de comissão salva.','ok');await load();
+    closeModal('ruleModal');await load();message('Regra de comissão salva.','ok');
   }catch(e){message(e.message||String(e),'error')}finally{loading(false)}
 }
 function openGoal(id){$('goalUserId').value=id;$('goalType').value='VENDAS';$('goalValue').value='';$('rewardType').value='BONUS_FIXO';$('rewardValue').value='';$('benefitDescription').value='';openModal('goalModal')}
@@ -256,7 +256,7 @@ async function saveGoal(){
     var eventId=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctComissoesPromotoresSalvarMetaPROD',[state.session.token,eventId,{usuarioComissionadoId:id,tipoMeta:$('goalType').value,metaNumero:goal,recompensaTipo:$('rewardType').value,recompensaValor:Number($('rewardValue').value||0),beneficioDescricao:$('benefitDescription').value.trim()}]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar a meta.');
-    closeModal('goalModal');message('Meta salva. O bônus permanece manual.','ok');await load();
+    closeModal('goalModal');await load();message('Meta salva. O bônus permanece manual.','ok');
   }catch(e){message(e.message||String(e),'error')}finally{loading(false)}
 }
 function showDetails(id,scroll=true){
@@ -269,7 +269,7 @@ function showDetails(id,scroll=true){
 }
 async function copyLink(id){var p=(state.data.comissionados||[]).find(x=>x.usuarioId===id),link=p&&p.canal&&p.canal.link;if(!link)return;try{await copy(link);message('Link individual copiado.','ok')}catch(e){message(e.message||String(e),'error')}}
 function shareWhatsapp(id){var p=(state.data.comissionados||[]).find(x=>x.usuarioId===id),link=p&&p.canal&&p.canal.link;if(!link)return;var text='Seu link individual para divulgar '+(state.data.evento&&state.data.evento.nome||'o evento')+' na Carioca Ticket:\n\n'+link+'\n\nAs vendas concluídas por este link serão atribuídas ao seu perfil.';window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank','noopener')}
-async function registerPayment(id){var p=(state.data.comissionados||[]).find(x=>x.usuarioId===id);if(!p)return;var total=Number(p.resumoComissao&&p.resumoComissao.aReceberNumero||0);if(total<=0)return;var ref=prompt('Referência do pagamento externo (opcional):','PIX '+new Date().toLocaleDateString('pt-BR'));if(ref===null)return;if(!confirm('Confirmar que você já pagou '+money(total)+' para '+p.nome+'? A Carioca Ticket apenas registrará este pagamento.'))return;loading(true);try{var eventId=String(state.evento.id||state.evento.eventoId||''),r=await rpc('ctComissoesPromotoresRegistrarPagamentoPROD',[state.session.token,eventId,{usuarioComissionadoId:id,referencia:ref,observacao:'Pagamento externo confirmado pelo produtor'}]);if(!r||r.sucesso!==true)throw new Error('Não foi possível registrar o pagamento.');message(r.registrado?'Pagamento externo registrado. Nenhuma transferência foi executada pela Carioca Ticket.':'Não há comissões pendentes para registrar.','ok');await load()}catch(e){message(e.message||String(e),'error')}finally{loading(false)}}
+async function registerPayment(id){var p=(state.data.comissionados||[]).find(x=>x.usuarioId===id);if(!p)return;var total=Number(p.resumoComissao&&p.resumoComissao.aReceberNumero||0);if(total<=0)return;var ref=prompt('Referência do pagamento externo (opcional):','PIX '+new Date().toLocaleDateString('pt-BR'));if(ref===null)return;if(!confirm('Confirmar que você já pagou '+money(total)+' para '+p.nome+'? A Carioca Ticket apenas registrará este pagamento.'))return;loading(true);try{var eventId=String(state.evento.id||state.evento.eventoId||''),r=await rpc('ctComissoesPromotoresRegistrarPagamentoPROD',[state.session.token,eventId,{usuarioComissionadoId:id,referencia:ref,observacao:'Pagamento externo confirmado pelo produtor'}]);if(!r||r.sucesso!==true)throw new Error('Não foi possível registrar o pagamento.');var retornoPagamento=r.registrado?'Pagamento externo registrado. Nenhuma transferência foi executada pela Carioca Ticket.':'Não há comissões pendentes para registrar.';await load();message(retornoPagamento,'ok')}catch(e){message(e.message||String(e),'error')}finally{loading(false)}}
 async function boot(){state.session=readSession();if(!state.session){location.replace('/produtor/');return}loading(true);try{var r=await rpc('ctPortalProdutorRestaurarSessaoIsoladaPROD',[state.session.token]);if(!r||r.autenticado!==true){location.replace('/produtor/');return}state.produtores=Array.isArray(r.produtores)?r.produtores:[];if(!state.produtores.length)throw new Error('Nenhum produtor autorizado foi encontrado.');fillProducers();if(state.evento)await load()}catch(e){message(e.message||String(e),'error')}finally{loading(false)}}
 $('producerSelect').onchange=function(){state.produtor=state.produtores.find(p=>String(p.id)===String($('producerSelect').value))||null;state.selectedUserId='';fillEvents();load()};$('eventSelect').onchange=function(){var ev=state.produtor&&Array.isArray(state.produtor.eventos)?state.produtor.eventos:[];state.evento=ev.find(e=>String(e.id||e.eventoId)===String($('eventSelect').value))||null;state.selectedUserId='';load()};$('loadButton').onclick=load;$('refreshButton').onclick=load;$('addButton').onclick=addMember;$('saveChannel').onclick=saveChannel;$('saveRule').onclick=saveRule;$('saveGoal').onclick=saveGoal;document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id)}));boot();
 }());
