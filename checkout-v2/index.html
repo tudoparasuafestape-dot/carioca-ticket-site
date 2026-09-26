@@ -259,6 +259,12 @@
         <div><small>SEU PEDIDO</small><b id="summaryTitle">—</b><div id="summaryAccess" class="help"></div></div>
         <div style="text-align:right"><small>TOTAL</small><b id="summaryPrice">R$ 0,00</b></div>
       </div>
+      <div id="feeSummary" class="promo-summary hidden">
+        <div class="promo-line"><span>Ingressos</span><span id="feeBase">R$ 0,00</span></div>
+        <div class="promo-line"><span id="feeLabel">Taxa Carioca Ticket</span><span id="feePlatform">R$ 0,00</span></div>
+        <div class="promo-line total"><span>Total a pagar</span><span id="feeTotal">R$ 0,00</span></div>
+        <div id="feeNote" class="help" style="margin-top:8px"></div>
+      </div>
       <div id="couponBox" class="coupon-box">
         <button id="couponToggle" class="coupon-toggle" type="button">Tem um cupom?</button>
         <div id="couponArea" class="hidden">
@@ -398,13 +404,19 @@
         cupomDoLink:'',
         campanhaOrigem:'',
         campanhaSessaoId:'',
-        autoCupomDispensado:false
+        autoCupomDispensado:false,
+        accessGrant:'',
+        privateFlow:false,
+        feePreview:null,
+        feeBusy:false,
+        feeSeq:0
       };
 
       var el={};
       [
         'loading','loadingTitle','loadingText','eventName','eventMeta','eventDescription','eventBack','checkoutCover','checkoutCoverImage','salePanel','buyerPanel','payActionPanel',
         'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',
+        'feeSummary','feeBase','feeLabel','feePlatform','feeTotal','feeNote',
         'couponBox','couponToggle','couponArea','couponCode','couponApply','couponMessage','couponReplace','couponReplaceNo','couponReplaceYes','promoSummary','promoOriginal','promoLabel','promoDiscount','promoTotal','couponRemove',
         'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','buyerEmailLabel','buyerEmailHelp','marketing','paymentPix','paymentCard','payButton','payHelp',
         'pixPanel','pixStatus','qrImage','pixCode','copyButton','refreshButton','expiryText',
@@ -442,10 +454,14 @@
       }
 
       function getLocation(cb){
-        if(google && google.script && google.script.url && google.script.url.getLocation){
+        if(typeof google!=='undefined' && google.script && google.script.url && google.script.url.getLocation){
           google.script.url.getLocation(function(loc){cb(loc||{});});
         }else{
-          cb({parameter:{}});
+          var p={};
+          try{
+            new URLSearchParams(window.location.search).forEach(function(v,k){p[k]=v;});
+          }catch(_){}
+          cb({parameter:p});
         }
       }
 
@@ -535,6 +551,20 @@
           state.cupomDoLink=String((loc.parameter&&loc.parameter.cupom)||'').trim().toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9_-]/g,'').substring(0,80);
           state.campanhaOrigem=String((loc.parameter&&loc.parameter.src)||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').substring(0,60);
           state.campanhaSessaoId=String((loc.parameter&&loc.parameter.csid)||'').trim().replace(/[^A-Za-z0-9._:-]/g,'').substring(0,120);
+          state.privateFlow=String((loc.parameter&&loc.parameter.privado)||'').trim()==='1';
+          state.accessGrant=String((loc.parameter&&loc.parameter.accessGrant)||'').trim();
+          if(!state.accessGrant&&state.eventId){
+            try{
+              var rawGrant=sessionStorage.getItem('CT_PRIVATE_GRANT_'+state.eventId);
+              var objGrant=rawGrant?JSON.parse(rawGrant):null;
+              if(objGrant&&objGrant.grant&&(!objGrant.expiraEmEpoch||Number(objGrant.expiraEmEpoch)*1000>Date.now())){
+                state.accessGrant=String(objGrant.grant);
+                state.privateFlow=true;
+              }else if(rawGrant){
+                sessionStorage.removeItem('CT_PRIVATE_GRANT_'+state.eventId);
+              }
+            }catch(_){}
+          }
           if(state.cupomDoLink&&!state.campanhaSessaoId)state.campanhaSessaoId=campanhaSessao(state.cupomDoLink);
           if(!state.eventId){
             showClosed('O link de compra não informou qual evento deve ser aberto.');
@@ -565,7 +595,10 @@
           .withFailureHandler(function(){
             showClosed('Não foi possível carregar a venda online agora. Tente novamente mais tarde.');
           })
-          .ctCheckoutPublicoCarregarEventoPROD(state.eventId);
+          .ctCheckoutPublicoCarregarEventoPROD(
+            state.eventId,
+            state.accessGrant
+          );
       }
 
       function showClosed(message){
@@ -594,7 +627,12 @@
         el.eventName.textContent=e.nome||'Comprar ingressos';
         el.eventMeta.textContent=[e.data,e.horario,e.local,[e.cidade,e.uf].filter(Boolean).join(' / ')].filter(Boolean).join(' · ');
         el.eventDescription.textContent=visual.descricaoCurta||'Escolha seu ingresso e finalize sua compra com segurança.';
-        el.eventBack.href='/evento-v2/?evento='+encodeURIComponent(state.eventId)+queryCampanha();
+        if(state.privateFlow&&state.accessGrant){
+          el.eventBack.href='#';
+          el.eventBack.onclick=function(ev){ev.preventDefault();history.back();};
+        }else{
+          el.eventBack.href='/evento-v2/?evento='+encodeURIComponent(state.eventId)+queryCampanha();
+        }
 
         if(visual.capaUrl){
           el.checkoutCoverImage.src=visual.capaUrl;
@@ -753,6 +791,64 @@
         el.summary.classList.remove('hidden');
         renderPromotion();
         renderParticipants(Math.max(0,accesses-1));
+
+        var baseFinanceira=
+          state.promotion&&state.promotion.calculo
+            ?Number(state.promotion.calculo.valorFinalTotal||0)
+            :total;
+
+        atualizarTaxa(
+          baseFinanceira,
+          q>0?baseFinanceira/q:baseFinanceira,
+          q
+        );
+      }
+
+      function atualizarTaxa(valorIngressos,precoUnitario,quantidadeVendas){
+        var seq=++state.feeSeq;
+        state.feeBusy=true;
+
+        google.script.run
+          .withSuccessHandler(function(res){
+            if(seq!==state.feeSeq)return;
+            state.feeBusy=false;
+            state.feePreview=res||null;
+
+            if(!res||res.sucesso!==true||res.aplicar!==true){
+              el.feeSummary.classList.add('hidden');
+              el.summaryPrice.textContent=money(valorIngressos||0);
+              return;
+            }
+
+            el.feeBase.textContent=money(res.valorIngressos||0);
+            el.feePlatform.textContent=money(res.taxaCtValor||0);
+            el.feeTotal.textContent=money(res.valorCobradoComprador||0);
+            el.summaryPrice.textContent=money(res.valorCobradoComprador||0);
+
+            if(String(res.responsavelTaxa||'').toUpperCase()==='EVENTO'){
+              el.feeLabel.textContent='Taxa Carioca Ticket · paga pelo evento';
+              el.feeNote.textContent='Nenhum acréscimo desta taxa será cobrado de você.';
+            }else{
+              el.feeLabel.textContent='Taxa Carioca Ticket';
+              el.feeNote.textContent='A taxa está incluída no total a pagar.';
+            }
+
+            el.feeSummary.classList.remove('hidden');
+          })
+          .withFailureHandler(function(){
+            if(seq!==state.feeSeq)return;
+            state.feeBusy=false;
+            state.feePreview=null;
+            el.feeSummary.classList.add('hidden');
+            el.summaryPrice.textContent=money(valorIngressos||0);
+          })
+          .ctTaxasEventoPublicoSimularPROD({
+            eventoId:state.eventId,
+            valorIngressos:Number(valorIngressos||0),
+            precoUnitario:Number(precoUnitario||0),
+            quantidadeVendas:Number(quantidadeVendas||1),
+            formaPagamento:state.paymentMethod
+          });
       }
 
       function renderParticipants(count){
@@ -868,6 +964,7 @@
           cupomCodigo:state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'',
           campanhaOrigem:state.promotion&&state.promotion.cupom&&String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink?state.campanhaOrigem:'',
           campanhaSessaoId:state.promotion&&state.promotion.cupom&&String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink?state.campanhaSessaoId:'',
+          accessGrant:state.accessGrant,
           idempotenciaChave:getOrCreateIdempotency()
         };
 
