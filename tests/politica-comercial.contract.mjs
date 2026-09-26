@@ -70,7 +70,13 @@ for(const s of [
   'state.feeReady=true;',
   'if(state.feeBusy||state.feeReady!==true)',
   'Confirmando o total',
-  'ctPoliticaComercialPreviewPublicoPROD'
+  'ctPoliticaComercialPreviewPublicoPROD',
+  'tipoIngressoId:state.type?state.type.id',
+  'loteId:state.lot?state.lot.id',
+  'campanhaId:',
+  'feeAdditionalRow',
+  'Encargos comerciais adicionais',
+  "el.feePlatform.textContent=money(taxaComprador)"
 ]){
   if(!checkout.includes(s))throw new Error('Checkout sem gate de transparencia comercial: '+s);
 }
