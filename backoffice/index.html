@@ -42,7 +42,12 @@ a{color:inherit}.hidden{display:none!important}.shell{width:min(1440px,calc(100%
     <nav class="nav">
       <a class="btn" href="/parceiro/admin/">Parceiros</a>
       <a class="btn" href="/cupons/admin/">Cupons</a>
-      <a class="btn" href="/produtor/solicitacoes/">Produtores</a>
+      <a id="producerRequestsLink" class="btn" href="/produtor/solicitacoes/">Produtores <span id="producerPendingBadge"></span></a>
+      <a id="payRequestsLink" class="btn" href="/backoffice/carioca-pay/">Carioca Pay <span id="payPendingBadge"></span></a>
+      <a class="btn" href="/backoffice/carioca-pay/produtores/">Financeiro Produtores</a>
+      <a class="btn" href="/backoffice/politicas-comerciais/">Políticas Comerciais</a>
+      <a class="btn" href="/backoffice/modalidades/">Modalidades & Convites</a>
+      <a id="eventGovernanceLink" class="btn" href="/backoffice/eventos/">Governança Eventos <span id="eventGovernanceBadge"></span></a>
     </nav>
   </header>
 
@@ -212,12 +217,33 @@ function render(r){
   $('paymentMethods').innerHTML=methodTable(fin.vendasPorForma);
   $('sources').innerHTML=kvList(an.porOrigem);$('devices').innerHTML=kvList(an.porDispositivo);
 }
+async function loadPendingBadges(){
+  try{
+    var results=await Promise.all([
+      rpc('ctProdutorOnboardingAdminContarPendentesPROD',[String(state.session.token)]),
+      rpc('ctContaCariocaPayMasterContarPendentesPROD',[String(state.session.token)]),
+      rpc('ctEventoGovernancaMasterListarPROD',[String(state.session.token),{}])
+    ]);
+    var p=results[0]||{},f=results[1]||{},e=results[2]||{};
+    var produtores=Number(p.total||0);
+    var financeiro=Number(f.contagem&&f.contagem.abertas||0);
+    var eventos=Number(e.contagem&&e.contagem.pendentes||0);
+    $('producerPendingBadge').textContent=produtores>0?'('+produtores+')':'';
+    $('payPendingBadge').textContent=financeiro>0?'('+financeiro+')':'';
+    $('eventGovernanceBadge').textContent=eventos>0?'('+eventos+')':'';
+  }catch(_){
+    $('producerPendingBadge').textContent='';
+    $('payPendingBadge').textContent='';
+    $('eventGovernanceBadge').textContent='';
+  }
+}
+
 async function load(filters){
   if(state.busy)return;state.busy=true;$('refresh').disabled=true;$('applyCustom').disabled=true;
   try{
     var r=await rpc('ctBackofficeMasterCarregarPROD',[String(state.session.token),filters||{preset:state.preset}]);
     if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Seu perfil não está autorizado para o Backoffice Master.');
-    render(r);$('gate').classList.add('hidden');$('app').classList.remove('hidden');
+    render(r);$('gate').classList.add('hidden');$('app').classList.remove('hidden');loadPendingBadges();
   }catch(e){
     if($('app').classList.contains('hidden'))deny(e&&e.message?e.message:String(e));else toast(e&&e.message?e.message:String(e));
   }finally{state.busy=false;$('refresh').disabled=false;$('applyCustom').disabled=false}

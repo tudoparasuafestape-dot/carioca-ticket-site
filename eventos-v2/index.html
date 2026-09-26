@@ -1398,7 +1398,69 @@
               step="1"
               placeholder="300"
             >
+            <small style="display:block;margin-top:6px;color:#777;line-height:1.4">
+              Quantidade máxima de pessoas/acessos planejada para este evento.
+            </small>
 
+          </div>
+
+          <div class="campo-grupo">
+
+            <label
+              class="campo-label"
+              for="campoModoAcesso"
+            >
+              Modalidade do evento *
+            </label>
+
+            <select
+              id="campoModoAcesso"
+              class="campo"
+            >
+              <option value="PUBLICO">Público — aparece no catálogo</option>
+              <option value="NAO_LISTADO">Não listado — somente pelo link</option>
+              <option value="PRIVADO_CONVITE">Privado — somente convidados autorizados</option>
+            </select>
+
+          </div>
+
+          <div
+            id="grupoEventoPrivado"
+            class="campo-grupo largo"
+            style="display:none;padding:14px;border:1px solid #ead28c;border-radius:12px;background:#fffaf0"
+          >
+            <strong style="display:block;margin-bottom:10px">Configuração do convite privado</strong>
+
+            <div class="grade-formulario">
+              <div class="campo-grupo">
+                <label class="campo-label" for="campoValidacaoConvite">Validação do convidado</label>
+                <select id="campoValidacaoConvite" class="campo">
+                  <option value="TOKEN_TELEFONE">Link individual + telefone</option>
+                  <option value="TOKEN">Somente link individual</option>
+                  <option value="TOKEN_CPF">Link individual + CPF</option>
+                  <option value="TOKEN_TELEFONE_CPF">Link + telefone + CPF</option>
+                </select>
+              </div>
+
+              <div class="campo-grupo">
+                <label class="campo-label" for="campoCtaConvite">Texto do botão</label>
+                <input id="campoCtaConvite" class="campo" type="text" maxlength="80" value="Continuar">
+              </div>
+
+              <div class="campo-grupo largo">
+                <label class="campo-label" for="campoTituloConvite">Título do convite</label>
+                <input id="campoTituloConvite" class="campo" type="text" maxlength="220" value="Você está convidado">
+              </div>
+
+              <div class="campo-grupo largo">
+                <label class="campo-label" for="campoMensagemConvite">Mensagem do anfitrião</label>
+                <textarea id="campoMensagemConvite" class="campo" maxlength="1500" placeholder="Mensagem especial para os convidados"></textarea>
+              </div>
+            </div>
+
+            <small style="display:block;margin-top:10px;color:#777;line-height:1.5">
+              A lista de convidados e os limites individuais poderão ser cadastrados ou importados depois que o evento for salvo.
+            </small>
           </div>
 
         </div>
@@ -1516,6 +1578,15 @@
         .addEventListener(
           'change',
           atualizarVisibilidadeComissionado
+        );
+
+      document
+        .getElementById(
+          'campoModoAcesso'
+        )
+        .addEventListener(
+          'change',
+          atualizarVisibilidadeEventoPrivado
         );
     }
 
@@ -1929,6 +2000,9 @@
 
           '<div class="evento-acoes">' +
             botaoAtivar +
+            '<button class="botao botao-secundario" type="button" onclick="abrirModalidadeEvento(\'' +
+              escaparAtributo(evento.id) +
+            '\')">Modalidade e convidados</button>' +
             botaoPublicacao +
             botoesCheckout +
             botoesStatus +
@@ -1936,6 +2010,18 @@
 
         '</article>'
       );
+    }
+
+
+    function abrirModalidadeEvento(eventoId) {
+      window.location.href =
+        '/produtor/convidados/?evento=' +
+        encodeURIComponent(
+          String(
+            eventoId ||
+            ''
+          )
+        );
     }
 
 
@@ -2458,6 +2544,24 @@
     }
 
 
+    function atualizarVisibilidadeEventoPrivado() {
+      const modo =
+        obterValor(
+          'campoModoAcesso'
+        );
+
+      document
+        .getElementById(
+          'grupoEventoPrivado'
+        )
+        .style.display =
+          modo ===
+            'PRIVADO_CONVITE'
+            ? ''
+            : 'none';
+    }
+
+
     function salvarNovoEvento() {
       const dados = {
         nome:
@@ -2507,6 +2611,41 @@
             ) || 0
           ),
 
+        modoAcesso:
+          obterValor(
+            'campoModoAcesso'
+          ) ||
+          'PUBLICO',
+
+        validacaoConvite:
+          obterValor(
+            'campoValidacaoConvite'
+          ) ||
+          'TOKEN_TELEFONE',
+
+        mensagemConviteTitulo:
+          obterValor(
+            'campoTituloConvite'
+          ) ||
+          'Você está convidado',
+
+        mensagemConviteTexto:
+          obterValor(
+            'campoMensagemConvite'
+          ),
+
+        ctaConviteTexto:
+          obterValor(
+            'campoCtaConvite'
+          ) ||
+          'Continuar',
+
+        exibirNomeConvidado:
+          true,
+
+        exibirUnidade:
+          true,
+
         produtorId:
           obterValor(
             'campoProdutorId'
@@ -2551,6 +2690,32 @@
       if (!dados.local) {
         mostrarMensagemCadastro(
           'Informe o local do evento.',
+          false
+        );
+        return;
+      }
+
+      if (
+        ['PUBLICO','NAO_LISTADO','PRIVADO_CONVITE'].indexOf(
+          dados.modoAcesso
+        ) <
+          0
+      ) {
+        mostrarMensagemCadastro(
+          'Selecione uma modalidade válida para o evento.',
+          false
+        );
+        return;
+      }
+
+      if (
+        dados.modoAcesso ===
+          'PRIVADO_CONVITE' &&
+        dados.capacidade <=
+          0
+      ) {
+        mostrarMensagemCadastro(
+          'Informe a capacidade máxima do evento privado.',
           false
         );
         return;
@@ -2649,6 +2814,7 @@
         'campoCidade',
         'campoUf',
         'campoCapacidade',
+        'campoMensagemConvite',
         'campoComissionadoReferencia'
       ].forEach(
         function(id) {
@@ -2667,6 +2833,36 @@
         )
         .innerHTML =
           '<option value="">Carregando produtores...</option>';
+
+      document
+        .getElementById(
+          'campoModoAcesso'
+        )
+        .value =
+          'PUBLICO';
+
+      document
+        .getElementById(
+          'campoValidacaoConvite'
+        )
+        .value =
+          'TOKEN_TELEFONE';
+
+      document
+        .getElementById(
+          'campoTituloConvite'
+        )
+        .value =
+          'Você está convidado';
+
+      document
+        .getElementById(
+          'campoCtaConvite'
+        )
+        .value =
+          'Continuar';
+
+      atualizarVisibilidadeEventoPrivado();
 
       document
         .getElementById(

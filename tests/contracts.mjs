@@ -32,7 +32,9 @@ const protectedFiles = [
   'parceiro/programa/index.html',
   'parceiro/admin/index.html',
   'backoffice/index.html',
+  'backoffice/eventos/index.html',
   'backoffice/carioca-pay/index.html',
+  'backoffice/carioca-pay/produtores/index.html',
   'backoffice/carioca-pay/baas-sandbox/index.html',
   'backoffice/carioca-pay/saldo-extrato/index.html',
   'parceiro/ativar/index.html',
@@ -227,6 +229,7 @@ for (const file of [
   'produtor/index.html',
   'produtor/financeiro/index.html',
   'backoffice/carioca-pay/index.html',
+  'backoffice/carioca-pay/produtores/index.html',
   'central/index.html',
   'saude-vendas/index.html',
   'reembolsos/index.html',
@@ -286,7 +289,7 @@ if (contaCariocaPayPage) {
     'ctPortalProdutorRestaurarSessaoIsoladaPROD',
     'ctContaCariocaPayPortalResumoPROD',
     'Vendas confirmadas',
-    'Saldo operacional conciliado',
+    'Saldo operacional interno',
     'Disponível para solicitar antecipação',
     'Pagamentos planejados',
     'Portaria / Smart App',
@@ -296,13 +299,17 @@ if (contaCariocaPayPage) {
     'Regras de antecipação',
     '80%',
     '20%',
-    '3,49%',
+    '3,5%',
     'D+3 úteis',
     'movimentação real desabilitada',
-    'disabled><b>Solicitar antecipação',
-    'disabled><b>Registrar patrocínio',
-    'disabled><b>Planejar pagamento',
-    'disabled><b>Adicionar saldo'
+    'ctContaCariocaPayPortalSolicitarAntecipacaoPROD',
+    'prontoParaOperar',
+    'ctContaCariocaPayPortalSolicitarSaquePROD',
+    'Solicitar saque',
+    'Mínimo de R$ 500,00',
+    'Disponível para saque',
+    'saldoAutoritativoDisponivel',
+    'O saque permanece bloqueado por segurança'
   ]) {
     if (!contaCariocaPayPage.includes(required)) {
       fail('produtor/financeiro/index.html', 'Conta Carioca Pay incompleta: ' + required);
@@ -317,12 +324,80 @@ if (contaCariocaPayPage) {
   }
 
   if (
-    contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
+    !contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAntecipacaoPROD'") ||
+    !contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarSaquePROD'") ||
+    !contaCariocaPayPage.includes('Solicitação registrada e enviada para análise do Administrador Master') ||
+    !contaCariocaPayPage.includes('Solicitação de saque registrada e enviada para análise do Administrador Master') ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalSolicitarAportePROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalPlanejarPagamentoPROD'") ||
     contaCariocaPayPage.includes("rpc('ctContaCariocaPayPortalRegistrarPatrocinioPROD'")
   ) {
-    fail('produtor/financeiro/index.html', 'UI P2 nao pode disparar mutacoes antes da P3 Master');
+    fail('produtor/financeiro/index.html', 'UI financeira nao converge exclusivamente para solicitacoes protegidas pelo Master');
+  }
+}
+
+
+
+const governancaEventosMasterPage = read('backoffice/eventos/index.html');
+if (governancaEventosMasterPage) {
+  for (const required of [
+    '<title>Governança de Eventos | Backoffice Master</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctEventoGovernancaMasterListarPROD',
+    'ctEventoGovernancaMasterDecidirPROD',
+    'Aprovar governança',
+    'Reabrir análise',
+    'Não publica vendas automaticamente',
+    'eventos legados preservados',
+    'publicouVendas===true',
+    'movimentouDinheiro===true'
+  ]) {
+    if (!governancaEventosMasterPage.includes(required)) {
+      fail('backoffice/eventos/index.html', 'Governança Master de eventos incompleta: ' + required);
+    }
+  }
+  if (
+    governancaEventosMasterPage.includes('ctCheckoutPublicoLiberarEventoPROD') ||
+    governancaEventosMasterPage.includes('ctAsaasProvider') ||
+    governancaEventosMasterPage.includes('/transfers') ||
+    /window\.(?:alert|confirm|prompt)\s*\(/i.test(governancaEventosMasterPage)
+  ) {
+    fail('backoffice/eventos/index.html', 'Governança Master executa ação proibida ou diálogo nativo');
+  }
+}
+
+const financeiroProdutoresMasterPage = read('backoffice/carioca-pay/produtores/index.html');
+if (financeiroProdutoresMasterPage) {
+  for (const required of [
+    '<title>Financeiro de Produtores | Conta Carioca Pay</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctFinanceiroProdutorMasterListarPROD',
+    'ctFinanceiroProdutorMasterProntidaoPROD',
+    'ctFinanceiroProdutorMasterAtivarPROD',
+    'ctFinanceiroProdutorMasterSuspenderPROD',
+    'SUSPENDER FINANCEIRO',
+    'Suspensão de emergência',
+    'ATIVAR FINANCEIRO',
+    'CT_SECRET_ASAAS_PRODUCAO_',
+    'Somente referência opaca',
+    'sem cobrança, split ou transferência',
+    'segredoExposto===true',
+    'movimentouDinheiro===true',
+    'transferenciaCriada===true',
+    'splitHabilitado===true'
+  ]) {
+    if (!financeiroProdutoresMasterPage.includes(required)) {
+      fail('backoffice/carioca-pay/produtores/index.html', 'Ativação financeira Master incompleta: ' + required);
+    }
+  }
+  if (
+    financeiroProdutoresMasterPage.includes('ctSegredosObterValorInternoPROD_') ||
+    financeiroProdutoresMasterPage.includes('$aact_') ||
+    financeiroProdutoresMasterPage.includes('/transfers') ||
+    financeiroProdutoresMasterPage.includes('ctAsaasProvider') ||
+    /window\.(?:alert|confirm|prompt)\s*\(/i.test(financeiroProdutoresMasterPage)
+  ) {
+    fail('backoffice/carioca-pay/produtores/index.html', 'Ativação financeira Master expõe segredo/provider ou diálogo nativo');
   }
 }
 
@@ -343,10 +418,15 @@ if (contaCariocaPayMasterPage) {
     'Aprovar',
     'Recusar',
     'Aprovar nesta tela <b>não envia dinheiro</b>',
+    'SAQUE',
+    'Saldo disponível no pedido',
+    'Transferência automática',
+    'Marcar saque como processado',
+    'Referência externa',
     'providerAcionado===true',
     'movimentouDinheiro===true',
     'transferenciaCriada===true',
-    'P4 / sandbox'
+    'Integração bloqueada'
   ]) {
     if (!contaCariocaPayMasterPage.includes(required)) {
       fail('backoffice/carioca-pay/index.html', 'Backoffice Master Carioca Pay incompleto: ' + required);
@@ -532,7 +612,7 @@ const producerPage = read('produtor/index.html');
 if (producerPage) {
   if (
     !producerPage.includes('id="cariocaPayLink"') ||
-    !producerPage.includes('href="/produtor/carioca-pay/"') ||
+    !producerPage.includes('href="/produtor/financeiro/"') ||
     !producerPage.includes("perfil === 'PRODUTOR_TITULAR'") ||
     !producerPage.includes("perfil === 'FINANCEIRO'")
   ) {
@@ -660,6 +740,12 @@ if (produtorSolicitacoes) {
     'APROVAR',
     'REPROVAR',
     'Aprovar e ativar',
+    'prepara organização e financeiro pendente',
+    'Vendas só são publicadas após o financeiro ficar pronto',
+    'Financeiro ainda não liberado para vendas.',
+    'status financeiro ATIVO',
+    'credencial validada',
+    'recebimento habilitado',
     'load({skipDetail:true})',
     'function reconcileDecisionState',
     'adjustCounter(antigo,-1)',
@@ -832,7 +918,7 @@ if (parceiroPrograma) {
     '<span id="heroCommission">1</span>%',
     '<span id="serviceFee">10</span>%',
     '<span id="anticipationMax">80</span>%',
-    '<span id="anticipationFee">2,5</span>%',
+    '<span id="anticipationFee">3,5</span>%',
     'for(var tentativa=0;tentativa<3;tentativa++)',
     "CT_PARCEIRO_CADASTRO_RASCUNHO_V1",
     "sessionStorage.setItem(DRAFT_KEY",
@@ -852,7 +938,7 @@ if (parceiroPrograma) {
 
 const parceiroRegras = read('parceiro/regras-comerciais/index.html');
 if (parceiroRegras) {
-  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','2,5%']) {
+  for (const required of ['Regras comerciais do Programa Parceiro CT','10%','1%','3,5%']) {
     if (!parceiroRegras.includes(required)) {
       fail('parceiro/regras-comerciais/index.html', 'documento comercial incompleto: ' + required);
     }
@@ -1047,26 +1133,24 @@ if (financeiroProdutor) {
   if (!financeiroProdutor.includes('ctFinanceiroProdutorPainelPROD')) {
     fail('financeiro/index.html', 'Financeiro sem painel seguro do produtor');
   }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSimularAntecipacaoPROD')) {
-    fail('financeiro/index.html', 'Financeiro sem simulacao de antecipacao');
+  if (
+    financeiroProdutor.includes("rpc('ctFinanceiroProdutorSimularAntecipacaoPROD'") ||
+    financeiroProdutor.includes("rpc('ctFinanceiroProdutorSolicitarAntecipacaoPROD'")
+  ) {
+    fail('financeiro/index.html', 'Financeiro legado ainda permite antecipacao direta');
   }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarAntecipacaoPROD')) {
-    fail('financeiro/index.html', 'Financeiro sem solicitacao de antecipacao');
+  if (!financeiroProdutor.includes('href="/produtor/financeiro/"')) {
+    fail('financeiro/index.html', 'Financeiro legado não encaminha para a Conta Carioca Pay');
   }
-  if (!financeiroProdutor.includes('ctFinanceiroProdutorSolicitarSaquePROD')) {
-    fail('financeiro/index.html', 'Financeiro sem solicitacao de saque');
+  if (!financeiroProdutor.includes('Aguardando fluxo Master') ||
+      !financeiroProdutor.includes("document.getElementById('withdrawButton').disabled=true;")) {
+    fail('financeiro/index.html', 'Saque legado deve permanecer bloqueado ate existir fluxo Master');
   }
-  if (!financeiroProdutor.includes("==='ANTECIPAR'")) {
-    fail('financeiro/index.html', 'Antecipacao sem confirmacao textual de seguranca');
+  if (!financeiroProdutor.includes('3,5%') || !financeiroProdutor.includes('R$ 500,00')) {
+    fail('financeiro/index.html', 'Politica vigente de antecipacao nao esta transparente na interface');
   }
-  if (!financeiroProdutor.includes("==='SOLICITAR SAQUE'")) {
-    fail('financeiro/index.html', 'Saque sem confirmacao textual de seguranca');
-  }
-  if (!financeiroProdutor.includes('2,5%')) {
-    fail('financeiro/index.html', 'Taxa CT de antecipacao nao esta transparente na interface');
-  }
-  if (!financeiroProdutor.includes('Nenhuma transferência Pix/TED é executada automaticamente')) {
-    fail('financeiro/index.html', 'Saque nao informa que e apenas solicitacao interna');
+  if (!financeiroProdutor.includes('Nenhuma solicitação de saque será registrada enquanto não existir tela Master')) {
+    fail('financeiro/index.html', 'Saque bloqueado sem explicacao do gate Master');
   }
   const nativeDialogFinance = financeiroProdutor.match(/(?:window\.)?(?:alert|confirm|prompt)\s*\(/i);
   if (nativeDialogFinance) {
