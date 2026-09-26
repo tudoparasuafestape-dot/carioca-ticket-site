@@ -813,6 +813,9 @@
       case 'ctEventosPublicacaoListagemRapidaPROD':
         return {method:'ctEventosOperacionalListarSeguraPROD',args:[token]};
 
+      case 'ctEventosPublicacaoStatusPROD':
+        return {method:'ctEventosOperacionalStatusPublicacaoSeguraPROD',args:[token,String(args[0]||'')]};
+
       case 'ctEventosPublicacaoPublicarPROD':
         return {method:'ctEventosOperacionalPublicarSeguraPROD',args:[token,String(args[0]||'')]};
 
@@ -1119,9 +1122,10 @@
           "
         >
           <strong>Cadastro seguro.</strong>
-          Todo evento novo nasce como <strong>RASCUNHO</strong>.
-          Publicar vendas será uma etapa separada, condicionada a produtor,
-          ingressos/lotes, risco e financeiro.
+          Todo evento novo nasce como <strong>RASCUNHO</strong> e,
+          ao ser salvo, <strong>a solicitação de autorização é criada automaticamente</strong>.
+          Você não precisa pedir liberação em outra tela.
+          A publicação só será liberada depois da análise e dos demais requisitos de venda.
         </div>
 
         <div class="grade-formulario">
@@ -1847,7 +1851,7 @@
                     : ' title="Há pendências antes da publicação"'
                 ) +
               '>' +
-                'Verificar e publicar vendas' +
+                'Ver situação e publicar' +
               '</button>'
             );
 
@@ -1983,7 +1987,7 @@
                     : (
                         prontoPublicar
                           ? 'PRONTO PARA PUBLICAR'
-                          : 'COM PENDÊNCIAS'
+                          : 'AGUARDANDO PUBLICAÇÃO'
                       )
                 ) +
               '</span>' +
@@ -2145,14 +2149,157 @@
     function publicarEvento(
       eventoId
     ) {
-      if (
-        !confirm(
-          'Deseja publicar as vendas online deste evento? Outros eventos já publicados continuarão vendendo normalmente.'
+      alterarCarregamento(
+        true
+      );
+
+      google.script.run
+        .withSuccessHandler(
+          function(status) {
+            alterarCarregamento(
+              false
+            );
+
+            if (
+              !status ||
+              status.sucesso !== true
+            ) {
+              mostrarErro(
+                'Não foi possível consultar a situação do evento.'
+              );
+              return;
+            }
+
+            if (
+              status.publicado === true
+            ) {
+              alert(
+                'As vendas deste evento já estão publicadas.'
+              );
+              carregarEventos();
+              return;
+            }
+
+            if (
+              status.prontoPublicar !== true
+            ) {
+              alert(
+                montarMensagemSituacaoPublicacao(
+                  status
+                )
+              );
+              return;
+            }
+
+            if (
+              !confirm(
+                'Todos os requisitos foram atendidos e a autorização está liberada. Deseja publicar as vendas online deste evento agora?'
+              )
+            ) {
+              return;
+            }
+
+            confirmarPublicacaoEvento(
+              eventoId
+            );
+          }
         )
+        .withFailureHandler(
+          function(erro) {
+            alterarCarregamento(
+              false
+            );
+
+            mostrarErro(
+              erro &&
+              erro.message
+                ? erro.message
+                : 'Não foi possível consultar a situação da publicação.'
+            );
+          }
+        )
+        .ctEventosPublicacaoStatusPROD(
+          eventoId
+        );
+    }
+
+
+    function montarMensagemSituacaoPublicacao(
+      status
+    ) {
+      const pendencias =
+        status &&
+        Array.isArray(
+          status.pendencias
+        )
+          ? status.pendencias
+          : [];
+
+      const governanca =
+        status &&
+        status.governancaRisco &&
+        status.governancaRisco.governanca
+          ? status.governancaRisco.governanca
+          : null;
+
+      const risco =
+        String(
+          governanca &&
+          governanca.riscoStatus ||
+          ''
+        )
+          .trim()
+          .toUpperCase();
+
+      const autorizada =
+        !!(
+          governanca &&
+          governanca.publicacaoAutorizada === true
+        );
+
+      let cabecalho =
+        'Seu evento ainda não está pronto para publicação.';
+
+      if (
+        risco === 'PENDENTE_ANALISE'
       ) {
-        return;
+        cabecalho =
+          'A autorização já foi solicitada automaticamente e está aguardando análise da Carioca Ticket. Você não precisa enviar outra solicitação.';
+      } else if (
+        risco === 'EM_ANALISE'
+      ) {
+        cabecalho =
+          'Seu evento já está em análise pela Carioca Ticket. Você não precisa enviar outra solicitação.';
+      } else if (
+        risco === 'BLOQUEADO'
+      ) {
+        cabecalho =
+          'A publicação deste evento está bloqueada pela análise. Verifique as pendências antes de tentar publicar.';
+      } else if (
+        autorizada ||
+        risco === 'APROVADO'
+      ) {
+        cabecalho =
+          'A autorização da Carioca Ticket já foi aprovada. Ainda existem requisitos operacionais antes da publicação.';
       }
 
+      return (
+        cabecalho +
+        (
+          pendencias.length
+            ? '\n\nPendências:\n• ' +
+              pendencias.join(
+                '\n• '
+              )
+            : ''
+        )
+      );
+    }
+
+
+    function confirmarPublicacaoEvento(
+      eventoId
+    ) {
       alterarCarregamento(
         true
       );
@@ -2166,8 +2313,7 @@
 
             if (
               !resposta ||
-              resposta.sucesso !==
-                true
+              resposta.sucesso !== true
             ) {
               const pendencias =
                 resposta &&
@@ -2221,8 +2367,10 @@
             );
 
             mostrarErro(
-              erro.message ||
-              'Não foi possível publicar as vendas.'
+              erro &&
+              erro.message
+                ? erro.message
+                : 'Não foi possível publicar as vendas.'
             );
           }
         )
@@ -2230,7 +2378,6 @@
           eventoId
         );
     }
-
 
     function fecharVendasEvento(
       eventoId
@@ -2760,8 +2907,7 @@
               'Salvar rascunho seguro';
 
             mostrarMensagemCadastro(
-              resposta.mensagem ||
-              'Evento cadastrado como rascunho.',
+              'Evento salvo como rascunho e enviado automaticamente para análise da Carioca Ticket. Você não precisa solicitar autorização em outra tela.',
               true
             );
 
@@ -2775,7 +2921,7 @@
 
                 carregarEventos();
               },
-              1000
+              1800
             );
           }
         )
