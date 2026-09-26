@@ -1025,8 +1025,13 @@
         if(
           state.feeBusy||
           state.feeReady!==true||
-          !state.feeQuotedAt||
-          (Date.now()-state.feeQuotedAt)>30000
+          (
+            state.politicaComercialAtiva&&
+            (
+              !state.feeQuotedAt||
+              (Date.now()-state.feeQuotedAt)>30000
+            )
+          )
         ){
           if(!state.feeBusy){
             updateSummary();
