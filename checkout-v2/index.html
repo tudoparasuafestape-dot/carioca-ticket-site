@@ -879,6 +879,14 @@
           })
             .ctPoliticaComercialPreviewPublicoPROD({
               eventoId:state.eventId,
+              tipoIngressoId:state.type?state.type.id:'',
+              loteId:state.lot?state.lot.id:'',
+              campanhaId:
+                state.promotion&&
+                state.promotion.cupom&&
+                String(state.promotion.cupom.codigo||'').trim().toUpperCase()===state.cupomDoLink
+                  ?state.campanhaOrigem
+                  :'',
               precoUnitario:Number(precoUnitario||0),
               quantidade:Number(quantidadeVendas||1)
             });
