@@ -409,6 +409,7 @@
         privateFlow:false,
         feePreview:null,
         feeBusy:false,
+        feeReady:false,
         feeSeq:0,
         feeTimer:null
       };
@@ -808,6 +809,7 @@
       function atualizarTaxa(valorIngressos,precoUnitario,quantidadeVendas){
         var seq=++state.feeSeq;
         state.feeBusy=true;
+        state.feeReady=false;
 
         if(state.feeTimer){
           clearTimeout(state.feeTimer);
@@ -829,10 +831,13 @@
 
             var resumo=res&&res.resumo?res.resumo:null;
             if(!res||res.sucesso!==true||!resumo){
+              state.feeReady=false;
               el.feeSummary.classList.add('hidden');
               el.summaryPrice.textContent=money(valorIngressos||0);
               return;
             }
+
+            state.feeReady=true;
 
             var subtotal=Number(resumo.subtotalIngressos||valorIngressos||0);
             var taxaCt=Number(resumo.taxaCtTotal||0);
@@ -867,6 +872,7 @@
           .withFailureHandler(function(){
             if(seq!==state.feeSeq)return;
             state.feeBusy=false;
+            state.feeReady=false;
             state.feePreview=null;
             el.feeSummary.classList.add('hidden');
             el.summaryPrice.textContent=money(valorIngressos||0);
@@ -963,6 +969,23 @@
 
       function createPayment(){
         if(state.busy)return;
+
+        /*
+         * Transparencia de preco:
+         * nunca cria pedido/cobranca antes de a UI confirmar o mesmo total
+         * comercial que esta sendo exibido para a selecao atual.
+         */
+        if(state.feeBusy||state.feeReady!==true){
+          if(!state.feeBusy){
+            updateSummary();
+          }
+          modal(
+            'Confirmando o total',
+            'Aguarde a atualização do valor final antes de continuar para o pagamento.'
+          );
+          return;
+        }
+
         var err=validate();
         if(err){modal('Revise seus dados',err);return;}
 
