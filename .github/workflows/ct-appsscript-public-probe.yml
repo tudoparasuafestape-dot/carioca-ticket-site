@@ -23,6 +23,12 @@ jobs:
           PORTAL_CODE="$(curl -L -sS --max-time 45 -o "$PORTAL_FILE" -w '%{http_code}' "$BASE_URL?page=produtor")"
           echo "PUBLIC_PROBE root=$ROOT_CODE portal=$PORTAL_CODE"
           if [ "$ROOT_CODE" != "200" ] || [ "$PORTAL_CODE" != "200" ]; then
+            echo "----- ROOT 403 BODY (primeiros 1200 bytes) -----"
+            head -c 1200 "$ROOT_FILE" | tr '\n' ' ' || true
+            echo
+            echo "----- PORTAL 403 BODY (primeiros 1200 bytes) -----"
+            head -c 1200 "$PORTAL_FILE" | tr '\n' ' ' || true
+            echo
             echo "::error::Apps Script PROD nao respondeu 200 fora do runner local."
             exit 1
           fi
