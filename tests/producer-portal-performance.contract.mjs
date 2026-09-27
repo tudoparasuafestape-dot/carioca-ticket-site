@@ -41,6 +41,7 @@ const checks = {
     portal.includes('await garantirBootstrapPronto();') &&
     portal.includes('state.capacidades.loginEmailSenha.habilitado') &&
     portal.includes('state.capacidades.cadastro.habilitado') &&
+    portal.includes('el.registerButton.disabled =') &&
     portal.includes('state.capacidades.recuperacaoSenha.habilitado'),
 
   prefetchHome:
