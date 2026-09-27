@@ -57,5 +57,8 @@ jobs:
           grep -q "Individual" "$CHECKOUT_FILE"
           grep -q "Pré-venda" "$CHECKOUT_FILE"
           echo "CT_EVENT_AND_CHECKOUT_READONLY_PROBE_OK"
+          grep -Fq "Criar conta" "$PORTAL_FILE"
+          grep -Fq "Entrar" "$PORTAL_FILE"
+          echo "CT_PORTAL_ACCOUNT_UI_PROBE_OK"
 
 # recheck-after-manual-auth-20260927
