@@ -39,4 +39,17 @@ jobs:
           grep -q "Portal do Produtor" "$PORTAL_FILE"
           echo "CT_PROD_PUBLIC_PROBE_OK"
 
+          EVENT_ID="EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD"
+          EVENT_FILE="$(mktemp)"
+          CHECKOUT_FILE="$(mktemp)"
+          EVENT_CODE="$(curl -L -sS --max-time 60 -o "$EVENT_FILE" -w '%{http_code}' -X POST             --data-urlencode "ctMinhaCariocaAction=publicRpc"             --data-urlencode "ctMinhaCariocaRequestId=CTPROBE-EVENTO"             --data-urlencode "metodo=ctEventoPublicoCarregarPROD"             --data-urlencode "argsJson=[\"$EVENT_ID\"]"             "$BASE_URL")"
+          CHECKOUT_CODE="$(curl -L -sS --max-time 60 -o "$CHECKOUT_FILE" -w '%{http_code}' -X POST             --data-urlencode "ctMinhaCariocaAction=publicRpc"             --data-urlencode "ctMinhaCariocaRequestId=CTPROBE-CHECKOUT"             --data-urlencode "metodo=ctCheckoutPublicoCarregarEventoPROD"             --data-urlencode "argsJson=[\"$EVENT_ID\"]"             "$BASE_URL")"
+          echo "PUBLIC_RPC_PROBE evento=$EVENT_CODE checkout=$CHECKOUT_CODE"
+          test "$EVENT_CODE" = "200"
+          test "$CHECKOUT_CODE" = "200"
+          grep -q "Roda de Samba Estilo Carioca" "$EVENT_FILE"
+          grep -q "Individual" "$CHECKOUT_FILE"
+          grep -q "Pré-venda" "$CHECKOUT_FILE"
+          echo "CT_EVENT_AND_CHECKOUT_READONLY_PROBE_OK"
+
 # recheck-after-manual-auth-20260927
