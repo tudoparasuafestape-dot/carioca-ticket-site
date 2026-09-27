@@ -1,0 +1,31 @@
+name: Carioca Ticket - Probe Apps Script PROD
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe publico Apps Script PROD
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_URL="https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec"
+          ROOT_FILE="$(mktemp)"
+          PORTAL_FILE="$(mktemp)"
+          ROOT_CODE="$(curl -L -sS --max-time 45 -o "$ROOT_FILE" -w '%{http_code}' "$BASE_URL")"
+          PORTAL_CODE="$(curl -L -sS --max-time 45 -o "$PORTAL_FILE" -w '%{http_code}' "$BASE_URL?page=produtor")"
+          echo "PUBLIC_PROBE root=$ROOT_CODE portal=$PORTAL_CODE"
+          if [ "$ROOT_CODE" != "200" ] || [ "$PORTAL_CODE" != "200" ]; then
+            echo "::error::Apps Script PROD nao respondeu 200 fora do runner local."
+            exit 1
+          fi
+          grep -q "API do Carioca Ticket funcionando" "$ROOT_FILE"
+          grep -q "Portal do Produtor" "$PORTAL_FILE"
+          echo "CT_PROD_PUBLIC_PROBE_OK"
