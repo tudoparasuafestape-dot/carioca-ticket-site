@@ -11,6 +11,8 @@
 <link rel="apple-touch-icon" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <title>Portal do Produtor | Carioca Ticket</title>
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
 <style>
@@ -1123,7 +1125,6 @@ Esqueci minha senha
 id="loginButton"
 class="primary"
 type="submit"
-disabled
 >
 Entrar
 </button>
@@ -1152,7 +1153,7 @@ Continuar com Google
 Ainda não tem uma conta?
 <button
 id="showRegisterButton"
-class="text-button hidden"
+class="text-button"
 type="button"
 >
 Criar conta
@@ -1777,27 +1778,56 @@ Carregando...
 </div>
 
 <script type="module">
-import {
-initializeApp,
-getApps
-} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+let initializeApp = null;
+let getApps = null;
+let getAuth = null;
+let setPersistence = null;
+let browserSessionPersistence = null;
+let signInWithEmailAndPassword = null;
+let createUserWithEmailAndPassword = null;
+let sendEmailVerification = null;
+let verifyBeforeUpdateEmail = null;
+let updateProfile = null;
+let getIdToken = null;
+let deleteUser = null;
+let signOut = null;
 
-import {
-getAuth,
-setPersistence,
-browserSessionPersistence,
-signInWithEmailAndPassword,
-createUserWithEmailAndPassword,
-sendEmailVerification,
-verifyBeforeUpdateEmail,
-updateProfile,
-getIdToken,
-deleteUser,
-signOut
-} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
-
+let firebaseSdkPromise = null;
 let firebaseApp = null;
 let firebaseAuth = null;
+
+async function carregarFirebaseSdk(){
+if(firebaseSdkPromise){
+return firebaseSdkPromise;
+}
+
+firebaseSdkPromise = Promise.all([
+import('https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js'),
+import('https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js')
+])
+.then(function(modulos){
+var appSdk = modulos[0];
+var authSdk = modulos[1];
+
+initializeApp = appSdk.initializeApp;
+getApps = appSdk.getApps;
+getAuth = authSdk.getAuth;
+setPersistence = authSdk.setPersistence;
+browserSessionPersistence = authSdk.browserSessionPersistence;
+signInWithEmailAndPassword = authSdk.signInWithEmailAndPassword;
+createUserWithEmailAndPassword = authSdk.createUserWithEmailAndPassword;
+sendEmailVerification = authSdk.sendEmailVerification;
+verifyBeforeUpdateEmail = authSdk.verifyBeforeUpdateEmail;
+updateProfile = authSdk.updateProfile;
+getIdToken = authSdk.getIdToken;
+deleteUser = authSdk.deleteUser;
+signOut = authSdk.signOut;
+
+return true;
+});
+
+return firebaseSdkPromise;
+}
 
 function exigirAuth(){
 if(!firebaseAuth){
@@ -1812,6 +1842,8 @@ inicializar: async function(config){
 if(firebaseAuth){
 return true;
 }
+
+await carregarFirebaseSdk();
 
 if(!config || !config.apiKey || !config.projectId){
 throw new Error('CT_FIREBASE_WEB_CONFIG_INVALIDA');
@@ -2048,6 +2080,12 @@ return true;
 var STORAGE_KEY =
 'CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 
+var BOOTSTRAP_STORAGE_KEY =
+'CT_PORTAL_PRODUTOR_PUBLIC_BOOTSTRAP_V1';
+
+var BOOTSTRAP_TTL_MS =
+600000;
+
 var state = {
 
 token:
@@ -2072,6 +2110,12 @@ handoffTimer:
 null,
 
 capacidades:
+null,
+
+firebaseConfigPublica:
+null,
+
+bootstrapPromise:
 null,
 
 firebaseReady:
@@ -2196,11 +2240,14 @@ registrarEventos();
 
 carregarMarcaOficial();
 
-carregarCapacidades();
-
 carregarIndicacaoComercialUrl();
 
-inicializarFirebaseSilencioso();
+aplicarBootstrapCache();
+
+carregarBootstrap()
+.catch(function(){});
+
+agendarFirebasePrewarm();
 
 iniciarSessaoPortal();
 }
@@ -2434,32 +2481,7 @@ el.registerReferralHint
 }
 
 
-function carregarCapacidades(){
-
-el.loginButton.disabled =
-true;
-
-el.forgotPasswordButton
-.classList
-.add(
-'hidden'
-);
-
-el.showRegisterButton
-.classList
-.add(
-'hidden'
-);
-
-el.googleArea
-.classList
-.add(
-'hidden'
-);
-
-google.script.run
-.withSuccessHandler(
-function(r){
+function aplicarCapacidadesPortal(r){
 
 state.capacidades =
 r || null;
@@ -2469,14 +2491,6 @@ var loginOk =
 r &&
 r.loginEmailSenha &&
 r.loginEmailSenha.habilitado ===
-true
-);
-
-var cadastro =
-!!(
-r &&
-r.cadastro &&
-r.cadastro.habilitado ===
 true
 );
 
@@ -2499,18 +2513,17 @@ true
 el.loginButton.disabled =
 !loginOk;
 
+el.showRegisterButton
+.classList
+.remove(
+'hidden'
+);
+
 el.forgotPasswordButton
 .classList
 .toggle(
 'hidden',
 !recuperacao
-);
-
-el.showRegisterButton
-.classList
-.toggle(
-'hidden',
-!cadastro
 );
 
 el.googleArea
@@ -2519,42 +2532,239 @@ el.googleArea
 'hidden',
 !googleOk
 );
+}
+
+function lerBootstrapCache(){
+
+try{
+
+var bruto =
+sessionStorage.getItem(
+BOOTSTRAP_STORAGE_KEY
+);
 
 if(
-!loginOk
+!bruto
 ){
-mostrarMensagem(
-el.loginMessage,
-'O serviço de acesso está temporariamente indisponível. Tente novamente em instantes.',
-'error'
+bruto =
+localStorage.getItem(
+BOOTSTRAP_STORAGE_KEY
 );
 }
+
+if(
+!bruto
+){
+return null;
+}
+
+var dados =
+JSON.parse(
+bruto
+);
+
+if(
+!dados ||
+!dados.salvoEm ||
+Date.now() -
+Number(
+dados.salvoEm
+) >
+BOOTSTRAP_TTL_MS
+){
+return null;
+}
+
+if(
+!dados.capacidades ||
+!dados.firebaseConfig
+){
+return null;
+}
+
+return dados;
+}
+catch(
+erro
+){
+return null;
+}
+}
+
+function salvarBootstrapCache(
+payload
+){
+
+if(
+!payload ||
+!payload.capacidades ||
+!payload.firebaseConfig
+){
+return;
+}
+
+var dados =
+JSON.stringify({
+salvoEm:
+Date.now(),
+
+capacidades:
+payload.capacidades,
+
+firebaseConfig:
+payload.firebaseConfig
+});
+
+try{
+sessionStorage.setItem(
+BOOTSTRAP_STORAGE_KEY,
+dados
+);
+}
+catch(
+erro
+){}
+
+try{
+localStorage.setItem(
+BOOTSTRAP_STORAGE_KEY,
+dados
+);
+}
+catch(
+erro
+){}
+}
+
+function aplicarBootstrapCache(){
+
+var cache =
+lerBootstrapCache();
+
+if(
+!cache
+){
+return false;
+}
+
+state.firebaseConfigPublica =
+cache.firebaseConfig;
+
+aplicarCapacidadesPortal(
+cache.capacidades
+);
+
+return true;
+}
+
+function carregarBootstrap(){
+
+if(
+state.bootstrapPromise
+){
+return state.bootstrapPromise;
+}
+
+state.bootstrapPromise =
+new Promise(
+function(
+resolve,
+reject
+){
+
+google.script.run
+.withSuccessHandler(
+function(r){
+
+if(
+!r ||
+r.sucesso !==
+true ||
+!r.capacidades ||
+!r.firebaseConfig
+){
+reject(
+new Error(
+'CT_PORTAL_BOOTSTRAP_INVALIDO'
+)
+);
+return;
+}
+
+state.firebaseConfigPublica =
+r.firebaseConfig;
+
+aplicarCapacidadesPortal(
+r.capacidades
+);
+
+salvarBootstrapCache(
+r
+);
+
+resolve(
+r
+);
 }
 )
 .withFailureHandler(
+reject
+)
+.ctCentralAcessoBootstrapPROD();
+}
+)
+.catch(
 function(erro){
 
-state.capacidades =
+state.bootstrapPromise =
 null;
 
-el.loginButton.disabled =
-true;
-
 registrarErroTecnico(
-'Capacidades de acesso',
+'Bootstrap de acesso',
 erro
 );
 
-mostrarMensagem(
-el.loginMessage,
-'Não foi possível inicializar os serviços de acesso. Atualize a página e tente novamente.',
-'error'
-);
-}
-)
-.ctCentralAcessoObterCapacidadesPROD();
+if(
+state.capacidades &&
+state.firebaseConfigPublica
+){
+return {
+sucesso:true,
+capacidades:state.capacidades,
+firebaseConfig:state.firebaseConfigPublica,
+cache:true
+};
 }
 
+throw erro;
+}
+);
+
+return state.bootstrapPromise;
+}
+
+function garantirBootstrapPronto(){
+
+if(
+state.capacidades &&
+state.firebaseConfigPublica
+){
+return Promise.resolve({
+sucesso:true,
+capacidades:state.capacidades,
+firebaseConfig:state.firebaseConfigPublica,
+cache:true
+});
+}
+
+return carregarBootstrap();
+}
+
+function carregarCapacidades(){
+return carregarBootstrap();
+}
+
+function mostrarCadastro(){
 function mostrarCadastro(){
 
 limparMensagem(
@@ -2610,6 +2820,20 @@ e.preventDefault();
 limparMensagem(
 el.registerMessage
 );
+
+try{
+await garantirBootstrapPronto();
+}
+catch(
+erroBootstrap
+){
+mostrarMensagem(
+el.registerMessage,
+'Não foi possível inicializar o cadastro agora. Tente novamente em instantes.',
+'error'
+);
+return;
+}
 
 if(
 !state.capacidades ||
@@ -2892,6 +3116,20 @@ limparMensagem(
 el.loginMessage
 );
 
+try{
+await garantirBootstrapPronto();
+}
+catch(
+erroBootstrap
+){
+mostrarMensagem(
+el.loginMessage,
+'Não foi possível inicializar a recuperação agora. Tente novamente em instantes.',
+'error'
+);
+return;
+}
+
 if(
 !state.capacidades ||
 !state.capacidades.recuperacaoSenha ||
@@ -3159,6 +3397,20 @@ e.preventDefault();
 limparMensagem(
 el.loginMessage
 );
+
+try{
+await garantirBootstrapPronto();
+}
+catch(
+erroBootstrap
+){
+mostrarMensagem(
+el.loginMessage,
+'Não foi possível inicializar o acesso agora. Tente novamente em instantes.',
+'error'
+);
+return;
+}
 
 if(
 !state.capacidades ||
@@ -3440,6 +3692,36 @@ erro
 );
 }
 
+function agendarFirebasePrewarm(){
+
+var executar =
+function(){
+
+inicializarFirebaseSilencioso();
+};
+
+if(
+typeof window.requestIdleCallback ===
+'function'
+){
+
+window.requestIdleCallback(
+executar,
+{
+timeout:
+2500
+}
+);
+
+return;
+}
+
+window.setTimeout(
+executar,
+800
+);
+}
+
 function garantirFirebasePronto(){
 
 if(
@@ -3462,11 +3744,9 @@ return state.firebaseInitPromise;
 }
 
 state.firebaseInitPromise =
-new Promise(
-function(
-resolve,
-reject
-){
+garantirBootstrapPronto()
+.then(
+function(){
 
 if(
 !window.CTFirebaseWeb ||
@@ -3474,38 +3754,25 @@ typeof window.CTFirebaseWeb.inicializar !==
 'function'
 ){
 
-reject(
-new Error(
+throw new Error(
 'CT_FIREBASE_WEB_MODULO_INDISPONIVEL'
-)
 );
-
-return;
 }
-
-google.script.run
-.withSuccessHandler(
-function(r){
 
 if(
-!r ||
-r.sucesso !==
-true ||
-!r.firebaseConfig
+!state.firebaseConfigPublica
 ){
 
-reject(
-new Error(
+throw new Error(
 'CT_FIREBASE_WEB_CONFIG_INDISPONIVEL'
-)
 );
-
-return;
 }
 
-window.CTFirebaseWeb
+return window.CTFirebaseWeb
 .inicializar(
-r.firebaseConfig
+state.firebaseConfigPublica
+);
+}
 )
 .then(
 function(){
@@ -3513,20 +3780,7 @@ function(){
 state.firebaseReady =
 true;
 
-resolve(
-true
-);
-}
-)
-.catch(
-reject
-);
-}
-)
-.withFailureHandler(
-reject
-)
-.ctCentralAcessoObterFirebaseConfigPROD();
+return true;
 }
 )
 .catch(
@@ -3545,6 +3799,7 @@ throw erro;
 return state.firebaseInitPromise;
 }
 
+function chamarCadastroFirebaseServidor(
 function chamarCadastroFirebaseServidor(
 idToken,
 dados
