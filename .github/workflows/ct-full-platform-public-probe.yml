@@ -1,0 +1,59 @@
+name: Carioca Ticket - Full Platform Public Probe
+
+on:
+  push:
+    branches:
+      - diag/full-platform-public-probe-20260927
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Probe HTTP das rotas publicas
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://cariocaticket.com.br"
+          declare -a routes=(
+            "/"
+            "/eventos-v2/"
+            "/evento/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD"
+            "/checkout/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD"
+            "/produtor/"
+            "/minha-carioca/"
+            "/minha-carioca/login/"
+            "/parceiro/"
+            "/checkin/"
+            "/consulta/"
+            "/bar/"
+            "/financeiro/"
+            "/reembolsos/"
+            "/cancelamento-reembolso/"
+            "/comissoes/"
+            "/produtor/comissoes/"
+            "/produtor/carioca-pay/"
+            "/produtor/convidados/"
+            "/convite/"
+            "/backoffice/"
+            "/backoffice/carioca-pay/"
+            "/saude-vendas/"
+          )
+          fail=0
+          for route in "${routes[@]}"; do
+            tmp="$(mktemp)"
+            code="$(curl -L -sS --max-time 45 -o "$tmp" -w '%{http_code}' "$base$route" || true)"
+            bytes="$(wc -c < "$tmp" | tr -d ' ')"
+            echo "ROUTE $route HTTP=$code BYTES=$bytes"
+            if [ "$code" != "200" ] || [ "$bytes" -lt 100 ]; then
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::Uma ou mais rotas publicas falharam"
+            exit 1
+          fi
+          echo "CT_FULL_PLATFORM_PUBLIC_ROUTES_OK"
