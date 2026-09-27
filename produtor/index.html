@@ -2493,6 +2493,14 @@ r.loginEmailSenha.habilitado ===
 true
 );
 
+var cadastro =
+!!(
+r &&
+r.cadastro &&
+r.cadastro.habilitado ===
+true
+);
+
 var recuperacao =
 !!(
 r &&
@@ -2517,6 +2525,9 @@ el.showRegisterButton
 .remove(
 'hidden'
 );
+
+el.registerButton.disabled =
+!cadastro;
 
 el.forgotPasswordButton
 .classList
