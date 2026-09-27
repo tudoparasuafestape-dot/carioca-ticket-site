@@ -38,3 +38,5 @@ jobs:
           grep -q "API do Carioca Ticket funcionando" "$ROOT_FILE"
           grep -q "Portal do Produtor" "$PORTAL_FILE"
           echo "CT_PROD_PUBLIC_PROBE_OK"
+
+# recheck-after-manual-auth-20260927
