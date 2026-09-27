@@ -45,6 +45,12 @@ jobs:
           EVENT_CODE="$(curl -L -sS --max-time 60 -o "$EVENT_FILE" -w '%{http_code}' -X POST             --data-urlencode "ctMinhaCariocaAction=publicRpc"             --data-urlencode "ctMinhaCariocaRequestId=CTPROBE-EVENTO"             --data-urlencode "metodo=ctEventoPublicoCarregarPROD"             --data-urlencode "argsJson=[\"$EVENT_ID\"]"             "$BASE_URL")"
           CHECKOUT_CODE="$(curl -L -sS --max-time 60 -o "$CHECKOUT_FILE" -w '%{http_code}' -X POST             --data-urlencode "ctMinhaCariocaAction=publicRpc"             --data-urlencode "ctMinhaCariocaRequestId=CTPROBE-CHECKOUT"             --data-urlencode "metodo=ctCheckoutPublicoCarregarEventoPROD"             --data-urlencode "argsJson=[\"$EVENT_ID\"]"             "$BASE_URL")"
           echo "PUBLIC_RPC_PROBE evento=$EVENT_CODE checkout=$CHECKOUT_CODE"
+          echo "----- EVENT RPC BODY -----"
+          head -c 4000 "$EVENT_FILE" || true
+          echo
+          echo "----- CHECKOUT RPC BODY -----"
+          head -c 4000 "$CHECKOUT_FILE" || true
+          echo
           test "$EVENT_CODE" = "200"
           test "$CHECKOUT_CODE" = "200"
           grep -q "Roda de Samba Estilo Carioca" "$EVENT_FILE"
