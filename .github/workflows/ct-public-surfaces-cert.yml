@@ -41,7 +41,7 @@ jobs:
 
           event="https://cariocaticket.com.br/evento/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD"
           checkout="https://cariocaticket.com.br/checkout/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD"
-          probe "$event" "Roda de Samba Estilo Carioca" "EVENTO"
+          probe "$event" "Evento | Carioca Ticket" "EVENTO"
           probe "$checkout" "Comprar Ingressos" "CHECKOUT"
 
           echo "CT_PUBLIC_SURFACES_CERT_OK"
