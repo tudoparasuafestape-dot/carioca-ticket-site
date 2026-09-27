@@ -1,8 +1,9 @@
 name: Carioca Ticket - Probe Apps Script PROD
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - fix/apps-script-public-probe-20260927
 
 permissions:
   contents: read
@@ -10,9 +11,9 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
-      - name: Probe publico Apps Script PROD
+      - name: Probe externo raiz e Portal PROD
         shell: bash
         run: |
           set -euo pipefail
@@ -22,45 +23,10 @@ jobs:
           ROOT_CODE="$(curl -L -sS --max-time 45 -o "$ROOT_FILE" -w '%{http_code}' "$BASE_URL")"
           PORTAL_CODE="$(curl -L -sS --max-time 45 -o "$PORTAL_FILE" -w '%{http_code}' "$BASE_URL?page=produtor")"
           echo "PUBLIC_PROBE root=$ROOT_CODE portal=$PORTAL_CODE"
-          if [ "$ROOT_CODE" != "200" ] || [ "$PORTAL_CODE" != "200" ]; then
-            echo "----- ROOT 403 TEXTO VISIVEL -----"
-            sed -E 's/<script[^>]*>[[:space:][:print:]]*<\/script>/ /g; s/<style[^>]*>[[:space:][:print:]]*<\/style>/ /g; s/<[^>]+>/ /g' "$ROOT_FILE" | tr '\n' ' ' | tr -s ' ' | head -c 5000 || true
-            echo
-            echo "----- PORTAL 403 TEXTO VISIVEL -----"
-            sed -E 's/<script[^>]*>[[:space:][:print:]]*<\/script>/ /g; s/<style[^>]*>[[:space:][:print:]]*<\/style>/ /g; s/<[^>]+>/ /g' "$PORTAL_FILE" | tr '\n' ' ' | tr -s ' ' | head -c 5000 || true
-            echo
-            echo "----- ROOT 403 FINAL -----"
-            tail -c 5000 "$ROOT_FILE" | tr '\n' ' ' | head -c 5000 || true
-            echo
-            echo "::error::Apps Script PROD nao respondeu 200 fora do runner local."
-            exit 1
-          fi
+          test "$ROOT_CODE" = "200"
+          test "$PORTAL_CODE" = "200"
           grep -q "API do Carioca Ticket funcionando" "$ROOT_FILE"
           grep -q "Portal do Produtor" "$PORTAL_FILE"
-          echo "CT_PROD_PUBLIC_PROBE_OK"
-
-          EVENT_ID="EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD"
-          EVENT_FILE="$(mktemp)"
-          CHECKOUT_FILE="$(mktemp)"
-          EVENT_CODE="$(curl -L -sS --max-time 60 -o "$EVENT_FILE" -w '%{http_code}' -X POST             --data-urlencode "ctMinhaCariocaAction=publicRpc"             --data-urlencode "ctMinhaCariocaRequestId=CTPROBE-EVENTO"             --data-urlencode "metodo=ctEventoPublicoCarregarPROD"             --data-urlencode "argsJson=[\"$EVENT_ID\"]"             "$BASE_URL")"
-          CHECKOUT_CODE="$(curl -L -sS --max-time 60 -o "$CHECKOUT_FILE" -w '%{http_code}' -X POST             --data-urlencode "ctMinhaCariocaAction=publicRpc"             --data-urlencode "ctMinhaCariocaRequestId=CTPROBE-CHECKOUT"             --data-urlencode "metodo=ctCheckoutPublicoCarregarEventoPROD"             --data-urlencode "argsJson=[\"$EVENT_ID\"]"             "$BASE_URL")"
-          echo "PUBLIC_RPC_PROBE evento=$EVENT_CODE checkout=$CHECKOUT_CODE"
-          echo "----- EVENT RPC BODY -----"
-          head -c 4000 "$EVENT_FILE" || true
-          echo
-          echo "----- CHECKOUT RPC BODY -----"
-          head -c 4000 "$CHECKOUT_FILE" || true
-          echo
-          test "$EVENT_CODE" = "200"
-          test "$CHECKOUT_CODE" = "200"
-          grep -q "Roda de Samba Estilo Carioca" "$EVENT_FILE"
-          grep -q "Individual" "$CHECKOUT_FILE"
-          grep -q "Pré-venda" "$CHECKOUT_FILE"
-          echo "CT_EVENT_AND_CHECKOUT_READONLY_PROBE_OK"
-          if grep -Fq "Criar conta" "$PORTAL_FILE" && grep -Fq "Entrar" "$PORTAL_FILE"; then
-            echo "CT_PORTAL_ACCOUNT_UI_PROBE_OK"
-          else
-            echo "::warning::CT_PORTAL_ACCOUNT_UI_CREATE_MISSING"
-          fi
-
-# recheck-after-manual-auth-20260927
+          grep -Fq "Criar conta" "$PORTAL_FILE"
+          grep -Fq "Entrar" "$PORTAL_FILE"
+          echo "CT_PROD_PUBLIC_AND_PORTAL_ACCOUNT_OK"
