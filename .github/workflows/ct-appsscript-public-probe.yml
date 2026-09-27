@@ -23,11 +23,14 @@ jobs:
           PORTAL_CODE="$(curl -L -sS --max-time 45 -o "$PORTAL_FILE" -w '%{http_code}' "$BASE_URL?page=produtor")"
           echo "PUBLIC_PROBE root=$ROOT_CODE portal=$PORTAL_CODE"
           if [ "$ROOT_CODE" != "200" ] || [ "$PORTAL_CODE" != "200" ]; then
-            echo "----- ROOT 403 BODY (primeiros 1200 bytes) -----"
-            head -c 1200 "$ROOT_FILE" | tr '\n' ' ' || true
+            echo "----- ROOT 403 TEXTO VISIVEL -----"
+            sed -E 's/<script[^>]*>[[:space:][:print:]]*<\/script>/ /g; s/<style[^>]*>[[:space:][:print:]]*<\/style>/ /g; s/<[^>]+>/ /g' "$ROOT_FILE" | tr '\n' ' ' | tr -s ' ' | head -c 5000 || true
             echo
-            echo "----- PORTAL 403 BODY (primeiros 1200 bytes) -----"
-            head -c 1200 "$PORTAL_FILE" | tr '\n' ' ' || true
+            echo "----- PORTAL 403 TEXTO VISIVEL -----"
+            sed -E 's/<script[^>]*>[[:space:][:print:]]*<\/script>/ /g; s/<style[^>]*>[[:space:][:print:]]*<\/style>/ /g; s/<[^>]+>/ /g' "$PORTAL_FILE" | tr '\n' ' ' | tr -s ' ' | head -c 5000 || true
+            echo
+            echo "----- ROOT 403 FINAL -----"
+            tail -c 5000 "$ROOT_FILE" | tr '\n' ' ' | head -c 5000 || true
             echo
             echo "::error::Apps Script PROD nao respondeu 200 fora do runner local."
             exit 1
