@@ -1,0 +1,47 @@
+name: Carioca Ticket - Public Surfaces Certification
+
+on:
+  push:
+    branches:
+      - diag/full-platform-public-surfaces-20260927
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Probar superficies publicas
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe() {
+            url="$1"
+            marker="$2"
+            name="$3"
+            f="$(mktemp)"
+            code="$(curl -L -sS --max-time 45 -o "$f" -w '%{http_code}' "$url")"
+            echo "SURFACE $name HTTP=$code"
+            test "$code" = "200"
+            grep -Fq "$marker" "$f"
+            echo "SURFACE_OK $name"
+          }
+
+          probe "https://cariocaticket.com.br/" "Carioca Ticket" "HOME"
+          probe "https://cariocaticket.com.br/minha-carioca/" "Minha Carioca" "MINHA_CARIOCA"
+          probe "https://cariocaticket.com.br/parceiro/" "Portal Parceiro CT" "PARCEIRO"
+          probe "https://cariocaticket.com.br/checkin/" "Check-in Carioca" "CHECKIN"
+          probe "https://cariocaticket.com.br/bar/" "Carioca Bar" "BAR"
+          probe "https://cariocaticket.com.br/consulta/" "Consulta de Ingressos" "CONSULTA"
+          probe "https://cariocaticket.com.br/financeiro/" "Financeiro do Produtor" "FINANCEIRO"
+          probe "https://cariocaticket.com.br/convite/" "Convite privado" "CONVITE"
+          probe "https://cariocaticket.com.br/produtor/" "Portal do Produtor" "PRODUTOR"
+
+          event="https://cariocaticket.com.br/evento/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD"
+          checkout="https://cariocaticket.com.br/checkout/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD"
+          probe "$event" "Roda de Samba Estilo Carioca" "EVENTO"
+          probe "$checkout" "Comprar Ingressos" "CHECKOUT"
+
+          echo "CT_PUBLIC_SURFACES_CERT_OK"
