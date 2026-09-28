@@ -153,7 +153,10 @@
 var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 var pending={};
-var eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();
+var params=new URLSearchParams(location.search);
+var eventId=String(params.get('evento')||'').trim();
+var producerId=String(params.get('produtor')||'').trim();
+var eventNameHint=String(params.get('eventoNome')||'').trim();
 var token='';
 var data={tipos:[],lotes:[],resumo:{}};
 
@@ -177,7 +180,7 @@ function rpc(method,args){
     function add(k,v){var el=document.createElement('input');el.type='hidden';el.name=k;el.value=String(v==null?'':v);form.appendChild(el)}
     add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));
     document.body.append(frame,form);
-    pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},40000)};
+    pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},20000)};
     form.submit();
   });
 }
@@ -206,14 +209,14 @@ function badge(status){status=String(status||'').toUpperCase();var cls=status===
 async function load(){
   loading(true,'Carregando ingressos e lotes...');
   try{
-    var r=await rpc('ctIngressosConfigCarregarPROD',[token,eventId]);
+    var r=await rpc('ctIngressosConfigCarregarPROD',[token,eventId,producerId]);
     if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Não foi possível carregar a configuração.');
     data=r;render();
   }catch(e){toast(e.message,true)}finally{loading(false)}
 }
 function render(){
   var ev=data.evento||{};
-  document.getElementById('eventName').textContent=ev.nome||eventId;
+  document.getElementById('eventName').textContent=ev.nome||eventNameHint||eventId;
   document.getElementById('eventMeta').textContent=[ev.data,eventId].filter(Boolean).join(' • ');
   var s=data.resumo||{};
   document.getElementById('sumTipos').textContent=s.tipos||0;
@@ -281,25 +284,25 @@ async function saveType(e){
   e.preventDefault();
   var payload={id:document.getElementById('typeId').value,nome:document.getElementById('typeName').value,descricao:document.getElementById('typeDescription').value,preco:document.getElementById('typePrice').value,quantidade:document.getElementById('typeQuantity').value,capacidadePorVenda:document.getElementById('typeCapacity').value,ordem:document.getElementById('typeOrder').value,cor:document.getElementById('typeColor').value,status:document.getElementById('typeStatus').value};
   loading(true,'Salvando tipo de ingresso...');
-  try{var r=await rpc('ctIngressosConfigSalvarTipoPROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar tipo.');document.getElementById('typeDialog').close();toast(r.mensagem||'Tipo salvo.');await load()}catch(err){toast(err.message,true)}finally{loading(false)}
+  try{var r=await rpc('ctIngressosConfigSalvarTipoPROD',[token,eventId,producerId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar tipo.');document.getElementById('typeDialog').close();toast(r.mensagem||'Tipo salvo.');await load()}catch(err){toast(err.message,true)}finally{loading(false)}
 }
 async function saveLot(e){
   e.preventDefault();
   var payload={id:document.getElementById('lotId').value,tipoId:document.getElementById('lotType').value,nome:document.getElementById('lotName').value,preco:document.getElementById('lotPrice').value,quantidade:document.getElementById('lotQuantity').value,dataInicio:document.getElementById('lotStart').value,dataFim:document.getElementById('lotEnd').value,status:document.getElementById('lotStatus').value,ordem:document.getElementById('lotOrder').value};
   loading(true,'Salvando lote...');
-  try{var r=await rpc('ctIngressosConfigSalvarLotePROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar lote.');document.getElementById('lotDialog').close();toast(r.mensagem||'Lote salvo.');await load()}catch(err){toast(err.message,true)}finally{loading(false)}
+  try{var r=await rpc('ctIngressosConfigSalvarLotePROD',[token,eventId,producerId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar lote.');document.getElementById('lotDialog').close();toast(r.mensagem||'Lote salvo.');await load()}catch(err){toast(err.message,true)}finally{loading(false)}
 }
 async function toggleType(id){
   var t=data.tipos.find(function(x){return x.id===id});if(!t)return;
   var next=String(t.status).toUpperCase()==='ATIVO'?'INATIVO':'ATIVO';
   loading(true,'Atualizando tipo...');
-  try{var r=await rpc('ctIngressosConfigAlterarStatusTipoPROD',[token,eventId,id,next]);toast(r&&r.mensagem||'Status atualizado.');await load()}catch(e){toast(e.message,true)}finally{loading(false)}
+  try{var r=await rpc('ctIngressosConfigAlterarStatusTipoPROD',[token,eventId,producerId,id,next]);toast(r&&r.mensagem||'Status atualizado.');await load()}catch(e){toast(e.message,true)}finally{loading(false)}
 }
 async function toggleLot(id){
   var l=data.lotes.find(function(x){return x.id===id});if(!l)return;
   var next=String(l.status).toUpperCase()==='ATIVO'?'INATIVO':'ATIVO';
   loading(true,'Atualizando lote...');
-  try{var r=await rpc('ctIngressosConfigAlterarStatusLotePROD',[token,eventId,id,next]);toast(r&&r.mensagem||'Status atualizado.');await load()}catch(e){toast(e.message,true)}finally{loading(false)}
+  try{var r=await rpc('ctIngressosConfigAlterarStatusLotePROD',[token,eventId,producerId,id,next]);toast(r&&r.mensagem||'Status atualizado.');await load()}catch(e){toast(e.message,true)}finally{loading(false)}
 }
 document.getElementById('newType').addEventListener('click',function(){openType('')});
 document.getElementById('newLot').addEventListener('click',function(){openLot('')});
@@ -316,7 +319,7 @@ document.addEventListener('click',function(e){
 });
 var s=readSession();
 if(!s||!s.token){location.replace('/produtor/');return}
-if(!eventId){location.replace('/central/');return}
+if(!eventId||!producerId){location.replace('/central/');return}
 token=String(s.token);load();
 }());
 </script>
