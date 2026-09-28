@@ -142,6 +142,9 @@
       <a id="mEventos" class="module" data-perm="EVENTOS" href="/eventos-v2/">
         <div class="icon">📅</div><div><strong>Eventos</strong><span>Gerencie eventos autorizados, publicação e status.</span></div>
       </a>
+      <a id="mIngressos" class="module" data-perm="EVENTOS" href="#">
+        <div class="icon">🎟️</div><div><strong>Ingressos & Lotes</strong><span>Configure tipos, preços, quantidades e lotes antes de publicar.</span></div>
+      </a>
       <a id="mFornecedores" class="module" data-perm="FORNECEDORES" href="#">
         <div class="icon">🤝</div><div><strong>Fornecedores</strong><span>Prestadores, serviços, valores e pagamentos do evento.</span></div>
       </a>
@@ -301,6 +304,21 @@ function currentEvents(){
   return state.context&&Array.isArray(state.context.eventos)?state.context.eventos:[];
 }
 
+function localidadeEvento(ev){
+  var cidade=String(ev&&ev.cidade||'').trim();
+  var uf=String(ev&&ev.uf||'').trim().toUpperCase();
+  if(!cidade)return uf;
+  if(!uf)return cidade;
+  var finalNormalizado=cidade.toUpperCase().replace(/\s+/g,' ');
+  var sufixos=[' / '+uf,' - '+uf,', '+uf];
+  for(var i=0;i<sufixos.length;i++){
+    if(finalNormalizado.slice(-sufixos[i].length)===sufixos[i]){
+      return cidade;
+    }
+  }
+  return cidade+' - '+uf;
+}
+
 function applyEvent(){
   var id=String(eventSelect.value||'');
   state.event=currentEvents().find(function(e){return String(e.id||'')===id})||null;
@@ -309,7 +327,7 @@ function applyEvent(){
 
   if(state.event){
     var ev=state.event;
-    var bits=[ev.data,ev.horario,ev.local,[ev.cidade,ev.uf].filter(Boolean).join(' - ')].filter(Boolean);
+    var bits=[ev.data,ev.horario,ev.local,localidadeEvento(ev)].filter(Boolean);
     eventInfo.innerHTML=bits.map(function(x){return '<span>'+escapeHtml(x)+'</span>'}).join('');
     eventInfo.classList.add('show');
   }else{
@@ -359,6 +377,10 @@ function updateModules(){
 
   document.getElementById('mEventos').href='/eventos-v2/';
 
+  document.getElementById('mIngressos').href=id
+    ?'/produtor/ingressos/?evento='+encodeURIComponent(id)
+    :'#';
+
   document.getElementById('mFornecedores').href=id
     ?'/fornecedores/?evento='+encodeURIComponent(id)
     :'#';
@@ -393,6 +415,7 @@ function updateModules(){
     document.getElementById('mCupons').classList.add('disabled');
     document.getElementById('mComissionado').classList.add('disabled');
     document.getElementById('mBar').classList.add('disabled');
+    document.getElementById('mIngressos').classList.add('disabled');
     document.getElementById('mFornecedores').classList.add('disabled');
     document.getElementById('mFinanceiro').classList.add('disabled');
     document.getElementById('mReembolsos').classList.add('disabled');
