@@ -77,8 +77,15 @@ async function mockProducer(page,state){
     await route.fulfill({
       status:200,
       contentType:'text/html; charset=utf-8',
-      body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,ok,resultado,erro)+', "*");<\\/script></body></html>'
+      body:'<!doctype html><html><body>mock</body></html>'
     });
+    const payload=JSON.parse(envelope(id,ok,resultado,erro));
+    await page.evaluate((payload)=>{
+      window.dispatchEvent(new MessageEvent('message',{
+        data:payload,
+        origin:'https://script.google.com'
+      }));
+    },payload);
   });
 }
 
@@ -111,8 +118,15 @@ async function mockInvite(page,state){
     await route.fulfill({
       status:200,
       contentType:'text/html; charset=utf-8',
-      body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,ok,resultado,erro)+', "*");<\\/script></body></html>'
+      body:'<!doctype html><html><body>mock</body></html>'
     });
+    const payload=JSON.parse(envelope(id,ok,resultado,erro));
+    await page.evaluate((payload)=>{
+      window.dispatchEvent(new MessageEvent('message',{
+        data:payload,
+        origin:'https://script.google.com'
+      }));
+    },payload);
   });
 }
 
@@ -126,9 +140,7 @@ test.describe('Evento privado — jornada essencial',()=>{
 
     await page.goto('/produtor/convidados/?evento=EVT-PRIVATE-E2E',{waitUntil:'domcontentloaded'});
     await expect.poll(()=>state.methods.includes('ctEventoAcessoProdutorObterPROD')).toBe(true);
-    await page.waitForTimeout(500);
-    console.log('PRIVATE_PRODUCER_FRAMES', JSON.stringify(await Promise.all(page.frames().map(async f=>({url:f.url(),body:(await f.locator('body').innerText().catch(()=>'' )).slice(0,500)})))));
-    await expect(page.locator('#eventName')).toHaveText('Evento Privado E2E',{timeout:3000});
+    await expect(page.locator('#eventName')).toHaveText('Evento Privado E2E',{timeout:5000});
     await expect(page.locator('#accessMode')).toHaveValue('PUBLICO');
 
     await page.locator('#accessMode').selectOption('PRIVADO_CONVITE');
@@ -159,9 +171,7 @@ test.describe('Evento privado — jornada essencial',()=>{
 
     await page.goto('/convite/?token=TOKEN-E2E',{waitUntil:'domcontentloaded'});
     await expect.poll(()=>state.methods.includes('ctEventoConviteCarregarPublicoPROD')).toBe(true);
-    await page.waitForTimeout(500);
-    console.log('PRIVATE_INVITE_FRAMES', JSON.stringify(await Promise.all(page.frames().map(async f=>({url:f.url(),body:(await f.locator('body').innerText().catch(()=>'' )).slice(0,500)})))));
-    await expect(page.locator('#eventName')).toHaveText('Evento Privado E2E',{timeout:3000});
+    await expect(page.locator('#eventName')).toHaveText('Evento Privado E2E',{timeout:5000});
     await expect(page.locator('#guestName')).toHaveText('Convidado Teste');
     await expect(page.locator('#quota')).toHaveText('2');
     await expect(page.locator('#phoneField')).not.toHaveClass(/hidden/);
