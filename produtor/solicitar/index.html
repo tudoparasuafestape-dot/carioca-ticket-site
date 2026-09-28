@@ -149,7 +149,7 @@ document.getElementById('producerForm').addEventListener('submit',async function
   var data={nomeFantasia:document.getElementById('nomeFantasia').value,razaoSocial:document.getElementById('razaoSocial').value,cpfCnpj:document.getElementById('cpfCnpj').value,whatsapp:document.getElementById('whatsapp').value,cidade:document.getElementById('cidade').value,uf:String(document.getElementById('uf').value||'').toUpperCase(),instagram:document.getElementById('instagram').value};
   var b=document.getElementById('submitButton');b.disabled=true;setLoading(true,'Enviando para análise...');
   try{var r=await rpc('ctProdutorOnboardingEnviarPROD',[session.token,data]);if(!r||r.sucesso!==true)throw new Error('Não foi possível enviar a solicitação.');msg('Cadastro enviado para análise.','ok');await load()}
-  catch(e){var m=String(e&&e.message||e||'');if(m.indexOf('DOCUMENTO_INVALIDO')>=0)m='Informe um CPF ou CNPJ válido.';else if(m.indexOf('WHATSAPP_INVALIDO')>=0)m='Informe um WhatsApp válido.';else if(m.indexOf('JA_POSSUI_PRODUTOR')>=0){location.replace('/produtor/');return}msg(m,'bad')}
+  catch(e){var m=String(e&&e.message||e||'');if(m.indexOf('DOCUMENTO_INVALIDO')>=0)m='Informe um CPF ou CNPJ válido.';else if(m.indexOf('DOCUMENTO_JA_CADASTRADO')>=0||m.indexOf('CPF_CNPJ_JA_CADASTRADO')>=0)m='Este CPF/CNPJ já está vinculado a um produtor na Carioca Ticket. Se você precisa acessar essa operação, solicite ao administrador o vínculo da sua conta ao produtor existente.';else if(m.indexOf('WHATSAPP_INVALIDO')>=0)m='Informe um WhatsApp válido.';else if(m.indexOf('JA_POSSUI_PRODUTOR')>=0){location.replace('/produtor/');return}msg(m,'bad')}
   finally{setLoading(false);b.disabled=false}
 });
 load();
