@@ -151,30 +151,35 @@ test.describe('Jornada do produtor até publicação',()=>{
   test('evento aguardando análise informa autorização automática e não publica',async({page})=>{
     const state={ready:false,published:false,statusCalls:0,publishCalls:0};
     await installProducerEventMock(page,state);await seed(page);
-    const dialogs=[];
-    page.on('dialog',async dialog=>{dialogs.push(dialog.message());await dialog.dismiss()});
     await page.goto('/eventos-v2/',{waitUntil:'domcontentloaded'});
 
     await expect(page.getByRole('button',{name:'Ver situação e publicar'})).toBeVisible();
     await page.getByRole('button',{name:'Ver situação e publicar'}).click();
 
     await expect.poll(()=>state.statusCalls).toBe(1);
-    await expect.poll(()=>dialogs.join('\n')).toContain('autorização já foi solicitada automaticamente');
+    await expect(page.locator('#modalMensagemCT')).toBeVisible();
+    await expect(page.locator('#modalMensagemTitulo')).toHaveText('Faltam etapas para publicar');
+    await expect(page.locator('#modalMensagemTexto')).toContainText('autorização já foi solicitada automaticamente');
+    await expect(page.locator('#modalMensagemLista')).toContainText('autorização de risco/financeiro');
     expect(state.publishCalls).toBe(0);
   });
 
   test('evento pronto consulta gates antes de confirmar e publicar',async({page})=>{
     const state={ready:true,published:false,statusCalls:0,publishCalls:0};
     await installProducerEventMock(page,state);await seed(page);
-    const dialogs=[];
-    page.on('dialog',async dialog=>{dialogs.push(dialog.message());await dialog.accept()});
     await page.goto('/eventos-v2/',{waitUntil:'domcontentloaded'});
 
     await page.getByRole('button',{name:'Ver situação e publicar'}).click();
 
     await expect.poll(()=>state.statusCalls).toBe(1);
+    await expect(page.locator('#modalMensagemCT')).toBeVisible();
+    await expect(page.locator('#modalMensagemTitulo')).toHaveText('Publicar vendas online');
+    await expect(page.locator('#modalMensagemTexto')).toContainText('Todos os requisitos foram atendidos');
+
+    await page.locator('#modalMensagemConfirmar').click();
+
     await expect.poll(()=>state.publishCalls).toBe(1);
-    expect(dialogs.some(x=>x.includes('Todos os requisitos foram atendidos'))).toBe(true);
-    expect(dialogs.some(x=>x.includes('Vendas publicadas com sucesso.'))).toBe(true);
+    await expect(page.locator('#modalMensagemTitulo')).toHaveText('Vendas publicadas');
+    await expect(page.locator('#modalMensagemTexto')).toContainText('Vendas publicadas com sucesso.');
   });
 });
