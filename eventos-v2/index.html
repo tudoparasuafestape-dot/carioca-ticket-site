@@ -711,6 +711,51 @@
       color: var(--vermelho);
     }
 
+    .ct-dialogo-corpo {
+      padding: 22px;
+    }
+
+    .ct-dialogo-texto {
+      margin: 0;
+      color: #4f4f4f;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    .ct-dialogo-lista {
+      display: grid;
+      gap: 9px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .ct-dialogo-lista li {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      padding: 11px 12px;
+      border: 1px solid #eadcae;
+      border-radius: 11px;
+      background: #fffaf0;
+      color: #5b4815;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .ct-dialogo-lista li::before {
+      content: "⚠";
+      flex: 0 0 auto;
+    }
+
+    .ct-dialogo-acoes {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 20px;
+    }
+
     @media (
       max-width:
       850px
@@ -1503,10 +1548,32 @@
 
   </dialog>
 
+  <dialog id="modalMensagemCT">
+    <div class="modal">
+      <header class="modal-topo">
+        <div>
+          <p class="modal-marca">CARIOCA TICKET</p>
+          <h2 id="modalMensagemTitulo">Informação</h2>
+        </div>
+        <button id="modalMensagemFechar" class="modal-fechar" type="button" aria-label="Fechar">✕</button>
+      </header>
+      <div class="ct-dialogo-corpo">
+        <p id="modalMensagemTexto" class="ct-dialogo-texto"></p>
+        <ul id="modalMensagemLista" class="ct-dialogo-lista oculto"></ul>
+        <div class="ct-dialogo-acoes">
+          <button id="modalMensagemCancelar" class="botao botao-secundario oculto" type="button">Cancelar</button>
+          <button id="modalMensagemConfirmar" class="botao botao-dourado" type="button">Entendi</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
 
   <script>
+    const CHAVE_EVENTO_GESTAO = 'CT_CENTRAL_EVENTO_OFICIAL_V1';
     let eventosCarregados = [];
     let contextoCadastroSeguro = null;
+    let resolverModalMensagemCT = null;
 
     document.addEventListener(
       'DOMContentLoaded',
@@ -1592,6 +1659,51 @@
           'change',
           atualizarVisibilidadeEventoPrivado
         );
+
+      document
+        .getElementById(
+          'modalMensagemConfirmar'
+        )
+        .addEventListener(
+          'click',
+          function() {
+            fecharModalMensagemCT(true);
+          }
+        );
+
+      document
+        .getElementById(
+          'modalMensagemCancelar'
+        )
+        .addEventListener(
+          'click',
+          function() {
+            fecharModalMensagemCT(false);
+          }
+        );
+
+      document
+        .getElementById(
+          'modalMensagemFechar'
+        )
+        .addEventListener(
+          'click',
+          function() {
+            fecharModalMensagemCT(false);
+          }
+        );
+
+      document
+        .getElementById(
+          'modalMensagemCT'
+        )
+        .addEventListener(
+          'cancel',
+          function(evento) {
+            evento.preventDefault();
+            fecharModalMensagemCT(false);
+          }
+        );
     }
 
 
@@ -1631,12 +1743,51 @@
     function preencherTelaEventos(
       resposta
     ) {
+      const selecionadoId =
+        obterEventoGestaoLocal();
+
+      let selecionado =
+        null;
+
       eventosCarregados =
-        resposta.eventos || [];
+        (
+          resposta.eventos ||
+          []
+        ).map(
+          function(evento) {
+            const copia =
+              Object.assign(
+                {},
+                evento
+              );
+
+            copia.ativo =
+              !!selecionadoId &&
+              String(
+                copia.id ||
+                ''
+              ) === selecionadoId;
+
+            if (
+              copia.ativo
+            ) {
+              selecionado =
+                copia;
+            }
+
+            return copia;
+          }
+        );
+
+      if (
+        selecionadoId &&
+        !selecionado
+      ) {
+        limparEventoGestaoLocal();
+      }
 
       preencherEventoAtivo(
-        resposta.eventoAtivo ||
-        null
+        selecionado
       );
 
       preencherListaEventos(
@@ -1890,9 +2041,15 @@
           evento
         );
 
+      const cidadeExibicao =
+        normalizarCidadeExibicao(
+          evento.cidade,
+          evento.uf
+        );
+
       const localCompleto = [
         evento.local || '',
-        evento.cidade || '',
+        cidadeExibicao,
         evento.uf || ''
       ]
         .filter(
@@ -2032,9 +2189,19 @@
     function criarBotoesStatus(
       evento
     ) {
+      const status =
+        String(
+          evento.status ||
+          ''
+        )
+          .trim()
+          .toUpperCase();
+
       if (
-        evento.status ===
-        'CANCELADO'
+        status ===
+        'CANCELADO' ||
+        status ===
+        'ENCERRADO'
       ) {
         return (
           '<button ' +
@@ -2052,20 +2219,32 @@
       }
 
       if (
-        evento.status ===
-        'ENCERRADO'
+        status ===
+        'RASCUNHO'
       ) {
         return (
           '<button ' +
-            'class="botao botao-secundario" ' +
+            'class="botao botao-dourado" ' +
             'type="button" ' +
             'onclick="alterarStatus(\'' +
               escaparAtributo(
                 evento.id
               ) +
-            '\', \'RASCUNHO\')"' +
+            '\', \'ATIVO\')"' +
           '>' +
-            'Reabrir como rascunho' +
+            'Ativar evento' +
+          '</button>' +
+
+          '<button ' +
+            'class="botao botao-vermelho" ' +
+            'type="button" ' +
+            'onclick="alterarStatus(\'' +
+              escaparAtributo(
+                evento.id
+              ) +
+            '\', \'CANCELADO\')"' +
+          '>' +
+            'Cancelar' +
           '</button>'
         );
       }
@@ -2097,54 +2276,69 @@
       );
     }
 
-
-    function ativarEvento(
+    async function ativarEvento(
       eventoId
     ) {
-      if (
-        !confirm(
-          'Deseja selecionar este evento para gestão? Isso não altera a publicação dos outros eventos.'
-        )
-      ) {
+      const evento =
+        eventosCarregados.find(
+          function(item) {
+            return String(
+              item &&
+              item.id ||
+              ''
+            ) ===
+              String(
+                eventoId ||
+                ''
+              );
+          }
+        );
+
+      if (!evento) {
+        mostrarErro(
+          'Não foi possível localizar este evento na sua sessão.'
+        );
         return;
       }
 
-      alterarCarregamento(
-        true
+      const confirmado =
+        await mostrarModalMensagemCT({
+          titulo:
+            'Selecionar evento para gestão',
+          mensagem:
+            'Você vai trabalhar com “' +
+            String(
+              evento.nome ||
+              'este evento'
+            ) +
+            '” nos módulos da Central Mobile. Isso não publica vendas e não altera outros eventos.',
+          confirmarTexto:
+            'Selecionar evento',
+          cancelarTexto:
+            'Cancelar',
+          mostrarCancelar:
+            true
+        });
+
+      if (!confirmado) {
+        return;
+      }
+
+      salvarEventoGestaoLocal(
+        eventoId
       );
 
-      google.script.run
-        .withSuccessHandler(
-          function(resposta) {
-            alterarCarregamento(
-              false
-            );
+      await mostrarModalMensagemCT({
+        titulo:
+          'Evento selecionado',
+        mensagem:
+          'Pronto. Este evento agora é o contexto de gestão deste navegador. Você pode continuar a configuração com segurança.',
+        confirmarTexto:
+          'Continuar'
+      });
 
-            alert(
-              resposta.mensagem ||
-              'Evento selecionado para gestão.'
-            );
-
-            carregarEventos();
-          }
-        )
-        .withFailureHandler(
-          function(erro) {
-            alterarCarregamento(
-              false
-            );
-
-            mostrarErro(
-              erro.message ||
-              'Não foi possível selecionar o evento para gestão.'
-            );
-          }
-        )
-        .selecionarEventoAtivo(
-          eventoId
-        );
+      carregarEventos();
     }
-
 
     function publicarEvento(
       eventoId
@@ -2155,7 +2349,7 @@
 
       google.script.run
         .withSuccessHandler(
-          function(status) {
+          async function(status) {
             alterarCarregamento(
               false
             );
@@ -2173,9 +2367,15 @@
             if (
               status.publicado === true
             ) {
-              alert(
-                'As vendas deste evento já estão publicadas.'
-              );
+              await mostrarModalMensagemCT({
+                titulo:
+                  'Vendas já publicadas',
+                mensagem:
+                  'Este evento já está disponível para vendas online.',
+                confirmarTexto:
+                  'Entendi'
+              });
+
               carregarEventos();
               return;
             }
@@ -2183,25 +2383,45 @@
             if (
               status.prontoPublicar !== true
             ) {
-              alert(
+              const mensagem =
                 montarMensagemSituacaoPublicacao(
                   status
-                )
-              );
+                );
+
+              await mostrarModalMensagemCT({
+                titulo:
+                  'Faltam etapas para publicar',
+                mensagem:
+                  mensagem.cabecalho,
+                itens:
+                  mensagem.pendencias,
+                confirmarTexto:
+                  'Entendi'
+              });
               return;
             }
+
+            const confirmar =
+              await mostrarModalMensagemCT({
+                titulo:
+                  'Publicar vendas online',
+                mensagem:
+                  'Todos os requisitos foram atendidos e a autorização está liberada. Deseja publicar as vendas online deste evento agora?',
+                confirmarTexto:
+                  'Publicar vendas',
+                cancelarTexto:
+                  'Cancelar',
+                mostrarCancelar:
+                  true
+              });
 
             if (
-              !confirm(
-                'Todos os requisitos foram atendidos e a autorização está liberada. Deseja publicar as vendas online deste evento agora?'
-              )
+              confirmar
             ) {
-              return;
+              confirmarPublicacaoEvento(
+                eventoId
+              );
             }
-
-            confirmarPublicacaoEvento(
-              eventoId
-            );
           }
         )
         .withFailureHandler(
@@ -2211,10 +2431,12 @@
             );
 
             mostrarErro(
-              erro &&
-              erro.message
-                ? erro.message
-                : 'Não foi possível consultar a situação da publicação.'
+              traduzirErroEventos(
+                erro &&
+                erro.message
+                  ? erro.message
+                  : 'Não foi possível consultar a situação da publicação.'
+              )
             );
           }
         )
@@ -2222,7 +2444,6 @@
           eventoId
         );
     }
-
 
     function montarMensagemSituacaoPublicacao(
       status
@@ -2283,17 +2504,12 @@
           'A autorização da Carioca Ticket já foi aprovada. Ainda existem requisitos operacionais antes da publicação.';
       }
 
-      return (
-        cabecalho +
-        (
-          pendencias.length
-            ? '\n\nPendências:\n• ' +
-              pendencias.join(
-                '\n• '
-              )
-            : ''
-        )
-      );
+      return {
+        cabecalho:
+          cabecalho,
+        pendencias:
+          pendencias
+      };
     }
 
 
@@ -2331,31 +2547,33 @@
                         : []
                     );
 
-              alert(
-                (
+              mostrarModalMensagemCT({
+                titulo:
+                  'Publicação ainda bloqueada',
+                mensagem:
                   resposta &&
                   resposta.mensagem
                     ? resposta.mensagem
-                    : 'O evento ainda não está pronto para publicação.'
-                ) +
-                (
-                  pendencias.length
-                    ? '\n\n• ' +
-                      pendencias.join(
-                        '\n• '
-                      )
-                    : ''
-                )
-              );
+                    : 'O evento ainda não está pronto para publicação.',
+                itens:
+                  pendencias,
+                confirmarTexto:
+                  'Entendi'
+              });
 
               carregarEventos();
               return;
             }
 
-            alert(
-              resposta.mensagem ||
-              'Vendas publicadas com sucesso.'
-            );
+            mostrarModalMensagemCT({
+              titulo:
+                'Vendas publicadas',
+              mensagem:
+                resposta.mensagem ||
+                'Vendas publicadas com sucesso.',
+              confirmarTexto:
+                'Continuar'
+            });
 
             carregarEventos();
           }
@@ -2367,10 +2585,12 @@
             );
 
             mostrarErro(
-              erro &&
-              erro.message
-                ? erro.message
-                : 'Não foi possível publicar as vendas.'
+              traduzirErroEventos(
+                erro &&
+                erro.message
+                  ? erro.message
+                  : 'Não foi possível publicar as vendas.'
+              )
             );
           }
         )
@@ -2379,14 +2599,24 @@
         );
     }
 
-    function fecharVendasEvento(
+    async function fecharVendasEvento(
       eventoId
     ) {
-      if (
-        !confirm(
-          'Deseja fechar as vendas online somente deste evento? Os demais eventos publicados continuarão ativos.'
-        )
-      ) {
+      const confirmado =
+        await mostrarModalMensagemCT({
+          titulo:
+            'Fechar vendas online',
+          mensagem:
+            'Deseja fechar as vendas online somente deste evento? Os demais eventos publicados continuarão ativos.',
+          confirmarTexto:
+            'Fechar vendas',
+          cancelarTexto:
+            'Cancelar',
+          mostrarCancelar:
+            true
+        });
+
+      if (!confirmado) {
         return;
       }
 
@@ -2396,15 +2626,20 @@
 
       google.script.run
         .withSuccessHandler(
-          function(resposta) {
+          async function(resposta) {
             alterarCarregamento(
               false
             );
 
-            alert(
-              resposta.mensagem ||
-              'Vendas online fechadas.'
-            );
+            await mostrarModalMensagemCT({
+              titulo:
+                'Vendas fechadas',
+              mensagem:
+                resposta.mensagem ||
+                'Vendas online fechadas.',
+              confirmarTexto:
+                'Entendi'
+            });
 
             carregarEventos();
           }
@@ -2416,8 +2651,10 @@
             );
 
             mostrarErro(
-              erro.message ||
-              'Não foi possível fechar as vendas deste evento.'
+              traduzirErroEventos(
+                erro.message ||
+                'Não foi possível fechar as vendas deste evento.'
+              )
             );
           }
         )
@@ -2425,7 +2662,6 @@
           eventoId
         );
     }
-
 
     function abrirCheckoutEvento(
       url
@@ -2469,9 +2705,14 @@
           )
           .then(
             function() {
-              alert(
-                'Link do checkout copiado.'
-              );
+              mostrarModalMensagemCT({
+                titulo:
+                  'Link copiado',
+                mensagem:
+                  'O link do checkout foi copiado para a área de transferência.',
+                confirmarTexto:
+                  'Entendi'
+              });
             }
           )
           .catch(
@@ -2493,24 +2734,53 @@
     }
 
 
-    function alterarStatus(
+    async function alterarStatus(
       eventoId,
       novoStatus
     ) {
-      const mensagem =
-        novoStatus === 'CANCELADO'
-          ? 'Deseja cancelar este evento?'
+      const titulo =
+        novoStatus === 'ATIVO'
+          ? 'Ativar evento'
           : (
-              novoStatus === 'ENCERRADO'
-                ? 'Deseja encerrar este evento?'
-                : 'Deseja alterar o status deste evento?'
+              novoStatus === 'CANCELADO'
+                ? 'Cancelar evento'
+                : (
+                    novoStatus === 'ENCERRADO'
+                      ? 'Encerrar evento'
+                      : 'Alterar status do evento'
+                  )
             );
 
-      if (
-        !confirm(
-          mensagem
-        )
-      ) {
+      const mensagem =
+        novoStatus === 'ATIVO'
+          ? 'O evento ficará ativo para configuração operacional. Isso ainda não publica vendas.'
+          : (
+              novoStatus === 'CANCELADO'
+                ? 'Deseja cancelar este evento?'
+                : (
+                    novoStatus === 'ENCERRADO'
+                      ? 'Deseja encerrar este evento?'
+                      : 'Deseja reabrir este evento como rascunho?'
+                  )
+            );
+
+      const confirmado =
+        await mostrarModalMensagemCT({
+          titulo:
+            titulo,
+          mensagem:
+            mensagem,
+          confirmarTexto:
+            novoStatus === 'ATIVO'
+              ? 'Ativar evento'
+              : 'Confirmar',
+          cancelarTexto:
+            'Voltar',
+          mostrarCancelar:
+            true
+        });
+
+      if (!confirmado) {
         return;
       }
 
@@ -2520,15 +2790,20 @@
 
       google.script.run
         .withSuccessHandler(
-          function(resposta) {
+          async function(resposta) {
             alterarCarregamento(
               false
             );
 
-            alert(
-              resposta.mensagem ||
-              'Status atualizado.'
-            );
+            await mostrarModalMensagemCT({
+              titulo:
+                'Status atualizado',
+              mensagem:
+                resposta.mensagem ||
+                'Status atualizado.',
+              confirmarTexto:
+                'Continuar'
+            });
 
             carregarEventos();
           }
@@ -2540,8 +2815,10 @@
             );
 
             mostrarErro(
-              erro.message ||
-              'Não foi possível atualizar o status.'
+              traduzirErroEventos(
+                erro.message ||
+                'Não foi possível atualizar o status.'
+              )
             );
           }
         )
@@ -2550,7 +2827,6 @@
           novoStatus
         );
     }
-
 
     function abrirModalNovoEvento() {
       limparFormularioEvento();
@@ -2742,8 +3018,13 @@
           ),
 
         cidade:
-          obterValor(
-            'campoCidade'
+          normalizarCidadeExibicao(
+            obterValor(
+              'campoCidade'
+            ),
+            obterValor(
+              'campoUf'
+            )
           ),
 
         uf:
@@ -3088,6 +3369,285 @@
       }
 
       return 'badge-rascunho';
+    }
+
+
+    function obterEventoGestaoLocal() {
+      try {
+        return String(
+          localStorage.getItem(
+            CHAVE_EVENTO_GESTAO
+          ) ||
+          ''
+        ).trim();
+      } catch (_) {
+        return '';
+      }
+    }
+
+
+    function salvarEventoGestaoLocal(
+      eventoId
+    ) {
+      try {
+        localStorage.setItem(
+          CHAVE_EVENTO_GESTAO,
+          String(
+            eventoId ||
+            ''
+          ).trim()
+        );
+      } catch (_) {}
+    }
+
+
+    function limparEventoGestaoLocal() {
+      try {
+        localStorage.removeItem(
+          CHAVE_EVENTO_GESTAO
+        );
+      } catch (_) {}
+    }
+
+
+    function normalizarCidadeExibicao(
+      cidadeRecebida,
+      ufRecebida
+    ) {
+      let cidade =
+        String(
+          cidadeRecebida ||
+          ''
+        ).trim();
+
+      const uf =
+        String(
+          ufRecebida ||
+          ''
+        )
+          .trim()
+          .toUpperCase();
+
+      if (
+        cidade &&
+        uf
+      ) {
+        const cidadeMaiuscula =
+          cidade.toUpperCase();
+
+        const sufixos = [
+          ' / ' + uf,
+          ' — ' + uf,
+          ' - ' + uf
+        ];
+
+        for (
+          let indice = 0;
+          indice < sufixos.length;
+          indice += 1
+        ) {
+          const sufixo =
+            sufixos[indice];
+
+          if (
+            cidadeMaiuscula.endsWith(
+              sufixo
+            )
+          ) {
+            cidade =
+              cidade
+                .slice(
+                  0,
+                  cidade.length -
+                  sufixo.length
+                )
+                .trim();
+
+            break;
+          }
+        }
+      }
+
+      return cidade;
+    }
+
+
+    function traduzirErroEventos(
+      mensagemRecebida
+    ) {
+      const mensagem =
+        String(
+          mensagemRecebida ||
+          ''
+        );
+
+      if (
+        mensagem.indexOf(
+          'CT_EVENTOS_RPC_METODO_NAO_AUTORIZADO'
+        ) >= 0
+      ) {
+        return 'Esta ação ainda não está disponível nesta sessão. Atualize a página e tente novamente.';
+      }
+
+      if (
+        mensagem.indexOf(
+          'CT_EVENTOS_EVENTO_NAO_AUTORIZADO'
+        ) >= 0
+      ) {
+        return 'Sua conta não possui autorização para alterar este evento.';
+      }
+
+      if (
+        mensagem.indexOf(
+          'CT_EVENTOS_RPC_TIMEOUT'
+        ) >= 0
+      ) {
+        return 'A resposta demorou mais do que o esperado. Atualize a tela antes de tentar novamente.';
+      }
+
+      return mensagem ||
+        'Não foi possível concluir esta ação.';
+    }
+
+
+    function mostrarModalMensagemCT(
+      opcoesRecebidas
+    ) {
+      const opcoes =
+        opcoesRecebidas ||
+        {};
+
+      const modal =
+        document.getElementById(
+          'modalMensagemCT'
+        );
+
+      definirTexto(
+        'modalMensagemTitulo',
+        opcoes.titulo ||
+        'Carioca Ticket'
+      );
+
+      definirTexto(
+        'modalMensagemTexto',
+        opcoes.mensagem ||
+        ''
+      );
+
+      const lista =
+        document.getElementById(
+          'modalMensagemLista'
+        );
+
+      const itens =
+        Array.isArray(
+          opcoes.itens
+        )
+          ? opcoes.itens.filter(
+              Boolean
+            )
+          : [];
+
+      if (
+        itens.length
+      ) {
+        lista.innerHTML =
+          itens.map(
+            function(item) {
+              return '<li>' +
+                escaparHtml(
+                  item
+                ) +
+                '</li>';
+            }
+          ).join('');
+
+        lista.classList.remove(
+          'oculto'
+        );
+      } else {
+        lista.innerHTML =
+          '';
+
+        lista.classList.add(
+          'oculto'
+        );
+      }
+
+      const cancelar =
+        document.getElementById(
+          'modalMensagemCancelar'
+        );
+
+      cancelar.textContent =
+        opcoes.cancelarTexto ||
+        'Cancelar';
+
+      cancelar.classList.toggle(
+        'oculto',
+        opcoes.mostrarCancelar !== true
+      );
+
+      document
+        .getElementById(
+          'modalMensagemConfirmar'
+        )
+        .textContent =
+          opcoes.confirmarTexto ||
+          'Entendi';
+
+      return new Promise(
+        function(resolve) {
+          if (
+            typeof resolverModalMensagemCT ===
+            'function'
+          ) {
+            resolverModalMensagemCT(
+              false
+            );
+          }
+
+          resolverModalMensagemCT =
+            resolve;
+
+          if (
+            !modal.open
+          ) {
+            modal.showModal();
+          }
+        }
+      );
+    }
+
+
+    function fecharModalMensagemCT(
+      confirmado
+    ) {
+      const modal =
+        document.getElementById(
+          'modalMensagemCT'
+        );
+
+      if (
+        modal.open
+      ) {
+        modal.close();
+      }
+
+      const resolver =
+        resolverModalMensagemCT;
+
+      resolverModalMensagemCT =
+        null;
+
+      if (
+        typeof resolver ===
+        'function'
+      ) {
+        resolver(
+          confirmado === true
+        );
+      }
     }
 
 
