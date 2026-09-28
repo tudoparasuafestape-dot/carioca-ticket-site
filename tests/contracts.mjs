@@ -76,6 +76,21 @@ if (producerPortalAdminNotifications) {
   }
 }
 
+
+const eventosV2 = readEarly('eventos-v2/index.html');
+if (eventosV2) {
+  const regrasEventosV2 = [
+    ['contexto de gestão compartilhado com Central Mobile', eventosV2.includes("CT_CENTRAL_EVENTO_OFICIAL_V1")],
+    ['seleção local sem mutação global legado', eventosV2.includes('localStorage.setItem(\n          CHAVE_EVENTO_GESTAO') && !eventosV2.includes('.selecionarEventoAtivo(')],
+    ['modal CT substitui alertas nativos', eventosV2.includes('modalMensagemCT') && !/\balert\s*\(/.test(eventosV2) && !/\bconfirm\s*\(/.test(eventosV2)],
+    ['rascunho pode ser ativado pela própria jornada', eventosV2.includes('Ativar evento') && eventosV2.includes("'ATIVO'")],
+    ['erro técnico de RPC não é exposto cru', eventosV2.includes('traduzirErroEventos')]
+  ];
+  for (const [regra, ok] of regrasEventosV2) {
+    if (!ok) errors.push({file:'eventos-v2/index.html', rule:'eventos-v2: '+regra, excerpt:''});
+  }
+}
+
 function fail(file, rule, excerpt = '') {
   errors.push({ file, rule, excerpt: String(excerpt).slice(0, 220) });
 }
