@@ -3432,171 +3432,40 @@
         cidade &&
         uf
       ) {
-        const padrao =
-          new RegExp(
-            '\\s*(?:/|—|-)\\s*' +
-            uf +
-            '\\s*
-      const area =
-        document.getElementById(
-          'mensagemCadastro'
-        );
+        const cidadeMaiuscula =
+          cidade.toUpperCase();
 
-      area.innerText =
-        (
-          sucesso
-            ? '✅ '
-            : '❌ '
-        ) +
-        mensagem;
+        const sufixos = [
+          ' / ' + uf,
+          ' — ' + uf,
+          ' - ' + uf
+        ];
 
-      area.className =
-        'mensagem ' +
-        (
-          sucesso
-            ? 'mensagem-sucesso'
-            : 'mensagem-erro'
-        );
-    }
+        for (
+          let indice = 0;
+          indice < sufixos.length;
+          indice += 1
+        ) {
+          const sufixo =
+            sufixos[indice];
 
+          if (
+            cidadeMaiuscula.endsWith(
+              sufixo
+            )
+          ) {
+            cidade =
+              cidade
+                .slice(
+                  0,
+                  cidade.length -
+                  sufixo.length
+                )
+                .trim();
 
-    function mostrarErro(
-      mensagem
-    ) {
-      const area =
-        document.getElementById(
-          'estadoErro'
-        );
-
-      area.innerText =
-        '❌ ' +
-        traduzirErroEventos(
-          mensagem
-        );
-
-      area.classList.remove(
-        'oculto'
-      );
-    }
-
-
-    function alterarCarregamento(
-      ativo
-    ) {
-      const area =
-        document.getElementById(
-          'estadoCarregando'
-        );
-
-      document
-        .getElementById(
-          'botaoAtualizar'
-        )
-        .disabled =
-          ativo;
-
-      if (
-        ativo
-      ) {
-        area.classList.remove(
-          'oculto'
-        );
-      } else {
-        area.classList.add(
-          'oculto'
-        );
-      }
-    }
-
-
-    function obterValor(
-      id
-    ) {
-      return String(
-        document
-          .getElementById(
-            id
-          )
-          .value || ''
-      ).trim();
-    }
-
-
-    function definirTexto(
-      id,
-      valor
-    ) {
-      document
-        .getElementById(
-          id
-        )
-        .innerText =
-          valor === null ||
-          typeof valor ===
-            'undefined'
-            ? ''
-            : valor;
-    }
-
-
-    function escaparAtributo(
-      texto
-    ) {
-      return String(
-        texto || ''
-      )
-        .replace(
-          /\\/g,
-          '\\\\'
-        )
-        .replace(
-          /'/g,
-          "\\'"
-        );
-    }
-
-
-    function escaparHtml(
-      texto
-    ) {
-      return String(
-        texto || ''
-      )
-        .replace(
-          /&/g,
-          '&amp;'
-        )
-        .replace(
-          /</g,
-          '&lt;'
-        )
-        .replace(
-          />/g,
-          '&gt;'
-        )
-        .replace(
-          /"/g,
-          '&quot;'
-        )
-        .replace(
-          /'/g,
-          '&#039;'
-        );
-    }
-  </script>
-
-  <script src="/assets/ct-analytics.js?v=20260923a" defer></script>
-</body>
-</html>
-,
-            'i'
-          );
-
-        cidade =
-          cidade.replace(
-            padrao,
-            ''
-          ).trim();
+            break;
+          }
+        }
       }
 
       return cidade;
