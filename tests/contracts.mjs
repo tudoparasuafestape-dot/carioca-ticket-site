@@ -86,6 +86,8 @@ if (centralIngressosConfig) {
     'id="mIngressos"',
     '<strong>Ingressos & Lotes</strong>',
     "'/produtor/ingressos/?evento='",
+    "'&produtor='",
+    "'&eventoNome='",
     'localidadeEvento(ev)',
     "document.getElementById('mIngressos').classList.add('disabled')"
   ]) {
@@ -104,6 +106,9 @@ if (produtorIngressosConfig) {
     '<title>Ingressos e Lotes | Carioca Ticket</title>',
     'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
     'ctIngressosConfigCarregarPROD',
+    'producerId',
+    "params.get('produtor')",
+    '[token,eventId,producerId]',
     'ctIngressosConfigSalvarTipoPROD',
     'ctIngressosConfigAlterarStatusTipoPROD',
     'ctIngressosConfigSalvarLotePROD',
