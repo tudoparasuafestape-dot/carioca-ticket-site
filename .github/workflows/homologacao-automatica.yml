@@ -9,6 +9,7 @@ on:
       - main
       - audit-homologacao-automatica-20260920
       - release/rc-produtor-modalidades-20260925
+      - preprod/reunioes-produtores-20260928
   schedule:
     - cron: '15 7 * * *'
 
