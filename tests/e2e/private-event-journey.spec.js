@@ -60,12 +60,16 @@ test.describe('Evento privado — jornada essencial', () => {
       mode: 'PUBLICO',
       saveAccessCalls: 0,
       saveGuestCalls: 0,
-      guests: []
+      guests: [],
+      methods: [],
+      pageErrors: []
     };
 
+    page.on('pageerror', e => state.pageErrors.push(String(e && e.message || e)));
     await seedSession(page);
 
     await page.route('https://script.google.com/**', async route => { await fulfillRpc(route, ({ action, method, args }) => {
+      state.methods.push(method);
       expect(action).toBe('portalRpc');
 
       if (method === 'ctEventoAcessoProdutorObterPROD') {
@@ -124,6 +128,13 @@ test.describe('Evento privado — jornada essencial', () => {
     }); });
 
     await page.goto('/produtor/convidados/?evento=EVT-PRIVATE-E2E', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1500);
+    console.log('PRIVATE_PRODUCER_DIAG', JSON.stringify({
+      methods: state.methods,
+      pageErrors: state.pageErrors,
+      message: await page.locator('#message').textContent(),
+      session: await page.evaluate(key => sessionStorage.getItem(key), STORAGE)
+    }));
 
     await expect(page.locator('#eventName')).toHaveText('Evento Privado E2E');
     await expect(page.locator('#accessMode')).toHaveValue('PUBLICO');
@@ -153,7 +164,10 @@ test.describe('Evento privado — jornada essencial', () => {
   });
 
   test('convidado valida telefone, recebe grant e segue ao checkout privado', async ({ page }) => {
+    const diag = { methods: [], pageErrors: [] };
+    page.on('pageerror', e => diag.pageErrors.push(String(e && e.message || e)));
     await page.route('https://script.google.com/**', async route => { await fulfillRpc(route, ({ action, method, args }) => {
+      diag.methods.push(method);
       if (method === 'ctEventoConviteCarregarPublicoPROD') {
         expect(action).toBe('publicRpc');
         expect(String(args[0] || '')).toBe('TOKEN-E2E');
@@ -205,6 +219,12 @@ test.describe('Evento privado — jornada essencial', () => {
     }); });
 
     await page.goto('/convite/?token=TOKEN-E2E', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1500);
+    console.log('PRIVATE_INVITE_DIAG', JSON.stringify({
+      methods: diag.methods,
+      pageErrors: diag.pageErrors,
+      invalid: await page.locator('#invalidText').textContent()
+    }));
 
     await expect(page.locator('#eventName')).toHaveText('Evento Privado E2E');
     await expect(page.locator('#guestName')).toHaveText('Convidado Teste');
