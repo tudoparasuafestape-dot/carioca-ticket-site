@@ -52,6 +52,7 @@
  <h2 id="actionTitle">Confirmar ação</h2><p id="actionHelp"></p>
  <div class="field"><label for="internalNote">Observação interna</label><textarea id="internalNote" maxlength="1200"></textarea></div>
  <div id="publicPendingField" class="field hidden"><label for="publicPending">Mensagem para o produtor</label><textarea id="publicPending" maxlength="1200"></textarea></div>
+ <div id="actionError" class="note hidden" role="alert"></div>
  <div class="modalactions"><button id="cancelAction" class="btn" type="button">Cancelar</button><button id="confirmAction" class="btn gold" type="button">Confirmar</button></div>
 </section></div>
 <div id="toast" class="toast hidden"></div>
@@ -119,6 +120,9 @@ function renderDetail(){
  }
  var html='<h2>'+esc(s.nomeFantasia)+'</h2><div class="sub">'+esc(s.responsavelNome)+' · '+esc(s.email)+'</div><div class="data">'+data.map(function(k){return'<div class="kv"><span>'+esc(k[0])+'</span><strong>'+esc(k[1])+'</strong></div>'}).join('')+'</div>';
  if(s.pendenciaPublica)html+='<div class="note"><b>Pendência enviada:</b><br>'+esc(s.pendenciaPublica)+'</div>';
+ if(s.documentoJaCadastrado&&s.produtorExistente){
+   html+='<div class="note"><b>Aprovação bloqueada:</b><br>Este CPF/CNPJ já está vinculado ao produtor <b>'+esc(s.produtorExistente.nomeFantasia||s.produtorExistente.produtorId||'existente')+'</b>. Solicite a correção do documento ou trate o vínculo com a operação existente antes de aprovar.</div>';
+ }
  if(s.produtorId&&!fin.prontoParaVendas){
    html+='<div class="note"><b>Financeiro ainda não liberado para vendas.</b><br>A conta do produtor está ativa para navegação e configuração, mas a publicação de vendas permanece bloqueada até status financeiro ATIVO, credencial validada e recebimento habilitado.<div class="actions"><a class="btn gold" href="/backoffice/carioca-pay/produtores/?produtor='+encodeURIComponent(s.produtorId)+'">Configurar financeiro</a></div></div>';
  }
@@ -126,33 +130,68 @@ function renderDetail(){
  html+='<div class="actions">'+actionsHtml(s.status)+'</div>';document.getElementById('detail').innerHTML=html;
  document.getElementById('detail').querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){openAction(String(b.dataset.action||''))})});
 }
-function actionsHtml(status){status=String(status||'').toUpperCase();if(status==='ENVIADO')return'<button class="btn gold" data-action="INICIAR_ANALISE">Iniciar análise</button>';if(status==='EM_ANALISE')return'<button class="btn" data-action="SOLICITAR_PENDENCIA">Solicitar pendência</button><button class="btn gold" data-action="APROVAR">Aprovar e ativar</button><button class="btn danger" data-action="REPROVAR">Reprovar</button>';if(status==='PENDENCIA')return'<span class="note">Aguardando o produtor reenviar os dados.</span>';if(status==='ATIVO')return'<a class="btn gold" href="/produtor/">Produtor ativo</a>';return''}
-function openAction(a){state.action=a;var titles={INICIAR_ANALISE:'Iniciar análise',SOLICITAR_PENDENCIA:'Solicitar pendência',APROVAR:'Aprovar e ativar produtor',REPROVAR:'Reprovar solicitação'};document.getElementById('actionTitle').textContent=titles[a]||'Confirmar ação';document.getElementById('actionHelp').textContent=a==='APROVAR'?'A aprovação cria o produtor, vincula o titular, prepara organização/financeiro pendente e processa a indicação comercial. Isso não habilita vendas automaticamente.':'A decisão será registrada no histórico e auditoria.';document.getElementById('internalNote').value='';document.getElementById('publicPending').value='';document.getElementById('publicPendingField').classList.toggle('hidden',a!=='SOLICITAR_PENDENCIA');document.getElementById('actionBackdrop').classList.remove('hidden');document.getElementById('actionBackdrop').setAttribute('aria-hidden','false')}
+function actionsHtml(status){
+ status=String(status||'').toUpperCase();
+ if(status==='ENVIADO')return'<button class="btn gold" data-action="INICIAR_ANALISE">Iniciar análise</button>';
+ if(status==='EM_ANALISE'){
+   var bloqueado=!!(state.selected&&state.selected.documentoJaCadastrado);
+   return '<button class="btn" data-action="SOLICITAR_PENDENCIA">Solicitar pendência</button>'+
+     (bloqueado?'<button class="btn gold" type="button" disabled title="CPF/CNPJ já vinculado a outro produtor">Aprovação bloqueada</button>':'<button class="btn gold" data-action="APROVAR">Aprovar e ativar</button>')+
+     '<button class="btn danger" data-action="REPROVAR">Reprovar</button>';
+ }
+ if(status==='PENDENCIA')return'<span class="note">Aguardando o produtor reenviar os dados.</span>';
+ if(status==='ATIVO')return'<a class="btn gold" href="/produtor/">Produtor ativo</a>';
+ return''
+}
+function openAction(a){state.action=a;var titles={INICIAR_ANALISE:'Iniciar análise',SOLICITAR_PENDENCIA:'Solicitar pendência',APROVAR:'Aprovar e ativar produtor',REPROVAR:'Reprovar solicitação'};document.getElementById('actionTitle').textContent=titles[a]||'Confirmar ação';document.getElementById('actionHelp').textContent=a==='APROVAR'?'A aprovação cria o produtor, vincula o titular, prepara organização/financeiro pendente e processa a indicação comercial. Isso não habilita vendas automaticamente.':'A decisão será registrada no histórico e auditoria.';document.getElementById('internalNote').value='';document.getElementById('publicPending').value='';document.getElementById('publicPendingField').classList.toggle('hidden',a!=='SOLICITAR_PENDENCIA');var er=document.getElementById('actionError');er.textContent='';er.classList.add('hidden');document.getElementById('actionBackdrop').classList.remove('hidden');document.getElementById('actionBackdrop').setAttribute('aria-hidden','false')}
 function closeAction(){if(state.busy)return;document.getElementById('actionBackdrop').classList.add('hidden');document.getElementById('actionBackdrop').setAttribute('aria-hidden','true');state.action=''}
 async function doAction(){
- if(!state.selected||!state.action||state.busy)return;var note=String(document.getElementById('internalNote').value||'').trim(),pub=String(document.getElementById('publicPending').value||'').trim();
+ if(!state.selected||!state.action)return;
+ if(state.busy){toast('Aguarde a operação atual terminar.');return}
+ var note=String(document.getElementById('internalNote').value||'').trim(),pub=String(document.getElementById('publicPending').value||'').trim();
  if(state.action==='SOLICITAR_PENDENCIA'&&pub.length<3){toast('Informe a pendência para o produtor.');return}
  if(state.action==='REPROVAR'&&note.length<3){toast('Informe a justificativa interna.');return}
- var id=state.selected.solicitacaoId;state.busy=true;document.getElementById('confirmAction').disabled=true;
- try{var r=await rpc('ctProdutorOnboardingAdminDecidirPROD',[state.session.token,id,state.action,{observacaoInterna:note,pendenciaPublica:pub}]);if(!r||r.sucesso!==true)throw new Error('A decisão não foi concluída.');
+ var id=state.selected.solicitacaoId,acao=state.action,b=document.getElementById('confirmAction'),er=document.getElementById('actionError'),rotulo=b.textContent;
+ state.busy=true;b.disabled=true;
+ er.textContent='';er.classList.add('hidden');
+ b.textContent=acao==='APROVAR'?'Aprovando produtor...':'Processando...';
+ document.getElementById('actionHelp').textContent=acao==='APROVAR'?'Aprovando produtor e preparando vínculos. Aguarde sem fechar esta tela.':'Processando a decisão. Aguarde.';
+ try{
+  var r=await rpc('ctProdutorOnboardingAdminDecidirPROD',[state.session.token,id,acao,{observacaoInterna:note,pendenciaPublica:pub}]);
+  if(!r||r.sucesso!==true)throw new Error('A decisão não foi concluída.');
   document.getElementById('actionBackdrop').classList.add('hidden');state.action='';
   if(r.solicitacao){
     if(r.financeiro)r.solicitacao.financeiro=r.financeiro;
     reconcileDecisionState(id,r.solicitacao);
   }
   state.busy=false;
-  await load({skipDetail:true});
-  if(r.solicitacao){
-    if(r.financeiro)r.solicitacao.financeiro=r.financeiro;
-    reconcileDecisionState(id,r.solicitacao);
+  await load({skipDetail:false});
+  toast(r.produtorId?'Produtor ativado. Financeiro preparado; vendas continuam bloqueadas até a configuração financeira ficar pronta.':'Ação concluída com auditoria.');
+ }
+ catch(e){
+  var m=String(e&&e.message||e||'Não foi possível concluir a operação.');
+  if(m.indexOf('DOCUMENTO_JA_CADASTRADO')>=0||m.indexOf('CPF_CNPJ_JA_CADASTRADO')>=0){
+    m='Este CPF/CNPJ já está vinculado a outro produtor. Solicite a correção do documento ou trate o vínculo com a operação existente antes de aprovar.';
+  }else if(m.indexOf('demorou mais do que o esperado')>=0){
+    m='A resposta demorou além do esperado. O status será atualizado antes de permitir uma nova tentativa.';
   }
-  toast(r.produtorId?'Produtor ativado. Financeiro preparado; vendas continuam bloqueadas até a configuração financeira ficar pronta.':'Ação concluída com auditoria.')}
- catch(e){toast(e&&e.message?e.message:String(e))}
- finally{state.busy=false;document.getElementById('confirmAction').disabled=false}
+  er.textContent=m;er.classList.remove('hidden');
+  state.busy=false;
+  await load({skipDetail:false});
+ }
+ finally{
+  state.busy=false;b.disabled=false;b.textContent=rotulo;
+ }
 }
 
 async function logoutAdmin(){if(state.busy)return;state.busy=true;var token=state.session&&state.session.token?String(state.session.token):'';try{if(token)await rpc('logoutUsuarioCT2',[token])}catch(_){ }finally{try{sessionStorage.removeItem(STORAGE);localStorage.removeItem(STORAGE)}catch(_){ }state.session=null;window.location.replace('/produtor/')}}
-document.getElementById('filterButton').addEventListener('click',load);
+document.getElementById('filterButton').addEventListener('click',async function(){
+ var b=this,rotulo=b.textContent;
+ if(state.busy){toast('Aguarde a operação atual terminar.');return}
+ b.disabled=true;b.textContent='Atualizando...';
+ try{await load({skipDetail:false});toast('Lista atualizada.')}
+ finally{b.disabled=false;b.textContent=rotulo}
+});
 document.getElementById('cancelAction').addEventListener('click',closeAction);
 document.getElementById('confirmAction').addEventListener('click',doAction);
 document.getElementById('logoutAdminButton').addEventListener('click',logoutAdmin);
