@@ -41,7 +41,8 @@ async function fulfillRpc(route, handler) {
 }
 
 async function seedSession(page, token = 'CT-PRODUTOR-PRIVADO-E2E') {
-  await page.addInitScript(({ storage, token }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.evaluate(({ storage, token }) => {
     const value = JSON.stringify({
       token,
       expiraEm: '2099-01-01T00:00:00.000Z'
@@ -64,7 +65,7 @@ test.describe('Evento privado — jornada essencial', () => {
 
     await seedSession(page);
 
-    await page.route('https://script.google.com/**', route => fulfillRpc(route, ({ action, method, args }) => {
+    await page.route('https://script.google.com/**', async route => { await fulfillRpc(route, ({ action, method, args }) => {
       expect(action).toBe('portalRpc');
 
       if (method === 'ctEventoAcessoProdutorObterPROD') {
@@ -120,7 +121,7 @@ test.describe('Evento privado — jornada essencial', () => {
       }
 
       throw new Error('Método inesperado: ' + method);
-    }));
+    }); });
 
     await page.goto('/produtor/convidados/?evento=EVT-PRIVATE-E2E', { waitUntil: 'domcontentloaded' });
 
@@ -152,7 +153,7 @@ test.describe('Evento privado — jornada essencial', () => {
   });
 
   test('convidado valida telefone, recebe grant e segue ao checkout privado', async ({ page }) => {
-    await page.route('https://script.google.com/**', route => fulfillRpc(route, ({ action, method, args }) => {
+    await page.route('https://script.google.com/**', async route => { await fulfillRpc(route, ({ action, method, args }) => {
       if (method === 'ctEventoConviteCarregarPublicoPROD') {
         expect(action).toBe('publicRpc');
         expect(String(args[0] || '')).toBe('TOKEN-E2E');
@@ -201,7 +202,7 @@ test.describe('Evento privado — jornada essencial', () => {
       }
 
       return { sucesso: false, mensagem: 'RPC não necessário neste teste.' };
-    }));
+    }); });
 
     await page.goto('/convite/?token=TOKEN-E2E', { waitUntil: 'domcontentloaded' });
 
