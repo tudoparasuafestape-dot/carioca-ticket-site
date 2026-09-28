@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#080b10">
+  <meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate,max-age=0">
+  <title>Ingressos e Lotes | Carioca Ticket</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
+  <style>
+    :root{--bg:#07090c;--panel:#10151b;--panel2:#0b0f14;--line:#28303a;--gold:#dfa324;--gold2:#f6c94c;--text:#f6f3ec;--muted:#9aa3ad;--green:#4ade95;--red:#ff8080}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:radial-gradient(circle at 80% 0,rgba(223,163,36,.14),transparent 28%),linear-gradient(180deg,#080b10,#050608 82%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{min-height:100vh}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .shell{width:min(1120px,calc(100% - 28px));margin:auto;padding:18px 0 54px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{width:78px;max-height:46px;object-fit:contain}
+    .brand strong{display:block}.brand span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+    .top a{min-height:42px;padding:0 14px;border:1px solid #353c45;border-radius:12px;color:#fff;text-decoration:none;display:inline-flex;align-items:center;font-size:12px;font-weight:800;background:#11161c}
+    .hero{padding:24px;border:1px solid rgba(246,201,76,.28);border-radius:24px;background:linear-gradient(145deg,#111820,#0a0e13);box-shadow:0 20px 60px rgba(0,0,0,.28)}
+    .ey{color:var(--gold2);font-size:10px;font-weight:900;letter-spacing:.15em;text-transform:uppercase}
+    h1{font-size:clamp(30px,6vw,44px);letter-spacing:-.04em;margin:7px 0}
+    .hero p{margin:0;color:#bbc2ca;line-height:1.55}
+    .event{margin-top:16px;padding:14px;border:1px solid #3a3322;border-radius:15px;background:#0a0d11}
+    .event strong{display:block;font-size:17px}.event span{display:block;color:var(--muted);font-size:11px;margin-top:5px}
+    .notice{margin:14px 0 0;padding:11px 13px;border-radius:12px;background:#17140c;border:1px solid #54451e;color:#ecd998;font-size:12px;line-height:1.5}
+    .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+    .summary article{padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+    .summary span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800}.summary strong{display:block;font-size:27px;margin-top:6px}
+    .section{margin-top:14px;padding:18px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,#10151b,#0a0e12)}
+    .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .section-head h2{margin:0;font-size:23px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.45}
+    .btn{min-height:44px;padding:0 15px;border:0;border-radius:12px;font-weight:900;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#101010}
+    .btn.secondary{background:#161c23;color:#fff;border:1px solid #39414b}.btn.danger{background:#2a1518;color:#ffb0b0;border:1px solid #63333a}.btn:disabled{opacity:.45;cursor:not-allowed}
+    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .card{padding:16px;border:1px solid #2d353f;border-radius:16px;background:#090d11}
+    .card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .card h3{margin:0;font-size:18px}.card .sub{color:var(--muted);font-size:11px;margin-top:4px;line-height:1.45}
+    .badge{padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900;text-transform:uppercase;white-space:nowrap}
+    .badge.active{background:#123522;color:#6ee7a5}.badge.inactive{background:#332c16;color:#f6d56f}.badge.closed{background:#252d38;color:#aab8cb}
+    .metric{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:13px}
+    .metric div{padding:9px;border-radius:10px;background:#11161c}.metric span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}.metric strong{display:block;margin-top:4px;font-size:14px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.actions .btn{min-height:38px;font-size:11px;flex:1 1 120px}
+    .empty{padding:28px 15px;border:1px dashed #38414c;border-radius:16px;color:var(--muted);text-align:center;grid-column:1/-1;line-height:1.55}
+    .loading{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:rgba(0,0,0,.62);backdrop-filter:blur(3px)}.loading.show{display:grid}
+    .loading-box{width:min(90vw,330px);padding:24px;border:1px solid #3d4651;border-radius:18px;background:#111820;text-align:center}.spinner{width:38px;height:38px;border:4px solid rgba(255,255,255,.12);border-top-color:var(--gold2);border-radius:50%;margin:auto;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-box strong{display:block;margin-top:12px}.loading-box span{display:block;color:var(--muted);font-size:11px;margin-top:6px}
+    .toast{position:fixed;right:18px;bottom:18px;z-index:70;max-width:min(420px,calc(100vw - 36px));padding:13px 15px;border-radius:13px;background:#15251d;border:1px solid #2f6345;color:#c9f7dc;font-size:12px;display:none;box-shadow:0 14px 40px rgba(0,0,0,.35)}.toast.error{background:#2b171a;border-color:#67373f;color:#ffd0d4}.toast.show{display:block}
+    dialog{width:min(94vw,650px);max-height:92vh;padding:0;border:1px solid #39414b;border-radius:20px;background:#10151b;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.55)}dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line);background:#0b0f14}.modal-head h2{margin:3px 0 0}.close{width:40px;height:40px;border:0;border-radius:11px;background:#20262d;color:#fff;font-size:22px}
+    .modal-body{padding:18px 20px;overflow:auto}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{margin-bottom:12px}.field label{display:block;margin-bottom:6px;color:#d7dbe0;font-size:11px;font-weight:800}.field input,.field select,.field textarea{width:100%;min-height:45px;border:1px solid #343c46;border-radius:11px;background:#090d11;color:#fff;padding:10px 12px;outline:none}.field textarea{min-height:88px;resize:vertical}.help{color:var(--muted);font-size:10px;line-height:1.45;margin-top:5px}
+    .modal-actions{display:flex;justify-content:flex-end;gap:9px;padding-top:8px}.modal-actions .btn{min-width:130px}
+    @media(max-width:720px){.summary{grid-template-columns:1fr 1fr}.cards{grid-template-columns:1fr}.section-head{display:grid}.section-head .btn{width:100%}.grid2{grid-template-columns:1fr}.shell{width:min(100% - 18px,1120px)}}
+  </style>
+</head>
+<body>
+<div id="loading" class="loading"><div class="loading-box"><div class="spinner"></div><strong id="loadingTitle">Carregando...</strong><span>Seu evento continua seguro enquanto processamos.</span></div></div>
+<div id="toast" class="toast"></div>
+
+<main class="shell">
+  <header class="top">
+    <div class="brand"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><div><strong>Carioca Ticket</strong><span>Configuração do evento</span></div></div>
+    <a href="/central/">← Central Mobile</a>
+  </header>
+
+  <section class="hero">
+    <div class="ey">Configuração segura</div>
+    <h1>Ingressos e lotes</h1>
+    <p>Defina o que será vendido e organize os lotes antes de solicitar a publicação. Esta tela não publica vendas automaticamente.</p>
+    <div class="event"><strong id="eventName">Carregando evento...</strong><span id="eventMeta">—</span></div>
+    <div class="notice">Ordem recomendada: crie primeiro o <strong>tipo de ingresso</strong> e depois o <strong>lote</strong>. Para publicar, o evento precisa ter pelo menos um tipo ATIVO e um lote ATIVO.</div>
+  </section>
+
+  <section class="summary">
+    <article><span>Tipos</span><strong id="sumTipos">0</strong></article>
+    <article><span>Tipos ativos</span><strong id="sumTiposAtivos">0</strong></article>
+    <article><span>Lotes</span><strong id="sumLotes">0</strong></article>
+    <article><span>Lotes ativos</span><strong id="sumLotesAtivos">0</strong></article>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div><h2>1. Tipos de ingresso</h2><p>Ex.: Individual, Casadinha, VIP ou Meia. “Acessos por venda” define quantos QR Codes cada unidade gera.</p></div><button id="newType" class="btn" type="button">+ Novo tipo</button></div>
+    <div id="typeCards" class="cards"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div><h2>2. Lotes</h2><p>Defina preço, quantidade e período de venda para cada tipo de ingresso.</p></div><button id="newLot" class="btn" type="button">+ Novo lote</button></div>
+    <div id="lotCards" class="cards"></div>
+  </section>
+</main>
+
+<dialog id="typeDialog">
+  <form id="typeForm">
+    <div class="modal-head"><div><div class="ey">Carioca Ticket</div><h2 id="typeTitle">Novo tipo</h2></div><button class="close" type="button" data-close="typeDialog">×</button></div>
+    <div class="modal-body">
+      <input id="typeId" type="hidden">
+      <div class="grid2">
+        <div class="field"><label for="typeName">Nome *</label><input id="typeName" maxlength="60" required placeholder="Ex.: Individual"></div>
+        <div class="field"><label for="typeStatus">Status *</label><select id="typeStatus"><option value="ATIVO">ATIVO</option><option value="INATIVO">INATIVO</option></select></div>
+      </div>
+      <div class="field"><label for="typeDescription">Descrição</label><textarea id="typeDescription" maxlength="500" placeholder="Descrição opcional para sua operação"></textarea></div>
+      <div class="grid2">
+        <div class="field"><label for="typePrice">Preço base (R$) *</label><input id="typePrice" type="number" min="0" step="0.01" value="0" required></div>
+        <div class="field"><label for="typeQuantity">Quantidade total *</label><input id="typeQuantity" type="number" min="0" step="1" value="0" required><div class="help">0 pode ser usado quando o limite será controlado pelo lote.</div></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="typeCapacity">Acessos por venda *</label><input id="typeCapacity" type="number" min="1" step="1" value="1" required><div class="help">Individual = 1. Casadinha = 2.</div></div>
+        <div class="field"><label for="typeOrder">Ordem</label><input id="typeOrder" type="number" min="0" step="1" value="1"></div>
+      </div>
+      <div class="field"><label for="typeColor">Cor de identificação</label><input id="typeColor" type="color" value="#D4AF37"></div>
+      <div class="modal-actions"><button class="btn secondary" type="button" data-close="typeDialog">Cancelar</button><button class="btn" type="submit">Salvar tipo</button></div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="lotDialog">
+  <form id="lotForm">
+    <div class="modal-head"><div><div class="ey">Carioca Ticket</div><h2 id="lotTitle">Novo lote</h2></div><button class="close" type="button" data-close="lotDialog">×</button></div>
+    <div class="modal-body">
+      <input id="lotId" type="hidden">
+      <div class="grid2">
+        <div class="field"><label for="lotType">Tipo de ingresso *</label><select id="lotType" required></select></div>
+        <div class="field"><label for="lotName">Nome do lote *</label><input id="lotName" maxlength="60" required placeholder="Ex.: 1º lote"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="lotPrice">Preço (R$) *</label><input id="lotPrice" type="number" min="0" step="0.01" value="0" required></div>
+        <div class="field"><label for="lotQuantity">Quantidade *</label><input id="lotQuantity" type="number" min="0" step="1" value="0" required></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="lotStart">Início das vendas</label><input id="lotStart" type="datetime-local"></div>
+        <div class="field"><label for="lotEnd">Fim das vendas</label><input id="lotEnd" type="datetime-local"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="lotStatus">Status *</label><select id="lotStatus"><option value="ATIVO">ATIVO</option><option value="INATIVO">INATIVO</option><option value="ENCERRADO">ENCERRADO</option></select></div>
+        <div class="field"><label for="lotOrder">Ordem</label><input id="lotOrder" type="number" min="0" step="1" value="1"></div>
+      </div>
+      <div class="modal-actions"><button class="btn secondary" type="button" data-close="lotDialog">Cancelar</button><button class="btn" type="submit">Salvar lote</button></div>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function(){
+'use strict';
+var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
+var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
+var pending={};
+var eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();
+var token='';
+var data={tipos:[],lotes:[],resumo:{}};
+
+function readSession(){
+  try{
+    var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE);
+    if(!raw)return null;
+    var s=JSON.parse(raw);
+    if(!s||!s.token)return null;
+    if(s.expiraEm){var exp=Date.parse(s.expiraEm);if(!isNaN(exp)&&exp<=Date.now())return null}
+    return s;
+  }catch(_){return null}
+}
+function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
+function rpc(method,args){
+  return new Promise(function(resolve,reject){
+    var id='CTING-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+    var frameName='cting_'+id.replace(/[^A-Za-z0-9_]/g,'');
+    var frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+    var form=document.createElement('form');form.method='POST';form.action=APP;form.target=frameName;form.style.display='none';
+    function add(k,v){var el=document.createElement('input');el.type='hidden';el.name=k;el.value=String(v==null?'':v);form.appendChild(el)}
+    add('ctMinhaCariocaAction','portalRpc');add('ctMinhaCariocaRequestId',id);add('metodo',method);add('argsJson',JSON.stringify(args||[]));
+    document.body.append(frame,form);
+    pending[id]={frame:frame,form:form,resolve:resolve,reject:reject,timer:setTimeout(function(){var p=cleanup(id);if(p)p.reject(new Error('A operação demorou mais do que o esperado.'))},40000)};
+    form.submit();
+  });
+}
+window.addEventListener('message',function(ev){
+  if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;
+  var payload=ev.data;if(!payload||payload.ctMinhaCariocaPost!==true||!payload.id||!pending[payload.id])return;
+  var p=cleanup(payload.id);if(!p)return;
+  if(payload.ok===true)p.resolve(payload.resultado);else p.reject(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+});
+function loading(show,title){document.getElementById('loading').classList.toggle('show',!!show);if(title)document.getElementById('loadingTitle').textContent=title}
+function toast(msg,error){var el=document.getElementById('toast');el.textContent=humanError(msg);el.classList.toggle('error',!!error);el.classList.add('show');clearTimeout(window.__ctToast);window.__ctToast=setTimeout(function(){el.classList.remove('show')},4500)}
+function humanError(msg){
+  msg=String(msg||'Não foi possível concluir a operação.');
+  var map={
+    CT_INGRESSOS_CONFIG_ACESSO_NEGADO:'Seu acesso não permite configurar este evento.',
+    CT_INGRESSOS_CONFIG_EVENTO_DIVERGENTE:'O evento informado não corresponde ao evento autorizado.',
+    CT_INGRESSOS_CONFIG_TIPO_FORA_DO_EVENTO:'Este tipo de ingresso não pertence ao evento selecionado.',
+    CT_INGRESSOS_CONFIG_LOTE_FORA_DO_EVENTO:'Este lote não pertence ao evento selecionado.',
+    CT_INGRESSOS_CONFIG_TIPO_COM_LOTES:'Este tipo possui lotes. Desative-o ou ajuste os lotes antes de removê-lo.'
+  };
+  return map[msg]||msg;
+}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function badge(status){status=String(status||'').toUpperCase();var cls=status==='ATIVO'?'active':(status==='ENCERRADO'?'closed':'inactive');return '<span class="badge '+cls+'">'+esc(status||'—')+'</span>'}
+async function load(){
+  loading(true,'Carregando ingressos e lotes...');
+  try{
+    var r=await rpc('ctIngressosConfigCarregarPROD',[token,eventId]);
+    if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Não foi possível carregar a configuração.');
+    data=r;render();
+  }catch(e){toast(e.message,true)}finally{loading(false)}
+}
+function render(){
+  var ev=data.evento||{};
+  document.getElementById('eventName').textContent=ev.nome||eventId;
+  document.getElementById('eventMeta').textContent=[ev.data,eventId].filter(Boolean).join(' • ');
+  var s=data.resumo||{};
+  document.getElementById('sumTipos').textContent=s.tipos||0;
+  document.getElementById('sumTiposAtivos').textContent=s.tiposAtivos||0;
+  document.getElementById('sumLotes').textContent=s.lotes||0;
+  document.getElementById('sumLotesAtivos').textContent=s.lotesAtivos||0;
+  renderTypes();renderLots();fillTypeOptions();
+}
+function renderTypes(){
+  var box=document.getElementById('typeCards');
+  if(!data.tipos.length){box.innerHTML='<div class="empty"><strong>Nenhum tipo cadastrado.</strong><br>Crie o primeiro tipo para continuar a configuração do evento.</div>';return}
+  box.innerHTML=data.tipos.map(function(t){
+    return '<article class="card"><div class="card-head"><div><h3>'+esc(t.nome)+'</h3><div class="sub">'+esc(t.descricao||'Sem descrição')+'</div></div>'+badge(t.status)+'</div>'+
+      '<div class="metric"><div><span>Preço base</span><strong>'+esc(t.preco||money(t.precoNumero))+'</strong></div><div><span>Quantidade</span><strong>'+esc(t.quantidade)+'</strong></div><div><span>Acessos/venda</span><strong>'+esc(t.capacidadePorVenda||1)+'</strong></div></div>'+
+      '<div class="actions"><button class="btn secondary" type="button" data-edit-type="'+esc(t.id)+'">Editar</button><button class="btn secondary" type="button" data-toggle-type="'+esc(t.id)+'">'+(String(t.status).toUpperCase()==='ATIVO'?'Desativar':'Ativar')+'</button></div></article>';
+  }).join('');
+}
+function renderLots(){
+  var box=document.getElementById('lotCards');
+  if(!data.lotes.length){box.innerHTML='<div class="empty"><strong>Nenhum lote cadastrado.</strong><br>Depois de criar um tipo de ingresso, crie o primeiro lote.</div>';return}
+  box.innerHTML=data.lotes.map(function(l){
+    var period=[l.dataInicio?('Início: '+l.dataInicio):'',l.dataFim?('Fim: '+l.dataFim):''].filter(Boolean).join(' • ')||'Sem período definido';
+    return '<article class="card"><div class="card-head"><div><h3>'+esc(l.nome)+'</h3><div class="sub">'+esc(l.tipoNome||'Tipo')+' • '+esc(period)+'</div></div>'+badge(l.status)+'</div>'+
+      '<div class="metric"><div><span>Preço</span><strong>'+esc(l.preco||money(l.precoNumero))+'</strong></div><div><span>Quantidade</span><strong>'+esc(l.quantidade)+'</strong></div><div><span>Disponíveis</span><strong>'+esc(l.disponiveis)+'</strong></div></div>'+
+      '<div class="actions"><button class="btn secondary" type="button" data-edit-lot="'+esc(l.id)+'">Editar</button><button class="btn secondary" type="button" data-toggle-lot="'+esc(l.id)+'">'+(String(l.status).toUpperCase()==='ATIVO'?'Desativar':'Ativar')+'</button></div></article>';
+  }).join('');
+}
+function fillTypeOptions(){
+  var sel=document.getElementById('lotType');var current=sel.value;
+  sel.innerHTML='<option value="">Selecione o tipo</option>'+data.tipos.map(function(t){return '<option value="'+esc(t.id)+'">'+esc(t.nome)+' ('+esc(t.status)+')</option>'}).join('');
+  if(current&&data.tipos.some(function(t){return t.id===current}))sel.value=current;
+  document.getElementById('newLot').disabled=!data.tipos.length;
+}
+function openType(id){
+  var t=id?data.tipos.find(function(x){return x.id===id}):null;
+  document.getElementById('typeTitle').textContent=t?'Editar tipo':'Novo tipo';
+  document.getElementById('typeId').value=t?t.id:'';
+  document.getElementById('typeName').value=t?t.nome:'';
+  document.getElementById('typeDescription').value=t?t.descricao:'';
+  document.getElementById('typePrice').value=t?Number(t.precoNumero||0):0;
+  document.getElementById('typeQuantity').value=t?Number(t.quantidade||0):0;
+  document.getElementById('typeCapacity').value=t?Number(t.capacidadePorVenda||1):1;
+  document.getElementById('typeOrder').value=t?Number(t.ordem||0):Math.max(1,data.tipos.length+1);
+  document.getElementById('typeColor').value=(t&&/^#[0-9A-F]{6}$/i.test(t.cor||''))?t.cor:'#D4AF37';
+  document.getElementById('typeStatus').value=t?String(t.status||'ATIVO').toUpperCase():'ATIVO';
+  document.getElementById('typeDialog').showModal();
+}
+function openLot(id){
+  if(!data.tipos.length){toast('Cadastre primeiro um tipo de ingresso.',true);return}
+  var l=id?data.lotes.find(function(x){return x.id===id}):null;
+  fillTypeOptions();
+  document.getElementById('lotTitle').textContent=l?'Editar lote':'Novo lote';
+  document.getElementById('lotId').value=l?l.id:'';
+  document.getElementById('lotType').value=l?l.tipoId:(data.tipos.find(function(t){return String(t.status).toUpperCase()==='ATIVO'})||data.tipos[0]).id;
+  document.getElementById('lotName').value=l?l.nome:'';
+  document.getElementById('lotPrice').value=l?Number(l.precoNumero||0):0;
+  document.getElementById('lotQuantity').value=l?Number(l.quantidade||0):0;
+  document.getElementById('lotStart').value=l?(l.dataInicioFormulario||''):'';
+  document.getElementById('lotEnd').value=l?(l.dataFimFormulario||''):'';
+  document.getElementById('lotStatus').value=l?String(l.status||'ATIVO').toUpperCase():'ATIVO';
+  document.getElementById('lotOrder').value=l?Number(l.ordem||0):Math.max(1,data.lotes.length+1);
+  document.getElementById('lotDialog').showModal();
+}
+async function saveType(e){
+  e.preventDefault();
+  var payload={id:document.getElementById('typeId').value,nome:document.getElementById('typeName').value,descricao:document.getElementById('typeDescription').value,preco:document.getElementById('typePrice').value,quantidade:document.getElementById('typeQuantity').value,capacidadePorVenda:document.getElementById('typeCapacity').value,ordem:document.getElementById('typeOrder').value,cor:document.getElementById('typeColor').value,status:document.getElementById('typeStatus').value};
+  loading(true,'Salvando tipo de ingresso...');
+  try{var r=await rpc('ctIngressosConfigSalvarTipoPROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar tipo.');document.getElementById('typeDialog').close();toast(r.mensagem||'Tipo salvo.');await load()}catch(err){toast(err.message,true)}finally{loading(false)}
+}
+async function saveLot(e){
+  e.preventDefault();
+  var payload={id:document.getElementById('lotId').value,tipoId:document.getElementById('lotType').value,nome:document.getElementById('lotName').value,preco:document.getElementById('lotPrice').value,quantidade:document.getElementById('lotQuantity').value,dataInicio:document.getElementById('lotStart').value,dataFim:document.getElementById('lotEnd').value,status:document.getElementById('lotStatus').value,ordem:document.getElementById('lotOrder').value};
+  loading(true,'Salvando lote...');
+  try{var r=await rpc('ctIngressosConfigSalvarLotePROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar lote.');document.getElementById('lotDialog').close();toast(r.mensagem||'Lote salvo.');await load()}catch(err){toast(err.message,true)}finally{loading(false)}
+}
+async function toggleType(id){
+  var t=data.tipos.find(function(x){return x.id===id});if(!t)return;
+  var next=String(t.status).toUpperCase()==='ATIVO'?'INATIVO':'ATIVO';
+  loading(true,'Atualizando tipo...');
+  try{var r=await rpc('ctIngressosConfigAlterarStatusTipoPROD',[token,eventId,id,next]);toast(r&&r.mensagem||'Status atualizado.');await load()}catch(e){toast(e.message,true)}finally{loading(false)}
+}
+async function toggleLot(id){
+  var l=data.lotes.find(function(x){return x.id===id});if(!l)return;
+  var next=String(l.status).toUpperCase()==='ATIVO'?'INATIVO':'ATIVO';
+  loading(true,'Atualizando lote...');
+  try{var r=await rpc('ctIngressosConfigAlterarStatusLotePROD',[token,eventId,id,next]);toast(r&&r.mensagem||'Status atualizado.');await load()}catch(e){toast(e.message,true)}finally{loading(false)}
+}
+document.getElementById('newType').addEventListener('click',function(){openType('')});
+document.getElementById('newLot').addEventListener('click',function(){openLot('')});
+document.getElementById('typeForm').addEventListener('submit',saveType);
+document.getElementById('lotForm').addEventListener('submit',saveLot);
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-close],[data-edit-type],[data-toggle-type],[data-edit-lot],[data-toggle-lot]');
+  if(!el)return;
+  if(el.dataset.close){document.getElementById(el.dataset.close).close();return}
+  if(el.dataset.editType){openType(el.dataset.editType);return}
+  if(el.dataset.toggleType){toggleType(el.dataset.toggleType);return}
+  if(el.dataset.editLot){openLot(el.dataset.editLot);return}
+  if(el.dataset.toggleLot){toggleLot(el.dataset.toggleLot)}
+});
+var s=readSession();
+if(!s||!s.token){location.replace('/produtor/');return}
+if(!eventId){location.replace('/central/');return}
+token=String(s.token);load();
+}());
+</script>
+</body>
+</html>
