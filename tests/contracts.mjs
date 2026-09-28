@@ -14,6 +14,7 @@ const protectedFiles = [
   'checkin/index.html',
   'consulta/index.html',
   'produtor/index.html',
+  'produtor/ingressos/index.html',
   'produtor/carioca-pay/index.html',
   'produtor/financeiro/index.html',
   'produtor/solicitar/index.html',
@@ -76,6 +77,60 @@ if (producerPortalAdminNotifications) {
   }
 }
 
+
+const centralIngressosConfig = readEarly('central/index.html');
+const produtorIngressosConfig = readEarly('produtor/ingressos/index.html');
+
+if (centralIngressosConfig) {
+  for (const required of [
+    'id="mIngressos"',
+    '<strong>Ingressos & Lotes</strong>',
+    "'/produtor/ingressos/?evento='",
+    'localidadeEvento(ev)',
+    "document.getElementById('mIngressos').classList.add('disabled')"
+  ]) {
+    if (!centralIngressosConfig.includes(required)) {
+      errors.push({
+        file: 'central/index.html',
+        rule: 'jornada de configuração de ingressos ausente: ' + required,
+        excerpt: ''
+      });
+    }
+  }
+}
+
+if (produtorIngressosConfig) {
+  for (const required of [
+    '<title>Ingressos e Lotes | Carioca Ticket</title>',
+    'CT_PORTAL_PRODUTOR_PROD_SESSION_V1',
+    'ctIngressosConfigCarregarPROD',
+    'ctIngressosConfigSalvarTipoPROD',
+    'ctIngressosConfigAlterarStatusTipoPROD',
+    'ctIngressosConfigSalvarLotePROD',
+    'ctIngressosConfigAlterarStatusLotePROD',
+    'Acessos por venda',
+    'Casadinha = 2',
+    'Esta tela não publica vendas automaticamente',
+    'rel="manifest" href="/manifest-produtor.webmanifest"',
+    '/pwa-register.js'
+  ]) {
+    if (!produtorIngressosConfig.includes(required)) {
+      errors.push({
+        file: 'produtor/ingressos/index.html',
+        rule: 'configuração web de ingressos incompleta: ' + required,
+        excerpt: ''
+      });
+    }
+  }
+
+  if (/\b(?:alert|confirm|prompt)\s*\(/.test(produtorIngressosConfig)) {
+    errors.push({
+      file: 'produtor/ingressos/index.html',
+      rule: 'configuração de ingressos não deve usar diálogos nativos',
+      excerpt: ''
+    });
+  }
+}
 
 const eventosV2 = readEarly('eventos-v2/index.html');
 if (eventosV2) {
@@ -271,6 +326,7 @@ if (producerManifest) {
 
 for (const file of [
   'produtor/index.html',
+  'produtor/ingressos/index.html',
   'produtor/financeiro/index.html',
   'backoffice/carioca-pay/index.html',
   'backoffice/carioca-pay/produtores/index.html',
