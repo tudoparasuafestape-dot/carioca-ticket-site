@@ -425,6 +425,27 @@ cursor:wait
 .ghost[aria-disabled="true"]{
 opacity:.52
 }
+.admin-notification-link{
+gap:8px
+}
+.admin-notification-badge{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:21px;
+height:21px;
+padding:0 6px;
+border-radius:999px;
+background:var(--gold2);
+color:#151108;
+font-size:10px;
+font-weight:950;
+line-height:1;
+box-shadow:0 0 0 2px rgba(232,179,75,.12)
+}
+.admin-notification-badge.hidden{
+display:none
+}
 .container{
 width:
 min(
@@ -1445,6 +1466,20 @@ target="_top"
 Gestão Parceiros CT
 </a>
 <a
+id="producerRequestsLink"
+class="ghost admin-notification-link hidden"
+href="/produtor/solicitacoes/"
+target="_top"
+aria-label="Solicitações de produtores"
+>
+Solicitações
+<span
+id="producerRequestsBadge"
+class="admin-notification-badge hidden"
+aria-hidden="true"
+>0</span>
+</a>
+<a
 id="backofficeMasterLink"
 class="ghost hidden"
 href="/backoffice/"
@@ -2127,7 +2162,16 @@ painelEmAndamento:
 false,
 
 painelSequencia:
-0
+0,
+
+adminSolicitacoesHabilitado:
+false,
+
+adminSolicitacoesUltimaConsulta:
+0,
+
+adminSolicitacoesEmAndamento:
+false
 };
 
 var el = {};
@@ -2186,6 +2230,8 @@ function iniciar(){
 'commercialPolicyLink',
 'partnerPortalLink',
 'partnerAdminLink',
+'producerRequestsLink',
+'producerRequestsBadge',
 'backofficeMasterLink',
 'changeEmailButton',
 'emailModalBackdrop',
@@ -2385,6 +2431,10 @@ state.token
 
 prepararLinksAutenticados();
 
+atualizarBadgeSolicitacoesProdutor(
+false
+);
+
 if(
 state.eventoAtual
 ){
@@ -2404,13 +2454,21 @@ function(){
 if(
 document.visibilityState ===
 'visible' &&
-state.token &&
+state.token
+){
+
+atualizarBadgeSolicitacoesProdutor(
+false
+);
+
+if(
 state.eventoAtual
 ){
 
 carregarPainel(
 false
 );
+}
 }
 }
 );
@@ -4458,6 +4516,33 @@ el.partnerAdminLink.classList.toggle(
 !podeGerirParceiros
 );
 
+state.adminSolicitacoesHabilitado =
+podeGerirParceiros;
+
+el.producerRequestsLink.classList.toggle(
+'hidden',
+!podeGerirParceiros
+);
+
+if(
+!podeGerirParceiros
+){
+el.producerRequestsBadge.textContent =
+'0';
+el.producerRequestsBadge.classList.add(
+'hidden'
+);
+el.producerRequestsLink.setAttribute(
+'aria-label',
+'Solicitações de produtores'
+);
+}
+else{
+atualizarBadgeSolicitacoesProdutor(
+true
+);
+}
+
 el.backofficeMasterLink.classList.toggle(
 'hidden',
 !podeGerirParceiros
@@ -4541,7 +4626,138 @@ iniciarAtualizacaoHandoff();
 iniciarAtualizacaoAutomatica();
 }
 
+function atualizarBadgeSolicitacoesProdutor(
+forcar
+){
+
+if(
+!state.token ||
+!state.adminSolicitacoesHabilitado ||
+!el.producerRequestsLink ||
+!el.producerRequestsBadge
+){
+return;
+}
+
+var agora =
+Date.now();
+
+if(
+state.adminSolicitacoesEmAndamento
+){
+return;
+}
+
+if(
+forcar !== true &&
+state.adminSolicitacoesUltimaConsulta &&
+agora -
+state.adminSolicitacoesUltimaConsulta <
+30000
+){
+return;
+}
+
+state.adminSolicitacoesEmAndamento =
+true;
+
+google.script.run
+.withSuccessHandler(
+function(r){
+
+state.adminSolicitacoesEmAndamento =
+false;
+
+state.adminSolicitacoesUltimaConsulta =
+Date.now();
+
+if(
+!r ||
+r.sucesso !== true ||
+r.autorizado !== true
+){
+return;
+}
+
+var total =
+Math.max(
+0,
+Number(
+r.total ||
+0
+)
+);
+
+el.producerRequestsBadge.textContent =
+total > 99
+? '99+'
+: String(
+total
+);
+
+el.producerRequestsBadge.classList.toggle(
+'hidden',
+total <= 0
+);
+
+el.producerRequestsLink.setAttribute(
+'aria-label',
+total > 0
+? (
+'Solicitações de produtores, ' +
+total +
+' pendente' +
+(total === 1 ? '' : 's')
+)
+: 'Solicitações de produtores'
+);
+}
+)
+.withFailureHandler(
+function(){
+
+state.adminSolicitacoesEmAndamento =
+false;
+}
+)
+.ctProdutorOnboardingAdminContarPendentesPROD(
+state.token
+);
+}
+
+
 function mostrarLogin(){
+
+state.adminSolicitacoesHabilitado =
+false;
+
+state.adminSolicitacoesUltimaConsulta =
+0;
+
+state.adminSolicitacoesEmAndamento =
+false;
+
+if(
+el.producerRequestsBadge
+){
+el.producerRequestsBadge.textContent =
+'0';
+el.producerRequestsBadge.classList.add(
+'hidden'
+);
+}
+
+if(
+el.producerRequestsLink
+){
+el.producerRequestsLink.classList.add(
+'hidden'
+);
+el.producerRequestsLink.setAttribute(
+'aria-label',
+'Solicitações de produtores'
+);
+}
 
 pararAtualizacaoAutomatica();
 

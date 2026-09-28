@@ -47,6 +47,35 @@ const protectedFiles = [
 
 const errors = [];
 
+const producerPortalAdminNotifications = readEarly('produtor/index.html');
+
+function readEarly(file) {
+  const full = path.join(root, file);
+  return fs.existsSync(full) ? fs.readFileSync(full, 'utf8') : '';
+}
+
+if (producerPortalAdminNotifications) {
+  for (const required of [
+    'id="producerRequestsLink"',
+    'href="/produtor/solicitacoes/"',
+    'id="producerRequestsBadge"',
+    'admin-notification-badge',
+    'ctProdutorOnboardingAdminContarPendentesPROD',
+    'atualizarBadgeSolicitacoesProdutor',
+    'state.adminSolicitacoesHabilitado',
+    'total > 99',
+    '30000'
+  ]) {
+    if (!producerPortalAdminNotifications.includes(required)) {
+      errors.push({
+        file: 'produtor/index.html',
+        rule: 'notificação administrativa de solicitações incompleta: ' + required,
+        excerpt: ''
+      });
+    }
+  }
+}
+
 function fail(file, rule, excerpt = '') {
   errors.push({ file, rule, excerpt: String(excerpt).slice(0, 220) });
 }
