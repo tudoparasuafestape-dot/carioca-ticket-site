@@ -1,0 +1,41 @@
+name: CT PREPROD - analisar merge Eventos Privados
+
+on:
+  push:
+    branches:
+      - preprod/reunioes-produtores-20260928
+    paths:
+      - '.github/workflows/ct-preprod-private-merge-analysis.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Analisar conflitos sem alterar branch
+        shell: bash
+        run: |
+          set -u
+          git fetch origin feature/eventos-privados-v1-20260925
+          set +e
+          git merge --no-commit --no-ff origin/feature/eventos-privados-v1-20260925
+          rc=$?
+          set -e
+          echo "MERGE_EXIT_CODE=$rc"
+          conflicts="$(git diff --name-only --diff-filter=U || true)"
+          count="$(printf '%s\n' "$conflicts" | sed '/^$/d' | wc -l | tr -d ' ')"
+          echo "CONFLICT_COUNT=$count"
+          if [ -n "$conflicts" ]; then
+            echo "CONFLICT_FILES_BEGIN"
+            printf '%s\n' "$conflicts"
+            echo "CONFLICT_FILES_END"
+          fi
+          git merge --abort >/dev/null 2>&1 || true
+          echo "ANALISE_CONCLUIDA_SEM_PUSH"
