@@ -76,6 +76,17 @@ if (producerPortalAdminNotifications) {
   }
 }
 
+
+const producerOnboardingAdmin = readEarly('produtor/solicitacoes/index.html');
+const producerOnboardingSelf = readEarly('produtor/solicitar/index.html');
+if (producerOnboardingAdmin) {
+  for (const required of ['Aprovando produtor...','Atualizando...','documentoJaCadastrado','Aprovação bloqueada','actionError']) {
+    if (!producerOnboardingAdmin.includes(required)) errors.push({file:'produtor/solicitacoes/index.html',rule:'feedback administrativo onboarding ausente: '+required,excerpt:''});
+  }
+}
+if (producerOnboardingSelf && !producerOnboardingSelf.includes('Este CPF/CNPJ já está vinculado a um produtor na Carioca Ticket.')) {
+  errors.push({file:'produtor/solicitar/index.html',rule:'mensagem amigável de documento já cadastrado ausente',excerpt:''});
+}
 function fail(file, rule, excerpt = '') {
   errors.push({ file, rule, excerpt: String(excerpt).slice(0, 220) });
 }
