@@ -378,7 +378,9 @@ function updateModules(){
   document.getElementById('mEventos').href='/eventos-v2/';
 
   document.getElementById('mIngressos').href=id
-    ?'/produtor/ingressos/?evento='+encodeURIComponent(id)
+    ?'/produtor/ingressos/?evento='+encodeURIComponent(id)+
+      '&produtor='+encodeURIComponent(String(ev&&ev.produtorId||''))+
+      '&eventoNome='+encodeURIComponent(nome)
     :'#';
 
   document.getElementById('mFornecedores').href=id
