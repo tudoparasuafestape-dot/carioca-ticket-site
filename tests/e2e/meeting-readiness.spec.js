@@ -127,3 +127,23 @@ test('invitation rejected validation permits another attempt and does not store 
   assert.equal(await page.evaluate(id=>sessionStorage.getItem('CT_PRIVATE_GRANT_'+id),eventId),null);
   assert.deepEqual(errors,[]);
 }));
+
+
+test('private event card keeps a single modality action instead of generic checkout',()=>{
+  const html=
+    fs.readFileSync(
+      path.join(root,'eventos-v2/index.html'),
+      'utf8'
+    );
+
+  assert.ok(
+    html.includes("evento.modoAcesso === 'PRIVADO_CONVITE'")
+  );
+  assert.equal(
+    html.includes('Gerenciar convidados e convites'),
+    false
+  );
+  assert.ok(
+    html.includes('Modalidade e convidados')
+  );
+});
