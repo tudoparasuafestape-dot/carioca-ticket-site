@@ -524,7 +524,12 @@
               return;
             }
             state.catalog=res;
-            renderCatalog();
+            try {
+              renderCatalog();
+            } catch (err) {
+              showClosed('Não foi possível exibir os ingressos agora. Tente novamente em alguns instantes.');
+              return;
+            }
             var recovery=readRecovery();
             if(recovery&&recovery.pedidoId&&recovery.token){
               recoverOrder(recovery);

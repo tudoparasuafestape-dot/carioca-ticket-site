@@ -612,7 +612,12 @@
                 res.politicaComercial &&
                 res.politicaComercial.ativa === true
               );
-            renderCatalog();
+            try {
+              renderCatalog();
+            } catch (err) {
+              showClosed('Não foi possível exibir os ingressos agora. Tente novamente em alguns instantes.');
+              return;
+            }
             registrarAcessoCampanha();
             var recovery=readRecovery();
             if(recovery&&recovery.pedidoId&&recovery.token){

@@ -2007,6 +2007,9 @@
             );
 
       const botoesCheckout =
+        evento.modoAcesso === 'PRIVADO_CONVITE'
+          ? '<button class="botao botao-principal" type="button" onclick="abrirModalidadeEvento(\'' + escaparAtributo(evento.id) + '\')">Gerenciar convidados e convites</button>'
+          :
         publicado &&
         checkoutUrl
           ? (
@@ -3186,6 +3189,16 @@
 
             botao.innerText =
               'Salvar rascunho seguro';
+
+            if (!resposta || resposta.sucesso !== true) {
+              mostrarMensagemCadastro('Não foi possível confirmar o cadastro do evento. Tente novamente.', false);
+              return;
+            }
+            if (resposta.modalidade && resposta.modalidade.pendentePersistencia === true) {
+              mostrarMensagemCadastro(resposta.mensagem || 'Rascunho salvo. A modalidade está pendente. Abra Modalidade e convidados antes de publicar.', false);
+              carregarEventos();
+              return;
+            }
 
             mostrarMensagemCadastro(
               'Evento salvo como rascunho e enviado automaticamente para análise da Carioca Ticket. Você não precisa solicitar autorização em outra tela.',
