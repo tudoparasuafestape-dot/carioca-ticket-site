@@ -812,7 +812,12 @@
                 showError(res&&res.mensagem?res.mensagem:'Este evento não está disponível no momento.');
                 return;
               }
-              render(res);
+              try {
+                render(res);
+              } catch (err) {
+                showError('Não foi possível exibir este evento agora. Tente novamente em alguns instantes.');
+                return;
+              }
               registrarAcessoCampanha();
             })
             .withFailureHandler(function(){
