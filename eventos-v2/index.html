@@ -1197,52 +1197,22 @@
 
 
           <div class="campo-grupo largo">
-
-            <label
-              class="campo-label"
-              for="campoOrigemComercial"
-            >
-              Origem comercial *
+            <label class="campo-label">
+              Origem comercial
             </label>
 
-            <select
-              id="campoOrigemComercial"
+            <div
               class="campo"
+              style="
+                display:flex;
+                align-items:center;
+                min-height:46px;
+                background:#f6f6f6;
+                color:#555;
+              "
             >
-              <option value="PRODUTOR">
-                Produtor / relacionamento existente
-              </option>
-              <option value="DIRETO_CT">
-                Direto pela Carioca Ticket
-              </option>
-              <option value="COMISSIONADO">
-                Indicação de comissionado
-              </option>
-            </select>
-
-          </div>
-
-
-          <div
-            id="grupoComissionado"
-            class="campo-grupo largo"
-            style="display:none"
-          >
-
-            <label
-              class="campo-label"
-              for="campoComissionadoReferencia"
-            >
-              Referência do comissionado / indicação *
-            </label>
-
-            <input
-              id="campoComissionadoReferencia"
-              class="campo"
-              type="text"
-              placeholder="Código, nome ou referência provisória da indicação"
-              autocomplete="off"
-            >
+              Produtor / relacionamento existente
+            </div>
 
             <small
               style="
@@ -1252,10 +1222,9 @@
                 line-height:1.45;
               "
             >
-              A publicação ficará pendente até a indicação ser formalizada
-              no módulo Comercial &amp; Comissionados.
+              A origem comercial é definida pela governança da Carioca Ticket.
+              Indicações e comissões são vinculadas somente pelo Backoffice Master.
             </small>
-
           </div>
 
 
@@ -1642,15 +1611,7 @@
           }
         );
 
-      document
-        .getElementById(
-          'campoOrigemComercial'
-        )
-        .addEventListener(
-          'change',
-          atualizarVisibilidadeComissionado
-        );
-
+      
       document
         .getElementById(
           'campoModoAcesso'
@@ -3074,15 +3035,10 @@
           ),
 
         origemComercial:
-          obterValor(
-            'campoOrigemComercial'
-          ) ||
           'PRODUTOR',
 
         comissionadoReferencia:
-          obterValor(
-            'campoComissionadoReferencia'
-          )
+          ''
       };
 
       if (!dados.produtorId) {
@@ -3138,18 +3094,6 @@
       ) {
         mostrarMensagemCadastro(
           'Informe a capacidade máxima do evento privado.',
-          false
-        );
-        return;
-      }
-
-      if (
-        dados.origemComercial ===
-          'COMISSIONADO' &&
-        !dados.comissionadoReferencia
-      ) {
-        mostrarMensagemCadastro(
-          'Informe a referência do comissionado/indicação.',
           false
         );
         return;
@@ -3245,8 +3189,7 @@
         'campoCidade',
         'campoUf',
         'campoCapacidade',
-        'campoMensagemConvite',
-        'campoComissionadoReferencia'
+        'campoMensagemConvite'
       ].forEach(
         function(id) {
           document
@@ -3295,13 +3238,7 @@
 
       atualizarVisibilidadeEventoPrivado();
 
-      document
-        .getElementById(
-          'campoOrigemComercial'
-        )
-        .value =
-          'PRODUTOR';
-
+      
       atualizarVisibilidadeComissionado();
 
       const mensagem =
