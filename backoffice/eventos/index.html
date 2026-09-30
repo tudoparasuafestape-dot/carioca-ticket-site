@@ -66,13 +66,49 @@ function renderDetail(){
  var html='<h2>'+esc(x.eventoNome||x.eventoId)+'</h2><div class="sub">'+esc(x.eventoId)+'</div><div class="kvgrid">'+
  '<div class="kv"><small>Produtor</small><strong>'+esc(x.produtorNome||x.produtorId)+'</strong></div>'+
  '<div class="kv"><small>Origem comercial</small><strong>'+esc(x.origemComercial||'—')+'</strong></div>'+
+ '<div class="kv"><small>Referência comercial</small><strong>'+esc(x.comissionadoReferencia||x.indicacaoId||'—')+'</strong></div>'+
  '<div class="kv"><small>Risco</small><strong>'+esc(label(x.riscoStatus))+'</strong></div>'+
  '<div class="kv"><small>Financeiro produtor</small><strong class="'+(x.financeiroPronto?'ok':'bad')+'">'+(x.financeiroPronto?'PRONTO':'NÃO PRONTO')+'</strong></div>'+
  '<div class="kv"><small>Autorização Master</small><strong>'+(x.publicacaoAutorizada?'SIM':'NÃO')+'</strong></div>'+
  '<div class="kv"><small>Status do evento</small><strong>'+esc(x.eventoStatus||'—')+'</strong></div></div>'+
- '<div class="note">Esta aprovação não coloca o evento no ar. Depois dela, o produtor ainda precisa ter tipos/lotes/tenant e demais requisitos válidos e clicar em publicar no módulo Eventos.</div>'+
+ '<div class="note">A origem comercial é governança Master e não pode ser autodeclarada pelo produtor. Esta aprovação não coloca o evento no ar.</div>'+
+ commercialOriginEditor(x)+
  actions(x);
- $('detail').innerHTML=html;$('detail').querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){openDecision(this.dataset.action)})})
+ $('detail').innerHTML=html;
+ $('detail').querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){openDecision(this.dataset.action)})});
+ var saveOrigin=$('saveCommercialOrigin');if(saveOrigin)saveOrigin.addEventListener('click',saveCommercialOrigin);
+ var originSelect=$('commercialOriginSelect');if(originSelect)originSelect.addEventListener('change',toggleCommercialReference);
+ toggleCommercialReference();
+}
+function commercialOriginEditor(x){
+ var origem=String(x.origemComercial||'PRODUTOR').toUpperCase();
+ return '<div class="note" style="margin-top:14px"><strong>Governança comercial</strong><div style="display:grid;gap:10px;margin-top:10px">'+
+ '<label>Origem<select id="commercialOriginSelect" class="input" style="width:100%;margin-top:5px"><option value="PRODUTOR" '+(origem==='PRODUTOR'?'selected':'')+'>Produtor / relacionamento existente</option><option value="DIRETO_CT" '+(origem==='DIRETO_CT'?'selected':'')+'>Direto pela Carioca Ticket</option><option value="COMISSIONADO" '+(origem==='COMISSIONADO'?'selected':'')+'>Indicação / comissionado</option></select></label>'+
+ '<label id="commercialReferenceGroup">Referência do comissionado / indicação<input id="commercialReference" class="input" style="width:100%;margin-top:5px" value="'+esc(x.comissionadoReferencia||'')+'" placeholder="Código ou referência auditável"></label>'+
+ '<button id="saveCommercialOrigin" class="btn" type="button">Salvar origem comercial</button>'+
+ '</div></div>';
+}
+function toggleCommercialReference(){
+ var select=$('commercialOriginSelect'),group=$('commercialReferenceGroup');if(!select||!group)return;
+ group.style.display=select.value==='COMISSIONADO'?'block':'none';
+}
+async function saveCommercialOrigin(){
+ if(!state.selected||state.busy)return;
+ var origem=$('commercialOriginSelect').value;
+ var referencia=$('commercialReference').value.trim();
+ if(origem==='COMISSIONADO'&&!referencia&&!state.selected.indicacaoId){toast('Informe a referência do comissionado/indicação.');return}
+ state.busy=true;$('saveCommercialOrigin').disabled=true;
+ try{
+  var r=await rpc('ctEventoGovernancaMasterAtualizarOrigemPROD',[state.session.token,state.selected.eventoId,origem,referencia]);
+  if(!r||r.sucesso!==true)throw new Error('A origem comercial não foi atualizada.');
+  if(r.movimentouDinheiro===true||r.publicouVendas===true)throw new Error('Gate de segurança violado.');
+  toast(r.mensagem||'Origem comercial atualizada.');
+  state.selected=r.evento||state.selected;
+  state.busy=false;
+  await load();
+  var fresh=state.list.find(function(x){return x.eventoId===state.selected.eventoId});if(fresh){state.selected=fresh;renderList();renderDetail()}
+ }catch(e){toast(e&&e.message?e.message:String(e))}
+ finally{state.busy=false;var b=$('saveCommercialOrigin');if(b)b.disabled=false}
 }
 function actions(x){
  var s=String(x.riscoStatus||'').toUpperCase();

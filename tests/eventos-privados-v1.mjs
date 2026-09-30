@@ -87,6 +87,11 @@ ok(modalidades.includes('Rollback global da V1'),'rollback global de modalidades
 ok(politica.includes('ctPoliticaComercialMasterSalvarPROD'),'politica comercial Master ausente');
 ok(politica.includes('COMPRADOR')&&politica.includes('PRODUTOR')&&politica.includes('DIVIDIDA'),'pagadores canonicos incompletos');
 ok(governanca.includes('ctEventoGovernancaMasterDecidirPROD'),'governanca Master foi perdida');
+ok(governanca.includes('ctEventoGovernancaMasterAtualizarOrigemPROD'),'governanca Master da origem comercial ausente');
+ok(!eventos.includes('id="campoOrigemComercial"'),'produtor nao pode editar origem comercial');
+ok(!eventos.includes('id="campoComissionadoReferencia"'),'produtor nao pode editar referencia comercial');
+ok(eventos.includes("origemComercial:\n          'PRODUTOR'"),'cadastro comum deve fixar origem PRODUTOR');
+
 
 ok(backoffice.includes('/backoffice/eventos/'),'Backoffice sem Governanca Eventos');
 ok(backoffice.includes('/backoffice/modalidades/'),'Backoffice sem Modalidades & Convites');
