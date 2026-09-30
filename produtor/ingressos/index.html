@@ -110,8 +110,8 @@
       </div>
       <div class="field"><label for="typeDescription">Descrição</label><textarea id="typeDescription" maxlength="500" placeholder="Descrição opcional para sua operação"></textarea></div>
       <div class="grid2">
-        <div class="field"><label for="typePrice">Preço base (R$) *</label><input id="typePrice" type="number" min="0" step="0.01" value="0" required></div>
-        <div class="field"><label for="typeQuantity">Quantidade total *</label><input id="typeQuantity" type="number" min="0" step="1" value="0" required><div class="help">0 pode ser usado quando o limite será controlado pelo lote.</div></div>
+        <div class="field"><label for="typePrice">Preço base do tipo (R$) *</label><input id="typePrice" type="number" min="0" step="0.01" value="0" required><div class="help">Referência do tipo. Quando houver lote ativo, o preço de venda é definido no lote.</div></div>
+        <div class="field"><label for="typeQuantity">Limite do tipo *</label><input id="typeQuantity" type="number" min="0" step="1" value="0" required><div class="help">Use 0 quando a quantidade disponível será controlada exclusivamente pelos lotes.</div></div>
       </div>
       <div class="grid2">
         <div class="field"><label for="typeCapacity">Acessos por venda *</label><input id="typeCapacity" type="number" min="1" step="1" value="1" required><div class="help">Individual = 1. Casadinha = 2.</div></div>
@@ -134,8 +134,8 @@
         <div class="field"><label for="lotName">Nome do lote *</label><input id="lotName" maxlength="60" required placeholder="Ex.: 1º lote"></div>
       </div>
       <div class="grid2">
-        <div class="field"><label for="lotPrice">Preço (R$) *</label><input id="lotPrice" type="number" min="0" step="0.01" value="0" required></div>
-        <div class="field"><label for="lotQuantity">Quantidade *</label><input id="lotQuantity" type="number" min="0" step="1" value="0" required></div>
+        <div class="field"><label for="lotPrice">Preço de venda do lote (R$) *</label><input id="lotPrice" type="number" min="0" step="0.01" value="0" required></div>
+        <div class="field"><label for="lotQuantity">Quantidade disponível no lote *</label><input id="lotQuantity" type="number" min="0" step="1" value="0" required></div>
       </div>
       <div class="grid2">
         <div class="field"><label for="lotStart">Início das vendas</label><input id="lotStart" type="datetime-local"></div>

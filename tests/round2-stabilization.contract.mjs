@@ -1,0 +1,26 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const read=f=>fs.readFileSync(path.join(root,f),'utf8').replace(/\r\n/g,'\n');
+const failures=[]; const ok=(c,m)=>{if(!c)failures.push(m)};
+const home=read('index.html');
+const eventos=read('eventos-v2/index.html');
+const convite=read('convite/index.html');
+const checkout=read('checkout-v2/index.html');
+const guests=read('produtor/convidados/index.html');
+const ingressos=read('produtor/ingressos/index.html');
+const master=read('backoffice/carioca-pay/produtores/index.html');
+ok(home.includes('<a class="nav-cta" href="#todos-eventos">Comprar ingresso</a>'),'CTA global ainda aponta para evento específico');
+ok(!eventos.includes("titulo:\n          'Evento selecionado',\n        mensagem:\n          'Pronto. Este evento agora é o contexto de gestão"),'seleção de evento ainda tem segunda confirmação');
+ok(eventos.includes('while (\n          cidade &&\n          removeuSufixo'),'cidade/UF não remove sufixos repetidos');
+ok(convite.includes("res.vendas&&res.vendas.publicadas===true"),'convite não respeita publicação de vendas');
+ok(convite.includes("CT_PRIVATE_RETURN_"),'convite não preserva retorno privado seguro');
+ok(!convite.includes("accessGrant='+") && !/checkout-v2\/\?evento=.*accessGrant/.test(convite),'grant privado aparece em URL');
+ok(checkout.includes("sessionStorage.getItem('CT_PRIVATE_RETURN_'+state.eventId)"),'checkout não usa retorno privado determinístico');
+ok(checkout.includes("sessionStorage.getItem('CT_PRIVATE_RETURN_'+state.eventId)")&&checkout.includes('el.eventBack.href=privateReturn'),'checkout não restringe/usa retorno privado armazenado');
+ok(guests.includes("'Você está convidado'+(eventName?' para '+eventName:'')"),'título padrão do convite não usa nome do evento');
+ok(ingressos.includes('Preço de venda do lote (R$)'),'rótulo de preço do lote não foi esclarecido');
+ok(master.includes('readonly value=') && master.includes('Verificar configuração'),'Master ainda exige digitação manual da referência');
+if(failures.length){console.error('ROUND2 SITE CONTRACT FAIL');for(const f of failures)console.error('- '+f);process.exit(1)}
+console.log('ROUND2_SITE_CONTRACT_OK');

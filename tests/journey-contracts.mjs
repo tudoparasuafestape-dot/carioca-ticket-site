@@ -2,7 +2,7 @@ import fs from 'node:fs';
 
 const failures=[];
 function read(path){
-  try{return fs.readFileSync(path,'utf8')}catch(e){failures.push(path+': arquivo ausente');return ''}
+  try{return fs.readFileSync(path,'utf8').replace(/\r\n/g,'\n')}catch(e){failures.push(path+': arquivo ausente');return ''}
 }
 function requireAll(path, content, snippets){
   for(const snippet of snippets){

@@ -170,12 +170,13 @@ function renderAccess(res){
   state.access=res||{};
   var p=(res&&res.configuracaoPersistida)||(res&&res.acesso)||{};
   var mode=String(p.modoAcesso||'PUBLICO').toUpperCase();
+  var eventName=res&&res.evento&&res.evento.nome?String(res.evento.nome).trim():'';
   $('accessMode').value=mode;
   $('inviteValidation').value=p.validacaoConvite||'TOKEN_TELEFONE';
-  $('inviteTitle').value=p.mensagemConviteTitulo||'Você está convidado';
+  $('inviteTitle').value=p.mensagemConviteTitulo||('Você está convidado'+(eventName?' para '+eventName:''));
   $('inviteText').value=p.mensagemConviteTexto||'';
   $('inviteCta').value=p.ctaConviteTexto||'Continuar';
-  if(res&&res.evento&&res.evento.nome)$('eventName').textContent=res.evento.nome;
+  if(eventName)$('eventName').textContent=eventName;
   activePrivateFields(mode==='PRIVADO_CONVITE');
   $('accessFields').classList.remove('hidden');$('accessLoading').classList.add('hidden');
 }

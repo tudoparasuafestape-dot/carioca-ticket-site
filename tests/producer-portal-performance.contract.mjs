@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve('.');
-const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
+const read = rel => fs.readFileSync(path.join(root, rel), 'utf8').replace(/\r\n/g, '\n');
 const portal = read('produtor/index.html');
 const home = read('index.html');
 

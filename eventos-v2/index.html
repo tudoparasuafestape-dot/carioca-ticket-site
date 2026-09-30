@@ -2331,15 +2331,6 @@
         eventoId
       );
 
-      await mostrarModalMensagemCT({
-        titulo:
-          'Evento selecionado',
-        mensagem:
-          'Pronto. Este evento agora é o contexto de gestão deste navegador. Você pode continuar a configuração com segurança.',
-        confirmarTexto:
-          'Continuar'
-      });
-
       carregarEventos();
     }
 
@@ -3445,39 +3436,60 @@
         cidade &&
         uf
       ) {
-        const cidadeMaiuscula =
-          cidade.toUpperCase();
-
         const sufixos = [
           ' / ' + uf,
           ' — ' + uf,
           ' - ' + uf
         ];
 
-        for (
-          let indice = 0;
-          indice < sufixos.length;
-          indice += 1
+        let removeuSufixo =
+          true;
+
+        while (
+          cidade &&
+          removeuSufixo
         ) {
-          const sufixo =
-            sufixos[indice];
+          removeuSufixo =
+            false;
 
-          if (
-            cidadeMaiuscula.endsWith(
-              sufixo
-            )
+          const cidadeMaiuscula =
+            cidade.toUpperCase();
+
+          for (
+            let indice = 0;
+            indice < sufixos.length;
+            indice += 1
           ) {
-            cidade =
-              cidade
-                .slice(
-                  0,
-                  cidade.length -
-                  sufixo.length
-                )
-                .trim();
+            const sufixo =
+              sufixos[indice];
 
-            break;
+            if (
+              cidadeMaiuscula.endsWith(
+                sufixo
+              )
+            ) {
+              cidade =
+                cidade
+                  .slice(
+                    0,
+                    cidade.length -
+                    sufixo.length
+                  )
+                  .trim();
+
+              removeuSufixo =
+                true;
+
+              break;
+            }
           }
+        }
+
+        if (
+          cidade.toUpperCase() ===
+          uf
+        ) {
+          cidade = '';
         }
       }
 
