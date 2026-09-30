@@ -26,10 +26,16 @@ async function installMock(page,state){
       if(method==='ctEventoGovernancaMasterListarPROD'){
         resultado={sucesso:true,autorizado:true,itens:[{
           eventoId:'EVT-GOV-E2E',eventoNome:'Evento Governado E2E',eventoData:'20/11/2026',eventoStatus:'RASCUNHO',
-          produtorId:'PROD-E2E',produtorNome:'Produtor E2E',origemComercial:'PRODUTOR',
+          produtorId:'PROD-E2E',produtorNome:'Produtor E2E',origemComercial:state.origin||'PRODUTOR',comissionadoReferencia:state.reference||'',indicacaoId:'',
           riscoStatus:state.status,publicacaoAutorizada:state.authorized,financeiroPronto:state.financeReady,
           criadoEm:'2026-09-24T20:00:00.000Z',atualizadoEm:'2026-09-24T20:00:00.000Z'
         }],total:1,contagem:{pendentes:state.authorized?0:(state.status==='BLOQUEADO'?0:1),autorizados:state.authorized?1:0,bloqueados:state.status==='BLOQUEADO'?1:0},movimentouDinheiro:false,publicouVendas:false};
+      }else if(method==='ctEventoGovernancaMasterAtualizarOrigemPROD'){
+        const origin=String(args[2]||'').toUpperCase(),reference=String(args[3]||'');
+        if(!['PRODUTOR','DIRETO_CT','COMISSIONADO'].includes(origin))throw new Error('CT_EVENTO_GOV_MASTER_ORIGEM_INVALIDA');
+        if(origin==='COMISSIONADO'&&!reference)throw new Error('CT_EVENTO_GOV_MASTER_COMISSIONADO_REFERENCIA_OBRIGATORIA');
+        state.origin=origin;state.reference=reference;
+        resultado={sucesso:true,autorizado:true,evento:{eventoId:'EVT-GOV-E2E',eventoNome:'Evento Governado E2E',eventoStatus:'RASCUNHO',produtorId:'PROD-E2E',produtorNome:'Produtor E2E',origemComercial:origin,comissionadoReferencia:reference,indicacaoId:'',riscoStatus:state.status,publicacaoAutorizada:state.authorized,financeiroPronto:state.financeReady},movimentouDinheiro:false,publicouVendas:false,mensagem:'Origem comercial atualizada.'};
       }else if(method==='ctEventoGovernancaMasterDecidirPROD'){
         const action=String(args[2]||'');state.actions.push(action);
         if(action==='INICIAR_ANALISE'){state.status='EM_ANALISE';state.authorized=false}
@@ -68,6 +74,23 @@ test.describe('Governança Master de eventos',()=>{
     expect(state.actions).toEqual(['INICIAR_ANALISE','APROVAR']);
     await expect(page.locator('#approvedCount')).toHaveText('1');
     await expect(page.locator('#detail')).toContainText('AUTORIZADO');
+  });
+
+  test('origem comercial só é alterada pelo Backoffice Master',async({page})=>{
+    const state={status:'PENDENTE_ANALISE',authorized:false,financeReady:true,actions:[],origin:'PRODUTOR',reference:''};
+    await installMock(page,state);await seed(page);
+    await page.goto('/backoffice/eventos/',{waitUntil:'domcontentloaded'});
+    await page.getByText('Evento Governado E2E').first().click();
+
+    await expect(page.locator('#commercialOriginSelect')).toHaveValue('PRODUTOR');
+    await page.locator('#commercialOriginSelect').selectOption('COMISSIONADO');
+    await expect(page.locator('#commercialReferenceGroup')).toBeVisible();
+    await page.locator('#commercialReference').fill('PARCEIRO-E2E');
+    await page.locator('#saveCommercialOrigin').click();
+
+    await expect.poll(()=>state.origin).toBe('COMISSIONADO');
+    await expect.poll(()=>state.reference).toBe('PARCEIRO-E2E');
+    await expect(page.locator('#detail')).toContainText('COMISSIONADO');
   });
 
   test('financeiro não pronto impede aprovação',async({page})=>{
