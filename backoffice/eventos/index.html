@@ -103,6 +103,8 @@ async function saveCommercialOrigin(){
   if(!r||r.sucesso!==true)throw new Error('A origem comercial não foi atualizada.');
   if(r.movimentouDinheiro===true||r.publicouVendas===true)throw new Error('Gate de segurança violado.');
   toast(r.mensagem||'Origem comercial atualizada.');
+  state.selected=r.evento||state.selected;
+  state.busy=false;
   await load();
   var fresh=state.list.find(function(x){return x.eventoId===state.selected.eventoId});if(fresh){state.selected=fresh;renderList();renderDetail()}
  }catch(e){toast(e&&e.message?e.message:String(e))}
