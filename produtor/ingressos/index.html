@@ -76,14 +76,16 @@
     <h1>Ingressos e lotes</h1>
     <p>Defina o que será vendido e organize os lotes antes de solicitar a publicação. Esta tela não publica vendas automaticamente.</p>
     <div class="event"><strong id="eventName">Carregando evento...</strong><span id="eventMeta">—</span></div>
+    <p id="configStatus" role="status" aria-live="polite">Carregando configuração...</p>
+    <button id="reloadConfig" class="btn secondary" type="button" disabled>Atualizar configuração</button>
     <div class="notice">Ordem recomendada: crie primeiro o <strong>tipo de ingresso</strong> e depois o <strong>lote</strong>. Para publicar, o evento precisa ter pelo menos um tipo ATIVO e um lote ATIVO.</div>
   </section>
 
   <section class="summary">
-    <article><span>Tipos</span><strong id="sumTipos">0</strong></article>
-    <article><span>Tipos ativos</span><strong id="sumTiposAtivos">0</strong></article>
-    <article><span>Lotes</span><strong id="sumLotes">0</strong></article>
-    <article><span>Lotes ativos</span><strong id="sumLotesAtivos">0</strong></article>
+    <article><span>Tipos</span><strong id="sumTipos">—</strong></article>
+    <article><span>Tipos ativos</span><strong id="sumTiposAtivos">—</strong></article>
+    <article><span>Lotes</span><strong id="sumLotes">—</strong></article>
+    <article><span>Lotes ativos</span><strong id="sumLotesAtivos">—</strong></article>
   </section>
 
   <section class="section">
@@ -116,6 +118,7 @@
         <div class="field"><label for="typeOrder">Ordem</label><input id="typeOrder" type="number" min="0" step="1" value="1"></div>
       </div>
       <div class="field"><label for="typeColor">Cor de identificação</label><input id="typeColor" type="color" value="#D4AF37"></div>
+      <p id="typeFeedback" role="status" aria-live="polite"></p>
       <div class="modal-actions"><button class="btn secondary" type="button" data-close="typeDialog">Cancelar</button><button class="btn" type="submit">Salvar tipo</button></div>
     </div>
   </form>
@@ -142,6 +145,7 @@
         <div class="field"><label for="lotStatus">Status *</label><select id="lotStatus"><option value="ATIVO">ATIVO</option><option value="INATIVO">INATIVO</option><option value="ENCERRADO">ENCERRADO</option></select></div>
         <div class="field"><label for="lotOrder">Ordem</label><input id="lotOrder" type="number" min="0" step="1" value="1"></div>
       </div>
+      <p id="lotFeedback" role="status" aria-live="polite"></p>
       <div class="modal-actions"><button class="btn secondary" type="button" data-close="lotDialog">Cancelar</button><button class="btn" type="submit">Salvar lote</button></div>
     </div>
   </form>
@@ -156,6 +160,13 @@ var pending={};
 var eventId=String(new URLSearchParams(location.search).get('evento')||'').trim();
 var token='';
 var data={tipos:[],lotes:[],resumo:{}};
+var saving=false, loadingConfig=false, configReady=false;
+
+function formBusy(form,busy){
+  form.setAttribute('aria-busy',String(busy));
+  form.querySelectorAll('input,select,textarea,button').forEach(function(el){el.disabled=busy});
+  form.querySelector('[type=submit]').textContent=busy?'Salvando...':(form.id==='typeForm'?'Salvar tipo':'Salvar lote');
+}
 
 function readSession(){
   try{
@@ -204,12 +215,20 @@ function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){retur
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function badge(status){status=String(status||'').toUpperCase();var cls=status==='ATIVO'?'active':(status==='ENCERRADO'?'closed':'inactive');return '<span class="badge '+cls+'">'+esc(status||'—')+'</span>'}
 async function load(){
-  loading(true,'Carregando ingressos e lotes...');
+  if(loadingConfig)return false;
+  loadingConfig=true;
+  document.getElementById('reloadConfig').disabled=true;
+  document.getElementById('reloadConfig').textContent='Atualizando...';
+  document.getElementById('configStatus').textContent='Carregando configuração...';
   try{
     var r=await rpc('ctIngressosConfigCarregarPROD',[token,eventId]);
-    if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Não foi possível carregar a configuração.');
-    data=r;render();
-  }catch(e){toast(e.message,true)}finally{loading(false)}
+    if(!r||r.sucesso!==true||!Array.isArray(r.tipos)||!Array.isArray(r.lotes))throw new Error(r&&r.mensagem||'Não foi possível carregar a configuração.');
+    data=r;render();configReady=true;
+    document.getElementById('configStatus').textContent='Configuração atualizada.';
+    if(document.getElementById('toast').classList.contains('error'))document.getElementById('toast').classList.remove('show');
+    return true;
+  }catch(e){document.getElementById('configStatus').textContent='Não foi possível atualizar a lista. Use Atualizar configuração para tentar novamente.';toast(e.message,true);return false}
+  finally{loadingConfig=false;document.getElementById('reloadConfig').disabled=false;document.getElementById('reloadConfig').textContent='Atualizar configuração';document.getElementById('newType').disabled=!configReady;document.getElementById('newLot').disabled=!configReady||!data.tipos.length}
 }
 function render(){
   var ev=data.evento||{};
@@ -248,6 +267,7 @@ function fillTypeOptions(){
   document.getElementById('newLot').disabled=!data.tipos.length;
 }
 function openType(id){
+  if(saving||loadingConfig||!configReady)return;
   var t=id?data.tipos.find(function(x){return x.id===id}):null;
   document.getElementById('typeTitle').textContent=t?'Editar tipo':'Novo tipo';
   document.getElementById('typeId').value=t?t.id:'';
@@ -259,9 +279,11 @@ function openType(id){
   document.getElementById('typeOrder').value=t?Number(t.ordem||0):Math.max(1,data.tipos.length+1);
   document.getElementById('typeColor').value=(t&&/^#[0-9A-F]{6}$/i.test(t.cor||''))?t.cor:'#D4AF37';
   document.getElementById('typeStatus').value=t?String(t.status||'ATIVO').toUpperCase():'ATIVO';
+  document.getElementById('typeFeedback').textContent='';
   document.getElementById('typeDialog').showModal();
 }
 function openLot(id){
+  if(saving||loadingConfig||!configReady)return;
   if(!data.tipos.length){toast('Cadastre primeiro um tipo de ingresso.',true);return}
   var l=id?data.lotes.find(function(x){return x.id===id}):null;
   fillTypeOptions();
@@ -275,19 +297,22 @@ function openLot(id){
   document.getElementById('lotEnd').value=l?(l.dataFimFormulario||''):'';
   document.getElementById('lotStatus').value=l?String(l.status||'ATIVO').toUpperCase():'ATIVO';
   document.getElementById('lotOrder').value=l?Number(l.ordem||0):Math.max(1,data.lotes.length+1);
+  document.getElementById('lotFeedback').textContent='';
   document.getElementById('lotDialog').showModal();
 }
 async function saveType(e){
   e.preventDefault();
+  if(saving)return;
+  saving=true;formBusy(document.getElementById('typeForm'),true);document.getElementById('typeFeedback').textContent='Salvando...';
   var payload={id:document.getElementById('typeId').value,nome:document.getElementById('typeName').value,descricao:document.getElementById('typeDescription').value,preco:document.getElementById('typePrice').value,quantidade:document.getElementById('typeQuantity').value,capacidadePorVenda:document.getElementById('typeCapacity').value,ordem:document.getElementById('typeOrder').value,cor:document.getElementById('typeColor').value,status:document.getElementById('typeStatus').value};
-  loading(true,'Salvando tipo de ingresso...');
-  try{var r=await rpc('ctIngressosConfigSalvarTipoPROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar tipo.');document.getElementById('typeDialog').close();toast(r.mensagem||'Tipo salvo.');await load()}catch(err){toast(err.message,true)}finally{loading(false)}
+  try{var r=await rpc('ctIngressosConfigSalvarTipoPROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar tipo.');document.getElementById('typeDialog').close();toast(r.mensagem||'Tipo salvo.');if(!await load())toast('Tipo salvo. Não foi possível atualizar a lista. Use Atualizar configuração.',true)}catch(err){document.getElementById('typeFeedback').textContent=humanError(err.message);toast(err.message,true)}finally{saving=false;formBusy(document.getElementById('typeForm'),false)}
 }
 async function saveLot(e){
   e.preventDefault();
+  if(saving)return;
+  saving=true;formBusy(document.getElementById('lotForm'),true);document.getElementById('lotFeedback').textContent='Salvando...';
   var payload={id:document.getElementById('lotId').value,tipoId:document.getElementById('lotType').value,nome:document.getElementById('lotName').value,preco:document.getElementById('lotPrice').value,quantidade:document.getElementById('lotQuantity').value,dataInicio:document.getElementById('lotStart').value,dataFim:document.getElementById('lotEnd').value,status:document.getElementById('lotStatus').value,ordem:document.getElementById('lotOrder').value};
-  loading(true,'Salvando lote...');
-  try{var r=await rpc('ctIngressosConfigSalvarLotePROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar lote.');document.getElementById('lotDialog').close();toast(r.mensagem||'Lote salvo.');await load()}catch(err){toast(err.message,true)}finally{loading(false)}
+  try{var r=await rpc('ctIngressosConfigSalvarLotePROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar lote.');document.getElementById('lotDialog').close();toast(r.mensagem||'Lote salvo.');if(!await load())toast('Lote salvo. Não foi possível atualizar a lista. Use Atualizar configuração.',true)}catch(err){document.getElementById('lotFeedback').textContent=humanError(err.message);toast(err.message,true)}finally{saving=false;formBusy(document.getElementById('lotForm'),false)}
 }
 async function toggleType(id){
   var t=data.tipos.find(function(x){return x.id===id});if(!t)return;
@@ -302,6 +327,15 @@ async function toggleLot(id){
   try{var r=await rpc('ctIngressosConfigAlterarStatusLotePROD',[token,eventId,id,next]);toast(r&&r.mensagem||'Status atualizado.');await load()}catch(e){toast(e.message,true)}finally{loading(false)}
 }
 document.getElementById('newType').addEventListener('click',function(){openType('')});
+document.getElementById('reloadConfig').addEventListener('click',function(){if(!saving)load()});
+['typePrice','typeQuantity','lotPrice','lotQuantity'].forEach(function(id){
+  var input=document.getElementById(id);
+  input.addEventListener('focus',function(){if(this.value==='0'){this.value='';this.dataset.emptyZero='true'}});
+  input.addEventListener('blur',function(){if(this.value===''&&this.dataset.emptyZero==='true')this.value='0';delete this.dataset.emptyZero});
+});
+['typeDialog','lotDialog'].forEach(function(id){document.getElementById(id).addEventListener('cancel',function(e){if(saving)e.preventDefault()})});
+document.getElementById('newType').disabled=true;document.getElementById('newLot').disabled=true;
+['sumTipos','sumTiposAtivos','sumLotes','sumLotesAtivos'].forEach(function(id){document.getElementById(id).textContent='—'});
 document.getElementById('newLot').addEventListener('click',function(){openLot('')});
 document.getElementById('typeForm').addEventListener('submit',saveType);
 document.getElementById('lotForm').addEventListener('submit',saveLot);
