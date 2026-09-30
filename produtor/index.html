@@ -4980,9 +4980,19 @@ state.produtorAtual.id ||
 ''
 );
 
+if(state.catalogoPendente&&state.catalogoPendente.produtorId===produtorId&&state.catalogoPendente.token===state.token)return;
+var request={produtorId:produtorId,token:state.token};
+state.catalogoPendente=request;
+el.refreshButton.disabled=true;
+el.refreshButton.textContent='Atualizando...';
+limparMensagem(el.portalMessage);
+
 google.script.run
 .withSuccessHandler(
 function(r){
+if(state.catalogoPendente!==request)return;
+state.catalogoPendente=null;
+el.refreshButton.textContent='Atualizar painel';
 
 if(
 !state.produtorAtual ||
@@ -5019,6 +5029,9 @@ r.eventos
 )
 .withFailureHandler(
 function(){
+if(state.catalogoPendente!==request)return;
+state.catalogoPendente=null;
+el.refreshButton.textContent='Atualizar painel';
 
 if(
 state.produtorAtual &&
@@ -5043,6 +5056,7 @@ produtorId
 function renderizarOpcoesEventos(
 eventos
 ){
+limparMensagem(el.portalMessage);
 
 el.eventSelect.innerHTML =
 '';
@@ -5164,8 +5178,7 @@ el.eventPickerTitle.textContent =
 el.eventPickerMeta.textContent =
 'Toque para tentar novamente';
 
-el.refreshButton.disabled =
-true;
+el.refreshButton.disabled = false;
 
 mostrarMensagem(
 el.portalMessage,

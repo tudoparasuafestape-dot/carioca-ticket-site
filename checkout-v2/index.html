@@ -662,10 +662,20 @@
         el.eventMeta.textContent=[e.data,e.horario,e.local,[e.cidade,e.uf].filter(Boolean).join(' / ')].filter(Boolean).join(' · ');
         el.eventDescription.textContent=visual.descricaoCurta||'Escolha seu ingresso e finalize sua compra com segurança.';
         if(state.privateFlow&&state.accessGrant){
-          el.eventBack.href='#';
-          el.eventBack.onclick=function(ev){ev.preventDefault();history.back();};
+          var privateReturn='';
+          try{
+            privateReturn=String(sessionStorage.getItem('CT_PRIVATE_RETURN_'+state.eventId)||'');
+          }catch(_){}
+          if(/^\/convite\/(?:\?|$)/.test(privateReturn)){
+            el.eventBack.href=privateReturn;
+            el.eventBack.onclick=null;
+          }else{
+            el.eventBack.href='#';
+            el.eventBack.onclick=function(ev){ev.preventDefault();history.back();};
+          }
         }else{
           el.eventBack.href='/evento-v2/?evento='+encodeURIComponent(state.eventId)+queryCampanha();
+          el.eventBack.onclick=null;
         }
 
         if(visual.capaUrl){

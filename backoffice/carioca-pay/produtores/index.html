@@ -77,7 +77,7 @@ function renderDetail(){
    html+='<div class="note">Financeiro ativo e pronto para vendas. A chave de API não é exibida nesta tela.</div>'+
    '<div class="box"><b>Suspensão de emergência</b><div class="field"><label>Motivo</label><input id="suspendReason" maxlength="800" placeholder="Informe o motivo da suspensão"></div><div class="field"><label>Confirmação</label><input id="suspendConfirmation" autocomplete="off" placeholder="Digite SUSPENDER FINANCEIRO"></div><div class="actions"><button id="suspendButton" class="btn" type="button">Suspender financeiro</button></div><div class="note">Suspender desabilita recebimento e bloqueia novas vendas. Não movimenta dinheiro nem apaga a referência segura da credencial.</div></div>';
  }else{
-   html+='<div class="box"><b>Validar credencial de produção</b><div class="field"><label>Referência segura no cofre</label><input id="credentialRef" autocomplete="off" placeholder="CT_SECRET_ASAAS_PRODUCAO_..."></div><div class="actions"><button id="validateButton" class="btn gold" type="button">Validar referência</button></div><div id="readinessBox"></div></div>'+
+   html+='<div class="box"><b>Verificar configuração de produção</b><div class="field"><label>Referência segura esperada</label><input id="credentialRef" readonly value="'+esc(x.credencialRefEsperada||'Calculada pelo backend ao verificar')+'"></div><div class="note">A referência CT_SECRET_ASAAS_PRODUCAO_... é calculada pela Carioca Ticket e não deve ser digitada manualmente. Em SUBCONTA_PLATAFORMA, a subconta e a carteira do provider precisam estar vinculadas antes da ativação. Não reutilize a chave da conta principal neste produtor.</div><div class="actions"><button id="validateButton" class="btn gold" type="button">Verificar configuração</button></div><div id="readinessBox"></div></div>'+
    '<div class="box"><b>Ativação</b><div class="field"><label>Confirmação</label><input id="confirmation" autocomplete="off" placeholder="Digite ATIVAR FINANCEIRO"></div><label class="check"><input id="acceptTerms" type="checkbox"> Confirmo a ativação do recebimento para este produtor após validação somente leitura do provider. Nenhuma cobrança, antecipação, split ou transferência será criada.</label><div class="actions"><button id="activateButton" class="btn gold" type="button" disabled>Ativar financeiro</button></div></div>';
  }
  $('detail').innerHTML=html;
@@ -85,14 +85,15 @@ function renderDetail(){
  else{$('suspendButton').addEventListener('click',suspendFinance)}
 }
 async function validateRef(){
- if(!state.selected||state.busy)return;var ref=String($('credentialRef').value||'').trim().toUpperCase();if(!ref){toast('Informe a referência segura da credencial.');return}
+ if(!state.selected||state.busy)return;
  state.busy=true;$('validateButton').disabled=true;
  try{
-   var r=await rpc('ctFinanceiroProdutorMasterProntidaoPROD',[state.session.token,state.selected.produtorId,ref]);
+   var r=await rpc('ctFinanceiroProdutorMasterProntidaoPROD',[state.session.token,state.selected.produtorId,String(state.selected.credencialRefEsperada||'')]);
    if(!r||r.sucesso!==true)throw new Error('Não foi possível validar a referência.');
    if(r.segredoExposto===true||r.movimentouDinheiro===true)throw new Error('Gate de segurança violado.');
    state.readiness=r;
-   $('readinessBox').innerHTML='<div class="note"><b>Segredo no cofre:</b> '+(r.segredoExiste?'encontrado':'não encontrado')+'<br><b>Provider:</b> '+(r.providerValidado?'validado':'não validado')+'<br><b>Saldo consultado:</b> '+(r.providerValidado?money(r.saldoDisponivel):'—')+(r.erroProvider?'<br><b>Diagnóstico:</b> '+esc(r.erroProvider):'')+'</div>';
+   $('credentialRef').value=String(r.credencialRefEsperada||$('credentialRef').value||'');
+   $('readinessBox').innerHTML='<div class="note"><b>Vínculo com provider:</b> '+(r.vinculoProviderCompleto?'completo':'pendente')+'<br><b>Segredo no cofre:</b> '+(r.segredoExiste?'encontrado':'não encontrado')+'<br><b>Provider:</b> '+(r.providerValidado?'validado':'não validado')+'<br><b>Saldo consultado:</b> '+(r.providerValidado?money(r.saldoDisponivel):'—')+(r.erroProvider?'<br><b>Próximo passo:</b> '+esc(r.erroProvider):'')+'</div>';
    updateActivate();
  }catch(e){state.readiness=null;toast(e&&e.message?e.message:String(e));updateActivate()}
  finally{state.busy=false;$('validateButton').disabled=false}
@@ -121,7 +122,7 @@ async function activate(){
  if(!state.selected||!state.readiness||$('activateButton').disabled||state.busy)return;
  state.busy=true;$('activateButton').disabled=true;
  try{
-  var r=await rpc('ctFinanceiroProdutorMasterAtivarPROD',[state.session.token,state.selected.produtorId,{credencialRef:String($('credentialRef').value||'').trim().toUpperCase(),confirmacao:String($('confirmation').value||''),termosAceitos:$('acceptTerms').checked===true,termosVersao:String(state.readiness.termosVersaoAtual||'')}]);
+  var r=await rpc('ctFinanceiroProdutorMasterAtivarPROD',[state.session.token,state.selected.produtorId,{credencialRef:String(state.readiness.credencialRefEsperada||'').trim().toUpperCase(),confirmacao:String($('confirmation').value||''),termosAceitos:$('acceptTerms').checked===true,termosVersao:String(state.readiness.termosVersaoAtual||'')}]);
   if(!r||r.sucesso!==true||r.prontoParaVendas!==true)throw new Error('A ativação financeira não foi concluída.');
   if(r.segredoExposto===true||r.movimentouDinheiro===true||r.transferenciaCriada===true||r.splitHabilitado===true)throw new Error('Gate de segurança financeiro violado.');
   toast('Financeiro ativado. O produtor está pronto para vendas. Nenhuma movimentação financeira foi criada.');

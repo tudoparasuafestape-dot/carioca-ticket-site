@@ -29,13 +29,14 @@ async function installMock(page,state){
           provedor:'ASAAS',provedorAmbiente:'PRODUCAO',modoConta:'SUBCONTA_PLATAFORMA',
           statusOnboarding:state.status||(state.activated?'ATIVO':'PENDENTE_CREDENCIAL'),
           credencialConfigurada:state.activated,recebimentoHabilitado:state.activated,splitHabilitado:false,
-          termosVersao:state.activated?'CT-FIN-PROD-2026-09':'',prontoParaVendas:state.activated
+          termosVersao:state.activated?'CT-FIN-PROD-2026-09':'',prontoParaVendas:state.activated,
+          credencialRefEsperada:'CT_SECRET_ASAAS_PRODUCAO_PROD_E2E'
         }],total:1,contagem:{pendentes:state.activated?0:1,prontos:state.activated?1:0},termosVersaoAtual:'CT-FIN-PROD-2026-09',segredoExposto:false};
       }else if(method==='ctFinanceiroProdutorMasterProntidaoPROD'){
         state.validateCalls++;state.ref=String(args[2]||'');
         expect(String(args[1]||'')).toBe('PROD-E2E');
         expect(state.ref).toBe('CT_SECRET_ASAAS_PRODUCAO_PROD_E2E');
-        resultado={sucesso:true,autorizado:true,produtorId:'PROD-E2E',organizacaoId:'ORG-E2E',statusAtual:'PENDENTE_CREDENCIAL',referenciaFormatoValido:true,segredoExiste:true,providerValidado:true,saldoDisponivel:1200,saldoFonte:'ASAAS',erroProvider:'',termosVersaoAtual:'CT-FIN-PROD-2026-09',podeAtivar:true,segredoExposto:false,movimentouDinheiro:false,chamouSomenteLeituraProvider:true};
+        resultado={sucesso:true,autorizado:true,produtorId:'PROD-E2E',organizacaoId:'ORG-E2E',statusAtual:'PENDENTE_CREDENCIAL',credencialRefEsperada:'CT_SECRET_ASAAS_PRODUCAO_PROD_E2E',referenciaFormatoValido:true,vinculoProviderCompleto:true,segredoExiste:true,providerValidado:true,saldoDisponivel:1200,saldoFonte:'ASAAS',erroProvider:'',termosVersaoAtual:'CT-FIN-PROD-2026-09',podeAtivar:true,segredoExposto:false,movimentouDinheiro:false,chamouSomenteLeituraProvider:true};
       }else if(method==='ctFinanceiroProdutorMasterAtivarPROD'){
         state.activateCalls++;state.activateArgs=args;
         const d=args[2]||{};
@@ -73,7 +74,8 @@ test.describe('Ativação financeira Master do Produtor',()=>{
     await expect(page.locator('#detail')).toContainText('PENDENTE_CREDENCIAL');
     await expect(page.locator('#detail')).toContainText('Vendas bloqueadas').catch(()=>{});
 
-    await page.locator('#credentialRef').fill('CT_SECRET_ASAAS_PRODUCAO_PROD_E2E');
+    await expect(page.locator('#credentialRef')).toHaveAttribute('readonly','');
+    await expect(page.locator('#credentialRef')).toHaveValue('CT_SECRET_ASAAS_PRODUCAO_PROD_E2E');
     await page.locator('#validateButton').click();
     await expect.poll(()=>state.validateCalls).toBe(1);
     await expect(page.locator('#readinessBox')).toContainText('Provider: validado');
@@ -101,20 +103,21 @@ test.describe('Ativação financeira Master do Produtor',()=>{
     await expect(page.locator('#detail')).toContainText('BLOQUEADO');
   });
 
-  test('referencia invalida ou provider nao validado nao habilita ativacao',async({page})=>{
+  test('segredo ausente ou provider nao validado nao habilita ativacao',async({page})=>{
     const state={activated:false,validateCalls:0,activateCalls:0,ref:'',activateArgs:null};
     await page.route('https://script.google.com/**',async route=>{
       const p=new URLSearchParams(route.request().postData()||'');
       const id=String(p.get('ctMinhaCariocaRequestId')||'');
       const method=String(p.get('metodo')||'');
       let resultado=null;
-      if(method==='ctFinanceiroProdutorMasterListarPROD')resultado={sucesso:true,autorizado:true,itens:[{produtorId:'PROD-E2E',produtorNome:'Produtor E2E',provedorAmbiente:'PRODUCAO',statusOnboarding:'PENDENTE_CREDENCIAL',credencialConfigurada:false,recebimentoHabilitado:false,splitHabilitado:false,prontoParaVendas:false}],contagem:{pendentes:1,prontos:0}};
-      else if(method==='ctFinanceiroProdutorMasterProntidaoPROD')resultado={sucesso:true,autorizado:true,segredoExiste:false,providerValidado:false,podeAtivar:false,segredoExposto:false,movimentouDinheiro:false,erroProvider:'CREDENCIAL_NAO_ENCONTRADA',termosVersaoAtual:'CT-FIN-PROD-2026-09'};
+      if(method==='ctFinanceiroProdutorMasterListarPROD')resultado={sucesso:true,autorizado:true,itens:[{produtorId:'PROD-E2E',produtorNome:'Produtor E2E',provedorAmbiente:'PRODUCAO',statusOnboarding:'PENDENTE_CREDENCIAL',credencialConfigurada:false,recebimentoHabilitado:false,splitHabilitado:false,prontoParaVendas:false,credencialRefEsperada:'CT_SECRET_ASAAS_PRODUCAO_PROD_E2E'}],contagem:{pendentes:1,prontos:0}};
+      else if(method==='ctFinanceiroProdutorMasterProntidaoPROD')resultado={sucesso:true,autorizado:true,credencialRefEsperada:'CT_SECRET_ASAAS_PRODUCAO_PROD_E2E',vinculoProviderCompleto:true,segredoExiste:false,providerValidado:false,podeAtivar:false,segredoExposto:false,movimentouDinheiro:false,erroProvider:'CREDENCIAL_NAO_ENCONTRADA',termosVersaoAtual:'CT-FIN-PROD-2026-09'};
       else throw new Error('Método inesperado: '+method);
       await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,true,resultado,'')+', "*");<\/script></body></html>'});
     });
     await seed(page,'CT-ADMIN-E2E');await page.goto('/backoffice/carioca-pay/produtores/?produtor=PROD-E2E',{waitUntil:'domcontentloaded'});
-    await page.locator('#credentialRef').fill('CT_SECRET_ASAAS_PRODUCAO_INEXISTENTE');
+    await expect(page.locator('#credentialRef')).toHaveAttribute('readonly','');
+    await expect(page.locator('#credentialRef')).toHaveValue('CT_SECRET_ASAAS_PRODUCAO_PROD_E2E');
     await page.locator('#validateButton').click();
     await expect(page.locator('#readinessBox')).toContainText('não encontrado');
     await page.locator('#confirmation').fill('ATIVAR FINANCEIRO');

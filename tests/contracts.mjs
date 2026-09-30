@@ -52,7 +52,7 @@ const producerPortalAdminNotifications = readEarly('produtor/index.html');
 
 function readEarly(file) {
   const full = path.join(root, file);
-  return fs.existsSync(full) ? fs.readFileSync(full, 'utf8') : '';
+  return fs.existsSync(full) ? fs.readFileSync(full, 'utf8').replace(/\r\n/g, '\n') : '';
 }
 
 if (producerPortalAdminNotifications) {
@@ -156,7 +156,7 @@ function read(file) {
     fail(file, 'arquivo protegido ausente');
     return '';
   }
-  return fs.readFileSync(full, 'utf8');
+  return fs.readFileSync(full, 'utf8').replace(/\r\n/g, '\n');
 }
 
 for (const file of protectedFiles) {
