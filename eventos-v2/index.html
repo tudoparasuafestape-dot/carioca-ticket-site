@@ -2890,38 +2890,6 @@
     }
 
 
-    function atualizarVisibilidadeComissionado() {
-
-      const origem =
-        obterValor(
-          'campoOrigemComercial'
-        );
-
-      const grupo =
-        document.getElementById(
-          'grupoComissionado'
-        );
-
-      grupo.style.display =
-        origem ===
-          'COMISSIONADO'
-          ? ''
-          : 'none';
-
-      if (
-        origem !==
-        'COMISSIONADO'
-      ) {
-        document
-          .getElementById(
-            'campoComissionadoReferencia'
-          )
-          .value =
-            '';
-      }
-    }
-
-
     function atualizarVisibilidadeEventoPrivado() {
       const modo =
         obterValor(
@@ -3237,9 +3205,6 @@
           'Continuar';
 
       atualizarVisibilidadeEventoPrivado();
-
-      
-      atualizarVisibilidadeComissionado();
 
       const mensagem =
         document.getElementById(
