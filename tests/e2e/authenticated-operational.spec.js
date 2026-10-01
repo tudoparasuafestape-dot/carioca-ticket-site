@@ -1445,6 +1445,43 @@ test.describe('Jornada operacional autenticada', () => {
     expect(state.commissionMutationCalls).toBe(0);
   });
 
+  test('Portal preserva sessao local quando restauracao falha transitoriamente', async ({ page }) => {
+    const token = 'CT-E2E-TOKEN-RESTORE-TRANSIENT';
+    await page.addInitScript(({ key, value }) => {
+      localStorage.setItem(key, JSON.stringify(value));
+      sessionStorage.setItem(key, JSON.stringify(value));
+    }, {
+      key: STORAGE,
+      value: { token, expiraEm: '2099-12-31T23:59:59.000Z' }
+    });
+
+    await page.route('**/*', async route => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      const body = route.request().postData() || '';
+      if (body.includes('ctPortalProdutorRestaurarSessaoIsoladaPROD')) {
+        await route.abort('failed');
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#loginView')).toBeVisible({ timeout: 15000 });
+
+    const stored = await page.evaluate(key => ({
+      local: localStorage.getItem(key),
+      session: sessionStorage.getItem(key)
+    }), STORAGE);
+
+    expect(stored.local).not.toBeNull();
+    expect(stored.session).not.toBeNull();
+    expect(JSON.parse(stored.local).token).toBe(token);
+    expect(JSON.parse(stored.session).token).toBe(token);
+  });
+
   test('Central -> Usuarios e Permissoes -> Sair sem rota escondida', async ({ page }) => {
     const state = {
       token: 'CT-E2E-TOKEN-ACESSOS',
