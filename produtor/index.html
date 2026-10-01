@@ -998,9 +998,10 @@ body.portal-modal-open{overflow:hidden}
         String(method||'').indexOf('Login')>=0 ||
         String(method||'').indexOf('RestaurarSessao')>=0
       ) ? 90000 : (
-        String(method||'').indexOf('CarregarPainel')>=0 ||
+        String(method||'').indexOf('CarregarPainel')>=0
+      ) ? 15000 : (
         String(method||'').indexOf('CatalogoEventos')>=0
-      ) ? 15000 : 30000)
+      ) ? 45000 : 30000)
     };
 
     form.submit();

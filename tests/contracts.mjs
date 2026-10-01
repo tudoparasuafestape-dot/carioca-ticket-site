@@ -748,7 +748,9 @@ if (producerPage) {
 if (producerPage) {
   if (
     !producerPage.includes("? 90000 : (") ||
-    !producerPage.includes(") ? 15000 : 30000") ||
+    !producerPage.includes("String(method||'').indexOf('CarregarPainel')>=0") ||
+    !producerPage.includes("String(method||'').indexOf('CatalogoEventos')>=0") ||
+    !producerPage.includes(") ? 45000 : 30000") ||
     !producerPage.includes("'CT_PORTAL_RPC_TIMEOUT'") ||
     !producerPage.includes('Sua senha pode ter sido validada')
   ) {
