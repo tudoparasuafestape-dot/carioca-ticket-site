@@ -4423,15 +4423,29 @@ abrirPortal();
 }
 )
 .withFailureHandler(
-function(){
+function(erro){
 
 definirLoading(
 false
 );
 
-limparSessaoLocal();
+/*
+ * Falha transitória de transporte/timeout não invalida uma sessão
+ * local que ainda está dentro do prazo. O backend continua sendo a
+ * autoridade para rejeitar sessão inválida no successHandler.
+ */
+registrarErroTecnico(
+'Portal | restauração de sessão',
+erro
+);
 
 mostrarLogin();
+
+mostrarMensagem(
+el.loginMessage,
+'Não foi possível restaurar sua sessão agora. Sua sessão foi preservada; tente novamente em instantes.',
+'error'
+);
 }
 )
 .ctPortalProdutorRestaurarSessaoIsoladaPROD(
