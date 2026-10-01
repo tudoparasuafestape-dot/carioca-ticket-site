@@ -1445,6 +1445,12 @@ test.describe('Jornada operacional autenticada', () => {
     expect(state.commissionMutationCalls).toBe(0);
   });
 
+  test('Portal concede janela maior ao catalogo de eventos sem alterar timeout do painel', async ({ page }) => {
+    const html = await (await page.request.get('/produtor/')).text();
+    expect(html).toContain("String(method||'').indexOf('CatalogoEventos')>=0\n      ) ? 45000 : 30000");
+    expect(html).toContain("String(method||'').indexOf('CarregarPainel')>=0\n      ) ? 15000 : (");
+  });
+
   test('Portal preserva sessao local quando restauracao falha transitoriamente', async ({ page }) => {
     const token = 'CT-E2E-TOKEN-RESTORE-TRANSIENT';
     await page.addInitScript(({ key, value }) => {
