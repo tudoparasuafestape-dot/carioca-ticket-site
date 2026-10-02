@@ -944,7 +944,7 @@ for (const file of ['checkout/index.html','checkout-v2/index.html']) {
     'id="couponRemove"',
     'id="couponReplace"',
     'ctCuponsPublicoValidarSeguroPROD',
-    'cupomCodigo:state.promotion',
+    file==='checkout-v2/index.html' ? "cupomCodigo:gratuito?''" : 'cupomCodigo:state.promotion',
     'REMOVER CUPOM'
   ]) {
     if (!html.includes(required)) fail(file,'checkout promocional incompleto: '+required);
