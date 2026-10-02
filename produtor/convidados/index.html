@@ -82,6 +82,7 @@ button:disabled{opacity:.55;cursor:wait}
 </section>
 
 <div id="privateManagement" class="hidden">
+<div id="eventInactiveWarning" class="msg err hidden">Evento ainda não está ativo. Você pode preparar a lista de convidados, mas para gerar e compartilhar convites é necessário ativar o evento primeiro.</div>
 
 <section class="grid">
   <article class="panel">
@@ -131,7 +132,7 @@ var APP_PROD='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEB
 var APP_DEV='https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
 var APP=/^(?:www\.)?cariocaticket\.com\.br$/i.test(location.hostname)?APP_PROD:APP_DEV;
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
-var pending={},state={session:null,eventId:'',guests:[],csv:'',csvName:'',checksum:'',generated:[],access:null,loading:false,mutating:false,guestsReady:false};
+var pending={},state={session:null,eventId:'',guests:[],csv:'',csvName:'',checksum:'',generated:[],access:null,eventActive:false,loading:false,mutating:false,guestsReady:false};
 function $(id){return document.getElementById(id)}
 function digits(v){return String(v||'').replace(/\D/g,'')}
 function formatPhone(value){
@@ -144,8 +145,11 @@ function syncActions(){
   var busy=state.loading||state.mutating;
   $('refresh').disabled=busy;
   $('accessFields').disabled=busy||!state.access;
-  ['saveGuest','confirmImport','generateBatch'].forEach(function(id){$(id).disabled=busy||!state.guestsReady});
-  document.querySelectorAll('[data-invite]').forEach(function(b){b.disabled=busy});
+  ['saveGuest','confirmImport'].forEach(function(id){$(id).disabled=busy||!state.guestsReady});
+  $('generateBatch').disabled=busy||!state.guestsReady||!state.eventActive;
+  $('generateOnImport').disabled=busy||!state.eventActive;
+  if(!state.eventActive)$('generateOnImport').checked=false;
+  document.querySelectorAll('[data-invite]').forEach(function(b){b.disabled=busy||!state.eventActive});
 }
 function beginAction(button,label){
   if(state.loading||state.mutating||!state.access)return null;
@@ -168,6 +172,8 @@ function activePrivateFields(isPrivate){
 }
 function renderAccess(res){
   state.access=res||{};
+  state.eventActive=String(res&&res.evento&&res.evento.status||'').toUpperCase()==='ATIVO';
+  $('eventInactiveWarning').classList.toggle('hidden',state.eventActive);
   var p=(res&&res.configuracaoPersistida)||(res&&res.acesso)||{};
   var mode=String(p.modoAcesso||'PUBLICO').toUpperCase();
   var eventName=res&&res.evento&&res.evento.nome?String(res.evento.nome).trim():'';
@@ -205,7 +211,7 @@ async function saveAccess(){
     if(mode==='PRIVADO_CONVITE')await loadGuests();
   }catch(e){msg(e.message||String(e),'err')}finally{done()}
 }
-function render(){var g=state.guests||[];$('sGuests').textContent=g.length;$('sAllowed').textContent=g.reduce(function(t,x){return t+Number(x.quantidadeMaxima||0)},0);$('sConsumed').textContent=g.reduce(function(t,x){return t+Number(x.quantidadeConsumida||0)},0);$('sInvites').textContent=g.filter(function(x){return x.convite&&['ATIVO','ACESSADO','PARCIAL'].includes(String(x.convite.status||'').toUpperCase())}).length;$('rows').innerHTML=g.map(function(x){var inv=x.convite?'<span class="tag">'+String(x.convite.status||'ATIVO')+'</span>':'—';var copyBtn=x.convite&&x.convite.link?'<button data-copy-link="'+esc(x.convite.link)+'">Copiar link</button>':'';var courtesyBtn=x.convite?'<a class="btn" href="/produtor/cortesias/?evento='+encodeURIComponent(state.eventId)+'&convidado='+encodeURIComponent(x.convidadoId)+'">Cortesia</a>':'';return'<tr><td><div class="name">'+esc(x.nomeCompleto)+'</div><small>'+esc(x.categoria||'')+'</small></td><td>'+esc(x.whatsapp||'—')+'</td><td>'+esc(x.unidadeApartamento||'—')+'</td><td>'+Number(x.quantidadeMaxima||0)+'</td><td>'+Number(x.quantidadeConsumida||0)+'</td><td>'+inv+'</td><td><div class="rowactions">'+copyBtn+courtesyBtn+'<button data-invite="'+esc(x.convidadoId)+'">'+(x.convite?'Regenerar':'Gerar link')+'</button></div></td></tr>'}).join('')||'<tr><td colspan="7">Nenhum convidado cadastrado.</td></tr>';document.querySelectorAll('[data-copy-link]').forEach(function(b){b.onclick=async function(){try{await copy(b.dataset.copyLink);msg('Link do convite copiado sem alterar o convite já enviado.','ok')}catch(e){manualCopy(b.dataset.copyLink);msg('Não foi possível copiar automaticamente. Selecione o link e copie manualmente.','ok')}}});document.querySelectorAll('[data-invite]').forEach(function(b){b.onclick=function(){generateOne(b.dataset.invite)}})}
+function render(){var g=state.guests||[];$('sGuests').textContent=g.length;$('sAllowed').textContent=g.reduce(function(t,x){return t+Number(x.quantidadeMaxima||0)},0);$('sConsumed').textContent=g.reduce(function(t,x){return t+Number(x.quantidadeConsumida||0)},0);$('sInvites').textContent=g.filter(function(x){return x.convite&&['ATIVO','ACESSADO','PARCIAL'].includes(String(x.convite.status||'').toUpperCase())}).length;$('rows').innerHTML=g.map(function(x){var inv=x.convite?'<span class="tag">'+String(x.convite.status||'ATIVO')+'</span>':'—';var copyBtn=state.eventActive&&x.convite&&x.convite.link?'<button data-copy-link="'+esc(x.convite.link)+'">Copiar link</button>':'';var courtesyBtn=x.convite?'<a class="btn" href="/produtor/cortesias/?evento='+encodeURIComponent(state.eventId)+'&convidado='+encodeURIComponent(x.convidadoId)+'">Cortesia</a>':'';return'<tr><td><div class="name">'+esc(x.nomeCompleto)+'</div><small>'+esc(x.categoria||'')+'</small></td><td>'+esc(x.whatsapp||'—')+'</td><td>'+esc(x.unidadeApartamento||'—')+'</td><td>'+Number(x.quantidadeMaxima||0)+'</td><td>'+Number(x.quantidadeConsumida||0)+'</td><td>'+inv+'</td><td><div class="rowactions">'+copyBtn+courtesyBtn+'<button data-invite="'+esc(x.convidadoId)+'">'+(x.convite?'Regenerar':'Gerar link')+'</button></div></td></tr>'}).join('')||'<tr><td colspan="7">Nenhum convidado cadastrado.</td></tr>';document.querySelectorAll('[data-copy-link]').forEach(function(b){b.onclick=async function(){try{await copy(b.dataset.copyLink);msg('Link do convite copiado sem alterar o convite já enviado.','ok')}catch(e){manualCopy(b.dataset.copyLink);msg('Não foi possível copiar automaticamente. Selecione o link e copie manualmente.','ok')}}});document.querySelectorAll('[data-invite]').forEach(function(b){b.onclick=function(){generateOne(b.dataset.invite)}})}
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 async function loadGuests(){var r=await rpc('ctEventoConvidadosListarPROD',[state.session.token,state.eventId]);if(!r||r.sucesso!==true||!Array.isArray(r.convidados))throw new Error('Não foi possível carregar convidados. Use Atualizar para tentar novamente.');if(!$('eventName').textContent||$('eventName').textContent==='Carregando evento...')$('eventName').textContent=r.eventoNome||state.eventId;state.guests=r.convidados;state.guestsReady=true;render();syncActions()}
 async function load(){
@@ -247,6 +253,7 @@ function preview(r){$('importSummary').textContent=r.validas+' válidas · '+r.i
 async function validateFile(file){state.csvName=file.name;state.csv=await file.text();try{var r=await rpc('ctEventoImportacaoValidarCsvPROD',[state.session.token,state.eventId,state.csv,state.csvName]);preview(r)}catch(e){msg(e.message||String(e),'err')}}
 async function confirmImport(){var done=beginAction($('confirmImport'),'Importando...');if(!done)return;try{var r=await rpc('ctEventoImportacaoConfirmarCsvPROD',[state.session.token,{eventoId:state.eventId,csv:state.csv,arquivoNome:state.csvName,checksumEsperado:state.checksum,politicaDuplicidade:$('duplicatePolicy').value,gerarConvites:$('generateOnImport').checked===true}]);state.generated=state.generated.concat(r.convitesGerados||[]);msg('Importação concluída: '+r.criados+' criados, '+r.atualizados+' atualizados e '+r.ignorados+' mantidos.','ok');$('importActions').classList.add('hidden');await loadGuests()}catch(e){msg(e.message||String(e),'err')}finally{done()}}
 async function generateOne(id){
+  if(!state.eventActive){msg('Ative o evento antes de gerar convites.','err');return}
   var button=Array.from(document.querySelectorAll('[data-invite]')).find(function(b){return b.dataset.invite===id});
   if(!button)return;var done=beginAction(button,'Gerando...');if(!done)return;
   try{
@@ -261,7 +268,7 @@ async function generateOne(id){
     catch(_){manualCopy(inv.link);msg('Convite gerado com sucesso. Não foi possível copiar automaticamente.','ok')}
   }catch(e){msg(e.message||String(e),'err')}finally{done()}
 }
-async function generateBatch(){var done=beginAction($('generateBatch'),'Gerando...');if(!done)return;try{var r=await rpc('ctEventoConvidadosGerarConvitesLotePROD',[state.session.token,state.eventId]);state.generated=state.generated.concat((r.convites||[]).filter(function(x){return x.link}));msg('Processamento concluído. '+state.generated.length+' link(s) disponível(is) nesta sessão.','ok');await loadGuests()}catch(e){msg(e.message||String(e),'err')}finally{done()}}
+async function generateBatch(){if(!state.eventActive){msg('Ative o evento antes de gerar convites.','err');return}var done=beginAction($('generateBatch'),'Gerando...');if(!done)return;try{var r=await rpc('ctEventoConvidadosGerarConvitesLotePROD',[state.session.token,state.eventId]);state.generated=state.generated.concat((r.convites||[]).filter(function(x){return x.link}));msg('Processamento concluído. '+state.generated.length+' link(s) disponível(is) nesta sessão.','ok');await loadGuests()}catch(e){msg(e.message||String(e),'err')}finally{done()}}
 function exportLinks(){if(!state.generated.length){msg('Nenhum link novo foi gerado nesta sessão.','err');return}var lines=['NOME;CONVITE_ID;LINK'].concat(state.generated.map(function(x){return '"'+String(x.nomeCompleto||'').replace(/"/g,'""')+'";'+x.conviteId+';'+x.link}));download('convites-carioca-ticket.csv','\uFEFF'+lines.join('\r\n'),'text/csv;charset=utf-8')}
 $('phone').addEventListener('input',function(){this.value=formatPhone(this.value)});
 $('selectManualLink').onclick=function(){$('manualLink').focus();$('manualLink').select()};
