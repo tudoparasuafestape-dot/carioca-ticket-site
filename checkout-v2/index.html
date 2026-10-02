@@ -443,7 +443,11 @@
       function onlyDigits(v){return String(v||'').replace(/\D/g,'');}
 
       function isOfficialFree(){
-        return !!(state.lot && Number(state.lot.precoNumero||0)===0);
+        if(!state.lot)return false;
+        var raw=state.lot.precoNumero;
+        if(raw===null||typeof raw==='undefined'||String(raw).trim()==='')return false;
+        var valor=Number(raw);
+        return Number.isFinite(valor)&&Math.abs(valor)<0.0001;
       }
 
       function updateFreeCheckoutUI(){
