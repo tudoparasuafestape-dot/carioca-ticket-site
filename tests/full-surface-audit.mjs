@@ -55,6 +55,15 @@ for(const file of htmlFiles){
       failures.push(file+': iframe técnico exposto na superfície -> '+src);
     }
   }
+  // Links de ingresso vindos do backend nunca podem ser usados crus em botões/âncoras.
+  // O Apps Script continua permitido somente como transporte oculto de RPC.
+  for(const re of [
+    /href=["']\s*["']\s*\+\s*esc\([^)]*\.link\)/g,
+    /\.href\s*=\s*String\([^;]*\.link\s*\|\|/g,
+    /return\s+String\(raw\s*\|\|\s*['"]#['"]\)/g
+  ]){
+    if(re.test(html)) failures.push(file+': link dinâmico visível não canonizado para o domínio oficial');
+  }
 }
 
 const operational=[
