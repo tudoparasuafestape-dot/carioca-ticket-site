@@ -148,7 +148,7 @@
             if(codigo&&sig)return '/ingresso/?codigo='+encodeURIComponent(codigo)+'&sig='+encodeURIComponent(sig);
           }
         }catch(_){}
-        return String(raw||'#');
+        return '#';
       }
 
       function showError(msg){

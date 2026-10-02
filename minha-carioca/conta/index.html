@@ -221,7 +221,7 @@ chaves.forEach(function(chave){
       var pt=String(pu.searchParams.get('token')||'').trim();
       a.href='/minha-carioca/ingressos/?v=20260921-0530&pedido='+encodeURIComponent(pp)+'&token='+encodeURIComponent(pt);
     }catch(_){
-      a.href=String(pedido.link||'#');
+      a.href='#';
     }
     linha.append(info,a);it.append(linha);
   });

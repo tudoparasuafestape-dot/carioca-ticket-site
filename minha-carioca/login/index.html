@@ -1,4 +1,6 @@
 <!doctype html>
+
+  function officialPurchaseLink(raw){try{var u=new URL(String(raw||''),location.href),p=String(u.searchParams.get('pedido')||'').trim(),t=String(u.searchParams.get('token')||'').trim();if(p&&t)return '/minha-carioca/?pedido='+encodeURIComponent(p)+'&token='+encodeURIComponent(t)}catch(_){}return '#'}
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -411,7 +413,7 @@
         var bottom=el('div','purchase-bottom');
         bottom.append(el('small','', (item.quantidade||0)+(Number(item.quantidade)===1?' acesso':' acessos')));
         var link=el('a','open-ticket','Abrir ingressos');
-        link.href=String(item.link||'#');
+        link.href=officialPurchaseLink(item.link);
         bottom.append(link);card.append(bottom);list.append(card);
       });
     }

@@ -178,6 +178,8 @@ var state={
 
 function $(id){return document.getElementById(id)}
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function officialTicketUrl(raw){try{var u=new URL(String(raw||''),location.href),c=String(u.searchParams.get('codigo')||'').trim(),s=String(u.searchParams.get('sig')||'').trim();if(c&&s)return '/ingresso/?codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s);var d=String(u.searchParams.get('destino')||'').trim();if(d){u=new URL(d);c=String(u.searchParams.get('codigo')||'').trim();s=String(u.searchParams.get('sig')||'').trim();if(c&&s)return '/ingresso/?codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s)}}catch(_){}return '#'}
+
 function digits(v){return String(v||'').replace(/\D/g,'')}
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
@@ -320,7 +322,7 @@ function renderIssued(r){
   $('resultTickets').innerHTML='<div class="message show ok" style="margin-top:12px">'+esc(r.mensagem||'Cortesia emitida.')+'</div>'+list.map(function(t){
     var msg='🎟️ Cortesia Carioca Ticket\n\n'+(t.nome||'Participante')+'\n'+(state.evento&&state.evento.nome||'Evento')+'\n\nAbrir ingresso: '+(t.link||'');
     return '<div class="ticket-result"><b>'+esc(t.nome||'Participante')+' · '+esc(t.codigo||'')+'</b><small>'+esc(t.tipo||'')+' · '+esc(t.loteNome||'')+'</small><div class="ticket-actions">'+
-      (t.link?'<a class="btn gold" href="'+esc(t.link)+'" target="_blank" rel="noopener">Abrir ingresso</a><button class="btn" data-copy="'+esc(t.link)+'" type="button">Copiar link</button><a class="btn" href="https://wa.me/?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">WhatsApp</a>':'<span>Link seguro indisponível.</span>')+
+      (officialTicketUrl(t.link)!=='#'?'<a class="btn gold" href="'+esc(officialTicketUrl(t.link))+'" target="_blank" rel="noopener">Abrir ingresso</a><button class="btn" data-copy="'+esc(officialTicketUrl(t.link))+'" type="button">Copiar link</button><a class="btn" href="https://wa.me/?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">WhatsApp</a>':'<span>Link seguro indisponível.</span>')+
       '</div></div>';
   }).join('');
   document.querySelectorAll('[data-copy]').forEach(function(b){b.onclick=async function(){try{await copy(b.dataset.copy);message('Link do ingresso copiado.','ok')}catch(e){message(e.message||String(e),'error')}}});

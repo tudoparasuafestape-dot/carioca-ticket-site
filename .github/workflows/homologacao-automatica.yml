@@ -36,6 +36,7 @@ jobs:
           node tests/campanhas-recompensas.contract.mjs
           node tests/comissoes-promotores.contract.mjs
           node tests/producer-portal-performance.contract.mjs
+          python3 tests/checkout_gratuito_contract.py
   publico-producao:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     name: Publico homologado ${{ matrix.viewport }}
