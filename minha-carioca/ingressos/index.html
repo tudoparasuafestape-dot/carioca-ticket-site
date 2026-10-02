@@ -57,7 +57,7 @@ try{
     if(c&&s)return '/ingresso/?v=20260919-2217&codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s);
   }
 }catch(_){}
-return String(raw||'#')
+return '#'
 }
 function fail(m){app.innerHTML='<div class="error">'+esc(m||'Não foi possível abrir esta compra.')+'</div><div class="actions"><a class="action primary" href="/minha-carioca/conta/">Voltar para Minha Carioca</a></div>'}
 function render(r){
