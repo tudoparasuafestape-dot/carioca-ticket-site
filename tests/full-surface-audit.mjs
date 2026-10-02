@@ -58,7 +58,7 @@ for(const file of htmlFiles){
   // Links de ingresso vindos do backend nunca podem ser usados crus em botões/âncoras.
   // O Apps Script continua permitido somente como transporte oculto de RPC.
   for(const re of [
-    /href=["']\s*["']\s*\+\s*esc\([^)]*\.link\)/g,
+    /href=["']\s*["']\s*\+\s*esc\(\s*[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\.link\s*\)/g,
     /\.href\s*=\s*String\([^;]*\.link\s*\|\|/g,
     /return\s+String\(raw\s*\|\|\s*['"]#['"]\)/g
   ]){
