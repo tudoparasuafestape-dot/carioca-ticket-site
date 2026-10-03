@@ -168,6 +168,7 @@ for (const rota of ['/checkout/', '/checkout-v2/']) {
     await page.locator('#buyerName').fill('Cliente Teste');
     await page.locator('#buyerCpf').fill('12345678901');
     await page.locator('#buyerWhatsapp').fill('81999999999');
+    await page.locator('#buyerEmail').fill('cliente.teste@example.com');
 
     const participantNames = page.locator('#participants [data-name]');
     const participantCount = await participantNames.count();

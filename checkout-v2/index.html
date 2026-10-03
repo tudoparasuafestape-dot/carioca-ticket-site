@@ -157,7 +157,7 @@
       timer:setTimeout(function(){
         var p=cleanup(id);
         if(p)p.failure(new Error('CT_PUBLIC_RPC_TIMEOUT'));
-      },45000)
+      },String(method||'')==='ctCheckoutPixPublicoIniciarPROD'?120000:45000)
     };
 
     form.submit();
