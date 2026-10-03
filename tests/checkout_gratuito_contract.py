@@ -18,4 +18,5 @@ assert "Number(state.lot.precoNumero||0)===0" not in html, "Preço ausente não 
 # P0 2026-10-03 — emissão gratuita finaliza venda/ingresso na mesma RPC.
 # O timeout padrão de 45s continua para as demais operações; somente o fluxo
 # oficialmente gratuito recebe janela compatível com a finalização síncrona.
-assert "String(method||'')==='ctCheckoutPixPublicoIniciarPROD'&&isOfficialFree()?120000:45000" in html, "Emissão gratuita não pode ser abortada pelo timeout RPC padrão de 45s"
+assert "String(method||'')==='ctCheckoutPixPublicoIniciarPROD'?120000:45000" in html, "Inicialização do checkout não pode ser abortada pelo timeout RPC padrão de 45s"
+assert "&&isOfficialFree()?120000:45000" not in html, "Bridge RPC não pode depender de função do escopo interno do checkout"
