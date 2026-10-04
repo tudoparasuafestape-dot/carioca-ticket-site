@@ -2,13 +2,13 @@ const CONFIG = {
   STORAGE_API_URL: 'carioca_ticket_api_url',
   STORAGE_CREDENCIAL_SESSION: 'ct_checkin_operacional_credencial_v1',
   API_URL_OFICIAL: 'https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec',
-  VERSAO: '2.3.0',
+  VERSAO: '2.3.1',
   PREFIXO_VALIDACAO_SEM_ENTRADA: 'CT_VALIDAR_SEM_ENTRADA:',
   TEMPO_BLOQUEIO_LEITURA_MS: 2600,
   TEMPO_TELA_SUCESSO_MS: 4000,
   TEMPO_TELA_AVISO_MS: 5000,
   TEMPO_TELA_ERRO_MS: 5000,
-  TEMPO_TIMEOUT_API_MS: 8000
+  TEMPO_TIMEOUT_API_MS: 20000
 };
 
 let leitorQr = null;
