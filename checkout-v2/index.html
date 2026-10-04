@@ -537,7 +537,56 @@
       }
 
       function storageKey(){return 'CT_CHECKOUT_RECOVERY_'+state.eventId;}
-      function idempotencyStorageKey(){return 'CT_CHECKOUT_IDEMPOTENCY_'+state.eventId+'_'+state.paymentMethod;}
+
+      /*
+       * P0 EVENTO PRIVADO / IDEMPOTENCIA:
+       * a chave persistida precisa pertencer à intenção do convite atual.
+       * Antes, todos os convites gratuitos do mesmo evento compartilhavam
+       * CT_CHECKOUT_IDEMPOTENCY_<evento>_GRATUITO. Se uma emissão anterior
+       * chegasse ao backend e a tela não limpasse a chave local (ex.: falha
+       * pós-emissão), o convite seguinte reutilizava a chave antiga e o
+       * backend rejeitava o retry por contexto/comprador divergente antes
+       * de criar um novo pedido.
+       *
+       * O grant é assinado e contém o convite em "i". Usamos somente esse
+       * identificador estável como escopo local; não persistimos o grant.
+       * Checkout público permanece com a chave histórica.
+       */
+      function privateInviteIdempotencyScope(){
+        var grant=String(state.accessGrant||'').trim();
+        if(!grant)return '';
+
+        try{
+          var parte=grant.split('.')[0]||'';
+          if(!parte)return '';
+
+          var normalizada=parte.replace(/-/g,'+').replace(/_/g,'/');
+          while(normalizada.length%4)normalizada+='=';
+
+          var payload=JSON.parse(decodeURIComponent(
+            Array.prototype.map.call(atob(normalizada),function(ch){
+              return '%'+('00'+ch.charCodeAt(0).toString(16)).slice(-2);
+            }).join('')
+          ));
+
+          var convite=String(payload&&payload.i||'')
+            .trim()
+            .replace(/[^A-Za-z0-9_-]/g,'')
+            .substring(0,180);
+
+          return convite?'_INV_'+convite:'';
+        }catch(_){
+          return '';
+        }
+      }
+
+      function idempotencyStorageKey(){
+        return 'CT_CHECKOUT_IDEMPOTENCY_'+
+          state.eventId+
+          '_'+
+          state.paymentMethod+
+          privateInviteIdempotencyScope();
+      }
 
       function saveRecovery(){
         if(!state.order||!state.order.pedidoId||!state.queryToken)return;
