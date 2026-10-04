@@ -368,6 +368,23 @@ if (checkinManifest) {
     fail('manifest-checkin.webmanifest', 'JSON inválido');
   }
 }
+const checkinRuntime = read('checkin/checkin.js');
+if (checkinRuntime) {
+  for (const required of [
+    "VERSAO: '2.3.1'",
+    'TEMPO_TIMEOUT_API_MS: 20000',
+    "titulo:\n        'Falha na comunicação'",
+    "PREFIXO_VALIDACAO_SEM_ENTRADA: 'CT_VALIDAR_SEM_ENTRADA:'"
+  ]) {
+    if (!checkinRuntime.includes(required)) {
+      fail('checkin/checkin.js', 'resiliência operacional do Check-in incompleta: ' + required);
+    }
+  }
+  if (checkinRuntime.includes('TEMPO_TIMEOUT_API_MS: 8000')) {
+    fail('checkin/checkin.js', 'timeout legado de 8s ainda ativo');
+  }
+}
+
 const checkinPagePwa = read('checkin/index.html');
 if (checkinPagePwa) {
   if (!checkinPagePwa.includes('rel="manifest" href="/manifest-checkin.webmanifest"')) {
