@@ -20,3 +20,12 @@ assert "Number(state.lot.precoNumero||0)===0" not in html, "Preço ausente não 
 # oficialmente gratuito recebe janela compatível com a finalização síncrona.
 assert "String(method||'')==='ctCheckoutPixPublicoIniciarPROD'?120000:45000" in html, "Inicialização do checkout não pode ser abortada pelo timeout RPC padrão de 45s"
 assert "&&isOfficialFree()?120000:45000" not in html, "Bridge RPC não pode depender de função do escopo interno do checkout"
+
+# P0 2026-10-04 — cada convite privado precisa de uma intenção idempotente própria.
+# Reusar a chave do evento/forma de pagamento faz o backend tratar um novo convidado
+# como retry de um pedido anterior e rejeitar antes de criar o novo pedido.
+assert "function privateInviteIdempotencyScope()" in html
+assert "payload&&payload.i" in html, "Escopo privado deve usar o ID estável do convite assinado"
+assert "'_INV_'+convite" in html
+assert "state.paymentMethod+\n          privateInviteIdempotencyScope()" in html
+assert "localStorage.setItem(idempotencyStorageKey(),nova)" in html
