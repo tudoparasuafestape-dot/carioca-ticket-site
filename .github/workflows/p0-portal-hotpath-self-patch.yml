@@ -1,0 +1,52 @@
+name: P0 Portal Hotpath Self Patch
+
+on:
+  push:
+    branches:
+      - perf/p0-portal-login-hotpath-e2e
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore post-login failure semantics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('produtor/index.html')
+          text = p.read_text(encoding='utf-8')
+          old_log = "'Portal | contexto pós-login'"
+          new_log = "'Portal | abertura pós-login'"
+          old_msg = "'Não foi possível carregar seus eventos agora. Sua sessão foi preservada; atualize a página para tentar novamente.'"
+          new_msg = "'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Atualize a página para restaurar sua sessão.'"
+          changed = False
+          if old_log in text:
+              text = text.replace(old_log, new_log, 1)
+              changed = True
+          if old_msg in text:
+              text = text.replace(old_msg, new_msg, 1)
+              changed = True
+          if changed:
+              p.write_text(text, encoding='utf-8')
+              print('PATCH_APPLIED')
+          else:
+              print('PATCH_ALREADY_APPLIED')
+          PY
+      - name: Commit patch if needed
+        run: |
+          if git diff --quiet -- produtor/index.html; then
+            echo "No patch needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add produtor/index.html
+          git commit -m "fix: preserve post-login failure semantics"
+          git push origin HEAD:${GITHUB_REF_NAME}
