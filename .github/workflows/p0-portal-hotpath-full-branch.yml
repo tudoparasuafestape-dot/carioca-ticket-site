@@ -1,0 +1,66 @@
+name: P0 Portal Hotpath Full Branch Gate
+
+on:
+  push:
+    branches:
+      - perf/p0-portal-login-hotpath-e2e
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Contract suite
+        run: |
+          node tests/contracts.mjs
+          node tests/journey-contracts.mjs
+          node tests/full-surface-audit.mjs
+          node tests/politica-comercial.contract.mjs
+          node tests/eventos-privados-v1.mjs
+          node tests/campanhas-recompensas.contract.mjs
+          node tests/comissoes-promotores.contract.mjs
+          node tests/producer-portal-performance.contract.mjs
+          python3 tests/checkout_gratuito_contract.py
+      - name: Diff hygiene
+        run: git diff --check
+
+  portal-first-paint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Serve branch locally
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/ct-http.log 2>&1 &
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/ct-http.log
+          exit 1
+      - name: Portal first paint desktop
+        env:
+          CT_BASE_URL: http://127.0.0.1:4173
+          CT_EXPECTED_HOST: 127.0.0.1
+          CT_BRANCH_MODE: '1'
+        run: npx playwright test tests/e2e/producer-portal-first-paint.spec.js --project=desktop-chromium
+      - name: Portal first paint mobile
+        env:
+          CT_BASE_URL: http://127.0.0.1:4173
+          CT_EXPECTED_HOST: 127.0.0.1
+          CT_BRANCH_MODE: '1'
+        run: npx playwright test tests/e2e/producer-portal-first-paint.spec.js --project=mobile-chromium
