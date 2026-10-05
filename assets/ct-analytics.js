@@ -2,7 +2,7 @@
 ====================================================================================================
 CARIOCA TICKET
 ANALYTICS MASTER — CLIENTE PUBLICO BEST-EFFORT
-Versao: 1.0.1
+Versao: 1.0.2
 
 REGRAS:
 - Nunca bloqueia renderizacao, navegacao, checkout ou venda.
@@ -57,96 +57,46 @@ REGRAS:
     var qs=new URLSearchParams(location.search||'');
     var declarada=String(qs.get('src')||qs.get('utm_source')||'').trim();
     if(declarada)return declarada.toUpperCase().replace(/[^A-Z0-9._:-]+/g,'_').slice(0,80);
-
     var host=safe(function(){return new URL(document.referrer).hostname.toLowerCase()},'');
     if(!host||host===location.hostname.toLowerCase())return 'DIRETO';
     return ('REF_'+host).toUpperCase().replace(/[^A-Z0-9._:-]+/g,'_').slice(0,80);
   }
 
   function referrerHost(){
-    return safe(function(){
-      return new URL(document.referrer).hostname.toLowerCase().replace(/[^a-z0-9.:-]+/g,'').slice(0,180);
-    },'');
+    return safe(function(){return new URL(document.referrer).hostname.toLowerCase().replace(/[^a-z0-9.:-]+/g,'').slice(0,180);},'');
   }
 
   function device(){
-    var w=Math.max(
-      Number(window.innerWidth||0),
-      Number(document.documentElement&&document.documentElement.clientWidth||0)
-    );
+    var w=Math.max(Number(window.innerWidth||0),Number(document.documentElement&&document.documentElement.clientWidth||0));
     if(w>0&&w<=767)return 'MOBILE';
     if(w>767&&w<=1024)return 'TABLET';
     return 'DESKTOP';
   }
 
-  function cleanup(frame,form){
-    try{form.remove()}catch(_){}
-    try{frame.remove()}catch(_){}
-  }
+  function cleanup(frame,form){try{form.remove()}catch(_){}try{frame.remove()}catch(_){} }
 
   function send(){
     var pagina=pageType();
     if(!pagina)return;
-
     var qs=new URLSearchParams(location.search||'');
     var eventoId=cleanId(qs.get('evento')||'',220);
     var sessao=sessionId();
-
     if(!sessao||sessao.length<8)return;
-
-    var evento={
-      pagina:pagina,
-      sessaoId:sessao,
-      eventoId:eventoId,
-      origem:source(),
-      referrerHost:referrerHost(),
-      dispositivo:device()
-    };
-
-    /*
-     * Fire-and-forget via iframe/form:
-     * - nao aguarda resposta;
-     * - nao interfere no RPC principal da pagina;
-     * - executa apos a pagina estar carregada;
-     * - qualquer falha e silenciosamente descartada.
-     */
+    var evento={pagina:pagina,sessaoId:sessao,eventoId:eventoId,origem:source(),referrerHost:referrerHost(),dispositivo:device()};
     safe(function(){
       var id='CTAM-'+Date.now()+'-'+Math.random().toString(36).slice(2);
       var alvo='ctam_'+id.replace(/[^A-Za-z0-9_]/g,'');
       var frame=document.createElement('iframe');
       var form=document.createElement('form');
-
-      frame.name=alvo;
-      frame.setAttribute('aria-hidden','true');
-      frame.tabIndex=-1;
-      frame.style.display='none';
-
-      form.method='POST';
-      form.action=APP;
-      form.target=alvo;
-      form.style.display='none';
-
-      function add(k,v){
-        var input=document.createElement('input');
-        input.type='hidden';
-        input.name=k;
-        input.value=String(v==null?'':v);
-        form.appendChild(input);
-      }
-
+      frame.name=alvo;frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.display='none';
+      form.method='POST';form.action=APP;form.target=alvo;form.style.display='none';
+      function add(k,v){var input=document.createElement('input');input.type='hidden';input.name=k;input.value=String(v==null?'':v);form.appendChild(input);}
       add('ctMinhaCariocaAction','publicRpc');
       add('ctMinhaCariocaRequestId',id);
       add('metodo','ctAnalyticsMasterRegistrarLotePublicoPROD');
       add('argsJson',JSON.stringify([[evento]]));
-
-      document.body.appendChild(frame);
-      document.body.appendChild(form);
-
-      form.submit();
-
-      window.setTimeout(function(){
-        cleanup(frame,form);
-      },15000);
+      document.body.appendChild(frame);document.body.appendChild(form);form.submit();
+      window.setTimeout(function(){cleanup(frame,form);},15000);
     },null);
   }
 
@@ -159,9 +109,13 @@ REGRAS:
         var msg=String(text&&text.textContent||'');
         if(!box||box.classList.contains('hidden'))return;
         if(msg.indexOf('Não foi possível carregar o evento agora')===-1)return;
-        var qs=new URLSearchParams(location.search||'');
-        if(!cleanId(qs.get('evento')||'',220))return;
-        location.replace('/checkout-v2/?'+qs.toString());
+        var entrada=new URLSearchParams(location.search||'');
+        var eventoId=cleanId(entrada.get('evento')||'',220);
+        if(!eventoId)return;
+        var saida=new URLSearchParams();
+        saida.set('page','evento');
+        ['evento','cupom','src','csid','convite','token','seller','refcode'].forEach(function(k){var v=entrada.get(k);if(v)saida.set(k,v);});
+        location.replace(APP+'?'+saida.toString());
       },null);
     },900);
   }
@@ -169,17 +123,11 @@ REGRAS:
   function schedule(){
     emergencyEventFallback();
     window.setTimeout(function(){
-      if(typeof window.requestIdleCallback==='function'){
-        window.requestIdleCallback(function(){send()},{timeout:2500});
-      }else{
-        window.setTimeout(send,250);
-      }
+      if(typeof window.requestIdleCallback==='function')window.requestIdleCallback(function(){send()},{timeout:2500});
+      else window.setTimeout(send,250);
     },2500);
   }
 
-  if(document.readyState==='complete'){
-    schedule();
-  }else{
-    window.addEventListener('load',schedule,{once:true});
-  }
+  if(document.readyState==='complete')schedule();
+  else window.addEventListener('load',schedule,{once:true});
 }());
