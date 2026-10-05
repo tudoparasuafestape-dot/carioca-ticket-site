@@ -2126,6 +2126,9 @@ var state = {
 token:
 '',
 
+contextoPendente:
+false,
+
 usuario:
 null,
 
@@ -2222,6 +2225,7 @@ function iniciar(){
 'eventPickerClose',
 'eventPickerList',
 'refreshButton',
+'eventsManagementLink',
 'centralMobileLink',
 'accessManagementLink',
 'cariocaPayLink',
@@ -2427,7 +2431,9 @@ window.addEventListener(
 function(){
 
 if(
-state.token
+state.token &&
+state.contextoPendente !==
+true
 ){
 
 prepararLinksAutenticados();
@@ -2455,7 +2461,9 @@ function(){
 if(
 document.visibilityState ===
 'visible' &&
-state.token
+state.token &&
+state.contextoPendente !==
+true
 ){
 
 atualizarBadgeSolicitacoesProdutor(
@@ -3547,6 +3555,8 @@ firebaseLogin.idToken
 
 if(
 !resposta ||
+resposta.sucesso !==
+true ||
 resposta.autenticado !==
 true
 ){
@@ -3606,48 +3616,21 @@ return;
 }
 
 if(
-resposta.autorizado !==
-true
-){
-
-if(
-resposta.token
-){
-
-state.token =
-String(
+resposta.autorizado ===
+true ||
+resposta.contextoPendente !==
+true ||
+!String(
 resposta.token ||
 ''
-);
-
-state.usuario =
-resposta.usuario ||
-null;
-
-state.produtores =
-[];
-
-salvarSessao(
-state.token,
-resposta.expiraEm ||
-''
-);
-
-await sairFirebaseSilencioso();
-
-window.location.replace(
-'/produtor/solicitar/'
-);
-
-return;
-}
+).trim()
+){
 
 await sairFirebaseSilencioso();
 
 mostrarMensagem(
 el.loginMessage,
-resposta.mensagem ||
-'Esta conta não possui acesso a produtor.',
+'Não foi possível iniciar a sessão segura do Portal.',
 'error'
 );
 
@@ -3656,20 +3639,24 @@ return;
 
 state.token =
 String(
-resposta.token ||
-''
-);
+resposta.token
+)
+.trim();
 
 state.usuario =
-resposta.usuario ||
 null;
 
 state.produtores =
-Array.isArray(
-resposta.produtores
-)
-? resposta.produtores
-: [];
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+state.contextoPendente =
+true;
 
 salvarSessao(
 state.token,
@@ -3680,45 +3667,20 @@ resposta.expiraEm ||
 el.senha.value =
 '';
 
+await sairFirebaseSilencioso();
+
 /*
- * A autenticação já terminou e a sessão CT foi persistida.
- * Falhas exclusivamente visuais/operacionais na abertura do painel
- * não podem ser classificadas como falha de login nem encerrar
- * uma sessão válida.
+ * P0: autenticado != autorizado.
+ * A sessão CT2 existe, mas nenhum recurso protegido é liberado
+ * antes da restauração server-side do contexto autorizado.
  */
-try{
-
-abrirPortal();
-
-}
-catch(
-erroPortal
-){
-
-registrarErroTecnico(
-'Portal | abertura pós-login',
-erroPortal
+definirLoading(
+false
 );
 
-el.loginView
-.classList
-.add(
-'hidden'
-);
+abrirShellPortalPendente();
 
-el.portalView
-.classList
-.remove(
-'hidden'
-);
-
-mostrarMensagem(
-el.portalMessage,
-'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Atualize a página para restaurar sua sessão.',
-'error'
-);
-
-}
+carregarContextoPortalPendente();
 }
 catch(
 erro
@@ -3910,7 +3872,7 @@ resolve
 .withFailureHandler(
 reject
 )
-.ctPortalProdutorLoginFirebaseIsoladoPROD(
+.ctPortalProdutorLoginFirebaseHotpathP0PROD(
 idToken
 );
 }
@@ -4369,30 +4331,214 @@ return;
 }
 
 state.token =
-salvo.token;
+String(
+salvo.token
+)
+.trim();
 
-definirLoading(
-true,
-'Restaurando sessão...'
-);
+state.usuario =
+null;
 
-google.script.run
-.withSuccessHandler(
-function(r){
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+state.contextoPendente =
+true;
 
 definirLoading(
 false
 );
 
+abrirShellPortalPendente();
+
+carregarContextoPortalPendente();
+}
+
+function abrirShellPortalPendente(){
+
+state.contextoPendente =
+true;
+
+state.usuario =
+null;
+
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+state.adminSolicitacoesHabilitado =
+false;
+
+pararAtualizacaoAutomatica();
+
+pararAtualizacaoHandoff();
+
+resetarLinksAutenticados();
+
+el.loginView
+.classList
+.add(
+'hidden'
+);
+
+el.portalView
+.classList
+.remove(
+'hidden'
+);
+
+el.dashboard
+.classList
+.add(
+'hidden'
+);
+
+el.topUser.textContent =
+'';
+
+el.helloName.textContent =
+'Portal do Produtor';
+
+[
+el.eventsManagementLink,
+el.centralMobileLink,
+el.accessManagementLink,
+el.cariocaPayLink,
+el.courtesyLink,
+el.campaignsLink,
+el.commissionsLink,
+el.commercialPolicyLink,
+el.partnerPortalLink,
+el.partnerAdminLink,
+el.producerRequestsLink,
+el.backofficeMasterLink,
+el.changeEmailButton
+]
+.forEach(
+function(controle){
+
+if(
+controle
+){
+
+controle
+.classList
+.add(
+'hidden'
+);
+}
+}
+);
+
+el.changeEmailButton.disabled =
+true;
+
+el.producerSelect.disabled =
+true;
+
+el.eventSelect.disabled =
+true;
+
+el.eventPickerButton.disabled =
+true;
+
+el.refreshButton.disabled =
+true;
+
+el.producerSelect.innerHTML =
+'';
+
+el.eventSelect.innerHTML =
+'';
+
+fecharSeletorEvento();
+
+fecharModalEmail();
+
+mostrarMensagem(
+el.portalMessage,
+'Carregando seus eventos...',
+'info'
+);
+}
+
+function carregarContextoPortalPendente(){
+
+var tokenEsperado =
+String(
+state.token ||
+''
+)
+.trim();
+
+if(
+!tokenEsperado
+){
+
+mostrarLogin();
+
+return;
+}
+
+google.script.run
+.withSuccessHandler(
+function(r){
+
+if(
+String(
+state.token ||
+''
+)
+.trim() !==
+tokenEsperado
+){
+
+return;
+}
+
 if(
 !r ||
+r.sucesso !==
+true ||
 r.autenticado !==
 true
 ){
 
 limparSessaoLocal();
 
+state.contextoPendente =
+false;
+
+state.usuario =
+null;
+
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
 mostrarLogin();
+
+mostrarMensagem(
+el.loginMessage,
+'Sua sessão expirou. Faça login novamente.',
+'error'
+);
 
 return;
 }
@@ -4409,16 +4555,30 @@ window.location.replace(
 return;
 }
 
-state.usuario =
-r.usuario ||
-null;
-
-state.produtores =
+var produtoresAutorizados =
 Array.isArray(
 r.produtores
 )
 ? r.produtores
 : [];
+
+if(
+!produtoresAutorizados.length
+){
+
+window.location.replace(
+'/produtor/solicitar/'
+);
+
+return;
+}
+
+state.usuario =
+r.usuario ||
+null;
+
+state.produtores =
+produtoresAutorizados;
 
 abrirPortal();
 }
@@ -4426,35 +4586,57 @@ abrirPortal();
 .withFailureHandler(
 function(erro){
 
-definirLoading(
-false
-);
+if(
+String(
+state.token ||
+''
+)
+.trim() !==
+tokenEsperado
+){
+
+return;
+}
 
 /*
- * Falha transitória de transporte/timeout não invalida uma sessão
- * local que ainda está dentro do prazo. O backend continua sendo a
- * autoridade para rejeitar sessão inválida no successHandler.
+ * Falha transitória não transforma autenticação em autorização
+ * e não apaga a sessão CT2 local ainda válida.
  */
 registrarErroTecnico(
-'Portal | restauração de sessão',
+'Portal | contexto pós-login',
 erro
 );
 
-mostrarLogin();
+state.usuario =
+null;
+
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+abrirShellPortalPendente();
 
 mostrarMensagem(
-el.loginMessage,
-'Não foi possível restaurar sua sessão agora. Sua sessão foi preservada; tente novamente em instantes.',
+el.portalMessage,
+'Não foi possível carregar seus eventos agora. Sua sessão foi preservada; atualize a página para tentar novamente.',
 'error'
 );
 }
 )
 .ctPortalProdutorRestaurarSessaoIsoladaPROD(
-state.token
+tokenEsperado
 );
 }
 
 function abrirPortal(){
+
+state.contextoPendente =
+false;
 
 if(
 !state.produtores.length
@@ -4484,6 +4666,42 @@ el.portalView
 .remove(
 'hidden'
 );
+
+el.eventsManagementLink
+.classList
+.remove(
+'hidden'
+);
+
+el.centralMobileLink
+.classList
+.remove(
+'hidden'
+);
+
+el.accessManagementLink
+.classList
+.remove(
+'hidden'
+);
+
+el.partnerPortalLink
+.classList
+.remove(
+'hidden'
+);
+
+el.changeEmailButton
+.classList
+.remove(
+'hidden'
+);
+
+el.changeEmailButton.disabled =
+false;
+
+el.producerSelect.disabled =
+false;
 
 var nome =
 state.usuario &&
@@ -4742,6 +4960,9 @@ state.token
 
 
 function mostrarLogin(){
+
+state.contextoPendente =
+false;
 
 state.adminSolicitacoesHabilitado =
 false;
