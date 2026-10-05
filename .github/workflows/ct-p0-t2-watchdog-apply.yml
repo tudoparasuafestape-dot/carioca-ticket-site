@@ -29,517 +29,64 @@ jobs:
 
       - name: Runner and Barrier 1
         run: |
-          $ErrorActionPreference = 'Stop'
+          $ErrorActionPreference='Stop'
           Write-Host "RUNNER_NAME=$env:RUNNER_NAME"
           Write-Host "RUNNER_OS=$env:RUNNER_OS"
           Write-Host "RUNNER_ARCH=$env:RUNNER_ARCH"
           $head=(git rev-parse HEAD).Trim(); $parent=(git rev-parse HEAD^1).Trim()
           Write-Host "HEAD=$head"; Write-Host "PARENT=$parent"
-          if($head -ne '${{ github.sha }}'){ throw 'HEAD diverge de github.sha' }
-          if($parent -ne '7429dec0aadfe0780bf2be797e2a3ebb56e787c5'){ throw "Parent inseguro: $parent" }
+          if($head -ne '${{ github.sha }}'){throw 'HEAD diverge'}
+          if($parent -ne '81c9c108cf30a4ea32cfc7732215b0f8e845b733'){throw "Parent inseguro: $parent"}
           $changed=@(git diff --name-only HEAD^1 HEAD)
-          $changed | ForEach-Object { Write-Host "WORKFLOW_COMMIT_FILE=$_" }
-          if($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-apply.yml'){ throw 'Commit intermediario contem arquivo nao autorizado.' }
-          if(@(git status --short).Count -ne 0){ throw 'Working tree nao esta limpo.' }
+          if($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-apply.yml'){throw 'Commit intermediario invalido'}
+          if(@(git status --short).Count -ne 0){throw 'Working tree sujo'}
           Write-Host 'BARRIER_1=PASS'
 
       - name: Structural atomic edit
+        env:
+          EDITOR_B64: "CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aApwPVBhdGgoInByb2R1dG9yL2luZGV4Lmh0bWwiKTsgdD1QYXRoKCJ0ZXN0cy9lMmUvYXV0aGVudGljYXRlZC1vcGVyYXRpb25hbC5zcGVjLmpzIikKcz1wLnJlYWRfdGV4dChlbmNvZGluZz0idXRmLTgiKTsgcT10LnJlYWRfdGV4dChlbmNvZGluZz0idXRmLTgiKQpkZWYgb25lKHgsYSxiLG4pOgogICAgYz14LmNvdW50KGEpOyBwcmludChmIkFOQ0hPUl97bn09e2N9IikKICAgIGlmIGMhPTE6IHJhaXNlIFN5c3RlbUV4aXQoZiJ7bn06IGV4cGVjdGVkIDEgZ290IHtjfSIpCiAgICByZXR1cm4geC5yZXBsYWNlKGEsYiwxKQpmb3IgaCBpbiBbImZ1bmN0aW9uIGNhbmNlbGFyV2F0Y2hkb2dSZXN0YXVyYWNhbygpeyIsImZ1bmN0aW9uIGludmFsaWRhclRlbnRhdGl2YVJlc3RhdXJhY2FvKCl7IiwiZnVuY3Rpb24gdGVudGF0aXZhUmVzdGF1cmFjYW9BdGl2YSgiLCJmdW5jdGlvbiBtb3N0cmFyRmFsaGFUcmFuc2l0b3JpYVJlc3RhdXJhY2FvKCJdOgogICAgaWYgcy5jb3VudChoKTogcmFpc2UgU3lzdGVtRXhpdCgiaGVscGVyIHByZWV4aXN0ZW50ZTogIitoKQpzPW9uZShzLCJ2YXIgQk9PVFNUUkFQX1RUTF9NUyA9XG42MDAwMDA7XG5cbnZhciBzdGF0ZSA9IHsiLCJ2YXIgQk9PVFNUUkFQX1RUTF9NUyA9XG42MDAwMDA7XG5cbnZhciBSRVNUT1JFX1VYX1RJTUVPVVRfTVMgPVxuOTAwMDtcblxudmFyIHN0YXRlID0ge1xuIiwidGltZW91dCIpCnM9b25lKHMsImNvbnRleHRvUGVuZGVudGU6XG5mYWxzZSxcblxudXN1YXJpbzoiLCJjb250ZXh0b1BlbmRlbnRlOlxuZmFsc2UsXG5cbnJlc3RvcmVHZW5lcmF0aW9uOlxuMCxcblxucmVzdG9yZVRpbWVyOlxubnVsbCxcblxudXN1YXJpbzoiLCJzdGF0ZSIpCnM9b25lKHMsImZ1bmN0aW9uKCl7XG5cbmlmKFxuc3RhdGUuZXZlbnRvQXR1YWxcbil7XG5cbmNhcnJlZ2FyUGFpbmVsKFxudHJ1ZVxuKTsiLCJmdW5jdGlvbigpe1xuXG5pZihcbnN0YXRlLmNvbnRleHRvUGVuZGVudGUgPT09XG50cnVlICYmXG5zdGF0ZS50b2tlblxuKXtcblxuY2FycmVnYXJDb250ZXh0b1BvcnRhbFBlbmRlbnRlKCk7XG5cbnJldHVybjtcbn1cblxuaWYoXG5zdGF0ZS5ldmVudG9BdHVhbFxuKXtcblxuY2FycmVnYXJQYWluZWwoXG50cnVlXG4pOyIsInJldHJ5IikKc3RhcnQ9ImZ1bmN0aW9uIGNhcnJlZ2FyQ29udGV4dG9Qb3J0YWxQZW5kZW50ZSgpeyI7IGVuZD0iZnVuY3Rpb24gYWJyaXJQb3J0YWwoKXsiCmlmIHMuY291bnQoc3RhcnQpIT0xIG9yIHMuY291bnQoZW5kKSE9MTogcmFpc2UgU3lzdGVtRXhpdCgiZnVuY3Rpb24gbWFya2VycyBpbnZhbGlkIikKYT1zLmluZGV4KHN0YXJ0KTsgYj1zLmluZGV4KGVuZCkKaWYgYjw9YTogcmFpc2UgU3lzdGVtRXhpdCgiZnVuY3Rpb24gb3JkZXIgaW52YWxpZCIpCmJsb2NrPSIiImZ1bmN0aW9uIGNhbmNlbGFyV2F0Y2hkb2dSZXN0YXVyYWNhbygpewoKaWYoCnN0YXRlLnJlc3RvcmVUaW1lcgopewoKY2xlYXJUaW1lb3V0KApzdGF0ZS5yZXN0b3JlVGltZXIKKTsKCnN0YXRlLnJlc3RvcmVUaW1lciA9Cm51bGw7Cn0KfQoKZnVuY3Rpb24gaW52YWxpZGFyVGVudGF0aXZhUmVzdGF1cmFjYW8oKXsKCmNhbmNlbGFyV2F0Y2hkb2dSZXN0YXVyYWNhbygpOwoKc3RhdGUucmVzdG9yZUdlbmVyYXRpb24rKzsKfQoKZnVuY3Rpb24gdGVudGF0aXZhUmVzdGF1cmFjYW9BdGl2YSgKZ2VuZXJhdGlvbiwKdG9rZW5Fc3BlcmFkbwopewoKaWYoCmdlbmVyYXRpb24gIT09CnN0YXRlLnJlc3RvcmVHZW5lcmF0aW9uIHx8CnN0YXRlLmNvbnRleHRvUGVuZGVudGUgIT09CnRydWUgfHwKU3RyaW5nKApzdGF0ZS50b2tlbiB8fAonJwopCi50cmltKCkgIT09CnRva2VuRXNwZXJhZG8KKXsKCnJldHVybiBmYWxzZTsKfQoKdmFyIHNhbHZvID0KbGVyU2Vzc2FvKCk7CgpyZXR1cm4gQm9vbGVhbigKc2Fsdm8gJiYK U3RyaW5nKA pzYWx2by50b2tlbiB8fAonJwopCi50cmltKCkgPT09CnRva2VuRXNwZXJhZG8KKTsKfQoKZnVuY3Rpb24gbW9zdHJhckZhbGhhVHJhbnNpdG9yaWFSZXN0YXVyYWNhbygKZ2VuZXJhdGlvbiwKdG9rZW5Fc3BlcmFkbywKZXJybwopewoKaWYoCiF0ZW50YXRpdmFSZXN0YXVyYWNhb0F0aXZhKA pnZW5lcmF0aW9uLAp0b2tlbkVzcGVyYWRvCikKKXsKCnJldHVybjsKfQoKaW52YWxpZGFyVGVudGF0aXZhUmVzdGF1cmFjYW8oKTsKCmlmKAplcnJvCil7CgpyZWdpc3RyYXJFcnJvVGVjbmljbygKJ1BvcnRhbCB8IGFiZXJ0dXJhIHDzcy1sb2dpbicsCmVycm8KKTsKfQoKc3RhdGUudXN1YXJpbyA9Cm51bGw7CgpzdGF0ZS5wcm9kdXRvcmVzID0KW107CgpzdGF0ZS5wcm9kdXRvckF0dWFsID0KbnVsbDsKCnN0YXRlLmV2ZW50b0F0dWFsID0KbnVsbDsKCmFicmlyU2hlbGxQb3J0YWxQZW5kZW50ZSgpOwoKZWwucmVmcmVzaEJ1dHRvbi5kaXNhYmxlZCA9CmZhbHNlOwoKZWwucmVmcmVzaEJ1dHRvbi50ZXh0Q29udGVudCA9CidUZW50YXIgbm92YW1lbnRlJzsKCm1vc3RyYXJNZW5zYWdlbSgKZWwucG9ydGFsTWVzc2FnZSwKJ1NldSBsb2dpbiBmb2kgcmVhbGl6YWRvLCBtYXMgbuNvIGZvaSBwb3Nz7XZlbCBjYXJyZWdhciB0b2RhIGEg4XJlYSBhZG1pbmlzdHJhdGl2YS4gU3VhIHNlc3PhbyBmb2kgcHJlc2VydmFkYTsgdGVudGUgbm92YW1lbnRlLicsCidlcnJvcicKKTsKfQoKZnVuY3Rpb24gY2FycmVnYXJDb250ZXh0b1BvcnRhbFBlbmRlbnRlKCl7Cgp2YXIgdG9rZW5Fc3BlcmFkbyA9ClN0cmluZygKc3RhdGUudG9rZW4gfHwKJycKKQoudHJpbSgpOwoKaWYoCiF0b2tlbkVzcGVyYWRvCil7Cgptb3N0cmFyTG9naW4oKTsKCnJldHVybjsKfQoKaW52YWxpZGFyVGVudGF0aXZhUmVzdGF1cmFjYW8oKTsKCnZhciBnZW5lcmF0aW9uID0Kc3RhdGUucmVzdG9yZUdlbmVyYXRpb247CgphYnJpclNoZWxsUG9ydGFsUGVuZGVudGUoKTsKCmVsLnJlZnJlc2hCdXR0b24uZGlzYWJsZWQgPQp0cnVlOwoKZWwucmVmcmVzaEJ1dHRvbi50ZXh0Q29udGVudCA9CidDYXJyZWdhbmRvLi4uJzsKCnN0YXRlLnJlc3RvcmVUaW1lciA9CnNldFRpbWVvdXQoCmZ1bmN0aW9uKCl7Cgptb3N0cmFyRmFsaGFUcmFuc2l0b3JpYVJlc3RhdXJhY2FvKA pnZW5lcmF0aW9uLAp0b2tlbkVzcGVyYWRvLApudWxsCik7Cn0sClJFU1RPUkVfVVhfVElNRU9VVF9NUwopOwoKZ29vZ2xlLnNjcmlwdC5ydW4KLndpdGhTdWNjZXNzSGFuZGxlcigKZnVuY3Rpb24ocil7CgppZigKIXRlbnRhdGl2YVJlc3RhdXJhY2FvQXRpdmEoCmdlbmVyYXRpb24sCnRva2VuRXNwZXJhZG8KKQopewoKcmV0dXJuOwp9CgpjYW5jZWxhcldhdGNoZG9nUmVzdGF1cmFjYW8oKTsKCmlmKApyICYmCnIuYXV0ZW50aWNhZG8gPT09CmZhbHNlCil7CgppbnZhbGlkYXJUZW50YXRpdmFSZXN0YXVyYWNhbygpOwoKbGltcGFyU2Vzc2FvTG9jYWwoKTsKCnN0YXRlLnRva2VuID0KJyc7CgpzdGF0ZS5jb250ZXh0b1BlbmRlbnRlID0KZmFsc2U7CgpzdGF0ZS51c3VhcmlvID0KbnVsbDsKCnN0YXRlLnByb2R1dG9yZXMgPQpbXTsKCnN0YXRlLnByb2R1dG9yQXR1YWwgPQpudWxsOwoKc3RhdGUuZXZlbnRvQXR1YWwgPQpudWxsOwoKbW9zdHJhckxvZ2luKCk7Cgptb3N0cmFyTWVuc2FnZW0oCmVsLmxvZ2luTWVzc2FnZSwKJ1N1YSBzZXNz428gZXhwaXJvdS4gRmHnYSBsb2dpbiBub3ZhbWVudGUuJywKJ2Vycm9yJwopOwoKcmV0dXJuOwp9CgppZigKIXIgfHwKci5zdWNlc3NvICE9PQp0cnVlIHx8CnIuYXV0ZW50aWNhZG8gIT09CnRydWUKKXsKCm1vc3RyYXJGYWxoYVRyYW5zaXRvcmlhUmVzdGF1cmFjYW8oCmdlbmVyYXRpb24sCnRva2VuRXNwZXJhZG8sCm5ldyBFcnJvcignQ1RfUE9SVEFMX1JFU1RBVVJBQ0FPX1JFU1BPU1RBX1RFQ05JQ0FfSU5WQUxJREEnKQopOwoKcmV0dXJuOwp9CgppZigKci5hdXRvcml6YWRvICE9PQp0cnVlCil7CgppbnZhbGlkYXJUZW50YXRpdmFSZXN0YXVyYWNhbygpOwoKd2luZG93LmxvY2F0aW9uLnJlcGxhY2UoCicvcHJvZHV0b3Ivc29saWNpdGFyLycKKTsKCnJldHVybjsKfQoKdmFyIHByb2R1dG9yZXNBdXRvcml6YWRvcyA9CkFycmF5LmlzQXJyYXkoCnIucHJvZHV0b3JlcwopCj8gci5wcm9kdXRvcmVzCjogW107CgppZigKIXByb2R1dG9yZXNBdXRvcml6YWRvcy5sZW5ndGgKKXsKCmludmFsaWRhclRlbnRhdGl2YVJlc3RhdXJhY2FvKCk7Cgp3aW5kb3cubG9jYXRpb24ucmVwbGFjZSgKJy9wcm9kdXRvci9zb2xpY2l0YXIvJwopOwoKcmV0dXJuOwp9CgppbnZhbGlkYXJUZW50YXRpdmFSZXN0YXVyYWNhbygpOwoKc3RhdGUudXN1YXJpbyA9CnIudXN1YXJpbyB8fApudWxsOwoKc3RhdGUucHJvZHV0b3JlcyA9CnByb2R1dG9yZXNBdXRvcml6YWRvczsKCmFicmlyUG9ydGFsKCk7Cn0KKQoud2l0aEZhaWx1cmVIYW5kbGVyKApmdW5jdGlvbihlcnJvKXsKCm1vc3RyYXJGYWxoYVRyYW5zaXRvcmlhUmVzdGF1cmFjYW8oCmdlbmVyYXRpb24sCnRva2VuRXNwZXJhZG8sCmVycm8KKTsKfQopCi5jdFBvcnRhbFByb2R1dG9yUmVzdGF1cmFyU2Vzc2FvSXNvbGFkYVBST0QoCnRva2VuRXNwZXJhZG8KKTsKfQoKIiIiCnM9c1s6YV0rYmxvY2src1tiOl0Kcz1vbmUocywiZnVuY3Rpb24gYWJyaXJQb3J0YWwoKXtcblxuc3RhdGUuY29udGV4dG9QZW5kZW50ZSA9XG5mYWxzZTsiLCJmdW5jdGlvbiBhYnJpclBvcnRhbCgpe1xuXG5zdGF0ZS5jb250ZXh0b1BlbmRlbnRlID1cbmZhbHNlO1xuXG5jYW5jZWxhcldhdGNoZG9nUmVzdGF1cmFjYW8oKTtcblxuZWwucmVmcmVzaEJ1dHRvbi50ZXh0Q29udGVudCA9XG4nQXR1YWxpemFyIHBhaW5lbCc7Iiwib3BlbiIpCnM9b25lKHMsImZ1bmN0aW9uIGV4ZWN1dGFyTG9nb3V0KCl7XG5cbnZhciB0b2tlbkF0dWFsID1cbnN0YXRlLnRva2VuOyIsImZ1bmN0aW9uIGV4ZWN1dGFyTG9nb3V0KCl7XG5cbnZhciB0b2tlbkF0dWFsID1cbnN0YXRlLnRva2VuO1xuXG5pbnZhbGlkYXJUZW50YXRpdmFSZXN0YXVyYWNhbygpOyIsImxvZ291dCIpCnM9b25lKHMsImZ1bmN0aW9uIHJlc2V0YXJF c3RhZG8oKXtcblxuc3RhdGUudG9rZW4gPSIsImZ1bmN0aW9uIHJlc2V0YXJF c3RhZG8oKXtcblxuaW52YWxpZGFyVGVudGF0aXZhUmVzdGF1cmFjYW8oKTtcblxuc3RhdGUudG9rZW4gPSIsInJlc2V0IikKb2xkPSIiIiAgICAgICAgICBjYXNlICdjdFBvcnRhbFByb2R1dG9yUmVzdGF1cmFyU2Vzc2FvSXNvbGFkYVBST0QnOgogICAgICAgICAgICBleHBlY3QoU3RyaW5nKGFyZ3NbMF0gfHwgJycpKS50b0JlKHN0YXRlLnRva2VuKTsKICAgICAgICAgICAgcmVzdWx0YWRvID0gcG9ydGFsU2Vzc2lvbigpOwogICAgICAgICAgICBicmVhazsiIiIKbmV3PSIiIiAgICAgICAgICBjYXNlICdjdFBvcnRhbFByb2R1dG9yUmVzdGF1cmFyU2Vzc2FvSXNvbGFkYVBST0QnOgogICAgICAgICAgICBleHBlY3QoU3RyaW5nKGFyZ3NbMF0gfHwgJycpKS50b0JlKHN0YXRlLnRva2VuKTsKICAgICAgICAgICAgc3RhdGUucmVzdG9yZUNhbGxzID0gTnVtYmVyKHN0YXRlLnJlc3RvcmVDYWxscyB8fCAwKSArIDE7CiAgICAgICAgICAgIHsKICAgICAgICAgICAgICBjb25zdCBpID0gc3RhdGUucmVzdG9yZUNhbGxzIC0gMTsKICAgICAgICAgICAgICBjb25zdCBkZWxheXMgPSBBcnJheS5pc0FycmF5KHN0YXRlLnJlc3RvcmVEZWxheXMpID8gc3RhdGUucmVzdG9yZURlbGF5cyA6IFtdOwogICAgICAgICAgICAgIGNvbnN0IGRlbGF5ID0gTnVtYmVyKGRlbGF5c1tpXSAhPT0gdW5kZWZpbmVkID8gZGVsYXlzW2ldIDogKHN0YXRlLnJlc3RvcmVEZWxheU1zIHx8IDApKTsKICAgICAgICAgICAgICBpZiAoZGVsYXkgPiAwKSBhd2FpdCBuZXcgUHJvbWlzZShyZXNvbHZlID0+IHNldFRpbWVvdXQocmVzb2x2ZSwgZGVsYXkpKTsKICAgICAgICAgICAgICBjb25zdCByZXNwb25zZXMgPSBBcnJheS5pc0FycmF5KHN0YXRlLnJlc3RvcmVSZXNwb25zZXMpID8gc3RhdGUucmVzdG9yZVJlc3BvbnNlcyA6IFtdOwogICAgICAgICAgICAgIHJlc3VsdGFkbyA9IHJlc3BvbnNlc1tpXSAhPT0gdW5kZWZpbmVkID8gcmVzcG9uc2VzW2ldIDogcG9ydGFsU2Vzc2lvbigpOwogICAgICAgICAgICB9CiAgICAgICAgICAgIGJyZWFrOyIiIgpxPW9uZShxLG9sZCxuZXcsIm1vY2siKQp0cz0iICB0ZXN0KCdQb3J0YWwgcHJlc2VydmEgc2Vzc2FvIGxvY2FsIHF1YW5kbyByZXN0YXVyYWNhbyBmYWxoYSB0cmFuc2l0b3JpYW1lbnRlJyIKdGU9IiAgdGVzdCgnQ2VudHJhbCAtPiBVc3VhcmlvcyBlIFBlcm1pc3NvZXMgLT4gU2FpciBzZW0gcm90YSBlc2NvbmRpZGEnIgppZiBxLmNvdW50KHRzKSE9MSBvciBxLmNvdW50KHRlKSE9MTogcmFpc2UgU3lzdGVtRXhpdCgidGVzdCBtYXJrZXJzIGludmFsaWQiKQphPXEuaW5kZXgodHMpOyBiPXEuaW5kZXgodGUpCnRlc3RzPSIiIiAgdGVzdCgnUG9ydGFsIHByZXNlcnZhIHNlc3NhbyBsb2NhbCBxdWFuZG8gcmVzdGF1cmFjYW8gZmFsaGEgdHJhbnNpdG9yaWFtZW50ZScsIGFzeW5jICh7IHBhZ2UgfSkgPT4gewogICAgY29uc3QgdG9rZW4gPSAnQ1QtRTJFLVRPS0VOLVJFU1RPUkUtVFJBTlNJRU5UJzsKICAgIGF3YWl0IHBhZ2UuYWRkSW5pdFNjcmlwdCgoeyBrZXksIHZhbHVlIH0pID0+IHsgbG9jYWxTdG9yYWdlLnNldEl0ZW0oa2V5LCBKU09OLnN0cmluZ2lmeSh2YWx1ZSkpOyBzZXNzaW9uU3RvcmFnZS5zZXRJdGVtKGtleSwgSlNPTi5zdHJpbmdpZnkodmFsdWUpKTsgfSwgeyBrZXk6IFNUT1JBR0UsIHZhbHVlOiB7IHRva2VuLCBleHBpcmFFbTogJzIwOTktMTItMzFUMjM6NTk6NTkuMDAwWicgfSB9KTsKICAgIGF3YWl0IHBhZ2Uucm91dGUoJyoqLyonLCBhc3luYyByb3V0ZSA9PiB7CiAgICAgIGlmIChyb3V0ZS5yZXF1ZXN0KCkubWV0aG9kKCkgPT09ICdQT1NUJyAmJiAocm91dGUucmVxdWVzdCgpLnBvc3REYXRhKCkgfHwgJycpLmluY2x1ZGVzKCdjdFBvcnRhbFByb2R1dG9yUmVzdGF1cmFyU2Vzc2FvSXNvbGFkYVBST0QnKSkgeyBhd2FpdCByb3V0ZS5hYm9ydCgnZmFpbGVkJyk7IHJldHVybjsgfQogICAgICBhd2FpdCByb3V0ZS5jb250aW51ZSgpOwogICAgfSk7CiAgICBjb25zdCBpbmljaW8gPSBEYXRlLm5vdygpOwogICAgYXdhaXQgcGFnZS5nb3RvKCcvcHJvZHV0b3IvJywgeyB3YWl0VW50aWw6ICdkb21jb250ZW50bG9hZGVkJyB9KTsKICAgIGF3YWl0IGV4cGVjdChwYWdlLmxvY2F0b3IoJyNwb3J0YWxNZXNzYWdlJykpLnRvQ29udGFpblRleHQoJ1N1YSBzZXNz428gZm9pIHByZXNlcnZhZGEnLCB7IHRpbWVvdXQ6IDEwMDAwIH0pOwogICAgZXhwZWN0KERhdGUubm93KCkgLSBpbmljaW8pLnRvQmVMZXNzVGhhbigxMDAwMCk7CiAgICBhd2FpdCBleHBlY3QocGFnZS5sb2NhdG9yKCcjcmVmcmVzaEJ1dHRvbicpKS50b0hhdmVUZXh0KCdUZW50YXIgbm92YW1lbnRlJyk7CiAgICBhd2FpdCBleHBlY3QocGFnZS5sb2NhdG9yKCcjZXZlbnRQaWNrZXJCdXR0b24nKSkudG9CZURpc2FibGVkKCk7CiAgICBjb25zdCBzdG9yZWQgPSBhd2FpdCBwYWdlLmV2YWx1YXRlKGtleSA9PiAoeyBsb2NhbDogbG9jYWxTdG9yYWdlLmdldEl0ZW0oa2V5KSwgc2Vzc2lvbjogc2Vzc2lvblN0b3JhZ2UuZ2V0SXRlbShrZXkpIH0pLCBTVE9SQUdFKTsKICAgIGV4cGVjdChKU09OLnBhcnNlKHN0b3JlZC5sb2NhbCkudG9rZW4pLnRvQmUodG9rZW4pOyBleHBlY3QoSlNPTi5wYXJzZShzdG9yZWQuc2Vzc2lvbikudG9rZW4pLnRvQmUodG9rZW4pOwogIH0pOwoKICB0ZXN0KCdQb3J0YWwgZW5jZXJyYSBsb2FkaW5nIFQyIGVudHJlIDgsNXMgZSAxMHMgcXVhbmRvIFJQQyBmaWNhIHBlbmR1cmFkbycsIGFzeW5jICh7IHBhZ2UgfSkgPT4gewogICAgY29uc3Qgc3RhdGUgPSB7IHRva2VuOiAnQ1QtRTJFLVRPS0VOLVJFU1RPUkUtSEFORycsIHJlc3RvcmVEZWxheU1zOiAzMDAwMCwgdHJhbnNhY3Rpb25DYWxsczowLCBiYXJNdXRhdGlvbkNhbGxzOjAsIGV2ZW50TXV0YXRpb25DYWxsczowLCBzdXBwbGllck11dGF0aW9uQ2FsbHM6MCwgY29tbWlzc2lvbk11dGF0aW9uQ2FsbHM6MCB9OwogICAgYXdhaXQgaW5zdGFsbE1vY2socGFnZSxzdGF0ZSk7IGF3YWl0IHNlZWRTZXNzaW9uKHBhZ2Usc3RhdGUudG9rZW4pOwogICAgY29uc3QgaW5pY2lvPURhdGUubm93KCk7IGF3YWl0IHBhZ2UuZ290bygnL3Byb2R1dG9yLycse3dhaXRVbnRpbDonZG9tY29udGVudGxvYWRlZCd9KTsKICAgIGF3YWl0IGV4cGVjdChwYWdlLmxvY2F0b3IoJyNwb3J0YWxNZXNzYWdlJykpLnRvQ29udGFpblRleHQoJ1N1YSBzZXNz428gZm9pIHByZXNlcnZhZGEnLHt0aW1lb3V0OjEwMDAwfSk7CiAgICBjb25zdCBlbGFwc2VkPURhdGUubm93KCktaW5pY2lvOyBjb25zb2xlLmxvZyhgV0FUQ0hET0dfRUxBUFNFRF9NUz0ke2VsYXBzZWR9YCk7CiAgICBleHBlY3QoZWxhcHNlZCkudG9CRUdyZWF0ZXJUaGFuT3JFcXVhbCg4NTAwKTsgZXhwZWN0KGVsYXBzZWQpLnRvQmVMZXNzVGhhbigxMDAwMCk7CiAgICBhd2FpdCBleHBlY3QocGFnZS5sb2NhdG9yKCcjcmVmcmVzaEJ1dHRvbicpKS50b0hhdmVUZXh0KCdUZW50YXIgbm92YW1lbnRlJyk7IGF3YWl0IGV4cGVjdChwYWdlLmxvY2F0b3IoJyNldmVudFBpY2tlckJ1dHRvbicpKS50b0JlRGlzYWJsZWQoKTsKICB9KTsKCiAgdGVzdCgnUG9ydGFsIHJldHJ5IGJlbSBzdWNlZGlkbyBpbnZhbGlkYSBjYWxsYmFjayB0YXJkaW8gZGEgdGVudGF0aXZhIGFudGVyaW9yJywgYXN5bmMgKHsgcGFnZSB9KSA9PiB7CiAgICBjb25zdCBzdGF0ZT17dG9rZW46J0NULUUyRS1UT0tFTi1SRVNUT1JFLVJFVFJZJyxyZXN0b3JlRGVsYXlzOlsxMTAwMCwwXSxyZXN0b3JlUmVzcG9uc2VzOlt7c3VjZXNzbzpmYWxzZSxhdXRlbnRpY2FkbzpmYWxzZSxhdXRvcml6YWRvOmZhbHNlfSxwb3J0YWxTZXNzaW9uKCldLHRyYW5zYWN0aW9uQ2FsbHM6MCxiYXJNdXRhdGlvbkNhbGxzOjAsZXZlbnRNdXRhdGlvbkNhbGxzOjAsc3VwcGxpZXJNdXRhdGlvbkNhbGxzOjAsY29tbWlzc2lvbk11dGF0aW9uQ2FsbHM6MH07CiAgICBhd2FpdCBpbnN0YWxsTW9jayhwYWdlLHN0YXRlKTsgYXdhaXQgc2VlZFNlc3Npb24ocGFnZSxzdGF0ZS50b2tlbik7IGF3YWl0IHBhZ2UuZ290bygnL3Byb2R1dG9yLycse3dhaXRVbnRpbDonZG9tY29udGVudGxvYWRlZCd9KTsKICAgIGF3YWl0IGV4cGVjdChwYWdlLmxvY2F0b3IoJyNyZWZyZXNoQnV0dG9uJykpLnRvSGF2ZVRleHQoJ1RlbnRhciBub3ZhbWVudGUnLHt0aW1lb3V0OjEwMDAwfSk7IGF3YWl0IHBhZ2UubG9jYXRvcignI3JlZnJlc2hCdXR0b24nKS5jbGljaygpOwogICAgYXdhaXQgZXhwZWN0KHBhZ2UubG9jYXRvcignI2hlbGxvTmFtZScpKS50b0NvbnRhaW5UZXh0KCdPcGVyYWRvciBIb21vbG9nYWNhbycse3RpbWVvdXQ6NTAwMH0pOyBhd2FpdCBwYWdlLndhaXRGb3JUaW1lb3V0KDI1MDApOwogICAgYXdhaXQgZXhwZWN0KHBhZ2UubG9jYXRvcignI2xvZ2luVmlldycpKS50b0hhdmVDbGFzcygvaGlkZGVuLyk7IGV4cGVjdChzdGF0ZS5yZXN0b3JlQ2FsbHMpLnRvQmUoMik7CiAgfSk7CgogIHRlc3QoJ1BvcnRhbCBsb2dvdXQgZHVyYW50ZSByZXN0b3JlIGltcGVkZSBjYWxsYmFjayB0YXJkaW8gZGUgcmVhYnJpciBQb3J0YWwnLCBhc3luYyAoeyBwYWdlIH0pID0+IHsKICAgIGNvbnN0IHN0YXRlPXt0b2tlbjonQ1QtRTJFLVRPS0VOLVJFU1RPUkUtTE9HT1VUJyxyZXN0b3JlRGVsYXlNczoxMTAwMCx0cmFuc2FjdGlvbkNhbGxzOjAsYmFyTXV0YXRpb25DYWxsczowLGV2ZW50TXV0YXRpb25DYWxsczowLHN1cHBsaWVyTXV0YXRpb25DYWxsczowLGNvbW1pc3Npb25NdXRhdGlvbkNhbGxzOjB9OwogICAgYXdhaXQgaW5zdGFsbE1vY2socGFnZSxzdGF0ZSk7IGF3YWl0IHNlZWRTZXNzaW9uKHBhZ2Usc3RhdGUudG9rZW4pOyBhd2FpdCBwYWdlLmdvdG8oJy9wcm9kdXRvci8nLHt3YWl0VW50aWw6J2RvbWNvbnRlbnRsb2FkZWQnfSk7CiAgICBhd2FpdCBleHBlY3QocGFnZS5sb2NhdG9yKCcjcG9ydGFsVmlldycpKS50b0JlVmlzaWJsZSh7dGltZW91dDozMDAwfSk7IGF3YWl0IHBhZ2UubG9jYXRvcignI2xvZ291dEJ1dHRvbicpLmNsaWNrKCk7IGF3YWl0IGV4cGVjdChwYWdlLmxvY2F0b3IoJyNsb2dpblZpZXcnKSkudG9CZVZpc2libGUoKTsKICAgIGF3YWl0IHBhZ2Uud2FpdEZvclRpbWVvdXQoMTE1MDApOyBhd2FpdCBleHBlY3QocGFnZS5sb2NhdG9yKCcjcG9ydGFsVmlldycpKS50b0hhdmVDbGFzcygvaGlkZGVuLyk7CiAgICBjb25zdCBzdG9yZWQ9YXdhaXQgcGFnZS5ldmFsdWF0ZShrZXk9Pih7bG9jYWw6bG9jYWxTdG9yYWdlLmdldEl0ZW0oa2V5KSxzZXNzaW9uOnNlc3Npb25TdG9yYWdlLmdldEl0ZW0oa2V5KX0pLFNUT1JBR0UpOyBleHBlY3Qoc3RvcmVkLmxvY2FsKS50b0JlTnVsbCgpOyBleHBlY3Qoc3RvcmVkLnNlc3Npb24pLnRvQmVOdWxsKCk7CiAgfSk7CgogIHRlc3QoJ1BvcnRhbCByZXN0YXVyYSBub3JtYWxtZW50ZSBhbnRlcyBkbyB3YXRjaGRvZyBUMicsIGFzeW5jICh7IHBhZ2UgfSkgPT4gewogICAgY29uc3Qgc3RhdGU9e3Rva2VuOidDVC1FMkUtVE9LRU4tUkVTVE9SRS1GQVNUJyxyZXN0b3JlRGVsYXlNczoxMDAsdHJhbnNhY3Rpb25DYWxsczowLGJhck11dGF0aW9uQ2FsbHM6MCxldmVudE11dGF0aW9uQ2FsbHM6MCxzdXBwbGllck11dGF0aW9uQ2FsbHM6MCxjb21taXNzaW9uTXV0YXRpb25DYWxsczowfTsKICAgIGF3YWl0IGluc3RhbGxNb2NrKHBhZ2Usc3RhdGUpOyBhd2FpdCBzZWVkU2Vzc2lvbihwYWdlLHN0YXRlLnRva2VuKTsgY29uc3QgaW5pY2lvPURhdGUubm93KCk7IGF3YWl0IHBhZ2UuZ290bygnL3Byb2R1dG9yLycse3dhaXRVbnRpbDonZG9tY29udGVudGxvYWRlZCd9KTsKICAgIGF3YWl0IGV4cGVjdChwYWdlLmxvY2F0b3IoJyNoZWxsb05hbWUnKSkudG9Db250YWluVGV4dCgnT3BlcmFkb3IgSG9tb2xvZ2FjYW8nLHt0aW1lb3V0OjUwMDB9KTsgZXhwZWN0KERhdGUubm93KCktaW5pY2lvKS50b0JlTGVzc1RoYW4oOTAwMCk7CiAgICBhd2FpdCBleHBlY3QocGFnZS5sb2NhdG9yKCcjZXZlbnRQaWNrZXJCdXR0b24nKSkudG9CZUVuYWJsZWQoKTsgYXdhaXQgZXhwZWN0KHBhZ2UubG9jYXRvcignI3JlZnJlc2hCdXR0b24nKSkudG9IYXZlVGV4dCgnQXR1YWxpemFyIHBhaW5lbCcpOwogIH0pOwoKICB0ZXN0KCdQb3J0YWwgc2Vzc2FvIGV4cGxpY2l0YW1lbnRlIGludmFsaWRhIGxpbXBhIHN0b3JhZ2UgZSB2b2x0YSBhbyBsb2dpbicsIGFzeW5jICh7IHBhZ2UgfSkgPT4gewogICAgY29uc3Qgc3RhdGU9e3Rva2VuOidDVC1FMkUtVE9LRU4tSU5WQUxJRCcscmVzdG9yZVJlc3BvbnNlczpbe3N1Y2Vzc286ZmFsc2UsYXV0ZW50aWNhZG86ZmFsc2UsYXV0b3JpemFkbzpmYWxzZX1dLHRyYW5zYWN0aW9uQ2FsbHM6MCxiYXJNdXRhdGlvbkNhbGxzOjAsZXZlbnRNdXRhdGlvbkNhbGxzOjAsc3VwcGxpZXJNdXRhdGlvbkNhbHM6MCxjb21taXNzaW9uTXV0YXRpb25DYWxsczowfTsKICAgIGF3YWl0IGluc3RhbGxNb2NrKHBhZ2Usc3RhdGUpOyBhd2FpdCBzZWVkU2Vzc2lvbihwYWdlLHN0YXRlLnRva2VuKTsgYXdhaXQgcGFnZS5nb3RvKCcvcHJvZHV0b3IvJyx7d2FpdFVudGlsOidkb21jb250ZW50bG9hZGVkJ30pOwogICAgYXdhaXQgZXhwZWN0KHBhZ2UubG9jYXRvcignI2xvZ2luVmlldycpKS50b0JlVmlzaWJsZSh7dGltZW91dDo1MDAwfSk7IGF3YWl0IGV4cGVjdChwYWdlLmxvY2F0b3IoJyNsb2dpbk1lc3NhZ2UnKSkudG9Db250YWluVGV4dCgnU3VhIHNlc3PhbyBleHBpcm91Jyk7CiAgICBjb25zdCBzdG9yZWQ9YXdhaXQgcGFnZS5ldmFsdWF0ZShrZXk9Pih7bG9jYWw6bG9jYWxTdG9yYWdlLmdldEl0ZW0oa2V5KSxzZXNzaW9uOnNlc3Npb25TdG9yYWdlLmdldEl0ZW0oa2V5KX0pLFNUT1JBR0UpOyBleHBlY3Qoc3RvcmVkLmxvY2FsKS50b0JlTnVsbCgpOyBleHBlY3Qoc3RvcmVkLnNlc3Npb24pLnRvQmVOdWxsKCk7CiAgfSk7CgogIHRlc3QoJ1BvcnRhbCBGNSBjb20gc2Vzc2FvIHZhbGlkYSByZXN0YXVyYSBjb250ZXh0bycsIGFzeW5jICh7IHBhZ2UgfSkgPT4gewogICAgY29uc3Qgc3RhdGU9e3Rva2VuOidDVC1FMkUtVE9LRU4tRjUtVkFMSUQnLHRyYW5zYWN0aW9uQ2FsbHM6MCxiYXJNdXRhdGlvbkNhbGxzOjAsZXZlbnRNdXRhdGlvbkNhbGxzOjAsc3VwcGxpZXJNdXRhdGlvbkNhbHM6MCxjb21taXNzaW9uTXV0YXRpb25DYWxsczowfTsKICAgIGF3YWl0IGluc3RhbGxNb2NrKHBhZ2Usc3RhdGUpOyBhd2FpdCBzZWVkU2Vzc2lvbihwYWdlLHN0YXRlLnRva2VuKTsgYXdhaXQgcGFnZS5nb3RvKCcvcHJvZHV0b3IvJyx7d2FpdFVudGlsOidkb21jb250ZW50bG9hZGVkJ30pOwogICAgYXdhaXQgZXhwZWN0KHBhZ2UubG9jYXRvcignI2hlbGxvTmFtZScpKS50b0NvbnRhaW5UZXh0KCdPcGVyYWRvciBIb21vbG9nYWNhbycse3RpbWVvdXQ6NTAwMH0pOyBhd2FpdCBwYWdlLnJlbG9hZCh7d2FpdFVudGlsOidkb21jb250ZW50bG9hZGVkJ30pOwogICAgYXdhaXQgZXhwZWN0KHBhZ2UubG9jYXRvcignI2hlbGxvTmFtZScpKS50b0NvbnRhaW5UZXh0KCdPcGVyYWRvciBIb21vbG9nYWNhbycse3RpbWVvdXQ6NTAwMH0pOyBhd2FpdCBleHBlY3QocGFnZS5sb2NhdG9yKCcjZXZlbnRQaWNrZXJCdXR0b24nKSkudG9CZUVuYWJsZWQoKTsKICB9KTsKCiAgdGVzdCgnUG9ydGFsIEY1IGFwb3MgbG9nb3V0IG5hbyByZXNzdXNjaXRhIHNlc3NhbycsIGFzeW5jICh7IHBhZ2UgfSkgPT4gewogICAgY29uc3Qgc3RhdGU9e3Rva2VuOidDVC1FMkUtVE9LRU4tRjUtTE9HT1VUJyx0cmFuc2FjdGlvbkNhbGxzOjAsYmFyTXV0YXRpb25DYWxsczowLGV2ZW50TXV0YXRpb25DYWxsczowLHN1cHBsaWVyTXV0YXRpb25DYWxsczowLGNvbW1pc3Npb25NdXRhdGlvbkNhbGxzOjB9OwogICAgYXdhaXQgaW5zdGFsbE1vY2socGFnZSxzdGF0ZSk7IGF3YWl0IHNlZWRTZXNzaW9uKHBhZ2Usc3RhdGUudG9rZW4pOyBhd2FpdCBwYWdlLmdvdG8oJy9wcm9kdXRvci8nLHt3YWl0VW50aWw6J2RvbWNvbnRlbnRsb2FkZWQnfSk7CiAgICBhd2FpdCBleHBlY3QocGFnZS5sb2NhdG9yKCcjaGVsbG9OYW1lJykpLnRvQ29udGFpblRleHQoJ09wZXJhZG9yIEhvbW9sb2dhY2FvJyx7dGltZW91dDo1MDAwfSk7IGF3YWl0IHBhZ2UubG9jYXRvcignI2xvZ291dEJ1dHRvbicpLmNsaWNrKCk7IGF3YWl0IGV4cGVjdChwYWdlLmxvY2F0b3IoJyNsb2dpblZpZXcnKSkudG9CZVZpc2libGUoKTsKICAgIGF3YWl0IHBhZ2UucmVsb2FkKHt3YWl0VW50aWw6J2RvbWNvbnRlbnRsb2FkZWQnfSk7IGF3YWl0IGV4cGVjdChwYWdlLmxvY2F0b3IoJyNsb2dpblZpZXcnKSkudG9CZVZpc2libGUoKTsgYXdhaXQgZXhwZWN0KHBhZ2UubG9jYXRvcignI3BvcnRhbFZpZXcnKSkudG9IYXZlQ2xhc3MoL2hpZGRlbi8pOwogIH0pOwoKIiIiCnE9cVs6YV0rdGVzdHMrcVtiOl0KaWYgcS5jb3VudCgiV0FUQ0hET0dfRUxBUFNFRF9NUz0iKSE9MTogcmFpc2UgU3lzdGVtRXhpdCgibWV0cmljIGludmFsaWQiKQpwLndyaXRlX3RleHQocyxlbmNvZGluZz0idXRmLTgiLG5ld2xpbmU9IiIpOyB0LndyaXRlX3RleHQocSxlbmNvZGluZz0idXRmLTgiLG5ld2xpbmU9IiIpCnByaW50KCJTVFJVQ1RVUkFMX0VESVQ9UEFTUyIpCg=="
         run: |
-          $ErrorActionPreference = 'Stop'
-          @'
-          from pathlib import Path
-
-          portal_path=Path('produtor/index.html')
-          test_path=Path('tests/e2e/authenticated-operational.spec.js')
-          portal=portal_path.read_text(encoding='utf-8')
-          tests=test_path.read_text(encoding='utf-8')
-
-          def once(text, old, new, label):
-              n=text.count(old)
-              print(f'ANCHOR_{label}={n}')
-              if n != 1:
-                  raise SystemExit(f'{label}: expected exactly 1, got {n}')
-              return text.replace(old,new,1)
-
-          # Todas as ancoras sao validadas em memoria; nenhum arquivo e escrito antes do fim.
-          for helper in ['function cancelarWatchdogRestauracao(){','function invalidarTentativaRestauracao(){','function tentativaRestauracaoAtiva(','function mostrarFalhaTransitoriaRestauracao(']:
-              if portal.count(helper) != 0:
-                  raise SystemExit(f'helper preexistente inesperado: {helper}')
-
-          portal=once(portal,"var BOOTSTRAP_TTL_MS =\n600000;\n\nvar state = {","var BOOTSTRAP_TTL_MS =\n600000;\n\nvar RESTORE_UX_TIMEOUT_MS =\n9000;\n\nvar state = {",'timeout')
-          portal=once(portal,"contextoPendente:\nfalse,\n\nusuario:","contextoPendente:\nfalse,\n\nrestoreGeneration:\n0,\n\nrestoreTimer:\nnull,\n\nusuario:",'state')
-          portal=once(portal,"function(){\n\nif(\nstate.eventoAtual\n){\n\ncarregarPainel(\ntrue\n);","function(){\n\nif(\nstate.contextoPendente ===\ntrue &&\nstate.token\n){\n\ncarregarContextoPortalPendente();\n\nreturn;\n}\n\nif(\nstate.eventoAtual\n){\n\ncarregarPainel(\ntrue\n);",'retry')
-
-          start='function carregarContextoPortalPendente(){'
-          end='function abrirPortal(){'
-          if portal.count(start)!=1 or portal.count(end)!=1:
-              raise SystemExit(f'function markers invalid: start={portal.count(start)} end={portal.count(end)}')
-          a=portal.index(start); b=portal.index(end)
-          if b<=a: raise SystemExit('function marker order invalid')
-
-          block=r'''function cancelarWatchdogRestauracao(){
-
-if(
-state.restoreTimer
-){
-
-clearTimeout(
-state.restoreTimer
-);
-
-state.restoreTimer =
-null;
-}
-}
-
-function invalidarTentativaRestauracao(){
-
-cancelarWatchdogRestauracao();
-
-state.restoreGeneration++;
-}
-
-function tentativaRestauracaoAtiva(
-generation,
-tokenEsperado
-){
-
-if(
-generation !==
-state.restoreGeneration ||
-state.contextoPendente !==
-true ||
-String(
-state.token ||
-''
-)
-.trim() !==
-tokenEsperado
-){
-
-return false;
-}
-
-var salvo =
-lerSessao();
-
-return Boolean(
-salvo &&
-String(
-salvo.token ||
-''
-)
-.trim() ===
-tokenEsperado
-);
-}
-
-function mostrarFalhaTransitoriaRestauracao(
-generation,
-tokenEsperado,
-erro
-){
-
-if(
-!tentativaRestauracaoAtiva(
-generation,
-tokenEsperado
-)
-){
-
-return;
-}
-
-invalidarTentativaRestauracao();
-
-if(
-erro
-){
-
-registrarErroTecnico(
-'Portal | abertura pós-login',
-erro
-);
-}
-
-state.usuario =
-null;
-
-state.produtores =
-[];
-
-state.produtorAtual =
-null;
-
-state.eventoAtual =
-null;
-
-abrirShellPortalPendente();
-
-el.refreshButton.disabled =
-false;
-
-el.refreshButton.textContent =
-'Tentar novamente';
-
-mostrarMensagem(
-el.portalMessage,
-'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Sua sessão foi preservada; tente novamente.',
-'error'
-);
-}
-
-function carregarContextoPortalPendente(){
-
-var tokenEsperado =
-String(
-state.token ||
-''
-)
-.trim();
-
-if(
-!tokenEsperado
-){
-
-mostrarLogin();
-
-return;
-}
-
-invalidarTentativaRestauracao();
-
-var generation =
-state.restoreGeneration;
-
-abrirShellPortalPendente();
-
-el.refreshButton.disabled =
-true;
-
-el.refreshButton.textContent =
-'Carregando...';
-
-state.restoreTimer =
-setTimeout(
-function(){
-
-mostrarFalhaTransitoriaRestauracao(
-generation,
-tokenEsperado,
-null
-);
-},
-RESTORE_UX_TIMEOUT_MS
-);
-
-google.script.run
-.withSuccessHandler(
-function(r){
-
-if(
-!tentativaRestauracaoAtiva(
-generation,
-tokenEsperado
-)
-){
-
-return;
-}
-
-cancelarWatchdogRestauracao();
-
-if(
-r &&
-r.autenticado ===
-false
-){
-
-invalidarTentativaRestauracao();
-
-limparSessaoLocal();
-
-state.token =
-'';
-
-state.contextoPendente =
-false;
-
-state.usuario =
-null;
-
-state.produtores =
-[];
-
-state.produtorAtual =
-null;
-
-state.eventoAtual =
-null;
-
-mostrarLogin();
-
-mostrarMensagem(
-el.loginMessage,
-'Sua sessão expirou. Faça login novamente.',
-'error'
-);
-
-return;
-}
-
-if(
-!r ||
-r.sucesso !==
-true ||
-r.autenticado !==
-true
-){
-
-mostrarFalhaTransitoriaRestauracao(
-generation,
-tokenEsperado,
-new Error('CT_PORTAL_RESTAURACAO_RESPOSTA_TECNICA_INVALIDA')
-);
-
-return;
-}
-
-if(
-r.autorizado !==
-true
-){
-
-invalidarTentativaRestauracao();
-
-window.location.replace(
-'/produtor/solicitar/'
-);
-
-return;
-}
-
-var produtoresAutorizados =
-Array.isArray(
-r.produtores
-)
-? r.produtores
-: [];
-
-if(
-!produtoresAutorizados.length
-){
-
-invalidarTentativaRestauracao();
-
-window.location.replace(
-'/produtor/solicitar/'
-);
-
-return;
-}
-
-invalidarTentativaRestauracao();
-
-state.usuario =
-r.usuario ||
-null;
-
-state.produtores =
-produtoresAutorizados;
-
-abrirPortal();
-}
-)
-.withFailureHandler(
-function(erro){
-
-mostrarFalhaTransitoriaRestauracao(
-generation,
-tokenEsperado,
-erro
-);
-}
-)
-.ctPortalProdutorRestaurarSessaoIsoladaPROD(
-tokenEsperado
-);
-}
-
-'''
-          portal=portal[:a]+block+portal[b:]
-
-          portal=once(portal,"function abrirPortal(){\n\nstate.contextoPendente =\nfalse;","function abrirPortal(){\n\nstate.contextoPendente =\nfalse;\n\ncancelarWatchdogRestauracao();\n\nel.refreshButton.textContent =\n'Atualizar painel';",'abrirPortal')
-          portal=once(portal,"function executarLogout(){\n\nvar tokenAtual =\nstate.token;","function executarLogout(){\n\nvar tokenAtual =\nstate.token;\n\ninvalidarTentativaRestauracao();",'logout')
-          portal=once(portal,"function resetarEstado(){\n\nstate.token =","function resetarEstado(){\n\ninvalidarTentativaRestauracao();\n\nstate.token =",'reset')
-
-          # Mock de restore: suporte a delays/respostas por tentativa.
-          old_mock="""          case 'ctPortalProdutorRestaurarSessaoIsoladaPROD':\n            expect(String(args[0] || '')).toBe(state.token);\n            resultado = portalSession();\n            break;"""
-          new_mock="""          case 'ctPortalProdutorRestaurarSessaoIsoladaPROD':\n            expect(String(args[0] || '')).toBe(state.token);\n            state.restoreCalls = Number(state.restoreCalls || 0) + 1;\n            {\n              const indice = state.restoreCalls - 1;\n              const delays = Array.isArray(state.restoreDelays) ? state.restoreDelays : [];\n              const delay = Number(delays[indice] !== undefined ? delays[indice] : (state.restoreDelayMs || 0));\n              if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));\n              const respostas = Array.isArray(state.restoreResponses) ? state.restoreResponses : [];\n              resultado = respostas[indice] !== undefined ? respostas[indice] : portalSession();\n            }\n            break;"""
-          tests=once(tests,old_mock,new_mock,'mock')
-
-          test_start="  test('Portal preserva sessao local quando restauracao falha transitoriamente'"
-          test_end="  test('Central -> Usuarios e Permissoes -> Sair sem rota escondida'"
-          if tests.count(test_start)!=1 or tests.count(test_end)!=1:
-              raise SystemExit(f'test markers invalid: start={tests.count(test_start)} end={tests.count(test_end)}')
-          ta=tests.index(test_start); tb=tests.index(test_end)
-          if tb<=ta: raise SystemExit('test marker order invalid')
-          test_block=r'''  test('Portal preserva sessao local quando restauracao falha transitoriamente', async ({ page }) => {
-    const token = 'CT-E2E-TOKEN-RESTORE-TRANSIENT';
-    await page.addInitScript(({ key, value }) => {
-      localStorage.setItem(key, JSON.stringify(value));
-      sessionStorage.setItem(key, JSON.stringify(value));
-    }, { key: STORAGE, value: { token, expiraEm: '2099-12-31T23:59:59.000Z' } });
-    await page.route('**/*', async route => {
-      if (route.request().method() === 'POST' && (route.request().postData() || '').includes('ctPortalProdutorRestaurarSessaoIsoladaPROD')) {
-        await route.abort('failed'); return;
-      }
-      await route.continue();
-    });
-    const inicio = Date.now();
-    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada', { timeout: 10000 });
-    expect(Date.now() - inicio).toBeLessThan(10000);
-    await expect(page.locator('#refreshButton')).toHaveText('Tentar novamente');
-    await expect(page.locator('#eventPickerButton')).toBeDisabled();
-    await expect(page.locator('#centralMobileLink')).toHaveClass(/hidden/);
-    const stored = await page.evaluate(key => ({ local: localStorage.getItem(key), session: sessionStorage.getItem(key) }), STORAGE);
-    expect(JSON.parse(stored.local).token).toBe(token);
-    expect(JSON.parse(stored.session).token).toBe(token);
-  });
-
-  test('Portal encerra loading T2 entre 8,5s e 10s quando RPC fica pendurado', async ({ page }) => {
-    const state = { token: 'CT-E2E-TOKEN-RESTORE-HANG', restoreDelayMs: 30000, transactionCalls: 0, barMutationCalls: 0, eventMutationCalls: 0, supplierMutationCalls: 0, commissionMutationCalls: 0 };
-    await installMock(page, state); await seedSession(page, state.token);
-    const inicio = Date.now();
-    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada', { timeout: 10000 });
-    const elapsed = Date.now() - inicio;
-    console.log(`WATCHDOG_ELAPSED_MS=${elapsed}`);
-    expect(elapsed).toBeGreaterThanOrEqual(8500);
-    expect(elapsed).toBeLessThan(10000);
-    await expect(page.locator('#refreshButton')).toHaveText('Tentar novamente');
-    await expect(page.locator('#eventPickerButton')).toBeDisabled();
-  });
-
-  test('Portal retry bem sucedido invalida callback tardio da tentativa anterior', async ({ page }) => {
-    const invalida = { sucesso: false, autenticado: false, autorizado: false };
-    const state = { token: 'CT-E2E-TOKEN-RESTORE-RETRY', restoreDelays: [11000,0], restoreResponses: [invalida,portalSession()], transactionCalls: 0, barMutationCalls: 0, eventMutationCalls: 0, supplierMutationCalls: 0, commissionMutationCalls: 0 };
-    await installMock(page,state); await seedSession(page,state.token);
-    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#refreshButton')).toHaveText('Tentar novamente',{timeout:10000});
-    await page.locator('#refreshButton').click();
-    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000});
-    await expect(page.locator('#eventPickerButton')).toBeEnabled();
-    await page.waitForTimeout(2500);
-    await expect(page.locator('#loginView')).toHaveClass(/hidden/);
-    await expect(page.locator('#helloName')).toContainText('Operador Homologacao');
-    expect(state.restoreCalls).toBe(2);
-  });
-
-  test('Portal logout durante restore impede callback tardio de reabrir Portal', async ({ page }) => {
-    const state = { token: 'CT-E2E-TOKEN-RESTORE-LOGOUT', restoreDelayMs: 11000, transactionCalls: 0, barMutationCalls: 0, eventMutationCalls: 0, supplierMutationCalls: 0, commissionMutationCalls: 0 };
-    await installMock(page,state); await seedSession(page,state.token);
-    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#portalView')).toBeVisible({timeout:3000});
-    await page.locator('#logoutButton').click();
-    await expect(page.locator('#loginView')).toBeVisible();
-    await page.waitForTimeout(11500);
-    await expect(page.locator('#portalView')).toHaveClass(/hidden/);
-    const stored=await page.evaluate(key=>({local:localStorage.getItem(key),session:sessionStorage.getItem(key)}),STORAGE);
-    expect(stored.local).toBeNull(); expect(stored.session).toBeNull();
-  });
-
-  test('Portal restaura normalmente antes do watchdog T2', async ({ page }) => {
-    const state = { token: 'CT-E2E-TOKEN-RESTORE-FAST', restoreDelayMs: 100, transactionCalls: 0, barMutationCalls: 0, eventMutationCalls: 0, supplierMutationCalls: 0, commissionMutationCalls: 0 };
-    await installMock(page,state); await seedSession(page,state.token);
-    const inicio=Date.now();
-    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000});
-    expect(Date.now()-inicio).toBeLessThan(9000);
-    await expect(page.locator('#eventPickerButton')).toBeEnabled();
-    await expect(page.locator('#refreshButton')).toHaveText('Atualizar painel');
-  });
-
-  test('Portal sessao explicitamente invalida limpa storage e volta ao login', async ({ page }) => {
-    const state = { token: 'CT-E2E-TOKEN-INVALID', restoreResponses: [{sucesso:false,autenticado:false,autorizado:false}], transactionCalls:0, barMutationCalls:0, eventMutationCalls:0, supplierMutationCalls:0, commissionMutationCalls:0 };
-    await installMock(page,state); await seedSession(page,state.token);
-    await page.goto('/produtor/', {waitUntil:'domcontentloaded'});
-    await expect(page.locator('#loginView')).toBeVisible({timeout:5000});
-    await expect(page.locator('#loginMessage')).toContainText('Sua sessão expirou');
-    const stored=await page.evaluate(key=>({local:localStorage.getItem(key),session:sessionStorage.getItem(key)}),STORAGE);
-    expect(stored.local).toBeNull(); expect(stored.session).toBeNull();
-  });
-
-  test('Portal F5 com sessao valida restaura contexto', async ({ page }) => {
-    const state={token:'CT-E2E-TOKEN-F5-VALID',transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
-    await installMock(page,state); await seedSession(page,state.token);
-    await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
-    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000});
-    await page.reload({waitUntil:'domcontentloaded'});
-    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000});
-    await expect(page.locator('#eventPickerButton')).toBeEnabled();
-  });
-
-  test('Portal F5 apos logout nao ressuscita sessao', async ({ page }) => {
-    const state={token:'CT-E2E-TOKEN-F5-LOGOUT',transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
-    await installMock(page,state); await seedSession(page,state.token);
-    await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
-    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000});
-    await page.locator('#logoutButton').click();
-    await expect(page.locator('#loginView')).toBeVisible();
-    await page.reload({waitUntil:'domcontentloaded'});
-    await expect(page.locator('#loginView')).toBeVisible();
-    await expect(page.locator('#portalView')).toHaveClass(/hidden/);
-  });
-
-'''
-          tests=tests[:ta]+test_block+tests[tb:]
-
-          # Validacao final em memoria antes da escrita atomica dos dois arquivos.
-          required=['RESTORE_UX_TIMEOUT_MS','function cancelarWatchdogRestauracao(){','function carregarContextoPortalPendente(){',"'Tentar novamente'",'invalidarTentativaRestauracao();']
-          for marker in required:
-              if marker not in portal: raise SystemExit(f'marker final ausente: {marker}')
-          if tests.count('WATCHDOG_ELAPSED_MS=') != 1: raise SystemExit('watchdog metric marker invalid')
-
-          portal_path.write_text(portal,encoding='utf-8',newline='')
-          test_path.write_text(tests,encoding='utf-8',newline='')
-          print('STRUCTURAL_EDIT=PASS')
-          '@ | Set-Content -Path .ct_t2_edit.py -Encoding UTF8
+          $ErrorActionPreference='Stop'
+          [IO.File]::WriteAllBytes('.ct_t2_edit.py',[Convert]::FromBase64String($env:EDITOR_B64))
           python .ct_t2_edit.py
           $rc=$LASTEXITCODE
           Remove-Item .ct_t2_edit.py -Force -ErrorAction SilentlyContinue
-          if($rc -ne 0){ throw "Structural editor failed: $rc" }
+          if($rc -ne 0){throw "Structural editor failed: $rc"}
 
       - name: Diff barrier and audit
         run: |
           $ErrorActionPreference='Stop'
           git diff --check
-          if($LASTEXITCODE -ne 0){ throw 'git diff --check falhou' }
+          if($LASTEXITCODE -ne 0){throw 'git diff --check falhou'}
           Write-Host 'GIT_DIFF_CHECK=PASS'
           git diff --stat
           $changed=@(git diff --name-only)
-          $changed | ForEach-Object { Write-Host "CHANGED_FILE=$_" }
+          $changed | ForEach-Object {Write-Host "CHANGED_FILE=$_"}
           $allowed=@('produtor/index.html','tests/e2e/authenticated-operational.spec.js')
-          if($changed.Count -ne 2){ throw 'Quantidade de arquivos alterados invalida' }
-          foreach($f in $changed){ if($allowed -notcontains $f){ throw "Arquivo fora do escopo: $f" } }
+          if($changed.Count -ne 2){throw 'Quantidade de arquivos alterados invalida'}
+          foreach($f in $changed){if($allowed -notcontains $f){throw "Arquivo fora do escopo: $f"}}
           git diff -- produtor/index.html
           git diff -- tests/e2e/authenticated-operational.spec.js
 
       - name: Install frontend dependencies
-        run: npm.cmd ci
+        run: |
+          npm.cmd ci
 
       - name: Critical transient restore test desktop
-        run: npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal preserva sessao local quando restauracao falha transitoriamente" --workers=1 --retries=0
+        run: |
+          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal preserva sessao local quando restauracao falha transitoriamente" --workers=1 --retries=0
 
       - name: Watchdog focused scenarios desktop
-        run: npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal (encerra loading T2|retry bem sucedido|logout durante restore|restaura normalmente antes do watchdog|sessao explicitamente invalida|F5 com sessao valida|F5 apos logout)" --workers=1 --retries=0
+        run: |
+          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal (encerra loading T2|retry bem sucedido|logout durante restore|restaura normalmente antes do watchdog|sessao explicitamente invalida|F5 com sessao valida|F5 apos logout)" --workers=1 --retries=0
 
       - name: Authenticated operational desktop
-        run: npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --workers=1 --retries=0
+        run: |
+          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --workers=1 --retries=0
 
       - name: Authenticated operational mobile
-        run: npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=mobile-chromium --workers=1 --retries=0
+        run: |
+          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=mobile-chromium --workers=1 --retries=0
 
       - name: Relevant contracts
         run: |
@@ -547,7 +94,7 @@ tokenEsperado
           node tests/contracts.mjs
           node tests/journey-contracts.mjs
           node tests/full-surface-audit.mjs
-          if(Test-Path 'tests/producer-portal-performance.contract.mjs'){ node tests/producer-portal-performance.contract.mjs }
+          if(Test-Path 'tests/producer-portal-performance.contract.mjs'){node tests/producer-portal-performance.contract.mjs}
           npm.cmd run test:contracts
 
       - name: Final barrier commit and push
@@ -556,10 +103,8 @@ tokenEsperado
           git diff --check
           $changed=@(git diff --name-only)
           $allowed=@('produtor/index.html','tests/e2e/authenticated-operational.spec.js')
-          if($changed.Count -ne 2){ throw 'Delta final invalido' }
-          foreach($f in $changed){ if($allowed -notcontains $f){ throw "Delta final fora do escopo: $f" } }
-          git status --short
-          git diff --stat
+          if($changed.Count -ne 2){throw 'Delta final invalido'}
+          foreach($f in $changed){if($allowed -notcontains $f){throw "Delta final fora do escopo: $f"}}
           git add produtor/index.html tests/e2e/authenticated-operational.spec.js
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
