@@ -833,7 +833,15 @@ async function installMock(page, state) {
 
           case 'ctPortalProdutorRestaurarSessaoIsoladaPROD':
             expect(String(args[0] || '')).toBe(state.token);
-            resultado = portalSession();
+            state.restoreCalls = Number(state.restoreCalls || 0) + 1;
+            {
+              const i = state.restoreCalls - 1;
+              const delays = Array.isArray(state.restoreDelays) ? state.restoreDelays : [];
+              const delay = Number(delays[i] !== undefined ? delays[i] : (state.restoreDelayMs || 0));
+              if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));
+              const responses = Array.isArray(state.restoreResponses) ? state.restoreResponses : [];
+              resultado = responses[i] !== undefined ? responses[i] : portalSession();
+            }
             break;
 
           case 'ctPortalProdutorCarregarCatalogoEventosPROD':
@@ -1453,39 +1461,76 @@ test.describe('Jornada operacional autenticada', () => {
 
   test('Portal preserva sessao local quando restauracao falha transitoriamente', async ({ page }) => {
     const token = 'CT-E2E-TOKEN-RESTORE-TRANSIENT';
-    await page.addInitScript(({ key, value }) => {
-      localStorage.setItem(key, JSON.stringify(value));
-      sessionStorage.setItem(key, JSON.stringify(value));
-    }, {
-      key: STORAGE,
-      value: { token, expiraEm: '2099-12-31T23:59:59.000Z' }
-    });
-
+    await page.addInitScript(({ key, value }) => { localStorage.setItem(key, JSON.stringify(value)); sessionStorage.setItem(key, JSON.stringify(value)); }, { key: STORAGE, value: { token, expiraEm: '2099-12-31T23:59:59.000Z' } });
     await page.route('**/*', async route => {
-      if (route.request().method() !== 'POST') {
-        await route.continue();
-        return;
-      }
-      const body = route.request().postData() || '';
-      if (body.includes('ctPortalProdutorRestaurarSessaoIsoladaPROD')) {
-        await route.abort('failed');
-        return;
-      }
+      if (route.request().method() === 'POST' && (route.request().postData() || '').includes('ctPortalProdutorRestaurarSessaoIsoladaPROD')) { await route.abort('failed'); return; }
       await route.continue();
     });
-
     await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#loginView')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...', { timeout: 3000 });
+    const inicio = Date.now();
+    await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada', { timeout: 10000 });
+    expect(Date.now() - inicio).toBeLessThan(10000);
+    await expect(page.locator('#refreshButton')).toHaveText('Tentar novamente');
+    await expect(page.locator('#eventPickerButton')).toBeDisabled();
+    const stored = await page.evaluate(key => ({ local: localStorage.getItem(key), session: sessionStorage.getItem(key) }), STORAGE);
+    expect(JSON.parse(stored.local).token).toBe(token); expect(JSON.parse(stored.session).token).toBe(token);
+  });
 
-    const stored = await page.evaluate(key => ({
-      local: localStorage.getItem(key),
-      session: sessionStorage.getItem(key)
-    }), STORAGE);
+  test('Portal encerra loading T2 entre 8,5s e 10s quando RPC fica pendurado', async ({ page }) => {
+    const state = { token: 'CT-E2E-TOKEN-RESTORE-HANG', restoreDelayMs: 30000, transactionCalls:0, barMutationCalls:0, eventMutationCalls:0, supplierMutationCalls:0, commissionMutationCalls:0 };
+    await installMock(page,state); await seedSession(page,state.token);
+    await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...',{timeout:3000});
+    const inicio=Date.now();
+    await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada',{timeout:10000});
+    const elapsed=Date.now()-inicio; console.log(`WATCHDOG_ELAPSED_MS=${elapsed}`);
+    expect(elapsed).toBeGreaterThanOrEqual(8500); expect(elapsed).toBeLessThan(10000);
+    await expect(page.locator('#refreshButton')).toHaveText('Tentar novamente'); await expect(page.locator('#eventPickerButton')).toBeDisabled();
+  });
 
-    expect(stored.local).not.toBeNull();
-    expect(stored.session).not.toBeNull();
-    expect(JSON.parse(stored.local).token).toBe(token);
-    expect(JSON.parse(stored.session).token).toBe(token);
+  test('Portal retry bem sucedido invalida callback tardio da tentativa anterior', async ({ page }) => {
+    const state={token:'CT-E2E-TOKEN-RESTORE-RETRY',restoreDelays:[11000,0],restoreResponses:[{sucesso:false,autenticado:false,autorizado:false},portalSession()],transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
+    await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#refreshButton')).toHaveText('Tentar novamente',{timeout:10000}); await page.locator('#refreshButton').click();
+    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); await page.waitForTimeout(2500);
+    await expect(page.locator('#loginView')).toHaveClass(/hidden/); expect(state.restoreCalls).toBe(2);
+  });
+
+  test('Portal logout durante restore impede callback tardio de reabrir Portal', async ({ page }) => {
+    const state={token:'CT-E2E-TOKEN-RESTORE-LOGOUT',restoreDelayMs:11000,transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
+    await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#portalView')).toBeVisible({timeout:3000}); await page.locator('#logoutButton').click(); await expect(page.locator('#loginView')).toBeVisible();
+    await page.waitForTimeout(11500); await expect(page.locator('#portalView')).toHaveClass(/hidden/);
+    const stored=await page.evaluate(key=>({local:localStorage.getItem(key),session:sessionStorage.getItem(key)}),STORAGE); expect(stored.local).toBeNull(); expect(stored.session).toBeNull();
+  });
+
+  test('Portal restaura normalmente antes do watchdog T2', async ({ page }) => {
+    const state={token:'CT-E2E-TOKEN-RESTORE-FAST',restoreDelayMs:100,transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
+    await installMock(page,state); await seedSession(page,state.token); const inicio=Date.now(); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); expect(Date.now()-inicio).toBeLessThan(9000);
+    await expect(page.locator('#eventPickerButton')).toBeEnabled(); await expect(page.locator('#refreshButton')).toHaveText('Atualizar painel');
+  });
+
+  test('Portal sessao explicitamente invalida limpa storage e volta ao login', async ({ page }) => {
+    const state={token:'CT-E2E-TOKEN-INVALID',restoreResponses:[{sucesso:false,autenticado:false,autorizado:false}],transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
+    await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#loginView')).toBeVisible({timeout:5000}); await expect(page.locator('#loginMessage')).toContainText('Sua sessão expirou');
+    const stored=await page.evaluate(key=>({local:localStorage.getItem(key),session:sessionStorage.getItem(key)}),STORAGE); expect(stored.local).toBeNull(); expect(stored.session).toBeNull();
+  });
+
+  test('Portal F5 com sessao valida restaura contexto', async ({ page }) => {
+    const state={token:'CT-E2E-TOKEN-F5-VALID',transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
+    await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); await page.reload({waitUntil:'domcontentloaded'});
+    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); await expect(page.locator('#eventPickerButton')).toBeEnabled();
+  });
+
+  test('Portal F5 apos logout nao ressuscita sessao', async ({ page }) => {
+    const state={token:'CT-E2E-TOKEN-F5-LOGOUT',transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
+    await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); await page.locator('#logoutButton').click(); await expect(page.locator('#loginView')).toBeVisible();
+    await page.reload({waitUntil:'domcontentloaded'}); await expect(page.locator('#loginView')).toBeVisible(); await expect(page.locator('#portalView')).toHaveClass(/hidden/);
   });
 
   test('Central -> Usuarios e Permissoes -> Sair sem rota escondida', async ({ page }) => {

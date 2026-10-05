@@ -2121,10 +2121,23 @@ var BOOTSTRAP_STORAGE_KEY =
 var BOOTSTRAP_TTL_MS =
 600000;
 
+var RESTORE_UX_TIMEOUT_MS =
+9000;
+
 var state = {
+
 
 token:
 '',
+
+contextoPendente:
+false,
+
+restoreGeneration:
+0,
+
+restoreTimer:
+null,
 
 usuario:
 null,
@@ -2222,6 +2235,7 @@ function iniciar(){
 'eventPickerClose',
 'eventPickerList',
 'refreshButton',
+'eventsManagementLink',
 'centralMobileLink',
 'accessManagementLink',
 'cariocaPayLink',
@@ -2359,6 +2373,17 @@ el.refreshButton.addEventListener(
 function(){
 
 if(
+state.contextoPendente ===
+true &&
+state.token
+){
+
+carregarContextoPortalPendente();
+
+return;
+}
+
+if(
 state.eventoAtual
 ){
 
@@ -2427,7 +2452,9 @@ window.addEventListener(
 function(){
 
 if(
-state.token
+state.token &&
+state.contextoPendente !==
+true
 ){
 
 prepararLinksAutenticados();
@@ -2455,7 +2482,9 @@ function(){
 if(
 document.visibilityState ===
 'visible' &&
-state.token
+state.token &&
+state.contextoPendente !==
+true
 ){
 
 atualizarBadgeSolicitacoesProdutor(
@@ -3547,6 +3576,8 @@ firebaseLogin.idToken
 
 if(
 !resposta ||
+resposta.sucesso !==
+true ||
 resposta.autenticado !==
 true
 ){
@@ -3606,48 +3637,21 @@ return;
 }
 
 if(
-resposta.autorizado !==
-true
-){
-
-if(
-resposta.token
-){
-
-state.token =
-String(
+resposta.autorizado ===
+true ||
+resposta.contextoPendente !==
+true ||
+!String(
 resposta.token ||
 ''
-);
-
-state.usuario =
-resposta.usuario ||
-null;
-
-state.produtores =
-[];
-
-salvarSessao(
-state.token,
-resposta.expiraEm ||
-''
-);
-
-await sairFirebaseSilencioso();
-
-window.location.replace(
-'/produtor/solicitar/'
-);
-
-return;
-}
+).trim()
+){
 
 await sairFirebaseSilencioso();
 
 mostrarMensagem(
 el.loginMessage,
-resposta.mensagem ||
-'Esta conta não possui acesso a produtor.',
+'Não foi possível iniciar a sessão segura do Portal.',
 'error'
 );
 
@@ -3656,20 +3660,24 @@ return;
 
 state.token =
 String(
-resposta.token ||
-''
-);
+resposta.token
+)
+.trim();
 
 state.usuario =
-resposta.usuario ||
 null;
 
 state.produtores =
-Array.isArray(
-resposta.produtores
-)
-? resposta.produtores
-: [];
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+state.contextoPendente =
+true;
 
 salvarSessao(
 state.token,
@@ -3680,45 +3688,20 @@ resposta.expiraEm ||
 el.senha.value =
 '';
 
+await sairFirebaseSilencioso();
+
 /*
- * A autenticação já terminou e a sessão CT foi persistida.
- * Falhas exclusivamente visuais/operacionais na abertura do painel
- * não podem ser classificadas como falha de login nem encerrar
- * uma sessão válida.
+ * P0: autenticado != autorizado.
+ * A sessão CT2 existe, mas nenhum recurso protegido é liberado
+ * antes da restauração server-side do contexto autorizado.
  */
-try{
-
-abrirPortal();
-
-}
-catch(
-erroPortal
-){
-
-registrarErroTecnico(
-'Portal | abertura pós-login',
-erroPortal
+definirLoading(
+false
 );
 
-el.loginView
-.classList
-.add(
-'hidden'
-);
+abrirShellPortalPendente();
 
-el.portalView
-.classList
-.remove(
-'hidden'
-);
-
-mostrarMensagem(
-el.portalMessage,
-'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Atualize a página para restaurar sua sessão.',
-'error'
-);
-
-}
+carregarContextoPortalPendente();
 }
 catch(
 erro
@@ -3910,7 +3893,7 @@ resolve
 .withFailureHandler(
 reject
 )
-.ctPortalProdutorLoginFirebaseIsoladoPROD(
+.ctPortalProdutorLoginFirebaseHotpathP0PROD(
 idToken
 );
 }
@@ -4369,30 +4352,372 @@ return;
 }
 
 state.token =
-salvo.token;
+String(
+salvo.token
+)
+.trim();
+
+state.usuario =
+null;
+
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+state.contextoPendente =
+true;
 
 definirLoading(
-true,
-'Restaurando sessão...'
+false
+);
+
+abrirShellPortalPendente();
+
+carregarContextoPortalPendente();
+}
+
+function abrirShellPortalPendente(){
+
+state.contextoPendente =
+true;
+
+state.usuario =
+null;
+
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+state.adminSolicitacoesHabilitado =
+false;
+
+pararAtualizacaoAutomatica();
+
+pararAtualizacaoHandoff();
+
+resetarLinksAutenticados();
+
+el.loginView
+.classList
+.add(
+'hidden'
+);
+
+el.portalView
+.classList
+.remove(
+'hidden'
+);
+
+el.dashboard
+.classList
+.add(
+'hidden'
+);
+
+el.topUser.textContent =
+'';
+
+el.helloName.textContent =
+'Portal do Produtor';
+
+[
+el.eventsManagementLink,
+el.centralMobileLink,
+el.accessManagementLink,
+el.cariocaPayLink,
+el.courtesyLink,
+el.campaignsLink,
+el.commissionsLink,
+el.commercialPolicyLink,
+el.partnerPortalLink,
+el.partnerAdminLink,
+el.producerRequestsLink,
+el.backofficeMasterLink,
+el.changeEmailButton
+]
+.forEach(
+function(controle){
+
+if(
+controle
+){
+
+controle
+.classList
+.add(
+'hidden'
+);
+}
+}
+);
+
+el.changeEmailButton.disabled =
+true;
+
+el.producerSelect.disabled =
+true;
+
+el.eventSelect.disabled =
+true;
+
+el.eventPickerButton.disabled =
+true;
+
+el.refreshButton.disabled =
+true;
+
+el.producerSelect.innerHTML =
+'';
+
+el.eventSelect.innerHTML =
+'';
+
+fecharSeletorEvento();
+
+fecharModalEmail();
+
+mostrarMensagem(
+el.portalMessage,
+'Carregando seus eventos...',
+'info'
+);
+}
+
+function cancelarWatchdogRestauracao(){
+
+if(
+state.restoreTimer
+){
+
+clearTimeout(
+state.restoreTimer
+);
+
+state.restoreTimer =
+null;
+}
+}
+
+function invalidarTentativaRestauracao(){
+
+cancelarWatchdogRestauracao();
+
+state.restoreGeneration++;
+}
+
+function tentativaRestauracaoAtiva(
+generation,
+tokenEsperado
+){
+
+if(
+generation !==
+state.restoreGeneration ||
+state.contextoPendente !==
+true ||
+String(
+state.token ||
+''
+)
+.trim() !==
+tokenEsperado
+){
+
+return false;
+}
+
+var salvo =
+lerSessao();
+
+return Boolean(
+salvo &&
+String(
+salvo.token ||
+''
+)
+.trim() ===
+tokenEsperado
+);
+}
+
+function mostrarFalhaTransitoriaRestauracao(
+generation,
+tokenEsperado,
+erro
+){
+
+if(
+!tentativaRestauracaoAtiva(
+generation,
+tokenEsperado
+)
+){
+
+return;
+}
+
+invalidarTentativaRestauracao();
+
+if(
+erro
+){
+
+registrarErroTecnico(
+'Portal | abertura pós-login',
+erro
+);
+}
+
+state.usuario =
+null;
+
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+abrirShellPortalPendente();
+
+el.refreshButton.disabled =
+false;
+
+el.refreshButton.textContent =
+'Tentar novamente';
+
+mostrarMensagem(
+el.portalMessage,
+'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Sua sessão foi preservada; tente novamente.',
+'error'
+);
+}
+
+function carregarContextoPortalPendente(){
+
+var tokenEsperado =
+String(
+state.token ||
+''
+)
+.trim();
+
+if(
+!tokenEsperado
+){
+
+mostrarLogin();
+
+return;
+}
+
+invalidarTentativaRestauracao();
+
+var generation =
+state.restoreGeneration;
+
+abrirShellPortalPendente();
+
+el.refreshButton.disabled =
+true;
+
+el.refreshButton.textContent =
+'Carregando...';
+
+state.restoreTimer =
+setTimeout(
+function(){
+
+mostrarFalhaTransitoriaRestauracao(
+generation,
+tokenEsperado,
+null
+);
+},
+RESTORE_UX_TIMEOUT_MS
 );
 
 google.script.run
 .withSuccessHandler(
 function(r){
 
-definirLoading(
+if(
+!tentativaRestauracaoAtiva(
+generation,
+tokenEsperado
+)
+){
+
+return;
+}
+
+cancelarWatchdogRestauracao();
+
+if(
+r &&
+r.autenticado ===
 false
+){
+
+invalidarTentativaRestauracao();
+
+limparSessaoLocal();
+
+state.token =
+'';
+
+state.contextoPendente =
+false;
+
+state.usuario =
+null;
+
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+mostrarLogin();
+
+mostrarMensagem(
+el.loginMessage,
+'Sua sessão expirou. Faça login novamente.',
+'error'
 );
+
+return;
+}
 
 if(
 !r ||
+r.sucesso !==
+true ||
 r.autenticado !==
 true
 ){
 
-limparSessaoLocal();
-
-mostrarLogin();
+mostrarFalhaTransitoriaRestauracao(
+generation,
+tokenEsperado,
+new Error('CT_PORTAL_RESTAURACAO_RESPOSTA_TECNICA_INVALIDA')
+);
 
 return;
 }
@@ -4402,6 +4727,8 @@ r.autorizado !==
 true
 ){
 
+invalidarTentativaRestauracao();
+
 window.location.replace(
 '/produtor/solicitar/'
 );
@@ -4409,16 +4736,34 @@ window.location.replace(
 return;
 }
 
-state.usuario =
-r.usuario ||
-null;
-
-state.produtores =
+var produtoresAutorizados =
 Array.isArray(
 r.produtores
 )
 ? r.produtores
 : [];
+
+if(
+!produtoresAutorizados.length
+){
+
+invalidarTentativaRestauracao();
+
+window.location.replace(
+'/produtor/solicitar/'
+);
+
+return;
+}
+
+invalidarTentativaRestauracao();
+
+state.usuario =
+r.usuario ||
+null;
+
+state.produtores =
+produtoresAutorizados;
 
 abrirPortal();
 }
@@ -4426,35 +4771,27 @@ abrirPortal();
 .withFailureHandler(
 function(erro){
 
-definirLoading(
-false
-);
-
-/*
- * Falha transitória de transporte/timeout não invalida uma sessão
- * local que ainda está dentro do prazo. O backend continua sendo a
- * autoridade para rejeitar sessão inválida no successHandler.
- */
-registrarErroTecnico(
-'Portal | restauração de sessão',
+mostrarFalhaTransitoriaRestauracao(
+generation,
+tokenEsperado,
 erro
-);
-
-mostrarLogin();
-
-mostrarMensagem(
-el.loginMessage,
-'Não foi possível restaurar sua sessão agora. Sua sessão foi preservada; tente novamente em instantes.',
-'error'
 );
 }
 )
 .ctPortalProdutorRestaurarSessaoIsoladaPROD(
-state.token
+tokenEsperado
 );
 }
 
 function abrirPortal(){
+
+state.contextoPendente =
+false;
+
+cancelarWatchdogRestauracao();
+
+el.refreshButton.textContent =
+'Atualizar painel';
 
 if(
 !state.produtores.length
@@ -4484,6 +4821,42 @@ el.portalView
 .remove(
 'hidden'
 );
+
+el.eventsManagementLink
+.classList
+.remove(
+'hidden'
+);
+
+el.centralMobileLink
+.classList
+.remove(
+'hidden'
+);
+
+el.accessManagementLink
+.classList
+.remove(
+'hidden'
+);
+
+el.partnerPortalLink
+.classList
+.remove(
+'hidden'
+);
+
+el.changeEmailButton
+.classList
+.remove(
+'hidden'
+);
+
+el.changeEmailButton.disabled =
+false;
+
+el.producerSelect.disabled =
+false;
 
 var nome =
 state.usuario &&
@@ -4742,6 +5115,9 @@ state.token
 
 
 function mostrarLogin(){
+
+state.contextoPendente =
+false;
 
 state.adminSolicitacoesHabilitado =
 false;
@@ -6227,6 +6603,8 @@ function executarLogout(){
 var tokenAtual =
 state.token;
 
+invalidarTentativaRestauracao();
+
 pararAtualizacaoAutomatica();
 
 limparSessaoLocal();
@@ -6404,6 +6782,8 @@ erro
 }
 
 function resetarEstado(){
+
+invalidarTentativaRestauracao();
 
 state.token =
 '';
