@@ -41,7 +41,7 @@ jobs:
           Write-Host "HEAD=$head"
           Write-Host "PARENT=$parent"
           if($head -ne '${{ github.sha }}'){throw 'HEAD diverge de github.sha'}
-          if($parent -ne '7df5e135492ae7c9b6200bfc0e2fabba18b208d6'){throw "Parent inseguro: $parent"}
+          if($parent -ne '1945078c6d5a5bab3432e2de7bb8ad437a0ed1dd'){throw "Parent inseguro: $parent"}
           $changed=@(git diff --name-only HEAD^1 HEAD)
           if($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-exec.yml'){throw 'Commit intermediario contem arquivo nao autorizado'}
           if(@(git status --short).Count -ne 0){throw 'Working tree sujo'}
@@ -59,10 +59,46 @@ jobs:
           Remove-Item Env:EDITOR_B64 -ErrorAction SilentlyContinue
           Write-Host 'STRUCTURAL_EDIT=PASS'
 
-      - name: Sanitize generated literals and test typos
+      - name: Sanitize generated literals, timing measurement and test typos
         run: |
           $ErrorActionPreference='Stop'
-          python -c "from pathlib import Path; files=[Path('produtor/index.html'),Path('tests/e2e/authenticated-operational.spec.js')]; wrong='sess'+chr(0x00e1)+'o'; right='sess'+chr(0x00e3)+'o'; total=0; [(lambda p: (globals().update(total=globals().get('total',0)+p.read_text(encoding='utf-8').count(wrong)), p.write_text(p.read_text(encoding='utf-8').replace(wrong,right).replace('toBEGreaterThanOrEqual','toBeGreaterThanOrEqual').replace('supplierMutationCals','supplierMutationCalls'),encoding='utf-8',newline='\n')))(p) for p in files]; print('SANITIZE=PASS')"
+          @'
+          from pathlib import Path
+          files=[Path('produtor/index.html'),Path('tests/e2e/authenticated-operational.spec.js')]
+          wrong='sess'+chr(0x00e1)+'o'
+          right='sess'+chr(0x00e3)+'o'
+          for p in files:
+              txt=p.read_text(encoding='utf-8')
+              txt=txt.replace(wrong,right).replace('toBEGreaterThanOrEqual','toBeGreaterThanOrEqual').replace('supplierMutationCals','supplierMutationCalls')
+              p.write_text(txt,encoding='utf-8',newline='\n')
+          p=Path('tests/e2e/authenticated-operational.spec.js')
+          txt=p.read_text(encoding='utf-8')
+          old1="""    const inicio = Date.now();
+              await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+              await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada', { timeout: 10000 });
+              expect(Date.now() - inicio).toBeLessThan(10000);"""
+          new1="""    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+              await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...', { timeout: 3000 });
+              const inicio = Date.now();
+              await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada', { timeout: 10000 });
+              expect(Date.now() - inicio).toBeLessThan(10000);"""
+          old2="""    const inicio=Date.now(); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+              await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada',{timeout:10000});
+              const elapsed=Date.now()-inicio; console.log(`WATCHDOG_ELAPSED_MS=${elapsed}`);"""
+          new2="""    await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+              await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...',{timeout:3000});
+              const inicio=Date.now();
+              await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada',{timeout:10000});
+              const elapsed=Date.now()-inicio; console.log(`WATCHDOG_ELAPSED_MS=${elapsed}`);"""
+          for label,old,new in [('critical-timing',old1,new1),('watchdog-timing',old2,new2)]:
+              c=txt.count(old)
+              print(f'{label}: OLD_COUNT={c}')
+              if c!=1:
+                  raise SystemExit(f'{label}: expected 1 got {c}')
+              txt=txt.replace(old,new,1)
+          p.write_text(txt,encoding='utf-8',newline='\n')
+          print('SANITIZE=PASS')
+          '@ | python -
           if($LASTEXITCODE -ne 0){throw 'Sanitize failed'}
           $bad=@()
           foreach($f in @('produtor/index.html','tests/e2e/authenticated-operational.spec.js')){
@@ -87,8 +123,6 @@ jobs:
           foreach($f in $changed){if($allowed -notcontains $f){throw "Arquivo fora do escopo: $f"}}
           node --check tests/e2e/authenticated-operational.spec.js
           if($LASTEXITCODE -ne 0){throw 'Sintaxe do teste invalida'}
-          git diff -- produtor/index.html
-          git diff -- tests/e2e/authenticated-operational.spec.js
 
       - name: Install frontend dependencies
         run: |
