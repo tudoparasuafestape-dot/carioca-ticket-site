@@ -2,7 +2,7 @@
 ====================================================================================================
 CARIOCA TICKET
 ANALYTICS MASTER — CLIENTE PUBLICO BEST-EFFORT
-Versao: 1.0.1
+Versao: 1.0.2
 
 REGRAS:
 - Nunca bloqueia renderizacao, navegacao, checkout ou venda.
@@ -159,9 +159,15 @@ REGRAS:
         var msg=String(text&&text.textContent||'');
         if(!box||box.classList.contains('hidden'))return;
         if(msg.indexOf('Não foi possível carregar o evento agora')===-1)return;
-        var qs=new URLSearchParams(location.search||'');
-        if(!cleanId(qs.get('evento')||'',220))return;
-        location.replace('/checkout-v2/?'+qs.toString());
+        var entrada=new URLSearchParams(location.search||'');
+        if(!cleanId(entrada.get('evento')||'',220))return;
+        var saida=new URLSearchParams();
+        saida.set('page','evento');
+        ['evento','cupom','src','csid','convite','token','seller','refcode'].forEach(function(k){
+          var v=entrada.get(k);
+          if(v)saida.set(k,v);
+        });
+        location.replace(APP+'?'+saida.toString());
       },null);
     },900);
   }
