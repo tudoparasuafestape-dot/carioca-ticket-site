@@ -3,10 +3,8 @@ name: CT P0 T2 watchdog apply
 on:
   workflow_dispatch:
   push:
-    branches:
-      - perf/p0-portal-login-hotpath
-    paths:
-      - '.github/workflows/ct-p0-t2-watchdog-apply.yml'
+    branches: [perf/p0-portal-login-hotpath]
+    paths: ['.github/workflows/ct-p0-t2-watchdog-apply.yml']
 
 permissions:
   contents: write
@@ -20,126 +18,196 @@ jobs:
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 60
     steps:
-      - name: Checkout exact PR branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: perf/p0-portal-login-hotpath
           fetch-depth: 0
           clean: true
 
-      - name: Runner and adjusted Barrier 1
+      - name: Barrier 1
         run: |
-          $ErrorActionPreference = 'Stop'
-          Write-Host "RUNNER_NAME=$env:RUNNER_NAME"
-          Write-Host "RUNNER_OS=$env:RUNNER_OS"
-          Write-Host "RUNNER_ARCH=$env:RUNNER_ARCH"
-          Write-Host "github.sha=${{ github.sha }}"
-          $head = (git rev-parse HEAD).Trim()
-          $parent = (git rev-parse HEAD^1).Trim()
-          Write-Host "HEAD=$head"
-          Write-Host "PARENT=$parent"
-          if ($head -ne '${{ github.sha }}') { throw "HEAD diverge de github.sha" }
-          if ($parent -ne '7f838820113e5f0a361a000ebeb3f3a6aecd1a64') { throw "Parent inseguro: $parent" }
-          $changed = @(git diff --name-only HEAD^1 HEAD)
-          $changed | ForEach-Object { Write-Host "WORKFLOW_COMMIT_FILE=$_" }
-          if ($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-apply.yml') { throw 'Commit intermediario contem arquivo nao autorizado.' }
+          $ErrorActionPreference='Stop'
+          Write-Host "RUNNER_NAME=$env:RUNNER_NAME RUNNER_OS=$env:RUNNER_OS RUNNER_ARCH=$env:RUNNER_ARCH"
+          $head=(git rev-parse HEAD).Trim(); $parent=(git rev-parse HEAD^1).Trim()
+          Write-Host "HEAD=$head"; Write-Host "PARENT=$parent"
+          if($head -ne '${{ github.sha }}'){throw 'HEAD divergente'}
+          if($parent -ne 'dc83954826d79570d7bf1662af8a2b05b835906d'){throw 'Parent inseguro'}
+          $c=@(git diff --name-only HEAD^1 HEAD)
+          if($c.Count -ne 1 -or $c[0] -ne '.github/workflows/ct-p0-t2-watchdog-apply.yml'){throw 'Commit intermediario inseguro'}
           git log --oneline -4
-          $status = @(git status --short)
-          if ($status.Count -ne 0) { $status | Write-Host; throw 'Working tree nao esta limpo.' }
+          if(@(git status --short).Count -ne 0){throw 'Working tree sujo'}
 
-      - name: Canonical patch integrity and apply check
+      - name: Exact guarded edits
         run: |
-          $ErrorActionPreference = 'Stop'
-          $patchPath = 'ops/patches/ct-p0-t2-watchdog.patch'
-          $canonicalPatch = 'ct-p0-t2-watchdog-canonical.patch'
-          $blob = (git rev-parse "HEAD:$patchPath").Trim()
-          Write-Host "GIT_BLOB_SHA=$blob"
-          if ($blob -ne 'f06aca6e496f90b656a9dc4359f1f0ec294edc8b') { throw "Blob Git canonico diverge: $blob" }
-          python -c "import subprocess,hashlib; b=subprocess.check_output(['git','cat-file','blob','HEAD:ops/patches/ct-p0-t2-watchdog.patch']); print('CANONICAL_SHA256='+hashlib.sha256(b).hexdigest().upper())" | Tee-Object -Variable hashOutput
-          if ($LASTEXITCODE -ne 0) { throw 'Falha ao calcular SHA256 canonico via Python.' }
-          $hashLine = ($hashOutput | Select-Object -Last 1).Trim()
-          $hash = $hashLine -replace '^CANONICAL_SHA256=', ''
-          if ($hash -ne 'DC0FF51EE589F8F357B536914C7FE5A1FFCB9A4C267EE014936E59004A1F5C65') { throw "SHA256 canonico diverge: $hash" }
-          python -c "import subprocess,pathlib; pathlib.Path('ct-p0-t2-watchdog-canonical.patch').write_bytes(subprocess.check_output(['git','cat-file','blob','HEAD:ops/patches/ct-p0-t2-watchdog.patch']))"
-          if ($LASTEXITCODE -ne 0) { throw 'Falha ao materializar blob canonico.' }
-          $diffTargets = @(Get-Content $canonicalPatch | Where-Object { $_ -match '^diff --git ' })
-          if ($diffTargets.Count -ne 2) { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'Patch nao contem exatamente dois alvos.' }
-          if ($diffTargets[0] -ne 'diff --git a/produtor/index.html b/produtor/index.html') { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'Primeiro alvo inesperado.' }
-          if ($diffTargets[1] -ne 'diff --git a/tests/e2e/authenticated-operational.spec.js b/tests/e2e/authenticated-operational.spec.js') { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'Segundo alvo inesperado.' }
-          git apply --check $canonicalPatch
-          if ($LASTEXITCODE -ne 0) { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'git apply --check falhou.' }
-          Write-Host 'GIT_APPLY_CHECK=PASS'
+          $ErrorActionPreference='Stop'
+          @'
+          from pathlib import Path
+          def r(path,old,new,label):
+              p=Path(path); b=p.read_bytes(); nl=b'\r\n' if b'\r\n' in b else b'\n'
+              o=old.encode().replace(b'\n',nl); n=new.encode().replace(b'\n',nl); c=b.count(o)
+              print(f'{label}: OLD_COUNT={c}')
+              if c!=1: raise SystemExit(f'STOP {label}: {c}')
+              p.write_bytes(b.replace(o,n,1))
+          h='produtor/index.html'; t='tests/e2e/authenticated-operational.spec.js'
+          r(h,"var BOOTSTRAP_TTL_MS =\n600000;\n\nvar state = {\n\ntoken:\n'',\n\ncontextoPendente:\nfalse,","var BOOTSTRAP_TTL_MS =\n600000;\n\nvar RESTORE_UX_TIMEOUT_MS =\n9000;\n\nvar state = {\n\ntoken:\n'',\n\ncontextoPendente:\nfalse,\n\nrestoreGeneration:\n0,\n\nrestoreTimer:\nnull,",'state')
+          r(h,"function(){\n\nif(\nstate.eventoAtual\n){","function(){\n\nif(\nstate.contextoPendente ===\ntrue &&\nstate.token\n){\n\ncarregarContextoPortalPendente();\n\nreturn;\n}\n\nif(\nstate.eventoAtual\n){",'retry')
+          r(h,"function abrirShellPortalPendente(){\n\nstate.contextoPendente =\ntrue;","function abrirShellPortalPendente(){\n\nstate.contextoPendente =\ntrue;\n\nel.refreshButton.textContent =\n'Atualizar painel';",'shell')
+          helpers="""function cancelarWatchdogRestauracao(){
+          if(state.restoreTimer){ clearTimeout(state.restoreTimer); state.restoreTimer=null; }
+          }
+          function invalidarTentativaRestauracao(){ cancelarWatchdogRestauracao(); state.restoreGeneration++; }
+          function tentativaRestauracaoAtiva(generation,tokenEsperado){
+          if(generation!==state.restoreGeneration || state.contextoPendente!==true || String(state.token||'').trim()!==tokenEsperado){ return false; }
+          var salvo=lerSessao();
+          return Boolean(salvo && String(salvo.token||'').trim()===tokenEsperado);
+          }
+          function mostrarFalhaTransitoriaRestauracao(generation,tokenEsperado,erro){
+          if(!tentativaRestauracaoAtiva(generation,tokenEsperado)){ return; }
+          invalidarTentativaRestauracao();
+          if(erro){ registrarErroTecnico('Portal | abertura pós-login',erro); }
+          state.usuario=null; state.produtores=[]; state.produtorAtual=null; state.eventoAtual=null;
+          abrirShellPortalPendente();
+          el.refreshButton.disabled=false; el.refreshButton.textContent='Tentar novamente';
+          mostrarMensagem(el.portalMessage,'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Sua sessão foi preservada; tente novamente.','error');
+          }
 
-      - name: Apply canonical patch and diff barriers
+          function carregarContextoPortalPendente(){"""
+          r(h,'function carregarContextoPortalPendente(){',helpers,'helpers')
+          r(h,"mostrarLogin();\n\nreturn;\n}\n\ngoogle.script.run","mostrarLogin();\n\nreturn;\n}\n\ninvalidarTentativaRestauracao();\nvar generation=state.restoreGeneration;\nabrirShellPortalPendente();\nel.refreshButton.disabled=true;\nel.refreshButton.textContent='Carregando...';\nstate.restoreTimer=setTimeout(function(){ mostrarFalhaTransitoriaRestauracao(generation,tokenEsperado,null); },RESTORE_UX_TIMEOUT_MS);\n\ngoogle.script.run",'watchdog-start')
+          r(h,"if(\nString(\nstate.token ||\n''\n)\n.trim() !==\ntokenEsperado\n){\n\nreturn;\n}\n\nif(\n!r ||\nr.sucesso !==\ntrue ||\nr.autenticado !==\ntrue\n){","if(\n!tentativaRestauracaoAtiva(generation,tokenEsperado)\n){\n\nreturn;\n}\n\ncancelarWatchdogRestauracao();\n\nif(\nr &&\nr.autenticado ===\nfalse\n){",'success-guard')
+          r(h,"limparSessaoLocal();\n\nstate.contextoPendente =","invalidarTentativaRestauracao();\n\nlimparSessaoLocal();\n\nstate.token =\n'';\n\nstate.contextoPendente =",'invalid-session')
+          r(h,"return;\n}\n\nif(\nr.autorizado !==","return;\n}\n\nif(\n!r ||\nr.sucesso !==\ntrue ||\nr.autenticado !==\ntrue\n){\nmostrarFalhaTransitoriaRestauracao(generation,tokenEsperado,new Error('CT_PORTAL_RESTORE_RESPOSTA_INVALIDA'));\nreturn;\n}\n\nif(\nr.autorizado !==",'technical-response')
+          r(h,"state.usuario =\nr.usuario ||","invalidarTentativaRestauracao();\n\nstate.usuario =\nr.usuario ||",'authorize-terminal')
+          old="""function(erro){
+
+          if(
+          String(
+          state.token ||
+          ''
+          )
+          .trim() !==
+          tokenEsperado
+          ){
+
+          return;
+          }
+
+          /*
+           * Falha transitória não transforma autenticação em autorização
+           * e não apaga a sessão CT2 local ainda válida.
+           */
+          registrarErroTecnico(
+          'Portal | abertura pós-login',
+          erro
+          );
+
+          state.usuario =
+          null;
+
+          state.produtores =
+          [];
+
+          state.produtorAtual =
+          null;
+
+          state.eventoAtual =
+          null;
+
+          abrirShellPortalPendente();
+
+          mostrarMensagem(
+          el.portalMessage,
+          'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Sua sessão foi preservada; atualize a página para tentar novamente.',
+          'error'
+          );
+          }"""
+          r(h,old,"function(erro){\nmostrarFalhaTransitoriaRestauracao(generation,tokenEsperado,erro);\n}",'failure-handler')
+          r(h,"function abrirPortal(){\n\nstate.contextoPendente =\nfalse;","function abrirPortal(){\n\nstate.contextoPendente =\nfalse;\n\ncancelarWatchdogRestauracao();\n\nel.refreshButton.textContent =\n'Atualizar painel';",'open-portal')
+          r(h,"var tokenAtual =\nstate.token;\n\npararAtualizacaoAutomatica();","var tokenAtual =\nstate.token;\n\ninvalidarTentativaRestauracao();\n\npararAtualizacaoAutomatica();",'logout')
+          r(h,"function resetarEstado(){\n\nstate.token =","function resetarEstado(){\n\ninvalidarTentativaRestauracao();\n\nstate.token =",'reset')
+          r(t,"          case 'ctPortalProdutorRestaurarSessaoIsoladaPROD':\n            expect(String(args[0] || '')).toBe(state.token);\n            resultado = portalSession();\n            break;","          case 'ctPortalProdutorRestaurarSessaoIsoladaPROD':\n            expect(String(args[0] || '')).toBe(state.token);\n            state.restoreCalls = Number(state.restoreCalls || 0) + 1;\n            {\n              const i = state.restoreCalls - 1;\n              const delays = Array.isArray(state.restoreDelays) ? state.restoreDelays : [];\n              const delay = Number(delays[i] !== undefined ? delays[i] : (state.restoreDelayMs || 0));\n              if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));\n              const responses = Array.isArray(state.restoreResponses) ? state.restoreResponses : [];\n              resultado = responses[i] !== undefined ? responses[i] : portalSession();\n            }\n            break;",'mock')
+          r(t,"    const token = 'CT-E2E-TOKEN-RESTORE-TRANSIENT';\n    await page.addInitScript","    const token = 'CT-E2E-TOKEN-RESTORE-TRANSIENT';\n    const inicio = Date.now();\n    await page.addInitScript",'critical-start')
+          r(t,"    await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada');\n    await expect(page.locator('#eventPickerButton')).toBeDisabled();","    await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada');\n    const elapsed = Date.now() - inicio;\n    console.log('TRANSIENT_FEEDBACK_ELAPSED_MS=' + elapsed);\n    expect(elapsed).toBeLessThan(10000);\n    await expect(page.locator('#refreshButton')).toHaveText('Tentar novamente');\n    await expect(page.locator('#eventPickerButton')).toBeDisabled();",'critical-time')
+          marker="  test('Central -> Usuarios e Permissoes -> Sair sem rota escondida', async ({ page }) => {"
+          extra="""  test('Portal encerra loading T2 em menos de 10s quando RPC fica pendurado', async ({ page }) => {
+            const state={token:'CT-E2E-TOKEN-HANG',restoreDelayMs:30000}; await installMock(page,state); await seedSession(page,state.token);
+            const inicio=Date.now(); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+            await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada',{timeout:10000});
+            const elapsed=Date.now()-inicio; console.log('WATCHDOG_ELAPSED_MS='+elapsed); expect(elapsed).toBeLessThan(10000); expect(elapsed).toBeGreaterThanOrEqual(8500);
+            await expect(page.locator('#eventPickerButton')).toBeDisabled(); await expect(page.locator('#refreshButton')).toHaveText('Tentar novamente');
+          });
+
+          test('Portal ignora callback T2 antigo depois de retry bem sucedido', async ({ page }) => {
+            const state={token:'CT-E2E-TOKEN-RETRY',restoreDelays:[11000,0],restoreResponses:[{sucesso:false,autenticado:false,autorizado:false},portalSession()]}; await installMock(page,state); await seedSession(page,state.token);
+            await page.goto('/produtor/',{waitUntil:'domcontentloaded'}); await expect(page.locator('#refreshButton')).toHaveText('Tentar novamente',{timeout:10000}); await page.locator('#refreshButton').click();
+            await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); await page.waitForTimeout(2500); await expect(page.locator('#loginView')).toHaveClass(/hidden/); expect(state.restoreCalls).toBe(2);
+          });
+
+          test('Portal ignora callback T2 antigo depois de logout', async ({ page }) => {
+            const state={token:'CT-E2E-TOKEN-LOGOUT',restoreDelayMs:11000}; await installMock(page,state); await seedSession(page,state.token);
+            await page.goto('/produtor/',{waitUntil:'domcontentloaded'}); await expect(page.locator('#portalView')).toBeVisible({timeout:3000}); await page.locator('#logoutButton').click(); await expect(page.locator('#loginView')).toBeVisible();
+            await page.waitForTimeout(11500); await expect(page.locator('#loginView')).toBeVisible(); await expect(page.locator('#portalView')).toHaveClass(/hidden/);
+          });
+
+          test('Portal restaura normalmente antes do watchdog T2', async ({ page }) => {
+            const state={token:'CT-E2E-TOKEN-FAST',restoreDelayMs:100}; await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+            await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); await expect(page.locator('#eventPickerButton')).toBeEnabled();
+          });
+
+          test('Portal limpa sessao realmente invalida e volta ao login', async ({ page }) => {
+            const state={token:'CT-E2E-TOKEN-INVALID',restoreResponses:[{sucesso:false,autenticado:false,autorizado:false}]}; await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
+            await expect(page.locator('#loginView')).toBeVisible({timeout:5000}); await expect(page.locator('#loginMessage')).toContainText('Sua sessão expirou');
+          });
+
+          test('Portal F5 valido restaura e F5 apos logout nao ressuscita Portal', async ({ page }) => {
+            const state={token:'CT-E2E-TOKEN-F5'}; await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'}); await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000});
+            await page.reload({waitUntil:'domcontentloaded'}); await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); await page.locator('#logoutButton').click(); await expect(page.locator('#loginView')).toBeVisible(); await page.reload({waitUntil:'domcontentloaded'}); await expect(page.locator('#portalView')).toHaveClass(/hidden/);
+          });
+
+          """+marker
+          r(t,marker,extra,'focused-tests')
+          print('EXACT_SUBSTITUTIONS=PASS')
+          '@ | Set-Content .ct-edit.py -Encoding UTF8
+          python .ct-edit.py
+          $ec=$LASTEXITCODE
+          Remove-Item .ct-edit.py -Force -ErrorAction SilentlyContinue
+          if($ec -ne 0){throw "Exact edit failed $ec"}
+
+      - name: Diff barriers
         run: |
-          $ErrorActionPreference = 'Stop'
-          $canonicalPatch = 'ct-p0-t2-watchdog-canonical.patch'
-          if (-not (Test-Path $canonicalPatch)) { throw 'Patch canonico temporario ausente.' }
-          git apply $canonicalPatch
-          if ($LASTEXITCODE -ne 0) { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'git apply falhou.' }
-          Remove-Item $canonicalPatch -Force
-          git diff --check
-          if ($LASTEXITCODE -ne 0) { throw 'git diff --check falhou.' }
-          Write-Host 'GIT_DIFF_CHECK=PASS'
-          git diff --stat
-          git status --short
-          $changed = @(git diff --name-only)
-          $changed | ForEach-Object { Write-Host "PATCH_CHANGED_FILE=$_" }
-          $allowed = @('produtor/index.html','tests/e2e/authenticated-operational.spec.js')
-          if ($changed.Count -ne 2) { throw 'Patch alterou quantidade inesperada de arquivos.' }
-          foreach ($file in $changed) { if ($allowed -notcontains $file) { throw "Arquivo nao autorizado: $file" } }
+          $ErrorActionPreference='Stop'
+          git diff --check; if($LASTEXITCODE -ne 0){throw 'git diff --check falhou'}
+          Write-Host 'GIT_DIFF_CHECK=PASS'; git diff --stat
+          $c=@(git diff --name-only); $c | % { Write-Host "CHANGED_FILE=$_" }
+          if($c.Count -ne 2 -or $c -notcontains 'produtor/index.html' -or $c -notcontains 'tests/e2e/authenticated-operational.spec.js'){throw 'Delta nao autorizado'}
+          $u=@(git status --short | ? {$_ -notmatch 'produtor/index.html$' -and $_ -notmatch 'tests/e2e/authenticated-operational.spec.js$'}); if($u.Count){$u|Write-Host;throw 'Artefato inesperado'}
           git diff -- produtor/index.html
           git diff -- tests/e2e/authenticated-operational.spec.js
 
-      - name: Install frontend dependencies
+      - name: Install dependencies
+        run: npm.cmd ci
+      - name: Critical test
+        run: npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal preserva sessao local quando restauracao falha transitoriamente" --workers=1 --retries=0
+      - name: Focused watchdog tests
+        run: npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal (encerra loading T2|ignora callback T2|restaura normalmente antes do watchdog|limpa sessao realmente invalida|F5 valido)" --workers=1 --retries=0
+      - name: Desktop full
+        run: npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --workers=1 --retries=0
+      - name: Mobile full
+        run: npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=mobile-chromium --workers=1 --retries=0
+      - name: Contracts
         run: |
-          $ErrorActionPreference = 'Stop'
-          npm.cmd ci
-
-      - name: Critical transient restore test desktop
-        run: |
-          $ErrorActionPreference = 'Stop'
-          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal preserva sessao local quando restauracao falha transitoriamente" --workers=1
-
-      - name: Watchdog focused scenarios desktop
-        run: |
-          $ErrorActionPreference = 'Stop'
-          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal (encerra loading T2|ignora callback T2 antigo|restaura normalmente antes do watchdog)" --workers=1
-
-      - name: Authenticated operational desktop
-        run: |
-          $ErrorActionPreference = 'Stop'
-          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --workers=1
-
-      - name: Authenticated operational mobile
-        run: |
-          $ErrorActionPreference = 'Stop'
-          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=mobile-chromium --workers=1
-
-      - name: Relevant contracts
-        run: |
-          $ErrorActionPreference = 'Stop'
           node tests/contracts.mjs
           node tests/journey-contracts.mjs
           node tests/full-surface-audit.mjs
-          if (Test-Path 'tests/producer-portal-performance.contract.mjs') { node tests/producer-portal-performance.contract.mjs }
+          if(Test-Path 'tests/producer-portal-performance.contract.mjs'){node tests/producer-portal-performance.contract.mjs}
           npm.cmd run test:contracts
-
-      - name: Final diff barrier and commit
+      - name: Commit correction
         run: |
-          $ErrorActionPreference = 'Stop'
+          $ErrorActionPreference='Stop'
           git diff --check
-          if ($LASTEXITCODE -ne 0) { throw 'git diff --check final falhou.' }
-          $changed = @(git diff --name-only)
-          $allowed = @('produtor/index.html','tests/e2e/authenticated-operational.spec.js')
-          if ($changed.Count -ne 2) { throw 'Delta final inesperado.' }
-          foreach ($file in $changed) { if ($allowed -notcontains $file) { throw "Delta final nao autorizado: $file" } }
-          git status --short
-          git diff --stat
+          $c=@(git diff --name-only); if($c.Count -ne 2 -or $c -notcontains 'produtor/index.html' -or $c -notcontains 'tests/e2e/authenticated-operational.spec.js'){throw 'Delta final inseguro'}
           git add produtor/index.html tests/e2e/authenticated-operational.spec.js
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'fix: limitar espera T2 do Portal e ignorar callbacks tardios'
-          $newSha = (git rev-parse HEAD).Trim()
-          Write-Host "CORRECTION_SHA=$newSha"
+          Write-Host "CORRECTION_SHA=$((git rev-parse HEAD).Trim())"
           git push origin HEAD:perf/p0-portal-login-hotpath
