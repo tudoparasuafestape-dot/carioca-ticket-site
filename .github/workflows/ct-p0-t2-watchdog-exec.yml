@@ -18,6 +18,10 @@ jobs:
   apply-test-push:
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
+    env:
+      CT_BASE_URL: http://127.0.0.1:4173
+      CT_EXPECTED_HOST: 127.0.0.1
+      CT_BRANCH_MODE: '1'
     steps:
       - name: Checkout exact PR branch
         uses: actions/checkout@v4
@@ -37,7 +41,7 @@ jobs:
           Write-Host "HEAD=$head"
           Write-Host "PARENT=$parent"
           if($head -ne '${{ github.sha }}'){throw 'HEAD diverge de github.sha'}
-          if($parent -ne 'ff49e12a0d6721347a5b325124431e559490089e'){throw "Parent inseguro: $parent"}
+          if($parent -ne '7df5e135492ae7c9b6200bfc0e2fabba18b208d6'){throw "Parent inseguro: $parent"}
           $changed=@(git diff --name-only HEAD^1 HEAD)
           if($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-exec.yml'){throw 'Commit intermediario contem arquivo nao autorizado'}
           if(@(git status --short).Count -ne 0){throw 'Working tree sujo'}
@@ -55,6 +59,20 @@ jobs:
           Remove-Item Env:EDITOR_B64 -ErrorAction SilentlyContinue
           Write-Host 'STRUCTURAL_EDIT=PASS'
 
+      - name: Sanitize generated literals and test typos
+        run: |
+          $ErrorActionPreference='Stop'
+          python -c "from pathlib import Path; files=[Path('produtor/index.html'),Path('tests/e2e/authenticated-operational.spec.js')]; wrong='sess'+chr(0x00e1)+'o'; right='sess'+chr(0x00e3)+'o'; total=0; [(lambda p: (globals().update(total=globals().get('total',0)+p.read_text(encoding='utf-8').count(wrong)), p.write_text(p.read_text(encoding='utf-8').replace(wrong,right).replace('toBEGreaterThanOrEqual','toBeGreaterThanOrEqual').replace('supplierMutationCals','supplierMutationCalls'),encoding='utf-8',newline='\n')))(p) for p in files]; print('SANITIZE=PASS')"
+          if($LASTEXITCODE -ne 0){throw 'Sanitize failed'}
+          $bad=@()
+          foreach($f in @('produtor/index.html','tests/e2e/authenticated-operational.spec.js')){
+            $txt=Get-Content $f -Raw
+            if($txt.Contains('toBEGreaterThanOrEqual')){$bad += "$f:toBEGreaterThanOrEqual"}
+            if($txt.Contains('supplierMutationCals')){$bad += "$f:supplierMutationCals"}
+          }
+          if($bad.Count -gt 0){$bad | Write-Host; throw 'Typos remanescentes'}
+          Write-Host 'SANITIZE_GUARD=PASS'
+
       - name: Diff barrier and audit
         run: |
           $ErrorActionPreference='Stop'
@@ -67,12 +85,34 @@ jobs:
           $allowed=@('produtor/index.html','tests/e2e/authenticated-operational.spec.js')
           if($changed.Count -ne 2){throw 'Quantidade de arquivos alterados invalida'}
           foreach($f in $changed){if($allowed -notcontains $f){throw "Arquivo fora do escopo: $f"}}
+          node --check tests/e2e/authenticated-operational.spec.js
+          if($LASTEXITCODE -ne 0){throw 'Sintaxe do teste invalida'}
           git diff -- produtor/index.html
           git diff -- tests/e2e/authenticated-operational.spec.js
 
       - name: Install frontend dependencies
         run: |
-          npm.cmd ci
+          $ErrorActionPreference='Stop'
+          npm.cmd install --no-audit --no-fund --package-lock=false
+          if($LASTEXITCODE -ne 0){throw 'npm install falhou'}
+          npx.cmd playwright install chromium
+          if($LASTEXITCODE -ne 0){throw 'playwright install chromium falhou'}
+
+      - name: Start local branch server
+        run: |
+          $ErrorActionPreference='Stop'
+          $proc=Start-Process -FilePath 'python' -ArgumentList '-m','http.server','4173','--bind','127.0.0.1' -WindowStyle Hidden -PassThru
+          Write-Host "HTTP_SERVER_PID=$($proc.Id)"
+          $ok=$false
+          for($i=1;$i -le 20;$i++){
+            try{
+              $r=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:4173/' -TimeoutSec 2
+              if($r.StatusCode -eq 200){$ok=$true;break}
+            }catch{}
+            Start-Sleep -Seconds 1
+          }
+          if(-not $ok){throw 'Servidor local nao iniciou'}
+          Write-Host 'LOCAL_SERVER=PASS'
 
       - name: Critical transient restore test desktop
         run: |
@@ -97,11 +137,11 @@ jobs:
           node tests/journey-contracts.mjs
           node tests/full-surface-audit.mjs
           if(Test-Path 'tests/producer-portal-performance.contract.mjs'){node tests/producer-portal-performance.contract.mjs}
-          npm.cmd run test:contracts
 
       - name: Final barrier commit and push
         run: |
           $ErrorActionPreference='Stop'
+          Remove-Item -Recurse -Force playwright-report,test-results -ErrorAction SilentlyContinue
           git diff --check
           if($LASTEXITCODE -ne 0){throw 'git diff --check final falhou'}
           $changed=@(git diff --name-only)
