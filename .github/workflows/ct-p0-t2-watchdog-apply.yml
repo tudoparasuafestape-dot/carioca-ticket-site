@@ -2,6 +2,11 @@ name: CT P0 T2 watchdog apply
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - perf/p0-portal-login-hotpath
+    paths:
+      - '.github/workflows/ct-p0-t2-watchdog-apply.yml'
 
 permissions:
   contents: write
@@ -31,11 +36,11 @@ jobs:
           Write-Host "HEAD=$head"
           Write-Host "PARENT=$parent"
           if ($head -ne '${{ github.sha }}') { throw "HEAD diverge de github.sha" }
-          if ($parent -ne '1ee6294f0faa70070610bac12785ce179667065c') { throw "Parent inseguro: $parent" }
+          if ($parent -ne '5bc7e3d56ea39c7dc851f95377b05885d960494a') { throw "Parent inseguro: $parent" }
           $changed = @(git diff --name-only HEAD^1 HEAD)
           $changed | ForEach-Object { Write-Host "WORKFLOW_COMMIT_FILE=$_" }
           if ($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-apply.yml') { throw 'Commit intermediario contem arquivo nao autorizado.' }
-          git log --oneline -3
+          git log --oneline -4
           $status = @(git status --short)
           if ($status.Count -ne 0) { $status | Write-Host; throw 'Working tree nao esta limpo.' }
 
