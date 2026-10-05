@@ -1475,7 +1475,12 @@ test.describe('Jornada operacional autenticada', () => {
     });
 
     await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#loginView')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#portalView')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#loginView')).toHaveClass(/hidden/);
+    await expect(page.locator('#portalMessage')).toContainText('Seu login foi realizado');
+    await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada');
+    await expect(page.locator('#eventPickerButton')).toBeDisabled();
+    await expect(page.locator('#centralMobileLink')).toHaveClass(/hidden/);
 
     const stored = await page.evaluate(key => ({
       local: localStorage.getItem(key),
