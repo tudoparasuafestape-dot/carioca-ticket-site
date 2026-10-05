@@ -2121,13 +2121,23 @@ var BOOTSTRAP_STORAGE_KEY =
 var BOOTSTRAP_TTL_MS =
 600000;
 
+var RESTORE_UX_TIMEOUT_MS =
+9000;
+
 var state = {
+
 
 token:
 '',
 
 contextoPendente:
 false,
+
+restoreGeneration:
+0,
+
+restoreTimer:
+null,
 
 usuario:
 null,
@@ -2361,6 +2371,17 @@ fecharSeletorEvento();
 el.refreshButton.addEventListener(
 'click',
 function(){
+
+if(
+state.contextoPendente ===
+true &&
+state.token
+){
+
+carregarContextoPortalPendente();
+
+return;
+}
 
 if(
 state.eventoAtual
@@ -4473,6 +4494,118 @@ el.portalMessage,
 );
 }
 
+function cancelarWatchdogRestauracao(){
+
+if(
+state.restoreTimer
+){
+
+clearTimeout(
+state.restoreTimer
+);
+
+state.restoreTimer =
+null;
+}
+}
+
+function invalidarTentativaRestauracao(){
+
+cancelarWatchdogRestauracao();
+
+state.restoreGeneration++;
+}
+
+function tentativaRestauracaoAtiva(
+generation,
+tokenEsperado
+){
+
+if(
+generation !==
+state.restoreGeneration ||
+state.contextoPendente !==
+true ||
+String(
+state.token ||
+''
+)
+.trim() !==
+tokenEsperado
+){
+
+return false;
+}
+
+var salvo =
+lerSessao();
+
+return Boolean(
+salvo &&
+String(
+salvo.token ||
+''
+)
+.trim() ===
+tokenEsperado
+);
+}
+
+function mostrarFalhaTransitoriaRestauracao(
+generation,
+tokenEsperado,
+erro
+){
+
+if(
+!tentativaRestauracaoAtiva(
+generation,
+tokenEsperado
+)
+){
+
+return;
+}
+
+invalidarTentativaRestauracao();
+
+if(
+erro
+){
+
+registrarErroTecnico(
+'Portal | abertura pós-login',
+erro
+);
+}
+
+state.usuario =
+null;
+
+state.produtores =
+[];
+
+state.produtorAtual =
+null;
+
+state.eventoAtual =
+null;
+
+abrirShellPortalPendente();
+
+el.refreshButton.disabled =
+false;
+
+el.refreshButton.textContent =
+'Tentar novamente';
+
+mostrarMensagem(
+el.portalMessage,
+'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Sua sessão foi preservada; tente novamente.',
+'error'
+);
+}
+
 function carregarContextoPortalPendente(){
 
 var tokenEsperado =
@@ -4491,31 +4624,60 @@ mostrarLogin();
 return;
 }
 
+invalidarTentativaRestauracao();
+
+var generation =
+state.restoreGeneration;
+
+abrirShellPortalPendente();
+
+el.refreshButton.disabled =
+true;
+
+el.refreshButton.textContent =
+'Carregando...';
+
+state.restoreTimer =
+setTimeout(
+function(){
+
+mostrarFalhaTransitoriaRestauracao(
+generation,
+tokenEsperado,
+null
+);
+},
+RESTORE_UX_TIMEOUT_MS
+);
+
 google.script.run
 .withSuccessHandler(
 function(r){
 
 if(
-String(
-state.token ||
-''
-)
-.trim() !==
+!tentativaRestauracaoAtiva(
+generation,
 tokenEsperado
+)
 ){
 
 return;
 }
 
+cancelarWatchdogRestauracao();
+
 if(
-!r ||
-r.sucesso !==
-true ||
-r.autenticado !==
-true
+r &&
+r.autenticado ===
+false
 ){
 
+invalidarTentativaRestauracao();
+
 limparSessaoLocal();
+
+state.token =
+'';
 
 state.contextoPendente =
 false;
@@ -4544,9 +4706,28 @@ return;
 }
 
 if(
+!r ||
+r.sucesso !==
+true ||
+r.autenticado !==
+true
+){
+
+mostrarFalhaTransitoriaRestauracao(
+generation,
+tokenEsperado,
+new Error('CT_PORTAL_RESTAURACAO_RESPOSTA_TECNICA_INVALIDA')
+);
+
+return;
+}
+
+if(
 r.autorizado !==
 true
 ){
+
+invalidarTentativaRestauracao();
 
 window.location.replace(
 '/produtor/solicitar/'
@@ -4566,12 +4747,16 @@ if(
 !produtoresAutorizados.length
 ){
 
+invalidarTentativaRestauracao();
+
 window.location.replace(
 '/produtor/solicitar/'
 );
 
 return;
 }
+
+invalidarTentativaRestauracao();
 
 state.usuario =
 r.usuario ||
@@ -4586,45 +4771,10 @@ abrirPortal();
 .withFailureHandler(
 function(erro){
 
-if(
-String(
-state.token ||
-''
-)
-.trim() !==
-tokenEsperado
-){
-
-return;
-}
-
-/*
- * Falha transitória não transforma autenticação em autorização
- * e não apaga a sessão CT2 local ainda válida.
- */
-registrarErroTecnico(
-'Portal | abertura pós-login',
+mostrarFalhaTransitoriaRestauracao(
+generation,
+tokenEsperado,
 erro
-);
-
-state.usuario =
-null;
-
-state.produtores =
-[];
-
-state.produtorAtual =
-null;
-
-state.eventoAtual =
-null;
-
-abrirShellPortalPendente();
-
-mostrarMensagem(
-el.portalMessage,
-'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Sua sessão foi preservada; atualize a página para tentar novamente.',
-'error'
 );
 }
 )
@@ -4637,6 +4787,11 @@ function abrirPortal(){
 
 state.contextoPendente =
 false;
+
+cancelarWatchdogRestauracao();
+
+el.refreshButton.textContent =
+'Atualizar painel';
 
 if(
 !state.produtores.length
@@ -6448,6 +6603,8 @@ function executarLogout(){
 var tokenAtual =
 state.token;
 
+invalidarTentativaRestauracao();
+
 pararAtualizacaoAutomatica();
 
 limparSessaoLocal();
@@ -6625,6 +6782,8 @@ erro
 }
 
 function resetarEstado(){
+
+invalidarTentativaRestauracao();
 
 state.token =
 '';
