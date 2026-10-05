@@ -4603,7 +4603,7 @@ return;
  * e não apaga a sessão CT2 local ainda válida.
  */
 registrarErroTecnico(
-'Portal | contexto pós-login',
+'Portal | abertura pós-login',
 erro
 );
 
@@ -4623,7 +4623,7 @@ abrirShellPortalPendente();
 
 mostrarMensagem(
 el.portalMessage,
-'Não foi possível carregar seus eventos agora. Sua sessão foi preservada; atualize a página para tentar novamente.',
+'Seu login foi realizado, mas não foi possível carregar toda a área administrativa. Atualize a página para restaurar sua sessão.',
 'error'
 );
 }
