@@ -39,7 +39,7 @@ jobs:
           Write-Host "HEAD=$head"
           Write-Host "PARENT=$parent"
           if ($head -ne '${{ github.sha }}') { throw "HEAD diverge de github.sha" }
-          if ($parent -ne 'feafceffa34a173e2b9bf108f5c039d25e36a158') { throw "Parent inseguro: $parent" }
+          if ($parent -ne '7f838820113e5f0a361a000ebeb3f3a6aecd1a64') { throw "Parent inseguro: $parent" }
           $changed = @(git diff --name-only HEAD^1 HEAD)
           $changed | ForEach-Object { Write-Host "WORKFLOW_COMMIT_FILE=$_" }
           if ($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-apply.yml') { throw 'Commit intermediario contem arquivo nao autorizado.' }
@@ -47,29 +47,37 @@ jobs:
           $status = @(git status --short)
           if ($status.Count -ne 0) { $status | Write-Host; throw 'Working tree nao esta limpo.' }
 
-      - name: Patch integrity and apply check
+      - name: Canonical patch integrity and apply check
         run: |
           $ErrorActionPreference = 'Stop'
-          $patch = 'ops/patches/ct-p0-t2-watchdog.patch'
-          $hash = (Get-FileHash $patch -Algorithm SHA256).Hash
-          Write-Host "PATCH_SHA256=$hash"
-          if ($hash -ne 'DC0FF51EE589F8F357B536914C7FE5A1FFCB9A4C267EE014936E59004A1F5C65') { throw 'SHA256 do patch diverge.' }
-          $headers = Get-Content $patch | Where-Object { $_ -match '^(diff --git|--- a/|\+\+\+ b/)' }
-          $headers | ForEach-Object { Write-Host $_ }
-          $diffTargets = @(Get-Content $patch | Where-Object { $_ -match '^diff --git ' })
-          if ($diffTargets.Count -ne 2) { throw 'Patch nao contem exatamente dois alvos.' }
-          if ($diffTargets[0] -ne 'diff --git a/produtor/index.html b/produtor/index.html') { throw 'Primeiro alvo inesperado.' }
-          if ($diffTargets[1] -ne 'diff --git a/tests/e2e/authenticated-operational.spec.js b/tests/e2e/authenticated-operational.spec.js') { throw 'Segundo alvo inesperado.' }
-          git apply --check $patch
-          if ($LASTEXITCODE -ne 0) { throw 'git apply --check falhou.' }
+          $patchPath = 'ops/patches/ct-p0-t2-watchdog.patch'
+          $canonicalPatch = 'ct-p0-t2-watchdog-canonical.patch'
+          $blob = (git rev-parse "HEAD:$patchPath").Trim()
+          Write-Host "GIT_BLOB_SHA=$blob"
+          if ($blob -ne 'f06aca6e496f90b656a9dc4359f1f0ec294edc8b') { throw "Blob Git canonico diverge: $blob" }
+          python -c "import subprocess,hashlib; b=subprocess.check_output(['git','cat-file','blob','HEAD:ops/patches/ct-p0-t2-watchdog.patch']); print('CANONICAL_SHA256='+hashlib.sha256(b).hexdigest().upper())" | Tee-Object -Variable hashOutput
+          if ($LASTEXITCODE -ne 0) { throw 'Falha ao calcular SHA256 canonico via Python.' }
+          $hashLine = ($hashOutput | Select-Object -Last 1).Trim()
+          $hash = $hashLine -replace '^CANONICAL_SHA256=', ''
+          if ($hash -ne 'DC0FF51EE589F8F357B536914C7FE5A1FFCB9A4C267EE014936E59004A1F5C65') { throw "SHA256 canonico diverge: $hash" }
+          python -c "import subprocess,pathlib; pathlib.Path('ct-p0-t2-watchdog-canonical.patch').write_bytes(subprocess.check_output(['git','cat-file','blob','HEAD:ops/patches/ct-p0-t2-watchdog.patch']))"
+          if ($LASTEXITCODE -ne 0) { throw 'Falha ao materializar blob canonico.' }
+          $diffTargets = @(Get-Content $canonicalPatch | Where-Object { $_ -match '^diff --git ' })
+          if ($diffTargets.Count -ne 2) { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'Patch nao contem exatamente dois alvos.' }
+          if ($diffTargets[0] -ne 'diff --git a/produtor/index.html b/produtor/index.html') { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'Primeiro alvo inesperado.' }
+          if ($diffTargets[1] -ne 'diff --git a/tests/e2e/authenticated-operational.spec.js b/tests/e2e/authenticated-operational.spec.js') { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'Segundo alvo inesperado.' }
+          git apply --check $canonicalPatch
+          if ($LASTEXITCODE -ne 0) { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'git apply --check falhou.' }
           Write-Host 'GIT_APPLY_CHECK=PASS'
 
-      - name: Apply patch and diff barriers
+      - name: Apply canonical patch and diff barriers
         run: |
           $ErrorActionPreference = 'Stop'
-          $patch = 'ops/patches/ct-p0-t2-watchdog.patch'
-          git apply $patch
-          if ($LASTEXITCODE -ne 0) { throw 'git apply falhou.' }
+          $canonicalPatch = 'ct-p0-t2-watchdog-canonical.patch'
+          if (-not (Test-Path $canonicalPatch)) { throw 'Patch canonico temporario ausente.' }
+          git apply $canonicalPatch
+          if ($LASTEXITCODE -ne 0) { Remove-Item $canonicalPatch -Force -ErrorAction SilentlyContinue; throw 'git apply falhou.' }
+          Remove-Item $canonicalPatch -Force
           git diff --check
           if ($LASTEXITCODE -ne 0) { throw 'git diff --check falhou.' }
           Write-Host 'GIT_DIFF_CHECK=PASS'
