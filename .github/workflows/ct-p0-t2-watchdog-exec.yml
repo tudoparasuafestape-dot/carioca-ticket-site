@@ -1,0 +1,117 @@
+name: CT P0 T2 watchdog exec
+
+on:
+  push:
+    branches:
+      - perf/p0-portal-login-hotpath
+    paths:
+      - '.github/workflows/ct-p0-t2-watchdog-exec.yml'
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: powershell -NoProfile -ExecutionPolicy Bypass -Command ". '{0}'"
+
+jobs:
+  apply-test-push:
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: perf/p0-portal-login-hotpath
+          fetch-depth: 0
+          clean: true
+
+      - name: Barrier 1
+        run: |
+          $ErrorActionPreference='Stop'
+          Write-Host "RUNNER_NAME=$env:RUNNER_NAME"
+          Write-Host "RUNNER_OS=$env:RUNNER_OS"
+          Write-Host "RUNNER_ARCH=$env:RUNNER_ARCH"
+          $head=(git rev-parse HEAD).Trim()
+          $parent=(git rev-parse HEAD^1).Trim()
+          Write-Host "HEAD=$head"
+          Write-Host "PARENT=$parent"
+          if($head -ne '${{ github.sha }}'){throw 'HEAD diverge de github.sha'}
+          if($parent -ne 'ff49e12a0d6721347a5b325124431e559490089e'){throw "Parent inseguro: $parent"}
+          $changed=@(git diff --name-only HEAD^1 HEAD)
+          if($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-exec.yml'){throw 'Commit intermediario contem arquivo nao autorizado'}
+          if(@(git status --short).Count -ne 0){throw 'Working tree sujo'}
+          Write-Host 'BARRIER_1=PASS'
+
+      - name: Structural atomic edit from canonical payload
+        run: |
+          $ErrorActionPreference='Stop'
+          $wf = Get-Content '.github/workflows/ct-p0-t2-watchdog-apply.yml' -Raw
+          $m = [regex]::Match($wf, 'EDITOR_B64:\s*"([^"]+)"')
+          if(-not $m.Success){throw 'EDITOR_B64 nao encontrado no workflow fonte'}
+          $env:EDITOR_B64 = $m.Groups[1].Value
+          python -c "import os,base64; src=base64.b64decode(os.environ['EDITOR_B64']).decode('latin-1'); exec(compile(src,'.ct_t2_edit.py','exec'))"
+          if($LASTEXITCODE -ne 0){throw "Structural editor failed: $LASTEXITCODE"}
+          Remove-Item Env:EDITOR_B64 -ErrorAction SilentlyContinue
+          Write-Host 'STRUCTURAL_EDIT=PASS'
+
+      - name: Diff barrier and audit
+        run: |
+          $ErrorActionPreference='Stop'
+          git diff --check
+          if($LASTEXITCODE -ne 0){throw 'git diff --check falhou'}
+          Write-Host 'GIT_DIFF_CHECK=PASS'
+          git diff --stat
+          $changed=@(git diff --name-only)
+          $changed | ForEach-Object {Write-Host "CHANGED_FILE=$_"}
+          $allowed=@('produtor/index.html','tests/e2e/authenticated-operational.spec.js')
+          if($changed.Count -ne 2){throw 'Quantidade de arquivos alterados invalida'}
+          foreach($f in $changed){if($allowed -notcontains $f){throw "Arquivo fora do escopo: $f"}}
+          git diff -- produtor/index.html
+          git diff -- tests/e2e/authenticated-operational.spec.js
+
+      - name: Install frontend dependencies
+        run: |
+          npm.cmd ci
+
+      - name: Critical transient restore test desktop
+        run: |
+          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal preserva sessao local quando restauracao falha transitoriamente" --workers=1 --retries=0
+
+      - name: Watchdog focused scenarios desktop
+        run: |
+          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal (encerra loading T2|retry bem sucedido|logout durante restore|restaura normalmente antes do watchdog|sessao explicitamente invalida|F5 com sessao valida|F5 apos logout)" --workers=1 --retries=0
+
+      - name: Authenticated operational desktop
+        run: |
+          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --workers=1 --retries=0
+
+      - name: Authenticated operational mobile
+        run: |
+          npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=mobile-chromium --workers=1 --retries=0
+
+      - name: Relevant contracts
+        run: |
+          $ErrorActionPreference='Stop'
+          node tests/contracts.mjs
+          node tests/journey-contracts.mjs
+          node tests/full-surface-audit.mjs
+          if(Test-Path 'tests/producer-portal-performance.contract.mjs'){node tests/producer-portal-performance.contract.mjs}
+          npm.cmd run test:contracts
+
+      - name: Final barrier commit and push
+        run: |
+          $ErrorActionPreference='Stop'
+          git diff --check
+          if($LASTEXITCODE -ne 0){throw 'git diff --check final falhou'}
+          $changed=@(git diff --name-only)
+          $allowed=@('produtor/index.html','tests/e2e/authenticated-operational.spec.js')
+          if($changed.Count -ne 2){throw 'Delta final invalido'}
+          foreach($f in $changed){if($allowed -notcontains $f){throw "Delta final fora do escopo: $f"}}
+          git add produtor/index.html tests/e2e/authenticated-operational.spec.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix: limitar espera T2 do Portal e ignorar callbacks tardios'
+          $sha=(git rev-parse HEAD).Trim()
+          Write-Host "CORRECTION_SHA=$sha"
+          git push origin HEAD:perf/p0-portal-login-hotpath
