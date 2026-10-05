@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+defaults:
+  run:
+    shell: powershell -NoProfile -ExecutionPolicy Bypass -Command ". '{0}'"
+
 jobs:
   apply-test-push:
     runs-on: [self-hosted, Windows, X64]
@@ -24,7 +28,6 @@ jobs:
           clean: true
 
       - name: Runner and adjusted Barrier 1
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           Write-Host "RUNNER_NAME=$env:RUNNER_NAME"
@@ -36,7 +39,7 @@ jobs:
           Write-Host "HEAD=$head"
           Write-Host "PARENT=$parent"
           if ($head -ne '${{ github.sha }}') { throw "HEAD diverge de github.sha" }
-          if ($parent -ne '5bc7e3d56ea39c7dc851f95377b05885d960494a') { throw "Parent inseguro: $parent" }
+          if ($parent -ne 'feafceffa34a173e2b9bf108f5c039d25e36a158') { throw "Parent inseguro: $parent" }
           $changed = @(git diff --name-only HEAD^1 HEAD)
           $changed | ForEach-Object { Write-Host "WORKFLOW_COMMIT_FILE=$_" }
           if ($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-apply.yml') { throw 'Commit intermediario contem arquivo nao autorizado.' }
@@ -45,7 +48,6 @@ jobs:
           if ($status.Count -ne 0) { $status | Write-Host; throw 'Working tree nao esta limpo.' }
 
       - name: Patch integrity and apply check
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $patch = 'ops/patches/ct-p0-t2-watchdog.patch'
@@ -63,7 +65,6 @@ jobs:
           Write-Host 'GIT_APPLY_CHECK=PASS'
 
       - name: Apply patch and diff barriers
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           $patch = 'ops/patches/ct-p0-t2-watchdog.patch'
@@ -83,37 +84,31 @@ jobs:
           git diff -- tests/e2e/authenticated-operational.spec.js
 
       - name: Install frontend dependencies
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           npm.cmd ci
 
       - name: Critical transient restore test desktop
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal preserva sessao local quando restauracao falha transitoriamente" --workers=1
 
       - name: Watchdog focused scenarios desktop
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --grep "Portal (encerra loading T2|ignora callback T2 antigo|restaura normalmente antes do watchdog)" --workers=1
 
       - name: Authenticated operational desktop
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --workers=1
 
       - name: Authenticated operational mobile
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           npx.cmd playwright test tests/e2e/authenticated-operational.spec.js --project=mobile-chromium --workers=1
 
       - name: Relevant contracts
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           node tests/contracts.mjs
@@ -123,7 +118,6 @@ jobs:
           npm.cmd run test:contracts
 
       - name: Final diff barrier and commit
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           git diff --check
