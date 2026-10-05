@@ -41,7 +41,7 @@ jobs:
           Write-Host "HEAD=$head"
           Write-Host "PARENT=$parent"
           if($head -ne '${{ github.sha }}'){throw 'HEAD diverge de github.sha'}
-          if($parent -ne '1945078c6d5a5bab3432e2de7bb8ad437a0ed1dd'){throw "Parent inseguro: $parent"}
+          if($parent -ne 'aeabdccf31e7f9036e76ff36690eb1b48a865336'){throw "Parent inseguro: $parent"}
           $changed=@(git diff --name-only HEAD^1 HEAD)
           if($changed.Count -ne 1 -or $changed[0] -ne '.github/workflows/ct-p0-t2-watchdog-exec.yml'){throw 'Commit intermediario contem arquivo nao autorizado'}
           if(@(git status --short).Count -ne 0){throw 'Working tree sujo'}
@@ -64,6 +64,8 @@ jobs:
           $ErrorActionPreference='Stop'
           @'
           from pathlib import Path
+          import re
+
           files=[Path('produtor/index.html'),Path('tests/e2e/authenticated-operational.spec.js')]
           wrong='sess'+chr(0x00e1)+'o'
           right='sess'+chr(0x00e3)+'o'
@@ -71,31 +73,45 @@ jobs:
               txt=p.read_text(encoding='utf-8')
               txt=txt.replace(wrong,right).replace('toBEGreaterThanOrEqual','toBeGreaterThanOrEqual').replace('supplierMutationCals','supplierMutationCalls')
               p.write_text(txt,encoding='utf-8',newline='\n')
+
           p=Path('tests/e2e/authenticated-operational.spec.js')
           txt=p.read_text(encoding='utf-8')
-          old1="""    const inicio = Date.now();
-              await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
-              await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada', { timeout: 10000 });
-              expect(Date.now() - inicio).toBeLessThan(10000);"""
-          new1="""    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
-              await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...', { timeout: 3000 });
-              const inicio = Date.now();
-              await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada', { timeout: 10000 });
-              expect(Date.now() - inicio).toBeLessThan(10000);"""
-          old2="""    const inicio=Date.now(); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
-              await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada',{timeout:10000});
-              const elapsed=Date.now()-inicio; console.log(`WATCHDOG_ELAPSED_MS=${elapsed}`);"""
-          new2="""    await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
-              await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...',{timeout:3000});
-              const inicio=Date.now();
-              await expect(page.locator('#portalMessage')).toContainText('Sua sessão foi preservada',{timeout:10000});
-              const elapsed=Date.now()-inicio; console.log(`WATCHDOG_ELAPSED_MS=${elapsed}`);"""
-          for label,old,new in [('critical-timing',old1,new1),('watchdog-timing',old2,new2)]:
-              c=txt.count(old)
-              print(f'{label}: OLD_COUNT={c}')
-              if c!=1:
-                  raise SystemExit(f'{label}: expected 1 got {c}')
-              txt=txt.replace(old,new,1)
+
+          def bounds(title):
+              marker="  test('"+title+"'"
+              if txt.count(marker)!=1:
+                  raise SystemExit(f'{title}: marcador esperado 1, obtido {txt.count(marker)}')
+              start=txt.index(marker)
+              end=txt.find("\n  test('", start+len(marker))
+              if end<0:
+                  raise SystemExit(f'{title}: fim do bloco nao encontrado')
+              return start,end
+
+          title1='Portal preserva sessao local quando restauracao falha transitoriamente'
+          s,e=bounds(title1)
+          b=txt[s:e]
+          goto1="    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });"
+          if b.count(goto1)!=1:
+              raise SystemExit(f'critical goto count={b.count(goto1)}')
+          b=b.replace('    const inicio = Date.now();\n','',1)
+          b=b.replace(goto1, goto1+"\n    await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...', { timeout: 3000 });\n    const inicio = Date.now();",1)
+          if b.count('expect(Date.now() - inicio).toBeLessThan(10000);')!=1:
+              raise SystemExit('critical timing assertion ausente')
+          txt=txt[:s]+b+txt[e:]
+
+          title2='Portal encerra loading T2 entre 8,5s e 10s quando RPC fica pendurado'
+          s,e=bounds(title2)
+          b=txt[s:e]
+          pattern=r"    const inicio=Date\.now\(\);\s*await page\.goto\('/produtor/',\{waitUntil:'domcontentloaded'\}\);"
+          matches=list(re.finditer(pattern,b))
+          if len(matches)!=1:
+              raise SystemExit(f'watchdog inicio count={len(matches)}')
+          replacement="    await page.goto('/produtor/',{waitUntil:'domcontentloaded'});\n    await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...',{timeout:3000});\n    const inicio=Date.now();"
+          b=re.sub(pattern,replacement,b,count=1)
+          if b.count('WATCHDOG_ELAPSED_MS=')!=1:
+              raise SystemExit('watchdog metric ausente')
+          txt=txt[:s]+b+txt[e:]
+
           p.write_text(txt,encoding='utf-8',newline='\n')
           print('SANITIZE=PASS')
           '@ | python -
