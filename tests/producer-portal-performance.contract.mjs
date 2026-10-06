@@ -6,6 +6,13 @@ const read = rel => fs.readFileSync(path.join(root, rel), 'utf8').replace(/\r\n/
 const portal = read('produtor/index.html');
 const home = read('index.html');
 
+const preencherEventosInicio = portal.indexOf('function preencherEventos(){');
+const carregarCatalogoInicio = portal.indexOf('function carregarCatalogoEventosProdutor(){');
+const preencherEventosBloco =
+  preencherEventosInicio >= 0 && carregarCatalogoInicio > preencherEventosInicio
+    ? portal.slice(preencherEventosInicio, carregarCatalogoInicio)
+    : '';
+
 const checks = {
   cadastroVisivelPrimeiraPintura:
     portal.includes('id="showRegisterButton"\nclass="text-button"\ntype="button"') &&
@@ -43,6 +50,17 @@ const checks = {
     portal.includes('state.capacidades.cadastro.habilitado') &&
     portal.includes('el.registerButton.disabled =') &&
     portal.includes('state.capacidades.recuperacaoSenha.habilitado'),
+
+  catalogoProgressivoT2:
+    preencherEventosBloco.includes('/* CT_T2_PROGRESSIVE_CATALOG_V1 */') &&
+    preencherEventosBloco.includes('state.produtorAtual.catalogoEventosPendente') &&
+    preencherEventosBloco.includes('carregarCatalogoEventosProdutor();') &&
+    preencherEventosBloco.indexOf('catalogoEventosPendente') <
+      preencherEventosBloco.indexOf("vazio.textContent =\n'Nenhum evento autorizado';"),
+
+  catalogoProgressivoFinalizaEstado:
+    portal.includes('/* CT_T2_CATALOG_RESOLVED_V1 */') &&
+    portal.includes('state.produtorAtual.catalogoEventosPendente =\nfalse;'),
 
   prefetchHome:
     home.includes('<link rel="prefetch" href="/produtor/" as="document">')
