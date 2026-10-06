@@ -1,0 +1,209 @@
+name: CT Portal login T1 apply
+
+on:
+  push:
+    branches:
+      - hotfix/portal-login-t1-timeout
+    paths:
+      - '.github/workflows/ct-portal-login-t1-apply.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/portal-login-t1-timeout
+          fetch-depth: 0
+          clean: true
+
+      - name: Aplicar edicao atomica T1 e testes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          portal_path = Path('produtor/index.html')
+          spec_path = Path('tests/e2e/authenticated-operational.spec.js')
+
+          portal = portal_path.read_text(encoding='utf-8')
+          spec = spec_path.read_text(encoding='utf-8')
+
+          timeout_anchor = "var RESTORE_UX_TIMEOUT_MS =\n9000;\n"
+          if portal.count(timeout_anchor) != 1:
+              raise SystemExit('ANCHOR_TIMEOUT_COUNT=' + str(portal.count(timeout_anchor)))
+          if 'var LOGIN_RPC_TIMEOUT_MS =' not in portal:
+              portal = portal.replace(
+                  timeout_anchor,
+                  timeout_anchor + "\nvar LOGIN_RPC_TIMEOUT_MS =\n12000;\n",
+                  1,
+              )
+
+          start = portal.find('function chamarLoginFirebaseServidor(\nidToken\n){')
+          end = portal.find('function encerrarSessaoServidorSilencioso(', start)
+          if start < 0 or end < 0 or end <= start:
+              raise SystemExit('LOGIN_FUNCTION_MARKERS_INVALID')
+
+          new_login = """function chamarLoginFirebaseServidor(\nidToken\n){\n\nreturn new Promise(\nfunction(\nresolve,\nreject\n){\n\nvar concluido =\nfalse;\n\nvar timer =\nwindow.setTimeout(\nfunction(){\n\nif(\nconcluido\n){\nreturn;\n}\n\nconcluido =\ntrue;\n\nreject(\nnew Error(\n'CT_PORTAL_RPC_TIMEOUT'\n)\n);\n},\nLOGIN_RPC_TIMEOUT_MS\n);\n\ngoogle.script.run\n.withSuccessHandler(\nfunction(resposta){\n\nif(\nconcluido\n){\n\nif(\nresposta &&\nresposta.sucesso ===\ntrue &&\nresposta.autenticado ===\ntrue &&\nString(\nresposta.token ||\n''\n).trim()\n){\n\nencerrarSessaoServidorSilencioso(\nString(\nresposta.token\n).trim()\n);\n}\n\nreturn;\n}\n\nconcluido =\ntrue;\n\nwindow.clearTimeout(\ntimer\n);\n\nresolve(\nresposta\n);\n}\n)\n.withFailureHandler(\nfunction(erro){\n\nif(\nconcluido\n){\nreturn;\n}\n\nconcluido =\ntrue;\n\nwindow.clearTimeout(\ntimer\n);\n\nreject(\nerro ||\nnew Error(\n'CT_PORTAL_LOGIN_BACKEND_FALHOU'\n)\n);\n}\n)\n.ctPortalProdutorLoginFirebaseHotpathP0PROD(\nidToken\n);\n}\n);\n}\n\n"""
+          portal = portal[:start] + new_login + portal[end:]
+
+          login_case_anchor = "          case 'ctPortalProdutorRestaurarSessaoIsoladaPROD':\n"
+          if spec.count(login_case_anchor) != 1:
+              raise SystemExit('LOGIN_CASE_ANCHOR_COUNT=' + str(spec.count(login_case_anchor)))
+
+          login_case = """          case 'ctPortalProdutorLoginFirebaseHotpathP0PROD':\n            state.loginCalls = Number(state.loginCalls || 0) + 1;\n            {\n              const delay = Number(state.loginDelayMs || 0);\n              if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));\n              resultado = state.loginResponse || {\n                sucesso: true,\n                autenticado: true,\n                autorizado: false,\n                contextoPendente: true,\n                token: 'CT-E2E-LOGIN-TOKEN',\n                expiraEm: '2099-01-01T00:00:00.000Z',\n                usuario: { id: 'USR-E2E', nome: 'Operador Homologacao' }\n              };\n            }\n            break;\n\n"""
+          if "case 'ctPortalProdutorLoginFirebaseHotpathP0PROD':" not in spec:
+              spec = spec.replace(login_case_anchor, login_case + login_case_anchor, 1)
+
+          old_logout = """          case 'logoutUsuarioCT2':\n            resultado = { sucesso: true };\n            break;\n"""
+          new_logout = """          case 'logoutUsuarioCT2':\n            state.logoutCalls = Number(state.logoutCalls || 0) + 1;\n            state.logoutTokens = Array.isArray(state.logoutTokens) ? state.logoutTokens : [];\n            state.logoutTokens.push(String(args[0] || ''));\n            resultado = { sucesso: true };\n            break;\n"""
+          if spec.count(old_logout) != 1:
+              raise SystemExit('LOGOUT_CASE_COUNT=' + str(spec.count(old_logout)))
+          spec = spec.replace(old_logout, new_logout, 1)
+
+          final_marker = "\n});\n"
+          pos = spec.rfind(final_marker)
+          if pos < 0:
+              raise SystemExit('DESCRIBE_END_NOT_FOUND')
+
+          tests = r'''
+
+  test('Portal limita RPC inicial de login a 12s sem ficar preso por 30s', async ({ page }) => {
+    const state = {
+      token: 'CT-E2E-T1-HANG',
+      loginDelayMs: 30000,
+      loginResponse: {
+        sucesso: true,
+        autenticado: true,
+        autorizado: false,
+        contextoPendente: true,
+        token: 'CT-E2E-LATE-HANG',
+        expiraEm: '2099-01-01T00:00:00.000Z',
+        usuario: { id: 'USR-E2E', nome: 'Operador Homologacao' }
+      },
+      transactionCalls: 0,
+      barMutationCalls: 0,
+      eventMutationCalls: 0,
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0
+    };
+    await installMock(page, state);
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+    const inicio = Date.now();
+    const retorno = await page.evaluate(async () => {
+      try {
+        await window.chamarLoginFirebaseServidor('CT-E2E-IDTOKEN');
+        return { ok: true, message: '' };
+      } catch (erro) {
+        return { ok: false, message: String(erro && erro.message || erro || '') };
+      }
+    });
+    const elapsed = Date.now() - inicio;
+    console.log(`LOGIN_T1_TIMEOUT_ELAPSED_MS=${elapsed}`);
+    expect(retorno.ok).toBe(false);
+    expect(retorno.message).toContain('CT_PORTAL_RPC_TIMEOUT');
+    expect(elapsed).toBeGreaterThanOrEqual(11500);
+    expect(elapsed).toBeLessThan(13000);
+  });
+
+  test('Portal descarta sucesso tardio do login e encerra sessao orfa', async ({ page }) => {
+    const lateToken = 'CT-E2E-LATE-SESSION-CLEANUP';
+    const state = {
+      token: 'CT-E2E-T1-LATE',
+      loginDelayMs: 12500,
+      loginResponse: {
+        sucesso: true,
+        autenticado: true,
+        autorizado: false,
+        contextoPendente: true,
+        token: lateToken,
+        expiraEm: '2099-01-01T00:00:00.000Z',
+        usuario: { id: 'USR-E2E', nome: 'Operador Homologacao' }
+      },
+      transactionCalls: 0,
+      barMutationCalls: 0,
+      eventMutationCalls: 0,
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0
+    };
+    await installMock(page, state);
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+    const retorno = await page.evaluate(async () => {
+      try {
+        await window.chamarLoginFirebaseServidor('CT-E2E-IDTOKEN-LATE');
+        return { ok: true };
+      } catch (erro) {
+        return { ok: false, message: String(erro && erro.message || erro || '') };
+      }
+    });
+    expect(retorno.ok).toBe(false);
+    await page.waitForTimeout(1500);
+    expect(state.logoutCalls).toBe(1);
+    expect(state.logoutTokens).toContain(lateToken);
+    await expect(page.locator('#portalView')).toHaveClass(/hidden/);
+  });
+
+  test('Portal mantém resposta rápida do login sem esperar watchdog', async ({ page }) => {
+    const fastToken = 'CT-E2E-FAST-LOGIN';
+    const state = {
+      token: fastToken,
+      loginDelayMs: 80,
+      loginResponse: {
+        sucesso: true,
+        autenticado: true,
+        autorizado: false,
+        contextoPendente: true,
+        token: fastToken,
+        expiraEm: '2099-01-01T00:00:00.000Z',
+        usuario: { id: 'USR-E2E', nome: 'Operador Homologacao' }
+      },
+      transactionCalls: 0,
+      barMutationCalls: 0,
+      eventMutationCalls: 0,
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0
+    };
+    await installMock(page, state);
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+    const inicio = Date.now();
+    const resposta = await page.evaluate(async () => {
+      return await window.chamarLoginFirebaseServidor('CT-E2E-IDTOKEN-FAST');
+    });
+    expect(Date.now() - inicio).toBeLessThan(2500);
+    expect(resposta.sucesso).toBe(true);
+    expect(resposta.token).toBe(fastToken);
+  });
+'''
+          if "Portal limita RPC inicial de login a 12s" not in spec:
+              spec = spec[:pos] + tests + spec[pos:]
+
+          portal_path.write_text(portal, encoding='utf-8', newline='')
+          spec_path.write_text(spec, encoding='utf-8', newline='')
+          print('CT_T1_EDIT_OK')
+          PY
+
+          git diff --check
+          changed="$(git diff --name-only | sort)"
+          expected=$'produtor/index.html\ntests/e2e/authenticated-operational.spec.js'
+          if [ "$changed" != "$expected" ]; then
+            echo "Arquivos inesperados:"
+            printf '%s\n' "$changed"
+            exit 91
+          fi
+
+      - name: Commitar somente hotfix e remover workflow temporario
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'tudoparasuafestape-dot'
+          git config user.email 'tudoparasuafestape@gmail.com'
+          rm -f .github/workflows/ct-portal-login-t1-apply.yml
+          git add produtor/index.html tests/e2e/authenticated-operational.spec.js .github/workflows/ct-portal-login-t1-apply.yml
+          git diff --cached --check
+          git commit -m 'fix: limitar espera do login inicial do Portal'
+          git push origin HEAD:hotfix/portal-login-t1-timeout
