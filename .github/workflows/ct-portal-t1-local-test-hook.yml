@@ -1,0 +1,93 @@
+name: CT Portal T1 local test hook
+
+on:
+  push:
+    branches:
+      - hotfix/portal-login-t1-timeout
+    paths:
+      - '.github/workflows/ct-portal-t1-local-test-hook.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/portal-login-t1-timeout
+          fetch-depth: 0
+          clean: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Inserir hook somente localhost
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('produtor/index.html')
+          s=p.read_text(encoding='utf-8')
+          anchor='\nfunction encerrarSessaoServidorSilencioso(\n'
+          if s.count(anchor)!=1:
+              raise SystemExit(f'ANCHOR_COUNT={s.count(anchor)}')
+          if 'window.chamarLoginFirebaseServidor =\nchamarLoginFirebaseServidor;' in s:
+              raise SystemExit('HOOK_JA_EXISTE')
+          hook="""
+
+/*
+ * E2E local: expoe somente no host local a funcao T1 para a homologacao
+ * first-party. Em producao a funcao permanece privada ao escopo do Portal.
+ */
+if(
+window.location &&
+(
+window.location.hostname === '127.0.0.1' ||
+window.location.hostname === 'localhost'
+)
+){
+window.chamarLoginFirebaseServidor =
+chamarLoginFirebaseServidor;
+}
+"""
+          s=s.replace(anchor,hook+anchor,1)
+          p.write_text(s,encoding='utf-8',newline='')
+          PY
+          git diff --check
+          test "$(git diff --name-only)" = "produtor/index.html"
+
+      - name: Instalar e iniciar servidor
+        shell: bash
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/ct-http.log 2>&1 &
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/ct-http.log
+          exit 1
+
+      - name: Testar T1 desktop e mobile sem retry
+        env:
+          CT_BASE_URL: http://127.0.0.1:4173
+          CT_EXPECTED_HOST: 127.0.0.1
+          CT_BRANCH_MODE: '1'
+        shell: bash
+        run: |
+          npx playwright test tests/e2e/authenticated-operational.spec.js --project=desktop-chromium --workers=1 --retries=0 --grep "Portal (limita RPC inicial de login|descarta sucesso tardio do login|mantém resposta rápida do login)"
+          npx playwright test tests/e2e/authenticated-operational.spec.js --project=mobile-chromium --workers=1 --retries=0 --grep "Portal (limita RPC inicial de login|descarta sucesso tardio do login|mantém resposta rápida do login)"
+
+      - name: Commit e push do hook local
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add produtor/index.html
+          git commit -m 'test: expor T1 somente em localhost para E2E'
+          git push origin HEAD:hotfix/portal-login-t1-timeout
