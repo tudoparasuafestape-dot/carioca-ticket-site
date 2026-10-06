@@ -3987,6 +3987,17 @@ idToken
 );
 }
 
+/* E2E local: nunca exposto no dominio oficial. */
+if(
+window.location.hostname ===
+'127.0.0.1' ||
+window.location.hostname ===
+'localhost'
+){
+window.chamarLoginFirebaseServidor =
+chamarLoginFirebaseServidor;
+}
+
 function encerrarSessaoServidorSilencioso(
 token
 ){
