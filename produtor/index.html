@@ -2124,6 +2124,9 @@ var BOOTSTRAP_TTL_MS =
 var RESTORE_UX_TIMEOUT_MS =
 9000;
 
+var LOGIN_RPC_TIMEOUT_MS =
+12000;
+
 var state = {
 
 
@@ -3886,18 +3889,113 @@ resolve,
 reject
 ){
 
+var concluido =
+false;
+
+var timer =
+window.setTimeout(
+function(){
+
+if(
+concluido
+){
+return;
+}
+
+concluido =
+true;
+
+reject(
+new Error(
+'CT_PORTAL_RPC_TIMEOUT'
+)
+);
+},
+LOGIN_RPC_TIMEOUT_MS
+);
+
 google.script.run
 .withSuccessHandler(
-resolve
+function(resposta){
+
+if(
+concluido
+){
+
+if(
+resposta &&
+resposta.sucesso ===
+true &&
+resposta.autenticado ===
+true &&
+String(
+resposta.token ||
+''
+).trim()
+){
+
+encerrarSessaoServidorSilencioso(
+String(
+resposta.token
+).trim()
+);
+}
+
+return;
+}
+
+concluido =
+true;
+
+window.clearTimeout(
+timer
+);
+
+resolve(
+resposta
+);
+}
 )
 .withFailureHandler(
-reject
+function(erro){
+
+if(
+concluido
+){
+return;
+}
+
+concluido =
+true;
+
+window.clearTimeout(
+timer
+);
+
+reject(
+erro ||
+new Error(
+'CT_PORTAL_LOGIN_BACKEND_FALHOU'
+)
+);
+}
 )
 .ctPortalProdutorLoginFirebaseHotpathP0PROD(
 idToken
 );
 }
 );
+}
+
+/* E2E local: nunca exposto no dominio oficial. */
+if(
+window.location.hostname ===
+'127.0.0.1' ||
+window.location.hostname ===
+'localhost'
+){
+window.chamarLoginFirebaseServidor =
+chamarLoginFirebaseServidor;
 }
 
 function encerrarSessaoServidorSilencioso(

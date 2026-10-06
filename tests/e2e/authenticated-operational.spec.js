@@ -831,6 +831,23 @@ async function installMock(page, state) {
             resultado = { sucesso: false };
             break;
 
+          case 'ctPortalProdutorLoginFirebaseHotpathP0PROD':
+            state.loginCalls = Number(state.loginCalls || 0) + 1;
+            {
+              const delay = Number(state.loginDelayMs || 0);
+              if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));
+              resultado = state.loginResponse || {
+                sucesso: true,
+                autenticado: true,
+                autorizado: false,
+                contextoPendente: true,
+                token: 'CT-E2E-LOGIN-TOKEN',
+                expiraEm: '2099-01-01T00:00:00.000Z',
+                usuario: { id: 'USR-E2E', nome: 'Operador Homologacao' }
+              };
+            }
+            break;
+
           case 'ctPortalProdutorRestaurarSessaoIsoladaPROD':
             expect(String(args[0] || '')).toBe(state.token);
             state.restoreCalls = Number(state.restoreCalls || 0) + 1;
@@ -1022,6 +1039,9 @@ async function installMock(page, state) {
             throw new Error('Teste nao deve alterar regras de comissao.');
 
           case 'logoutUsuarioCT2':
+            state.logoutCalls = Number(state.logoutCalls || 0) + 1;
+            state.logoutTokens = Array.isArray(state.logoutTokens) ? state.logoutTokens : [];
+            state.logoutTokens.push(String(args[0] || ''));
             resultado = { sucesso: true };
             break;
 
@@ -1626,6 +1646,113 @@ test.describe('Jornada operacional autenticada', () => {
     await page.locator('#logout').click();
     await expect(page).toHaveURL(/\/produtor\//, { timeout: 10000 });
     expect(state.transactionCalls).toBe(0);
+  });
+
+
+  test('Portal limita RPC inicial de login a 12s sem ficar preso por 30s', async ({ page }) => {
+    const state = {
+      token: 'CT-E2E-T1-HANG',
+      loginDelayMs: 30000,
+      loginResponse: {
+        sucesso: true,
+        autenticado: true,
+        autorizado: false,
+        contextoPendente: true,
+        token: 'CT-E2E-LATE-HANG',
+        expiraEm: '2099-01-01T00:00:00.000Z',
+        usuario: { id: 'USR-E2E', nome: 'Operador Homologacao' }
+      },
+      transactionCalls: 0,
+      barMutationCalls: 0,
+      eventMutationCalls: 0,
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0
+    };
+    await installMock(page, state);
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+    const inicio = Date.now();
+    const retorno = await page.evaluate(async () => {
+      try {
+        await window.chamarLoginFirebaseServidor('CT-E2E-IDTOKEN');
+        return { ok: true, message: '' };
+      } catch (erro) {
+        return { ok: false, message: String(erro && erro.message || erro || '') };
+      }
+    });
+    const elapsed = Date.now() - inicio;
+    console.log(`LOGIN_T1_TIMEOUT_ELAPSED_MS=${elapsed}`);
+    expect(retorno.ok).toBe(false);
+    expect(retorno.message).toContain('CT_PORTAL_RPC_TIMEOUT');
+    expect(elapsed).toBeGreaterThanOrEqual(11500);
+    expect(elapsed).toBeLessThan(13000);
+  });
+
+  test('Portal descarta sucesso tardio do login e encerra sessao orfa', async ({ page }) => {
+    const lateToken = 'CT-E2E-LATE-SESSION-CLEANUP';
+    const state = {
+      token: 'CT-E2E-T1-LATE',
+      loginDelayMs: 12500,
+      loginResponse: {
+        sucesso: true,
+        autenticado: true,
+        autorizado: false,
+        contextoPendente: true,
+        token: lateToken,
+        expiraEm: '2099-01-01T00:00:00.000Z',
+        usuario: { id: 'USR-E2E', nome: 'Operador Homologacao' }
+      },
+      transactionCalls: 0,
+      barMutationCalls: 0,
+      eventMutationCalls: 0,
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0
+    };
+    await installMock(page, state);
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+    const retorno = await page.evaluate(async () => {
+      try {
+        await window.chamarLoginFirebaseServidor('CT-E2E-IDTOKEN-LATE');
+        return { ok: true };
+      } catch (erro) {
+        return { ok: false, message: String(erro && erro.message || erro || '') };
+      }
+    });
+    expect(retorno.ok).toBe(false);
+    await page.waitForTimeout(1500);
+    expect(state.logoutCalls).toBe(1);
+    expect(state.logoutTokens).toContain(lateToken);
+    await expect(page.locator('#portalView')).toHaveClass(/hidden/);
+  });
+
+  test('Portal mantém resposta rápida do login sem esperar watchdog', async ({ page }) => {
+    const fastToken = 'CT-E2E-FAST-LOGIN';
+    const state = {
+      token: fastToken,
+      loginDelayMs: 80,
+      loginResponse: {
+        sucesso: true,
+        autenticado: true,
+        autorizado: false,
+        contextoPendente: true,
+        token: fastToken,
+        expiraEm: '2099-01-01T00:00:00.000Z',
+        usuario: { id: 'USR-E2E', nome: 'Operador Homologacao' }
+      },
+      transactionCalls: 0,
+      barMutationCalls: 0,
+      eventMutationCalls: 0,
+      supplierMutationCalls: 0,
+      commissionMutationCalls: 0
+    };
+    await installMock(page, state);
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+    const inicio = Date.now();
+    const resposta = await page.evaluate(async () => {
+      return await window.chamarLoginFirebaseServidor('CT-E2E-IDTOKEN-FAST');
+    });
+    expect(Date.now() - inicio).toBeLessThan(2500);
+    expect(resposta.sucesso).toBe(true);
+    expect(resposta.token).toBe(fastToken);
   });
 
 });
