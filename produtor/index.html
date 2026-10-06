@@ -5387,8 +5387,14 @@ state.produtorAtual.eventos
 ? state.produtorAtual.eventos
 : [];
 
+/* CT_T2_PROGRESSIVE_CATALOG_V1 */
+var catalogoEventosPendente =
+state.produtorAtual.catalogoEventosPendente ===
+true;
+
 if(
-!eventosBase.length
+!eventosBase.length &&
+!catalogoEventosPendente
 ){
 
 var vazio =
@@ -5507,6 +5513,10 @@ r.eventos
 renderizarFalhaCatalogoEventos();
 return;
 }
+
+/* CT_T2_CATALOG_RESOLVED_V1 */
+state.produtorAtual.catalogoEventosPendente =
+false;
 
 state.produtorAtual.eventos =
 r.eventos;
