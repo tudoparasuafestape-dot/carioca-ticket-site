@@ -75,7 +75,7 @@ test.describe('Ativação financeira Master do Produtor',()=>{
     await expect(page.locator('#detail')).toContainText('Vendas bloqueadas').catch(()=>{});
 
     await expect(page.locator('#credentialRef')).toHaveAttribute('readonly','');
-    await expect(page.locator('#credentialRef')).toHaveValue('CT_SECRET_ASAAS_PRODUCAO_PROD_E2E');
+    await expect(page.locator('#credentialRef')).toHaveValue('CT_SECRET_ASAAS_PRODUCAO_…');
     await page.locator('#validateButton').click();
     await expect.poll(()=>state.validateCalls).toBe(1);
     await expect(page.locator('#readinessBox')).toContainText('Provider: validado');
@@ -117,7 +117,7 @@ test.describe('Ativação financeira Master do Produtor',()=>{
     });
     await seed(page,'CT-ADMIN-E2E');await page.goto('/backoffice/carioca-pay/produtores/?produtor=PROD-E2E',{waitUntil:'domcontentloaded'});
     await expect(page.locator('#credentialRef')).toHaveAttribute('readonly','');
-    await expect(page.locator('#credentialRef')).toHaveValue('CT_SECRET_ASAAS_PRODUCAO_PROD_E2E');
+    await expect(page.locator('#credentialRef')).toHaveValue('CT_SECRET_ASAAS_PRODUCAO_…');
     await page.locator('#validateButton').click();
     await expect(page.locator('#readinessBox')).toContainText('não encontrado');
     await page.locator('#confirmation').fill('ATIVAR FINANCEIRO');
