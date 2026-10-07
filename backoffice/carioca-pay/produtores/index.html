@@ -78,6 +78,11 @@ function missingFieldsHtml(faltas){
 function collectProvisionData(){
  var keys=['name','email','cpfCnpj','mobilePhone','incomeValue','address','addressNumber','province','postalCode','companyType','birthDate'];
  keys.forEach(function(k){var el=$('prov_'+k);if(el)state.provisionData[k]=String(el.value||'').trim()});
+ var emailOverride=$('prov_emailOverride');
+ if(emailOverride){
+   state.provisionData.emailOverride=String(emailOverride.value||'').trim().toLowerCase();
+   if(state.provisionData.emailOverride)state.provisionData.email=state.provisionData.emailOverride;
+ }
  return Object.assign({},state.provisionData);
 }
 function renderProvisioningResult(){
@@ -86,9 +91,10 @@ function renderProvisioningResult(){
  var status='<div class="note"><b>Dados cadastrais:</b> '+(r.prontoDados?'completos':'pendentes')+'<br><b>Credencial pai:</b> '+(r.credencialPaiConfigurada?'configurada':'não configurada')+'<br><b>Subconta vinculada:</b> '+(r.subcontaVinculada?'sim':'não')+'<br><b>Provider chamado:</b> não<br><b>Movimentação financeira:</b> não</div>';
  var fields=faltas.length?'<div class="note">Preencha somente os campos realmente ausentes abaixo. Nenhum endereço do evento será usado.</div>'+missingFieldsHtml(faltas)+'<div class="actions"><button id="recheckProvisionButton" class="btn gold" type="button">Verificar novamente</button></div>':'';
  var create='';
- if(r.podeProvisionar===true){create='<div class="note">Prontidão local aprovada. A criação permanece bloqueada até confirmação explícita. Antes de criar, o backend ainda pesquisa por CNPJ no Asaas para impedir duplicidade.</div><div class="field"><label>Confirmação de provisionamento</label><input id="provisionConfirmation" autocomplete="off" placeholder="Digite CRIAR SUBCONTA PRODUCAO"></div><div class="actions"><button id="provisionButton" class="btn gold" type="button" disabled>Criar/vincular subconta BIOCRED</button></div>'}
+ if(r.podeProvisionar===true){create='<div class="note">Prontidão local aprovada. O Asaas exige um e-mail de conta que ainda não esteja associado a outra conta Asaas. Informe abaixo um endereço exclusivo; em Gmail, um alias com + entrega na mesma caixa postal. O backend continua pesquisando o CNPJ antes de criar para impedir duplicidade.</div><div class="field"><label>E-mail exclusivo da subconta Asaas</label><input id="prov_emailOverride" type="email" autocomplete="off" placeholder="Ex.: nome+cariocaticket@gmail.com" value="'+esc(state.provisionData.emailOverride||'')+'"></div><div class="field"><label>Confirmação de provisionamento</label><input id="provisionConfirmation" autocomplete="off" placeholder="Digite CRIAR SUBCONTA PRODUCAO"></div><div class="actions"><button id="provisionButton" class="btn gold" type="button" disabled>Criar/vincular subconta BIOCRED</button></div>'}
  box.innerHTML=status+fields+create;
  var rb=$('recheckProvisionButton');if(rb)rb.addEventListener('click',checkProvisionReadiness);
+ var pe=$('prov_emailOverride');if(pe)pe.addEventListener('input',updateProvisionButton);
  var pc=$('provisionConfirmation');if(pc)pc.addEventListener('input',updateProvisionButton);
  var pb=$('provisionButton');if(pb)pb.addEventListener('click',provisionCanary);
  updateProvisionButton();
@@ -136,7 +142,11 @@ async function checkProvisionReadiness(){
  finally{state.busy=false;if(b)b.disabled=false}
 }
 function updateProvisionButton(){
- var b=$('provisionButton');if(!b)return;var c=$('provisionConfirmation');var ok=state.provisioning&&state.provisioning.podeProvisionar===true&&c&&String(c.value||'').trim().toUpperCase()==='CRIAR SUBCONTA PRODUCAO';b.disabled=!ok
+ var b=$('provisionButton');if(!b)return;
+ var c=$('provisionConfirmation'),e=$('prov_emailOverride');
+ var emailOverrideValido=!!(e&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e.value||'').trim()));
+ var ok=state.provisioning&&state.provisioning.podeProvisionar===true&&emailOverrideValido&&c&&String(c.value||'').trim().toUpperCase()==='CRIAR SUBCONTA PRODUCAO';
+ b.disabled=!ok
 }
 async function provisionCanary(){
  if(!isCanary()||!state.provisioning||state.provisioning.podeProvisionar!==true||state.busy)return;
