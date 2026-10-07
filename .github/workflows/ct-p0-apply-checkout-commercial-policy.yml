@@ -1,0 +1,133 @@
+name: CT P0 Apply Checkout Commercial Policy
+
+on:
+  push:
+    branches:
+      - feat/p0-checkout-commercial-policy-20261007
+    paths:
+      - '.github/workflows/ct-p0-apply-checkout-commercial-policy.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-checkout-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/p0-checkout-commercial-policy-20261007
+          fetch-depth: 0
+
+      - name: Apply deterministic patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('checkout/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          marker = 'CT_P0_COMMERCIAL_POLICY_OFFICIAL_CHECKOUT_V1'
+          if marker in text:
+              print('Patch already applied; nothing to do.')
+              raise SystemExit(0)
+
+          def once(old, new, label):
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected 1 occurrence, found {count}')
+              text = text.replace(old, new, 1)
+
+          once(
+              '<script src="/pwa-register.js" defer></script>\n</head>',
+              '<script src="/pwa-register.js" defer></script>\n  <script src="/assets/checkout-commercial-policy.js"></script>\n</head>',
+              'helper script'
+          )
+
+          once(
+              '''      <div id="summary" class="ticket-summary hidden">\n        <div><small>SEU PEDIDO</small><b id="summaryTitle">—</b><div id="summaryAccess" class="help"></div></div>\n        <div style="text-align:right"><small>TOTAL</small><b id="summaryPrice">R$ 0,00</b></div>\n      </div>\n      <div id="couponBox" class="coupon-box">''',
+              '''      <div id="summary" class="ticket-summary hidden">\n        <div><small>SEU PEDIDO</small><b id="summaryTitle">—</b><div id="summaryAccess" class="help"></div></div>\n        <div style="text-align:right"><small>TOTAL</small><b id="summaryPrice">R$ 0,00</b></div>\n      </div>\n      <div id="feeSummary" class="promo-summary hidden" data-ct-p0="CT_P0_COMMERCIAL_POLICY_OFFICIAL_CHECKOUT_V1">\n        <div class="promo-line"><span>Ingressos</span><span id="feeBase">R$ 0,00</span></div>\n        <div class="promo-line"><span><span id="feeLabel">Taxa Carioca Ticket</span> <button id="feeInfo" type="button" aria-label="Saiba mais sobre a taxa Carioca Ticket" style="min-height:auto;border:0;background:transparent;padding:0 2px;color:#7A5A0C;font-weight:900;cursor:pointer">ⓘ</button></span><span id="feePlatform">R$ 0,00</span></div>\n        <div id="feeAdditionalRow" class="promo-line hidden"><span>Encargos comerciais adicionais</span><span id="feeAdditional">R$ 0,00</span></div>\n        <div class="promo-line total"><span>Total a pagar</span><span id="feeTotal">R$ 0,00</span></div>\n        <div id="feeNote" class="help" style="margin-top:8px"></div>\n      </div>\n      <div id="couponBox" class="coupon-box">''',
+              'fee summary markup'
+          )
+
+          once(
+              '''        promotion:null,\n        couponBusy:false\n      };''',
+              '''        promotion:null,\n        couponBusy:false,\n        politicaComercialAtiva:false,\n        feePreview:null,\n        feeBusy:false,\n        feeReady:false,\n        feeRevision:'',\n        feeQuotedAt:0,\n        feeSeq:0,\n        feeTimer:null\n      };''',
+              'state fields'
+          )
+
+          once(
+              "        'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',\n",
+              "        'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',\n        'feeSummary','feeBase','feeLabel','feeInfo','feePlatform','feeAdditionalRow','feeAdditional','feeTotal','feeNote',\n",
+              'element ids'
+          )
+
+          once(
+              "      el.modalOk.onclick=closeModal;\n      el.modalBg.onclick=function(e){if(e.target===el.modalBg)closeModal();};\n",
+              "      el.modalOk.onclick=closeModal;\n      el.modalBg.onclick=function(e){if(e.target===el.modalBg)closeModal();};\n      if(el.feeInfo){\n        el.feeInfo.onclick=function(){\n          var p=window.CTCheckoutCommercialPolicy&&state.feePreview&&state.feePreview.resumo\n            ?window.CTCheckoutCommercialPolicy.present(state.feePreview.resumo)\n            :null;\n          modal(\n            p&&p.infoTitle?p.infoTitle:'Sobre a taxa Carioca Ticket',\n            p&&p.infoText?p.infoText:'Esta taxa remunera os serviços de tecnologia e intermediação da Carioca Ticket, incluindo infraestrutura da plataforma, processamento da venda, emissão e validação do ingresso digital e suporte à operação de compra.'\n          );\n        };\n      }\n",
+              'fee info action'
+          )
+
+          once(
+              "            state.catalog=res;\n            try {\n",
+              "            state.catalog=res;\n            state.politicaComercialAtiva=!!(res.politicaComercial&&res.politicaComercial.ativa===true);\n            try {\n",
+              'catalog policy flag'
+          )
+
+          once(
+              '''        el.summaryAccess.textContent=accesses+(accesses===1?' acesso':' acessos');\n        el.summary.classList.remove('hidden');\n        renderPromotion();\n        renderParticipants(Math.max(0,accesses-1));\n      }\n\n      function renderParticipants(count){''',
+              '''        el.summaryAccess.textContent=accesses+(accesses===1?' acesso':' acessos');\n        el.summary.classList.remove('hidden');\n        renderPromotion();\n        renderParticipants(Math.max(0,accesses-1));\n\n        var baseFinanceira=state.promotion&&state.promotion.calculo\n          ?Number(state.promotion.calculo.valorFinalTotal||0)\n          :total;\n        atualizarTaxa(baseFinanceira,q>0?baseFinanceira/q:baseFinanceira,q);\n      }\n\n      function atualizarTaxa(valorIngressos,precoUnitario,quantidadeVendas){\n        var seq=++state.feeSeq;\n        if(state.feeTimer){clearTimeout(state.feeTimer);state.feeTimer=null;}\n\n        if(!state.politicaComercialAtiva){\n          state.feeBusy=false;\n          state.feeReady=true;\n          state.feeRevision='';\n          state.feeQuotedAt=0;\n          state.feePreview=null;\n          el.feeSummary.classList.add('hidden');\n          el.summaryPrice.textContent=money(valorIngressos||0);\n          return;\n        }\n\n        state.feeBusy=true;\n        state.feeReady=false;\n        state.feeTimer=setTimeout(function(){\n          state.feeTimer=null;\n          google.script.run\n            .withSuccessHandler(function(res){\n              if(seq!==state.feeSeq)return;\n              state.feeBusy=false;\n              state.feePreview=res||null;\n              state.feeRevision=String(res&&res.revisao||'');\n              state.feeQuotedAt=Date.now();\n\n              var resumo=res&&res.resumo?res.resumo:null;\n              if(!res||res.sucesso!==true||!resumo){\n                state.feeReady=false;\n                el.feeSummary.classList.add('hidden');\n                el.summaryPrice.textContent=money(valorIngressos||0);\n                return;\n              }\n\n              state.feeReady=true;\n              var subtotal=Number(resumo.subtotalIngressos||valorIngressos||0);\n              var taxaCt=Number(resumo.taxaCtTotal||0);\n              var taxaComprador=Number(resumo.taxaComprador||0);\n              var adicionais=Number(resumo.adicionaisComprador||0);\n              var totalFinal=Number(resumo.totalComprador||subtotal);\n\n              el.feeBase.textContent=money(subtotal);\n              el.feePlatform.textContent=money(taxaComprador);\n              el.feeAdditional.textContent=money(adicionais);\n              el.feeAdditionalRow.classList.toggle('hidden',adicionais<=0);\n              el.feeTotal.textContent=money(totalFinal);\n              el.summaryPrice.textContent=money(totalFinal);\n\n              var apresentacao=window.CTCheckoutCommercialPolicy\n                ?window.CTCheckoutCommercialPolicy.present(resumo)\n                :null;\n              if(apresentacao){\n                el.feeLabel.textContent=apresentacao.label;\n                el.feeNote.textContent=apresentacao.note;\n              }else{\n                var pct=Number(resumo.taxaCtPercentual||0).toLocaleString('pt-BR',{maximumFractionDigits:2});\n                el.feeLabel.textContent='Taxa Carioca Ticket ('+pct+'%)';\n                el.feeNote.textContent=taxaComprador>0?'A taxa está incluída no total a pagar.':'Sem taxa adicional para o comprador.';\n              }\n\n              if(res.degradado===true){\n                el.feeNote.textContent='Sem taxa adicional para o comprador nesta operação.';\n              }\n              el.feeSummary.classList.toggle('hidden',taxaCt<=0&&adicionais<=0);\n            })\n            .withFailureHandler(function(){\n              if(seq!==state.feeSeq)return;\n              state.feeBusy=false;\n              state.feeReady=false;\n              state.feeRevision='';\n              state.feeQuotedAt=0;\n              state.feePreview=null;\n              el.feeSummary.classList.add('hidden');\n              el.summaryPrice.textContent=money(valorIngressos||0);\n            })\n            .ctPoliticaComercialPreviewPublicoPROD({\n              eventoId:state.eventId,\n              tipoIngressoId:state.type?state.type.id:'',\n              loteId:state.lot?state.lot.id:'',\n              precoUnitario:Number(precoUnitario||0),\n              quantidade:Number(quantidadeVendas||1)\n            });\n        },180);\n      }\n\n      function renderParticipants(count){''',
+              'fee preview integration'
+          )
+
+          once(
+              '''      function createPayment(){\n        if(state.busy)return;\n        var err=validate();''',
+              '''      function createPayment(){\n        if(state.busy)return;\n        if(\n          state.feeBusy||\n          state.feeReady!==true||\n          (state.politicaComercialAtiva&&(!state.feeQuotedAt||(Date.now()-state.feeQuotedAt)>30000))\n        ){\n          if(!state.feeBusy)updateSummary();\n          modal('Confirmando o total','Aguarde a atualização do valor final antes de continuar para o pagamento.');\n          return;\n        }\n        var err=validate();''',
+              'payment quote guard'
+          )
+
+          once(
+              "          cupomCodigo:state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'',\n          idempotenciaChave:getOrCreateIdempotency()\n",
+              "          cupomCodigo:state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'',\n          politicaRevisaoVista:state.feeRevision,\n          idempotenciaChave:getOrCreateIdempotency()\n",
+              'quote revision payload'
+          )
+
+          # Recalcula a taxa imediatamente após aplicar cupom.
+          target = "            renderPromotion();\n          })\n          .withFailureHandler(function(){"
+          if target in text:
+              text = text.replace(target, "            updateSummary();\n          })\n          .withFailureHandler(function(){", 1)
+          else:
+              raise SystemExit('coupon recalculation: target not found')
+
+          path.write_text(text, encoding='utf-8')
+          print('Official checkout commercial policy patch applied.')
+          PY
+
+      - name: Static safety checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'CT_P0_COMMERCIAL_POLICY_OFFICIAL_CHECKOUT_V1' checkout/index.html
+          grep -q 'ctPoliticaComercialPreviewPublicoPROD' checkout/index.html
+          grep -q 'politicaRevisaoVista:state.feeRevision' checkout/index.html
+          grep -q 'Taxa Carioca Ticket' checkout/index.html
+          grep -q 'checkout-commercial-policy.js' checkout/index.html
+          ! grep -q 'taxaCtPercentual:' checkout/index.html
+          ! grep -q 'produtorId:' checkout/index.html
+
+      - name: Commit patch to feature branch
+        shell: bash
+        run: |
+          if git diff --quiet -- checkout/index.html; then
+            echo 'No checkout changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add checkout/index.html
+          git commit -m 'feat(checkout): wire commercial policy into official checkout'
+          git push origin HEAD:feat/p0-checkout-commercial-policy-20261007
