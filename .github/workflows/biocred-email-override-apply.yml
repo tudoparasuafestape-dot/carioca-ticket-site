@@ -1,0 +1,101 @@
+name: BIOCRED Unique Email Override Applicator
+
+on:
+  push:
+    branches:
+      - fix/biocred-email-unique-override
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: contains(github.event.head_commit.message, '[apply-biocred-email-override]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/biocred-email-unique-override
+          fetch-depth: 0
+      - name: Apply constrained UI fix
+        shell: python
+        run: |
+          from pathlib import Path
+
+          html_path = Path('backoffice/carioca-pay/produtores/index.html')
+          test_path = Path('tests/biocred-financeiro-canary.contract.mjs')
+          html = html_path.read_text(encoding='utf-8')
+          test = test_path.read_text(encoding='utf-8')
+
+          old_collect = """function collectProvisionData(){
+           var keys=['name','email','cpfCnpj','mobilePhone','incomeValue','address','addressNumber','province','postalCode','companyType','birthDate'];
+           keys.forEach(function(k){var el=$('prov_'+k);if(el)state.provisionData[k]=String(el.value||'').trim()});
+           return Object.assign({},state.provisionData);
+          }"""
+          new_collect = """function collectProvisionData(){
+           var keys=['name','email','cpfCnpj','mobilePhone','incomeValue','address','addressNumber','province','postalCode','companyType','birthDate'];
+           keys.forEach(function(k){var el=$('prov_'+k);if(el)state.provisionData[k]=String(el.value||'').trim()});
+           var emailOverride=$('prov_emailOverride');
+           if(emailOverride){
+             state.provisionData.emailOverride=String(emailOverride.value||'').trim().toLowerCase();
+             if(state.provisionData.emailOverride)state.provisionData.email=state.provisionData.emailOverride;
+           }
+           return Object.assign({},state.provisionData);
+          }"""
+          if html.count(old_collect) != 1:
+              raise SystemExit('collectProvisionData anchor mismatch')
+          html = html.replace(old_collect, new_collect)
+
+          old_create = """ if(r.podeProvisionar===true){create='<div class=\"note\">Prontidão local aprovada. A criação permanece bloqueada até confirmação explícita. Antes de criar, o backend ainda pesquisa por CNPJ no Asaas para impedir duplicidade.</div><div class=\"field\"><label>Confirmação de provisionamento</label><input id=\"provisionConfirmation\" autocomplete=\"off\" placeholder=\"Digite CRIAR SUBCONTA PRODUCAO\"></div><div class=\"actions\"><button id=\"provisionButton\" class=\"btn gold\" type=\"button\" disabled>Criar/vincular subconta BIOCRED</button></div>'}"""
+          new_create = """ if(r.podeProvisionar===true){create='<div class=\"note\">Prontidão local aprovada. O Asaas exige um e-mail de conta que ainda não esteja associado a outra conta Asaas. Informe abaixo um endereço exclusivo; em Gmail, um alias com + entrega na mesma caixa postal. O backend continua pesquisando o CNPJ antes de criar para impedir duplicidade.</div><div class=\"field\"><label>E-mail exclusivo da subconta Asaas</label><input id=\"prov_emailOverride\" type=\"email\" autocomplete=\"off\" placeholder=\"Ex.: nome+cariocaticket@gmail.com\" value=\"'+esc(state.provisionData.emailOverride||'')+'\"></div><div class=\"field\"><label>Confirmação de provisionamento</label><input id=\"provisionConfirmation\" autocomplete=\"off\" placeholder=\"Digite CRIAR SUBCONTA PRODUCAO\"></div><div class=\"actions\"><button id=\"provisionButton\" class=\"btn gold\" type=\"button\" disabled>Criar/vincular subconta BIOCRED</button></div>'}"""
+          if html.count(old_create) != 1:
+              raise SystemExit('provision create anchor mismatch')
+          html = html.replace(old_create, new_create)
+
+          old_listeners = """ var pc=$('provisionConfirmation');if(pc)pc.addEventListener('input',updateProvisionButton);
+           var pb=$('provisionButton');if(pb)pb.addEventListener('click',provisionCanary);"""
+          new_listeners = """ var pe=$('prov_emailOverride');if(pe)pe.addEventListener('input',updateProvisionButton);
+           var pc=$('provisionConfirmation');if(pc)pc.addEventListener('input',updateProvisionButton);
+           var pb=$('provisionButton');if(pb)pb.addEventListener('click',provisionCanary);"""
+          if html.count(old_listeners) != 1:
+              raise SystemExit('provision listeners anchor mismatch')
+          html = html.replace(old_listeners, new_listeners)
+
+          old_button = """function updateProvisionButton(){
+           var b=$('provisionButton');if(!b)return;var c=$('provisionConfirmation');var ok=state.provisioning&&state.provisioning.podeProvisionar===true&&c&&String(c.value||'').trim().toUpperCase()==='CRIAR SUBCONTA PRODUCAO';b.disabled=!ok
+          }"""
+          new_button = """function updateProvisionButton(){
+           var b=$('provisionButton');if(!b)return;
+           var c=$('provisionConfirmation'),e=$('prov_emailOverride');
+           var emailOverrideValido=!!(e&&/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(e.value||'').trim()));
+           var ok=state.provisioning&&state.provisioning.podeProvisionar===true&&emailOverrideValido&&c&&String(c.value||'').trim().toUpperCase()==='CRIAR SUBCONTA PRODUCAO';
+           b.disabled=!ok
+          }"""
+          if html.count(old_button) != 1:
+              raise SystemExit('updateProvisionButton anchor mismatch')
+          html = html.replace(old_button, new_button)
+
+          marker = "console.log('BIOCRED financial canary contract: OK');"
+          extra = """assert.ok(html.includes('prov_emailOverride'), 'BIOCRED must allow an explicit unique Asaas account email override');
+          assert.ok(html.includes('state.provisionData.email=state.provisionData.emailOverride'), 'email override must be sent as the Asaas account email');
+          assert.ok(html.includes('emailOverrideValido'), 'provision button must require a syntactically valid explicit email override');
+          assert.ok(html.includes('e-mail de conta que ainda não esteja associado a outra conta Asaas'), 'operator guidance for Asaas email uniqueness missing');
+          assert.ok(!html.includes('jvfinpro@gmail.com'), 'client email must never be hard-coded in the frontend');
+
+          """ + marker
+          if test.count(marker) != 1:
+              raise SystemExit('contract marker mismatch')
+          test = test.replace(marker, extra)
+
+          html_path.write_text(html, encoding='utf-8')
+          test_path.write_text(test, encoding='utf-8')
+      - name: Validate contract locally
+        run: node tests/biocred-financeiro-canary.contract.mjs
+      - name: Commit constrained fix
+        run: |
+          git config user.name "carioca-ticket-bot"
+          git config user.email "carioca-ticket-bot@users.noreply.github.com"
+          git add backoffice/carioca-pay/produtores/index.html tests/biocred-financeiro-canary.contract.mjs
+          git commit -m "fix: require unique Asaas email for BIOCRED provisioning"
+          git push origin HEAD:fix/biocred-email-unique-override
