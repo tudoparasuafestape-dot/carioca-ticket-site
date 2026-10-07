@@ -1,0 +1,25 @@
+name: BIOCRED Financeiro Canary CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backoffice/carioca-pay/produtores/index.html'
+      - 'tests/biocred-financeiro-canary.contract.mjs'
+      - '.github/workflows/biocred-financeiro-canary-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate BIOCRED canary contract
+        run: node tests/biocred-financeiro-canary.contract.mjs
