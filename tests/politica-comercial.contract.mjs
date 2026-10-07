@@ -91,6 +91,23 @@ for(const s of [
   if(!checkout.includes(s))throw new Error('Checkout sem gate de transparencia comercial: '+s);
 }
 
+const checkoutOfficial=requireAll('checkout/index.html',[
+  'feeReady:false',
+  'politicaComercialAtiva:false',
+  'ctPoliticaComercialPreviewPublicoPROD',
+  'politicaRevisaoVista:state.feeRevision',
+  'Confirmando o total',
+  'feeQuotedAt',
+  '(Date.now()-state.feeQuotedAt)>30000',
+  'Taxa Carioca Ticket (',
+  'Sua parte da taxa Carioca Ticket (',
+  'Entenda a taxa Carioca Ticket',
+  'Encargos comerciais adicionais',
+  'ctCheckoutPixPublicoIniciarPROD(payload)',
+  'getOrCreateIdempotency()',
+  'cupomCodigo:'
+]);
+
 const finance=read('produtor/financeiro/index.html');
 if(!finance.includes('href="/produtor/politica-comercial/"'))throw new Error('Financeiro produtor sem acesso a politica comercial');
 
