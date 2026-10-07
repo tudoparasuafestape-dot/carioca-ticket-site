@@ -97,6 +97,7 @@ const checkoutOfficial=requireAll('checkout/index.html',[
   'ctPoliticaComercialPreviewPublicoPROD',
   'politicaRevisaoVista:state.feeRevision',
   'Confirmando o total',
+  'state.politicaComercialAtiva&&',
   'feeQuotedAt',
   '(Date.now()-state.feeQuotedAt)>30000',
   'Taxa Carioca Ticket (',

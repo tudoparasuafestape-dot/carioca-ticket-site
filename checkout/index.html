@@ -943,14 +943,12 @@
         if(state.busy)return;
 
         if(
-          state.feeBusy||
-          state.feeReady!==true||
+          state.politicaComercialAtiva&&
           (
-            state.politicaComercialAtiva&&
-            (
-              !state.feeQuotedAt||
-              (Date.now()-state.feeQuotedAt)>30000
-            )
+            state.feeBusy||
+            state.feeReady!==true||
+            !state.feeQuotedAt||
+            (Date.now()-state.feeQuotedAt)>30000
           )
         ){
           if(!state.feeBusy){
