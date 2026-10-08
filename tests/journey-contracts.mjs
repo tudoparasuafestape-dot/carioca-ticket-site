@@ -344,7 +344,9 @@ for(const path of ['evento/index.html','evento-v2/index.html']){
     'checkout-v2/index.html'
   ]){
     const pagina=read(path);
-    if(!pagina.includes('/assets/ct-analytics.js?v=20260923a')){
+    const analyticsVersion=['evento/index.html','evento-v2/index.html'].includes(path)
+      ? '20261008-recovery' : '20260923a';
+    if(!pagina.includes('/assets/ct-analytics.js?v='+analyticsVersion)){
       failures.push(path+': coletor Analytics Master seguro/versionado ausente');
     }
   }

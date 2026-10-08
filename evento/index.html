@@ -286,7 +286,15 @@
     return p;
   }
 
+  function transportError(code,startedAt){
+    var error=new Error(code);
+    error.code=code;
+    error.elapsedMs=Math.max(0,Date.now()-startedAt);
+    return error;
+  }
+
   function rpc(method,args,success,failure){
+    var startedAt=Date.now();
     var id='CTPUBLIC-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
     var frameName='ctpublic_'+id.replace(/[^A-Za-z0-9_]/g,'');
     var frame=document.createElement('iframe');
@@ -316,17 +324,21 @@
     document.body.append(frame,form);
 
     pending[id]={
+      startedAt:startedAt,
       frame:frame,
       form:form,
       success:typeof success==='function'?success:function(){},
       failure:typeof failure==='function'?failure:function(){},
       timer:setTimeout(function(){
         var p=cleanup(id);
-        if(p)p.failure(new Error('CT_PUBLIC_RPC_TIMEOUT'));
+        if(p)p.failure(transportError('CT_PUBLIC_RPC_TIMEOUT',p.startedAt));
       },45000)
     };
 
-    form.submit();
+    try{form.submit();}catch(_){
+      var p=cleanup(id);
+      if(p)p.failure(transportError('CT_PUBLIC_RPC_SUBMIT_ERROR',p.startedAt));
+    }
   }
 
   window.addEventListener('message',function(ev){
@@ -336,7 +348,7 @@
     var p=cleanup(payload.id);
     if(!p)return;
     if(payload.ok===true)p.success(payload.resultado);
-    else p.failure(new Error(String(payload.erro||'Não foi possível concluir a operação.')));
+    else p.failure(transportError('CT_PUBLIC_RPC_REMOTE_ERROR',p.startedAt));
   });
 
   function runner(success,failure){
@@ -508,6 +520,7 @@
   <section id="errorBox" class="error hidden">
     <h2>Evento indisponível</h2>
     <p id="errorText" style="color:#aeb4bd;line-height:1.6"></p>
+    <button id="retryEventLoad" data-event-load-retry class="cta hidden" type="button" style="font:inherit;cursor:pointer">Tentar novamente</button>
   </section>
 
   <div id="mobileBuy" class="mobile-buy hidden">
@@ -684,12 +697,13 @@
         if(backdrop)backdrop.onclick=fecharMenuCompartilhamento;
       }
 
-      function showError(msg){
+      function showError(msg,retryable){
         $('loading').classList.add('hidden');
         $('app').classList.add('hidden');
         $('mobileBuy').classList.add('hidden');
         $('errorText').textContent=msg||'Não foi possível carregar este evento.';
         $('errorBox').classList.remove('hidden');
+        $('retryEventLoad').classList.toggle('hidden',retryable!==true);
       }
 
       function render(res){
@@ -770,16 +784,24 @@
         }
       }
 
+      var loadRunning=false;
       function load(){
+        if(loadRunning)return;
+        loadRunning=true;
+        $('errorBox').classList.add('hidden');
+        $('retryEventLoad').classList.add('hidden');
+        $('loading').classList.remove('hidden');
         google.script.url.getLocation(function(loc){
           state.eventoId=String((loc.parameter&&loc.parameter.evento)||'').trim();
           if(!state.eventoId){
+            loadRunning=false;
             showError('O link não informou qual evento deve ser aberto.');
             return;
           }
 
           google.script.run
             .withSuccessHandler(function(res){
+              loadRunning=false;
               if(!res||res.sucesso!==true){
                 showError(res&&res.mensagem?res.mensagem:'Este evento não está disponível no momento.');
                 return;
@@ -791,16 +813,25 @@
                 return;
               }
             })
-            .withFailureHandler(function(){
-              showError('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.');
+            .withFailureHandler(function(error){
+              loadRunning=false;
+              // Bounded local diagnosis only: no URL, arguments, server message or personal data.
+              var code=error&&error.code;
+              if(['CT_PUBLIC_RPC_TIMEOUT','CT_PUBLIC_RPC_REMOTE_ERROR','CT_PUBLIC_RPC_SUBMIT_ERROR'].indexOf(code)<0)code='CT_PUBLIC_RPC_ERROR';
+              if(window.console&&typeof console.warn==='function')console.warn('[CT_EVENT_LOAD]',{
+                code:code,elapsedMs:Number(error&&error.elapsedMs)||0,
+                online:navigator.onLine,visibility:document.visibilityState
+              });
+              showError('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.',true);
             })
             .ctEventoPublicoCarregarPROD(state.eventoId);
         });
       }
 
+      $('retryEventLoad').addEventListener('click',load);
       load();
     })();
   </script>
-  <script src="/assets/ct-analytics.js?v=20260923a" defer></script>
+  <script src="/assets/ct-analytics.js?v=20261008-recovery" defer></script>
 </body>
 </html>
