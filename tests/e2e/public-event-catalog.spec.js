@@ -65,7 +65,9 @@ test('a single public catalog appears early, with complete covers and validated 
   await expect(page.locator('.catalog-card').first().locator('img')).toBeVisible();
   expect(await page.locator('.catalog-card').first().locator('img').evaluate(img => getComputedStyle(img).objectFit)).toBe('contain');
   const cover = await page.locator('.catalog-photo').first().boundingBox();
-  expect(cover.y).toBeLessThan(320);
+  // Mobile now exposes a labeled location field and a full-width search action.
+  // The first cover must still start in the first viewport, before 480 CSS px.
+  expect(cover.y).toBeLessThan(testInfo.project.name === 'mobile-chromium' ? 480 : 320);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(page.locator('.catalog-card')).not.toContainText(['R$']);
   await expect(page.locator('#producerPortalCta')).toHaveAttribute('href', '/produtor/');

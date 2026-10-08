@@ -1,0 +1,40 @@
+name: Home stage 1 (isolated fixtures)
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'assets/home*'
+      - 'assets/public-event-catalog.js'
+      - 'tests/home/**'
+      - 'tests/fixtures/home-stage1.cjs'
+      - 'tests/home-preview-server.cjs'
+      - 'playwright.home.config.cjs'
+      - '.github/workflows/home-stage1-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  home:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Home against synthetic fixtures only
+        env:
+          CT_BASE_URL: http://127.0.0.1:4174
+          CT_EXPECTED_HOST: 127.0.0.1
+          CT_BRANCH_MODE: '1'
+        run: npx playwright test --config=playwright.home.config.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: home-stage1-review
+          path: |
+            test-results/home-stage1*
+            docs/reviews/home-stage1/screenshots/
