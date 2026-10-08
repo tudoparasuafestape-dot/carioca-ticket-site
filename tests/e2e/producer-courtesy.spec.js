@@ -934,6 +934,34 @@ test.describe('WhatsApp do destinatário da cortesia',()=>{
     expect(page.context().pages()).toHaveLength(1);
   });
 
+  for(const surface of ['histórico','recém-emitido'])test('DDI explícito inválido não usa normalizado como DDD local no '+surface,async({page})=>{
+    await mockClipboard(page);
+    const cases=[
+      {telefone:'+55 99999-0001',telefoneNormalizado:'55999990001'},
+      {telefone:'+55 3456-7890',telefoneNormalizado:'5534567890'},
+      {telefone:'+55 (81) 99999-0001 ramal 2',telefoneNormalizado:'5581999990001'},
+      {telefone:'+1 123',telefoneNormalizado:'11988880002'},
+      {telefone:'0055 99999-0001',telefoneNormalizado:'55999990001'},
+      {telefone:'00 55 (81) 99999-0001',telefoneNormalizado:'5581999990001'}
+    ];
+    let fields=cases[0];
+    const state=fixture({issued:surface==='histórico',onRequest:({method,args})=>method===CONSULT?consultation(args[2],args[1],fields):undefined});
+    if(surface==='histórico'){await openCourtesy(page,state);await ready(page)}else await issueFixture(page,state);
+    for(const phone of cases)await test.step(JSON.stringify(phone),async()=>{
+      fields=phone;await page.locator('#loadButton').click();await ready(page);
+      const row=surface==='histórico'?historyTicket(page):issuedTicket(page),before=state.methods.length;
+      await row.getByRole('button',{name:'Compartilhar',exact:true}).click();
+      await expectRecipient(row,'CT-E2E-1','');
+      await expect(row).toContainText('Telefone cadastrado ausente ou inválido');
+      await expect(row.getByRole('link',{name:'Compartilhar',exact:true})).toHaveCount(0);
+      await expect(row.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl('CT-E2E-1'));
+      await row.getByRole('button',{name:'Copiar link',exact:true}).click();
+      expect(state.methods.slice(before)).toEqual([CONSULT]);
+    });
+    await expect.poll(()=>page.evaluate(()=>window.copiedLinks)).toEqual(cases.map(()=>ticketUrl('CT-E2E-1')));
+    expect(calls(state,ISSUE)).toHaveLength(surface==='histórico'?0:1);expect(page.context().pages()).toHaveLength(1);
+  });
+
   for(const idempotent of [false,true])test('resultado recém-emitido consulta o destinatário de cada ingresso'+(idempotent?' no retorno idempotente':''),async({page})=>{
     const state=fixture({onRequest:({method})=>{
       if(method===ISSUE&&idempotent){state.issued=true;return {sucesso:true,idempotente:true,ingressos:['CT-E2E-1','CT-E2E-2'].map(codigo=>({codigo,link:ticketUrl(codigo)}))}}

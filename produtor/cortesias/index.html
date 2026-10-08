@@ -202,7 +202,10 @@ function whatsappPhone(value){
 }
 function ticketWhatsapp(ticket,url){
   var raw=String(ticket.telefone||'').trim();
-  var phone=(raw.charAt(0)==='+'?whatsappPhone(raw):'')||whatsappPhone(ticket.telefoneNormalizado)||whatsappPhone(raw);
+  // An invalid explicit DDI must never fall back to a normalized local number.
+  // The 00 dialing prefix is not supported; it also requires explicit recipient choice.
+  var explicitDdi=raw.charAt(0)==='+'||digits(raw).startsWith('00');
+  var phone=explicitDdi?whatsappPhone(raw):(whatsappPhone(ticket.telefoneNormalizado)||whatsappPhone(raw));
   return {direct:!!phone,url:'https://wa.me/'+phone+'?text='+encodeURIComponent('Cortesia Carioca Ticket\n\nAbrir ingresso: '+url)};
 }
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
