@@ -2,6 +2,8 @@
 
 Estado: **diagnóstico e proposta; sem implementação; não fazer merge/deploy**.
 
+**Complemento da verificação técnica:** foi encontrada infraestrutura Drive existente para mídias, com pastas privadas e capas públicas por permissão individual; as thumbnails atuais responderam HTTP 200 sem autenticação. A menor proposta reutiliza esse Drive, sem novo serviço, sujeita à confirmação do acesso do executor do backend. A restrição inicial de formato ainda precisa ser fechada: um protótipo de PNG estático validou estrutura/CRC, mas isso não equivale a decoder completo nem a suporte JPEG. A verificação detalhada está no PR backend #273; os bloqueios iniciais abaixo devem ser lidos com esse complemento.
+
 O pedido é oferecer “Alterar capa” dentro do evento, com seleção de arquivo, prévia integral, validação e confirmação. Uma nova publicação de vendas exige capa válida. Esta proposta prepara o trabalho separado do catálogo em publicação coordenada.
 
 ## Base preservada e capacidades existentes
