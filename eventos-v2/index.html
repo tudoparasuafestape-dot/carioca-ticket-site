@@ -809,6 +809,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/assets/era-approved-visual.css">
 </head>
 
 <body>
@@ -863,6 +864,10 @@
 
       case 'ctEventosPublicacaoPublicarPROD':
         return {method:'ctEventosOperacionalPublicarSeguraPROD',args:[token,String(args[0]||'')]};
+
+      case 'ctEventosOperacionalVisualEraSeguraPROD':
+        if(args.length!==1)throw new Error('CT_ERA_VISUAL_ARGUMENTOS_INVALIDOS');
+        return {method:method,args:[token,args[0]]};
 
       case 'ctEventosPublicacaoFecharPROD':
         return {method:'ctEventosOperacionalFecharSeguraPROD',args:[token,String(args[0]||'')]};
@@ -2124,6 +2129,7 @@
           '</div>' +
 
           '<div class="evento-acoes">' +
+            (evento.id === 'EVT-23112026-ERA-BEAUTY-EAC4B673' ? '<button class="botao botao-secundario" type="button" data-era-approved-visual="EVT-23112026-ERA-BEAUTY-EAC4B673">Aplicar visual aprovado do ERA</button>' : '') +
             botaoAtivar +
             '<button class="botao botao-secundario" type="button" onclick="abrirModalidadeEvento(\'' +
               escaparAtributo(evento.id) +
@@ -3729,5 +3735,6 @@
   </script>
 
   <script src="/assets/ct-analytics.js?v=20260923a" defer></script>
+  <script src="/assets/era-approved-visual.js"></script>
 </body>
 </html>
