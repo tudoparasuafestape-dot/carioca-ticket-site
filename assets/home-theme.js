@@ -14,7 +14,7 @@
     var theme = preference === 'system' ? (system.matches ? 'dark' : 'light') : preference;
     root.dataset.homeTheme = theme;
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = theme === 'dark' ? '#161816' : '#f7f7f2';
+    if (meta) meta.content = theme === 'dark' ? '#171717' : '#f7f7f7';
   }
   apply();
   if (system.addEventListener) system.addEventListener('change', apply);

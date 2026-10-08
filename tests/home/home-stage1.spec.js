@@ -47,7 +47,15 @@ async function noOverflow(page) {
 async function screenshot(page, name, fullPage = false) {
   fs.mkdirSync(EVIDENCE, { recursive: true });
   await expect.poll(() => page.locator('img').evaluateAll(images => images.every(img => img.complete))).toBe(true);
-  await page.screenshot({ path: path.join(EVIDENCE, name + '.png'), fullPage });
+  const viewport = page.viewportSize();
+  // Paint the entire document before capture: some headless builds omit offscreen
+  // decorative text/images from full-page screenshots despite complete assets.
+  if (fullPage) await page.setViewportSize({ ...viewport, height: await page.evaluate(() => document.documentElement.scrollHeight) });
+  try {
+    await page.screenshot({ path: path.join(EVIDENCE, name + '.png'), fullPage });
+  } finally {
+    if (fullPage) await page.setViewportSize(viewport);
+  }
 }
 
 test('initial system theme, live system changes, explicit override and persistence', async ({ page }) => {

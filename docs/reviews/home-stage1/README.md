@@ -5,6 +5,23 @@ Base: `edcfe04d08438b0ba3a5fd38ef823aa9502aa2e0` (main conferida antes e depois 
 
 O catálogo passa a ter uma apresentação clara/escura, busca e cidade/local visíveis e navegação principal reduzida. O tema começa com a preferência do sistema; a escolha explícita fica restrita à home e continua funcionando quando o armazenamento está indisponível. Cards mantêm a capa inteira, nome, data/horário, local/cidade e os destinos existentes. Campos ausentes são identificados como não informados, sem preencher fatos ou preços fictícios.
 
+## Ajuste de identidade: carvão, dourado suave e branco
+
+A revisão removeu a dominante verde dos tokens da home, inclusive sombras, bordas, foco e o bloco de produtor. O bloco agora usa grafite `#242424` com dourado `#D5BB82`. A barra de cor do navegador acompanha os fundos neutros; a faixa do preview usa o mesmo dourado. Composição, dimensões, navegação, contratos e capas não mudaram. Cores nas ilustrações sintéticas dos eventos pertencem às capas, não aos tokens da interface.
+
+| Papel | Claro | Escuro |
+| --- | --- | --- |
+| Fundo | `#F7F7F7` | `#171717` |
+| Superfície | `#FFFFFF` | `#222222` |
+| Superfície secundária | `#EEEEEE` | `#2D2D2D` |
+| Texto | `#242424` | `#F5F5F5` |
+| Texto secundário | `#606060` | `#C2C2C2` |
+| Bordas | `#D6D6D6` | `#4A4A4A` |
+| Dourado / texto do botão | `#D5BB82` / `#242424` | `#D5BB82` / `#242424` |
+| Foco | `#80632A` | `#D5BB82` |
+
+Contrastes: texto/fundo **14,49:1 claro** e **16,44:1 escuro**; texto secundário mínimo **5,42:1** e **7,73:1**; dourado/grafite **8,32:1**; foco mínimo **4,84:1** e **7,38:1**. A suíte mede os tokens computados no navegador. As capturas abaixo foram atualizadas para esta paleta.
+
 ## Limite da referência
 
 A referência `libfile_3e18eab004bc8191a1da0e60abaec0d1`, `carioca-ticket-proposta-visual.pdf`, foi resolvida pela Library na versão **11**, tamanho declarado **101797 bytes**. A materialização pelo helper oficial retornou **HTTP 403**. Não houve PDF local legível, extração nem inspeção visual de páginas. Esta implementação resulta da inspeção independente da home e do escopo solicitado; **não está atestada como fiel à proposta v11**. A conferência com o PDF permanece pendente para a revisão.

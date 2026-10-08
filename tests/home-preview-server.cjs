@@ -34,7 +34,7 @@ http.createServer((req, res) => {
   if (url.pathname === '/pwa-register.js' || url.pathname === '/assets/ct-analytics.js') return send(res, 200, 'text/javascript', '// Disabled in isolated preview');
   if (url.pathname === '/' || url.pathname === '/index.html') {
     let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-    html = html.replace('<body class="ct-home">', '<body class="ct-home"><aside style="padding:6px 16px;background:#f4c64e;color:#20251d;text-align:center;font:12px/1.5 system-ui">Preview local · dados sintéticos · destinos externos e transações bloqueados</aside>');
+    html = html.replace('<body class="ct-home">', '<body class="ct-home"><aside style="padding:6px 16px;background:#d5bb82;color:#242424;text-align:center;font:12px/1.5 system-ui">Preview local · dados sintéticos · destinos externos e transações bloqueados</aside>');
     // Preserve production hrefs in source, but make the review surface safe to click.
     html = html.replace(/<a\b([^>]*?)href="(?!#|\/")([^"]+)"/g, '<a$1href="/__blocked"');
     html = html.replace(/<link rel="prefetch"[^>]+>/, '');
