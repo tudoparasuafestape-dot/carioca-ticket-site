@@ -1,0 +1,44 @@
+name: CT Checkout Commercial Policy Readiness
+
+on:
+  pull_request:
+    paths:
+      - 'assets/checkout-commercial-policy.js'
+      - 'checkout/**'
+      - 'checkout-v2/**'
+      - 'tests/checkout-commercial-policy.runtime.js'
+      - 'tests/checkout-era-beauty.dom.js'
+      - 'tests/checkout-era-beauty.browser.js'
+      - '.github/workflows/ct-checkout-commercial-policy-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  presentation-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Commercial policy presentation runtime
+        run: node tests/checkout-commercial-policy.runtime.js
+      - name: ERA checkout DOM and RPC regression (local mocks only)
+        run: node tests/checkout-era-beauty.dom.js
+      - name: Prepare browser regression dependencies
+        run: |
+          npm install --ignore-scripts
+          npx playwright install --with-deps chromium
+      - name: ERA desktop and mobile browser regression (all network mocked)
+        run: node tests/checkout-era-beauty.browser.js
+      - name: Assert helper stays presentation-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -q 'fetch(' assets/checkout-commercial-policy.js
+          ! grep -q 'google.script.run' assets/checkout-commercial-policy.js
+          ! grep -q 'XMLHttpRequest' assets/checkout-commercial-policy.js
+
