@@ -68,7 +68,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
     <button id="loadButton" class="btn gold" type="button">Carregar evento</button>
   </section>
 
-  <div id="message" class="message"></div>
+  <div id="message" class="message" role="status" aria-live="polite"></div>
 
   <section id="content" class="hidden">
     <section class="metrics">
@@ -171,7 +171,15 @@ var state={
   produtores:[],
   produtor:null,
   evento:null,
+  eventos:[],
+  catalogStatus:'idle',
+  catalogRequest:0,
+  loadRequest:0,
+  loadBusy:false,
+  bootBusy:true,
+  mutationBusy:false,
   data:null,
+  issuedContext:null,
   issueKey:null,
   issueBusy:false
 };
@@ -191,18 +199,89 @@ function loading(on){$('loading').classList.toggle('show',!!on)}
 function copy(text){if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(text);return Promise.reject(new Error('Copie o link manualmente.'))}
 function clearIssueKey(){if(!state.issueBusy)state.issueKey=null}
 function query(name){return String(new URL(location.href).searchParams.get(name)||'').trim()}
+function eventId(event){return String(event&&(event.id||event.eventoId)||'')}
+function syncControls(){
+  var blocked=state.bootBusy||state.mutationBusy;
+  $('producerSelect').disabled=blocked||!state.produtores.length;
+  $('eventSelect').disabled=blocked||state.catalogStatus!=='ready'||!state.eventos.length;
+  $('refreshButton').disabled=blocked||state.catalogStatus==='loading'||state.loadBusy;
+  $('loadButton').disabled=blocked||state.catalogStatus==='loading'||state.loadBusy||(!state.evento&&state.catalogStatus==='ready');
+  $('loadButton').textContent=state.catalogStatus==='loading'?'Carregando eventos...':state.loadBusy?'Carregando evento...':state.catalogStatus==='error'?'Tentar novamente':'Carregar evento';
+  document.querySelectorAll('#content button,#content input,#content select,#content textarea').forEach(function(el){el.disabled=blocked||state.loadBusy||!state.data});
+  loading(blocked);
+}
+function clearEventData(resetForm,preserveIssued){
+  state.loadRequest++;
+  state.loadBusy=false;
+  state.data=null;
+  $('content').classList.add('hidden');
+  ['typeSelect','lotSelect','guestSelect','historyRows'].forEach(function(id){$(id).innerHTML=''});
+  // A confirmed issue survives a transient refresh, hidden until access is revalidated.
+  // Context changes and explicit access denial always discard its signed links.
+  if(resetForm||!preserveIssued){$('resultTickets').innerHTML='';state.issuedContext=null}
+  ['privateNote','guestField','guestsLink'].forEach(function(id){$(id).classList.add('hidden')});
+  $('guestsLink').removeAttribute('href');
+  ['activeCourtesy','activeIssues','cancelledIssues','ledgerCount','ticketCount'].forEach(function(id){$(id).textContent='0'});
+  ['nominalValue','chargedCourtesy','previewNominal'].forEach(function(id){$(id).textContent=money(0)});
+  $('courtesyLimit').value=0;
+  $('accessCount').textContent='0';
+  $('reconcileStatus').textContent='-';
+  $('reconcileStatus').className='reconcile';
+  if(resetForm){
+    state.issueKey=null;
+    ['name','whatsapp','reason'].forEach(function(id){$(id).value=''});
+    $('quantity').value=1;
+    $('origin').value='MANUAL';
+  }
+}
+function currentSelection(){return {type:$('typeSelect').value,lot:$('lotSelect').value,guest:$('guestSelect').value}}
 
 function fillProducers(){
   $('producerSelect').innerHTML=state.produtores.map(function(p){return'<option value="'+esc(p.id)+'">'+esc(p.nomeFantasia||p.responsavelNome||p.nome||p.id)+'</option>'}).join('');
   state.produtor=state.produtores[0]||null;
-  fillEvents();
 }
-function fillEvents(){
-  var events=state.produtor&&Array.isArray(state.produtor.eventos)?state.produtor.eventos:[];
+function fillEvents(wanted){
+  var events=state.eventos;
   $('eventSelect').innerHTML=events.map(function(e){return'<option value="'+esc(e.id||e.eventoId)+'">'+esc(e.nome||e.eventoNome||e.id)+'</option>'}).join('');
-  var wanted=query('evento');
   state.evento=events.find(function(e){return String(e.id||e.eventoId)===wanted})||events[0]||null;
   if(state.evento)$('eventSelect').value=String(state.evento.id||state.evento.eventoId);
+}
+async function loadCatalog(wanted){
+  if(state.mutationBusy||state.catalogStatus==='loading'||!state.produtor)return;
+  var request=++state.catalogRequest,producerId=String(state.produtor.id);
+  var previous=eventId(state.evento),selection=currentSelection();
+  if(!previous&&state.issuedContext&&state.issuedContext.producerId===producerId)previous=state.issuedContext.eventId;
+  if(wanted===undefined)wanted=previous;
+  clearEventData(false,true);
+  state.evento=null;
+  state.eventos=[];
+  state.catalogStatus='loading';
+  $('eventSelect').innerHTML='<option value="">Carregando eventos...</option>';
+  message('Carregando eventos autorizados...','info');
+  syncControls();
+  try{
+    var r=await rpc('ctPortalProdutorCarregarCatalogoEventosPROD',[state.session.token,producerId]);
+    if(request!==state.catalogRequest)return;
+    if(!r||r.sucesso!==true||r.autenticado!==true||r.autorizado!==true||String(r.produtorId||'')!==producerId||!Array.isArray(r.eventos))throw new Error('Não foi possível carregar os eventos autorizados. Tente novamente.');
+    if(r.eventos.some(function(e){return !e||typeof (e.id||e.eventoId)!=='string'||!eventId(e).trim()}))throw new Error('O catálogo de eventos recebido é inválido. Tente novamente.');
+    state.eventos=r.eventos;
+    state.catalogStatus='ready';
+    fillEvents(wanted);
+    if(eventId(state.evento)!==previous){clearEventData(true);selection=null}
+    if(!state.evento){
+      $('eventSelect').innerHTML='<option value="">Nenhum evento autorizado</option>';
+      message('Nenhum evento autorizado foi encontrado para este produtor.','info');
+      return;
+    }
+    await load(false,selection);
+  }catch(e){
+    if(request!==state.catalogRequest)return;
+    state.catalogStatus='error';
+    var preserveIssued=!r||(r.autenticado===true&&r.autorizado===true&&String(r.produtorId||'')===producerId);
+    clearEventData(!preserveIssued,preserveIssued);
+    $('eventSelect').innerHTML='<option value="">Catálogo indisponível</option>';
+    message(($('resultTickets').hasChildNodes()?'A cortesia já foi emitida. Recarregue o evento para consultar os ingressos. ':'')+(e.message||String(e)),'error');
+  }finally{if(request===state.catalogRequest)syncControls()}
 }
 function lotForType(){
   var data=state.data||{},type=$('typeSelect').value;
@@ -255,7 +334,8 @@ function renderHistory(data){
     btn.onclick=function(){cancelCourtesy(btn.dataset.cancel)};
   });
 }
-function render(data){
+function render(data,selection){
+  var issueKey=state.issueKey,name=$('name').value,origin=$('origin').value;
   state.data=data;
   $('content').classList.remove('hidden');
   var r=data.resumo||{},op=data.operacional||{},rec=data.reconciliacao||{};
@@ -270,36 +350,55 @@ function render(data){
   $('reconcileStatus').textContent=rec.consistente===true?'OK':'DIVERGÊNCIA';
   $('reconcileStatus').className='reconcile '+(rec.consistente===true?'ok':'bad');
   $('typeSelect').innerHTML=(data.tipos||[]).map(function(t){return'<option value="'+esc(t.id)+'">'+esc(t.nome||t.id)+' · '+Number(t.capacidadePorVenda||1)+' acesso(s) por unidade</option>'}).join('');
+  if(selection&&(data.tipos||[]).some(function(t){return String(t.id)===selection.type}))$('typeSelect').value=selection.type;
   lotForType();
+  if(selection&&Array.from($('lotSelect').options).some(function(l){return l.value===selection.lot}))$('lotSelect').value=selection.lot;
+  preview();
   fillGuests(data);
+  if(selection&&Array.from($('guestSelect').options).some(function(g){return g.value===selection.guest})){$('guestSelect').value=selection.guest;applyGuest()}
+  if(selection&&selection.type===$('typeSelect').value&&selection.lot===$('lotSelect').value&&selection.guest===$('guestSelect').value&&name===$('name').value&&origin===$('origin').value)state.issueKey=issueKey;
+  else clearIssueKey();
   renderHistory(data);
   $('guestsLink').href='/produtor/convidados/?evento='+encodeURIComponent(state.evento.id||state.evento.eventoId||'');
 }
-async function load(){
+async function load(afterMutation,selection){
+  if(state.loadBusy||state.catalogStatus!=='ready'||(state.mutationBusy&&!afterMutation))return;
   if(!state.evento){message('Selecione um evento.','info');return}
-  loading(true);
+  var request=++state.loadRequest,id=eventId(state.evento);
+  selection=selection||currentSelection();
+  if(!selection.type)selection=null;
+  state.loadBusy=true;
+  state.data=null;
+  $('content').classList.add('hidden');
+  message('Carregando cortesias do evento...','info');
+  syncControls();
   try{
-    var eventId=String(state.evento.id||state.evento.eventoId||'');
-    var r=await rpc('ctCortesiasCarregarPROD',[state.session.token,eventId]);
-    if(!r||r.sucesso!==true||r.autorizado!==true)throw new Error('Não foi possível carregar as cortesias do evento.');
-    render(r);
+    var r=await rpc('ctCortesiasCarregarPROD',[state.session.token,id]);
+    if(request!==state.loadRequest)return;
+    if(!r||r.sucesso!==true||r.autenticado!==true||r.autorizado!==true)throw new Error('Não foi possível carregar as cortesias do evento.');
+    render(r,selection);
     if(r.reconciliacao&&r.reconciliacao.consistente!==true)message('A conferência encontrou divergência entre o ledger e os ingressos. Não emita novas cortesias até a reconciliação ser revisada.','error');
     else message('Cortesias carregadas com sucesso.','ok');
-  }catch(e){message(e.message||String(e),'error');$('content').classList.add('hidden')}
-  finally{loading(false)}
+  }catch(e){if(request===state.loadRequest){
+    var preserveIssued=!(r&&(r.autenticado===false||r.autorizado===false));
+    clearEventData(!preserveIssued,preserveIssued);
+    message(($('resultTickets').hasChildNodes()?'A cortesia já foi emitida. Recarregue o evento para consultar os ingressos. ':'')+(e.message||String(e)),'error');
+    syncControls();
+  }}
+  finally{if(request===state.loadRequest){state.loadBusy=false;syncControls()}}
 }
 async function saveLimit(){
-  if(!state.evento)return;
+  if(state.mutationBusy||state.loadBusy||!state.evento||!state.data)return;
   var value=Math.floor(Number($('courtesyLimit').value||0));
   if(value<0){message('Informe um limite válido.','error');return}
-  loading(true);
+  state.mutationBusy=true;syncControls();
   try{
     var id=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctCortesiasSalvarConfigPROD',[state.session.token,id,{limiteCortesiasAcessos:value}]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível salvar o limite.');
     message(value>0?'Limite de cortesias atualizado.':'Limite adicional desativado; continuam valendo as capacidades do evento.','ok');
-    await load();
-  }catch(e){message(e.message||String(e),'error')}finally{loading(false)}
+    await load(true);
+  }catch(e){message(e.message||String(e),'error')}finally{state.mutationBusy=false;syncControls()}
 }
 function issuePayload(){
   var data=state.data||{},privateData=data.privado||{},guest=$('guestSelect').value;
@@ -318,6 +417,7 @@ function issuePayload(){
   };
 }
 function renderIssued(r){
+  state.issuedContext={producerId:String(state.produtor.id),eventId:eventId(state.evento)};
   var list=Array.isArray(r.ingressos)?r.ingressos:[];
   $('resultTickets').innerHTML='<div class="message show ok" style="margin-top:12px">'+esc(r.mensagem||'Cortesia emitida.')+'</div>'+list.map(function(t){
     var msg='🎟️ Cortesia Carioca Ticket\n\n'+(t.nome||'Participante')+'\n'+(state.evento&&state.evento.nome||'Evento')+'\n\nAbrir ingresso: '+(t.link||'');
@@ -328,40 +428,41 @@ function renderIssued(r){
   document.querySelectorAll('[data-copy]').forEach(function(b){b.onclick=async function(){try{await copy(b.dataset.copy);message('Link do ingresso copiado.','ok')}catch(e){message(e.message||String(e),'error')}}});
 }
 async function issue(){
-  if(state.issueBusy)return;
+  if(state.mutationBusy||state.loadBusy||!state.evento||!state.data)return;
   var payload;
   try{payload=issuePayload()}catch(e){message(e.message||String(e),'error');return}
   if(!payload.nome||payload.whatsapp.length<10||!payload.tipoId||!payload.loteId||!payload.motivo){message('Preencha nome, WhatsApp, tipo, lote e motivo.','error');return}
   if(state.data&&state.data.reconciliacao&&state.data.reconciliacao.consistente!==true){message('Existe divergência de reconciliação. Atualize/revise antes de emitir uma nova cortesia.','error');return}
-  state.issueBusy=true;$('issueButton').disabled=true;loading(true);
+  state.issueBusy=true;state.mutationBusy=true;syncControls();
   try{
     var eventId=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctCortesiasEmitirPROD',[state.session.token,eventId,payload]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível emitir a cortesia.');
     renderIssued(r);
     state.issueKey=null;
-    await load();
+    await load(true);
   }catch(e){message(e.message||String(e),'error')}
-  finally{state.issueBusy=false;$('issueButton').disabled=false;loading(false)}
+  finally{state.issueBusy=false;state.mutationBusy=false;syncControls()}
 }
 async function cancelCourtesy(id){
+  if(state.mutationBusy||state.loadBusy||!state.evento||!state.data)return;
   var reason=prompt('Informe o motivo do cancelamento da cortesia:');
   if(!reason)return;
   if(!confirm('Cancelar esta cortesia? Ingressos já utilizados não podem ser cancelados.'))return;
-  loading(true);
+  state.mutationBusy=true;syncControls();
   try{
     var eventId=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctCortesiasCancelarPROD',[state.session.token,eventId,id,reason]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível cancelar a cortesia.');
     message(r.idempotente?'A cortesia já estava cancelada.':'Cortesia cancelada e capacidade reconciliada.','ok');
-    await load();
+    await load(true);
   }catch(e){message(e.message||String(e),'error')}
-  finally{loading(false)}
+  finally{state.mutationBusy=false;syncControls()}
 }
 async function boot(){
   state.session=readSession();
   if(!state.session){location.replace('/produtor/');return}
-  loading(true);
+  state.bootBusy=true;syncControls();
   try{
     var r=await rpc('ctPortalProdutorRestaurarSessaoIsoladaPROD',[state.session.token]);
     if(!r||r.autenticado!==true){location.replace('/produtor/');return}
@@ -371,14 +472,29 @@ async function boot(){
     var allowed=profile==='ADMINISTRADOR'||profile==='PRODUTOR_TITULAR'||state.produtores.some(function(p){var x=String(p.perfil||'').toUpperCase();return x==='ADMINISTRADOR'||x==='PRODUTOR_TITULAR'});
     if(!allowed)throw new Error('Seu perfil não possui permissão para emitir cortesias.');
     fillProducers();
-    if(state.evento)await load();
+    state.bootBusy=false;
+    await loadCatalog(query('evento'));
   }catch(e){message(e.message||String(e),'error')}
-  finally{loading(false)}
+  finally{state.bootBusy=false;syncControls()}
 }
 
-$('producerSelect').onchange=function(){state.produtor=state.produtores.find(function(p){return String(p.id)===String($('producerSelect').value)})||null;state.data=null;state.issueKey=null;fillEvents();load()};
-$('eventSelect').onchange=function(){var ev=state.produtor&&Array.isArray(state.produtor.eventos)?state.produtor.eventos:[];state.evento=ev.find(function(e){return String(e.id||e.eventoId)===String($('eventSelect').value)})||null;state.data=null;state.issueKey=null;load()};
-$('loadButton').onclick=load;$('refreshButton').onclick=load;$('saveLimitButton').onclick=saveLimit;$('issueButton').onclick=issue;$('typeSelect').onchange=function(){clearIssueKey();lotForType()};$('lotSelect').onchange=function(){clearIssueKey();preview()};$('quantity').oninput=function(){clearIssueKey();preview()};$('guestSelect').onchange=applyGuest;
+$('producerSelect').onchange=function(){
+  if(state.bootBusy||state.mutationBusy){$('producerSelect').value=state.produtor?String(state.produtor.id):'';return}
+  clearEventData(true);
+  state.produtor=state.produtores.find(function(p){return String(p.id)===String($('producerSelect').value)})||null;
+  state.evento=null;
+  state.catalogStatus='idle';
+  loadCatalog();
+};
+$('eventSelect').onchange=function(){
+  if(state.bootBusy||state.mutationBusy||state.catalogStatus!=='ready'){$('eventSelect').value=eventId(state.evento);return}
+  clearEventData(true);
+  state.evento=state.eventos.find(function(e){return eventId(e)===String($('eventSelect').value)})||null;
+  load();
+};
+$('loadButton').onclick=function(){if(state.catalogStatus==='error')loadCatalog();else load()};
+$('refreshButton').onclick=function(){if(!state.bootBusy&&!state.loadBusy){if(state.produtor)loadCatalog();else boot()}};
+$('saveLimitButton').onclick=saveLimit;$('issueButton').onclick=issue;$('typeSelect').onchange=function(){clearIssueKey();lotForType()};$('lotSelect').onchange=function(){clearIssueKey();preview()};$('quantity').oninput=function(){clearIssueKey();preview()};$('guestSelect').onchange=applyGuest;
 ['name','whatsapp','reason','origin'].forEach(function(id){$(id).addEventListener('input',clearIssueKey);$(id).addEventListener('change',clearIssueKey)});
 boot();
 }());
