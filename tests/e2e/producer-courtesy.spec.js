@@ -9,6 +9,20 @@ const LOAD='ctCortesiasCarregarPROD';
 const ISSUE='ctCortesiasEmitirPROD';
 const SAVE='ctCortesiasSalvarConfigPROD';
 const CANCEL='ctCortesiasCancelarPROD';
+const CONSULT='ctConsultaIngressosOperacionalPROD';
+const TICKET_ORIGIN='https://cariocaticket.com.br';
+
+function ticketUrl(code,sig='ASSINADA_E2E_1234567890'){return TICKET_ORIGIN+'/ingresso/?codigo='+encodeURIComponent(code)+'&sig='+sig}
+function consultation(code='CT-E2E-1',event='EVT-CORT-E2E',ticket={}){
+  return {sucesso:true,autenticado:true,autorizado:true,filtroEvento:{eventoId:event},ingressos:[{codigo:code,eventoId:event,statusClasse:'VALIDO',compartilhamentoPermitido:true,ingressoCompartilhamentoUrl:ticketUrl(code),...ticket}]};
+}
+function historyTicket(page,code='CT-E2E-1'){return page.locator('#historyRows [data-history-code="'+code+'"]')}
+async function mockClipboard(page,denied=false){
+  await page.addInitScript(denied=>{
+    window.copiedLinks=[];
+    Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{if(denied)throw new Error('NotAllowedError');window.copiedLinks.push(text)}}});
+  },denied);
+}
 
 function fixture(overrides={}){
   return {privateEvent:false,issued:false,cancelled:false,limit:0,loadCalls:0,issueCalls:0,cancelCalls:0,methods:[],...overrides};
@@ -105,7 +119,7 @@ function baseData(state){
         disponivel:2
       }]
     }:{privado:false,convidados:[]},
-    recentes:state.issued?[{
+    recentes:state.history||(state.issued?[{
       cortesiaId:'CRT-E2E',
       tipoNome:'Individual',
       loteNome:'1º lote',
@@ -118,7 +132,7 @@ function baseData(state){
       status:state.cancelled?'CANCELADA':'EMITIDA',
       valorNominalTotalNumero:50,
       codigos:['CT-E2E-1','CT-E2E-2']
-    }]:[],
+    }]:[]),
     regras:{
       maxPorOperacao:20,
       consomeCapacidade:true,
@@ -165,6 +179,9 @@ async function installMock(page,state){
         expect(args[0]).toBe('CT-PROD-CORTESIA-E2E');
         expect(args[1]).toBe('EVT-CORT-E2E');
         resultado=baseData(state);
+      }else if(method===CONSULT){
+        expect(args[3]).toBe('');
+        resultado=consultation(args[2],args[1]);
       }else if(method==='ctCortesiasSalvarConfigPROD'){
         state.limit=Number(args[2]?.limiteCortesiasAcessos||0);
         resultado={sucesso:true,eventoId:'EVT-CORT-E2E',limiteCortesiasAcessos:state.limit,limitado:state.limit>0};
@@ -192,8 +209,8 @@ async function installMock(page,state){
           formaPagamento:'CORTESIA',
           origem:state.privateEvent?'CORTESIA_CONVIDADO_PRIVADO':'CORTESIA_MANUAL',
           ingressos:[
-            {id:'1',codigo:'CT-E2E-1',nome:state.privateEvent?'Convidado Privado':'Pessoa Cortesia',tipo:'Individual',loteNome:'1º lote',link:'https://cariocaticket.com.br/ingresso/?codigo=CT-E2E-1&sig=ASSINADA'},
-            {id:'2',codigo:'CT-E2E-2',nome:state.privateEvent?'Convidado Privado':'Pessoa Cortesia',tipo:'Individual',loteNome:'1º lote',link:'https://cariocaticket.com.br/ingresso/?codigo=CT-E2E-2&sig=ASSINADA'}
+            {id:'1',codigo:'CT-E2E-1',nome:state.privateEvent?'Convidado Privado':'Pessoa Cortesia',tipo:'Individual',loteNome:'1º lote',link:'https://cariocaticket.com.br/ingresso/?codigo=CT-E2E-1&sig=ASSINADA_E2E_1234567890'},
+            {id:'2',codigo:'CT-E2E-2',nome:state.privateEvent?'Convidado Privado':'Pessoa Cortesia',tipo:'Individual',loteNome:'1º lote',link:'https://cariocaticket.com.br/ingresso/?codigo=CT-E2E-2&sig=ASSINADA_E2E_1234567890'}
           ],
           mensagem:'Cortesia emitida com sucesso.'
         };
@@ -232,11 +249,11 @@ test.describe('Cortesias do produtor',()=>{
     await page.locator('#reason').fill('Relacionamento');
 
     const issue=page.locator('#issueButton');
-    await issue.click();
-    await issue.click({force:true}).catch(()=>{});
+    await expect(issue).toBeEnabled();
+    await issue.evaluate(button=>{button.click();button.dispatchEvent(new Event('click'))});
 
     await expect.poll(()=>state.issueCalls).toBe(1);
-    await expect(page.getByRole('link',{name:'Abrir ingresso'}).first()).toHaveAttribute('href',/sig=ASSINADA/);
+    await expect(page.getByRole('link',{name:'Abrir ingresso'}).first()).toHaveAttribute('href',/sig=ASSINADA_E2E_1234567890/);
     await expect(page.locator('#chargedCourtesy')).toHaveText('R$ 0,00');
     expect(state.methods.some(x=>/Pagamento|Asaas|Venda|Checkout/i.test(x))).toBe(false);
   });
@@ -606,7 +623,7 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
       await ready(page);
       await expect(links.first()).toBeVisible();
       expect(await links.evaluateAll(items=>items.map(item=>item.getAttribute('href')))).toEqual(confirmedLinks);
-      expect(confirmedLinks).toEqual(['/ingresso/?codigo=CT-E2E-1&sig=ASSINADA','/ingresso/?codigo=CT-E2E-2&sig=ASSINADA']);
+      expect(confirmedLinks).toEqual([ticketUrl('CT-E2E-1'),ticketUrl('CT-E2E-2')]);
       expect(calls(state,ISSUE)).toHaveLength(1);
       await expect(page.locator('#activeCourtesy')).toHaveText('2');
       await page.locator('#eventSelect').selectOption('OUTRO');
@@ -662,5 +679,192 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
     await expect(page.locator('#eventSelect')).toHaveValue('NOVO');
     await expect(page.locator('#typeSelect')).toHaveValue('TIPO-NOVO');
     expect(calls(state,LOAD).map(c=>c.args[1])).toEqual(['EVT-CORT-E2E','NOVO']);
+  });
+});
+
+test.describe('Links das cortesias já emitidas no histórico',()=>{
+  test.skip(!BRANCH_MODE,'Somente fixtures locais; nenhuma emissão ou mensagem real.');
+
+  test('gera A e B sem envio automático, recupera A e reabre o histórico com os mesmos ingressos',async({page})=>{
+    await mockClipboard(page);
+    const state=fixture({history:[],onRequest:({method})=>{
+      if(method!==ISSUE)return;
+      const name=calls(state,ISSUE).length===1?'A':'B';
+      const codes=[1,2].map(n=>'CT-'+name+'-'+n);
+      state.issued=true;
+      state.history.unshift({...baseData(fixture({issued:true})).recentes[0],cortesiaId:'CRT-'+name,destinatarioNome:name,codigos:codes});
+      return {sucesso:true,ingressos:codes.map(codigo=>({codigo,nome:name,link:ticketUrl(codigo)}))};
+    }});
+    await openCourtesy(page,state);await ready(page);
+    await page.locator('#name').fill('Pessoa');await page.locator('#whatsapp').fill('81999990000');
+    await page.locator('#quantity').fill('2');await page.locator('#reason').fill('Relacionamento');
+    for(const name of ['A','B']){
+      await page.locator('#issueButton').click();
+      await expect(page.locator('#resultTickets')).toContainText('CT-'+name+'-1');await ready(page);
+    }
+    expect(calls(state,CONSULT)).toHaveLength(0);
+    await expect(page.locator('#historyRows [data-history-code]')).toHaveCount(4);
+    expect(page.context().pages()).toHaveLength(1);
+    await expect(page.locator('#resultTickets [data-copy]').first()).toHaveAttribute('data-copy',ticketUrl('CT-B-1'));
+    const a=historyTicket(page,'CT-A-1');
+    await a.getByRole('button',{name:'Copiar link',exact:true}).click();
+    await expect(a.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl('CT-A-1'));
+    await expect.poll(()=>page.evaluate(()=>window.copiedLinks)).toEqual([ticketUrl('CT-A-1')]);
+    expect(calls(state,CONSULT)[0].args).toEqual(['CT-PROD-CORTESIA-E2E','EVT-CORT-E2E','CT-A-1','']);
+    await page.reload();await ready(page);
+    await expect(page.locator('#resultTickets')).toBeEmpty();
+    await historyTicket(page,'CT-A-2').getByRole('button',{name:'Copiar link',exact:true}).click();
+    await expect.poll(()=>page.evaluate(()=>window.copiedLinks)).toEqual([ticketUrl('CT-A-2')]);
+    expect(calls(state,ISSUE)).toHaveLength(2);
+    expect(calls(state,CANCEL)).toHaveLength(0);
+    expect(state.methods.some(x=>/Pagamento|Asaas|Checkout|Enviar|Whatsapp/i.test(x))).toBe(false);
+    expect(await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}))).not.toContain('sig=');
+  });
+
+  test('abrir e compartilhar preparam links inline e só navegam no segundo clique explícito, inclusive mobile',async({page,context})=>{
+    const state=fixture({issued:true});await openCourtesy(page,state);await ready(page);
+    const first=historyTicket(page),second=historyTicket(page,'CT-E2E-2');
+    await first.getByRole('button',{name:'Abrir ingresso',exact:true}).click();
+    await expect(first.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl('CT-E2E-1'));
+    expect(context.pages()).toHaveLength(1);
+    await second.getByRole('button',{name:'Compartilhar',exact:true}).click();
+    const share=second.getByRole('link',{name:'Compartilhar',exact:true});
+    await expect(share).toHaveAttribute('href',/^https:\/\/wa\.me\/\?text=/);
+    const shareUrl=new URL(await share.getAttribute('href'));
+    expect(shareUrl.searchParams.get('text')).toContain(ticketUrl('CT-E2E-2'));
+    expect(shareUrl.searchParams.get('text')).not.toContain('CT-E2E-1');
+    expect(context.pages()).toHaveLength(1);
+    await context.route('**/*',route=>route.fulfill({status:200,body:'<!doctype html><title>Destino simulado</title>'}));
+    for(const link of [first.getByRole('link',{name:'Abrir ingresso'}),share]){
+      const popupEvent=page.waitForEvent('popup');await link.click();const popup=await popupEvent;
+      await popup.waitForLoadState();expect(popup.url()).toBe(await link.getAttribute('href'));await popup.close();
+    }
+    expect((await share.boundingBox()).height).toBeGreaterThanOrEqual(44);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    expect(calls(state,CONSULT)).toHaveLength(2);expect(calls(state,ISSUE)).toHaveLength(0);
+  });
+
+  test('clipboard negado oferece URL absoluta selecionada para cópia manual',async({page})=>{
+    await mockClipboard(page,true);const state=fixture({issued:true});await openCourtesy(page,state);await ready(page);
+    const row=historyTicket(page);await row.getByRole('button',{name:'Copiar link',exact:true}).click();
+    const input=row.getByRole('textbox',{name:'Link do ingresso CT-E2E-1'});
+    await expect(input).toHaveValue(ticketUrl('CT-E2E-1'));await expect(input).toHaveAttribute('readonly','');
+    expect(await input.evaluate(el=>el.selectionStart===0&&el.selectionEnd===el.value.length)).toBe(true);
+    await expect(row).toContainText('copie o link abaixo');
+  });
+
+  const rejected=[
+    ['sem autenticação',r=>({...r,autenticado:false}),'autorizar'],
+    ['sem permissão de consulta',r=>({...r,autorizado:false}),'autorizar'],
+    ['resposta sem sucesso',r=>({...r,sucesso:false}),'autorizar'],
+    ['filtro de outro evento',r=>({...r,filtroEvento:{eventoId:'OUTRO'}}),'evento selecionado'],
+    ['colisão por substring',r=>({...r,ingressos:[{...r.ingressos[0],codigo:'CT-E2E-10'}]}),'único ingresso'],
+    ['ingresso de outro evento',r=>({...r,ingressos:[{...r.ingressos[0],eventoId:'OUTRO'}]}),'único ingresso'],
+    ['resultado exato duplicado',r=>({...r,ingressos:[...r.ingressos,...r.ingressos]}),'único ingresso'],
+    ['permissão false',r=>({...r,ingressos:[{...r.ingressos[0],compartilhamentoPermitido:false}]}),'não autorizado'],
+    ['permissão string true',r=>({...r,ingressos:[{...r.ingressos[0],compartilhamentoPermitido:'true'}]}),'não autorizado'],
+    ...['CANCELADO','PENDENTE','UTILIZADO'].map(status=>[status,r=>({...r,ingressos:[{...r.ingressos[0],statusClasse:status}]}),status==='UTILIZADO'?'já utilizado':status.toLowerCase()]),
+    ...[
+      'https://outro.example/ingresso/?codigo=CT-E2E-1&sig=ASSINADA_E2E_1234567890',
+      'http://cariocaticket.com.br/ingresso/?codigo=CT-E2E-1&sig=ASSINADA_E2E_1234567890',
+      TICKET_ORIGIN+'/ingresso/?codigo=CT-E2E-1',
+      ticketUrl('CT-E2E-10'),
+      ticketUrl('CT-E2E-1','CURTA'),
+      ticketUrl('CT-E2E-1','assinatura.invalida.123456'),
+      ticketUrl('CT-E2E-1')+'&codigo=CT-E2E-2'
+    ].map((url,index)=>['URL insegura '+index,r=>({...r,ingressos:[{...r.ingressos[0],ingressoCompartilhamentoUrl:url}]}),'Link seguro indisponível'])
+  ];
+  for(const [name,change,text] of rejected)test('nega '+name,async({page})=>{
+    await mockClipboard(page);
+    const state=fixture({issued:true,onRequest:({method,args})=>method===CONSULT?change(consultation(args[2],args[1])):undefined});
+    await openCourtesy(page,state);await ready(page);
+    const before=state.methods.length;
+    await historyTicket(page).getByRole('button',{name:'Copiar link',exact:true}).click();
+    await expect(page.locator('body')).toContainText(text);
+    await expect(page.locator('#historyRows a')).toHaveCount(0);
+    expect(await page.evaluate(()=>window.copiedLinks)).toEqual([]);
+    expect(state.methods.slice(before)).toEqual([CONSULT]);
+  });
+
+  test('aceita só a correspondência exata entre resultados e o fallback ingressoUrl',async({page})=>{
+    const state=fixture({issued:true,onRequest:({method,args})=>{
+      if(method!==CONSULT)return;
+      const r=consultation(args[2],args[1],{ingressoCompartilhamentoUrl:'',ingressoUrl:ticketUrl(args[2])});
+      return {...r,ingressos:[{...r.ingressos[0],codigo:args[2]+'0'},...r.ingressos]};
+    }});
+    await openCourtesy(page,state);await ready(page);
+    await historyTicket(page).getByRole('button',{name:'Abrir ingresso',exact:true}).click();
+    await expect(historyTicket(page).getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl('CT-E2E-1'));
+  });
+
+  test('cortesia cancelada no histórico não oferece ações de link',async({page})=>{
+    const state=fixture({issued:true,cancelled:true});await openCourtesy(page,state);await ready(page);
+    await expect(historyTicket(page)).toContainText('indisponível');await expect(historyTicket(page).locator('button,a')).toHaveCount(0);
+    expect(calls(state,CONSULT)).toHaveLength(0);
+  });
+
+  for(const when of ['antes','durante','depois'])test('sessão expirada ou trocada '+when+' da consulta descarta links',async({page})=>{
+    const delayed=deferred();const state=fixture({issued:true,onRequest:({method})=>method===CONSULT&&when==='durante'?delayed.promise:undefined});
+    await openCourtesy(page,state);await ready(page);
+    if(when!=='antes'){
+      await historyTicket(page).getByRole('button',{name:'Abrir ingresso',exact:true}).click();
+      await expect.poll(()=>calls(state,CONSULT).length).toBe(1);
+      if(when==='depois')await expect(historyTicket(page).getByRole('link',{name:'Abrir ingresso'})).toBeVisible();
+    }
+    await page.evaluate(({key,when})=>{const data=JSON.parse(sessionStorage.getItem(key));if(when==='durante')data.token='OUTRA-SESSAO';else data.expiraEm='2000-01-01T00:00:00Z';sessionStorage.setItem(key,JSON.stringify(data));},{key:STORAGE,when});
+    if(when==='durante')delayed.resolve(consultation());
+    else await historyTicket(page).getByRole(when==='depois'?'link':'button',{name:'Abrir ingresso',exact:true}).click();
+    await expect(page.locator('#message')).toContainText('sessão mudou ou expirou');
+    await expect(page.locator('#historyRows a')).toHaveCount(0);expect(page.context().pages()).toHaveLength(1);
+    expect(calls(state,CONSULT)).toHaveLength(when==='antes'?0:1);
+  });
+
+  for(const staleError of [false,true])test('resposta antiga A→B→A não altera links novos'+(staleError?' (erro)':''),async({page})=>{
+    const delayed=deferred();let queries=0;
+    const state=fixture({issued:true,catalogs:{'PROD-E2E':catalog('PROD-E2E',[{id:'A'},{id:'B'}])},onRequest:({method,args})=>{
+      if(method===LOAD)return {...eventData(args[1]),recentes:baseData(fixture({issued:true})).recentes};
+      if(method===CONSULT)return ++queries===1?delayed.promise:consultation(args[2],args[1],{ingressoCompartilhamentoUrl:ticketUrl(args[2],'NOVA_E2E_1234567890')});
+    }});
+    await openCourtesy(page,state);await ready(page);
+    await historyTicket(page).getByRole('button',{name:'Abrir ingresso',exact:true}).click();
+    await expect.poll(()=>queries).toBe(1);
+    // Even synthetic repeated clicks cannot duplicate the pending lookup.
+    await historyTicket(page).locator('button').evaluateAll(buttons=>buttons.forEach(b=>b.dispatchEvent(new Event('click'))));
+    expect(queries).toBe(1);
+    for(const event of ['B','A']){await page.locator('#eventSelect').selectOption(event);await ready(page)}
+    await historyTicket(page).getByRole('button',{name:'Abrir ingresso',exact:true}).click();
+    const link=historyTicket(page).getByRole('link',{name:'Abrir ingresso'});
+    await expect(link).toHaveAttribute('href',ticketUrl('CT-E2E-1','NOVA_E2E_1234567890'));
+    if(staleError)delayed.reject(new Error('ERRO ANTIGO'));else delayed.resolve(consultation('CT-E2E-1','A'));
+    await page.waitForTimeout(150);
+    await expect(link).toHaveAttribute('href',ticketUrl('CT-E2E-1','NOVA_E2E_1234567890'));await expect(page.locator('body')).not.toContainText('ERRO ANTIGO');
+    await expect(historyTicket(page).getByRole('button',{name:'Copiar link',exact:true})).toBeEnabled();
+  });
+
+  for(const reset of ['reload','cancel','producer'])test('invalida consulta pendente em '+reset,async({page})=>{
+    const delayed=deferred();
+    const state=fixture({issued:true,producers:[{id:'PROD-E2E',perfil:'PRODUTOR_TITULAR'},{id:'PROD-2',perfil:'PRODUTOR_TITULAR'}],catalogs:{'PROD-2':catalog('PROD-2',[{id:'OUTRO'}])},onRequest:({method,args})=>{
+      if(method===CONSULT)return delayed.promise;
+      if(method===LOAD&&args[1]==='OUTRO')return eventData('OUTRO','PROD-2');
+    }});
+    await openCourtesy(page,state);await ready(page);
+    await historyTicket(page).getByRole('button',{name:'Compartilhar',exact:true}).click();await expect.poll(()=>calls(state,CONSULT).length).toBe(1);
+    if(reset==='cancel'){
+      page.on('dialog',dialog=>dialog.type()==='prompt'?dialog.accept('Teste simulado'):dialog.accept());
+      await page.getByRole('button',{name:'Cancelar',exact:true}).click();await expect.poll(()=>state.cancelCalls).toBe(1);
+    }else if(reset==='producer')await page.locator('#producerSelect').selectOption('PROD-2');
+    else await page.locator('#loadButton').click();
+    await ready(page);delayed.resolve(consultation());await page.waitForTimeout(150);
+    await expect(page.locator('#historyRows a')).toHaveCount(0);expect(page.context().pages()).toHaveLength(1);
+  });
+
+  test('falha de transporte permite nova tentativa sem reemitir',async({page})=>{
+    let failed=false;const state=fixture({issued:true,onRequest:({method})=>{if(method===CONSULT&&!failed){failed=true;throw new Error('Falha de consulta simulada')}}});
+    await openCourtesy(page,state);await ready(page);
+    const row=historyTicket(page);await row.getByRole('button',{name:'Abrir ingresso',exact:true}).click();
+    await expect(row).toContainText('Falha de consulta simulada');
+    await row.getByRole('button',{name:'Abrir ingresso',exact:true}).click();
+    await expect(row.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl('CT-E2E-1'));
+    expect(calls(state,CONSULT)).toHaveLength(2);expect(calls(state,ISSUE)).toHaveLength(0);
   });
 });

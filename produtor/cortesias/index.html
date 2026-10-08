@@ -30,6 +30,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
 .ticket-result{border:1px solid var(--line);background:var(--card2);border-radius:13px;padding:12px;margin-top:9px}.ticket-result b{display:block;font-size:12px}.ticket-result small{color:var(--muted)}.ticket-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.ticket-actions a,.ticket-actions button{min-height:36px}
 .tablewrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}.tablewrap table{width:100%;border-collapse:collapse;min-width:960px}.tablewrap th,.tablewrap td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:11px;vertical-align:top}.tablewrap th{color:var(--muted);text-transform:uppercase;font-size:9px}.tag{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:4px 7px;font-size:9px;font-weight:850}.tag.ok{color:#baf0d1;border-color:#285d41}.tag.cancel{color:#ffc0c0;border-color:#643038}.rowactions{display:flex;gap:5px;flex-wrap:wrap}
 .loading{position:fixed;inset:0;z-index:40;background:rgba(6,8,11,.74);display:none;place-items:center}.loading.show{display:grid}.loader{border:1px solid var(--line);background:var(--card);padding:18px 22px;border-radius:15px;color:var(--muted);font-size:12px}
+.history-ticket{margin-top:10px;max-width:340px;overflow-wrap:anywhere}.history-ticket .btn{min-height:44px;display:inline-flex;align-items:center}.history-ticket input{width:100%;margin-top:8px}.history-ticket [role=status]{display:block;margin-top:6px}
 @media(max-width:850px){.rulebar,.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}.selectors{grid-template-columns:1fr 1fr}.selectors .btn{grid-column:1/-1}.topin{padding:9px 0}}
 @media(max-width:620px){html,body{max-width:100%;overflow-x:hidden}.topin{flex-direction:column;align-items:stretch}.actions{display:grid;grid-template-columns:1fr 1fr}.selectors,.formgrid{grid-template-columns:1fr}.selectors>*,.formgrid>*,.rulebar>*,.metrics>*{min-width:0}.full,.selectors .btn{grid-column:auto}.rulebar,.metrics{grid-template-columns:1fr 1fr}.inline{display:grid}.hero{padding:19px}.metric strong{font-size:20px}.tablewrap{max-width:calc(100vw - 64px)}}
 </style>
@@ -175,6 +176,8 @@ var state={
   catalogStatus:'idle',
   catalogRequest:0,
   loadRequest:0,
+  historyEpoch:0,
+  historyPending:{},
   loadBusy:false,
   bootBusy:true,
   mutationBusy:false,
@@ -186,7 +189,7 @@ var state={
 
 function $(id){return document.getElementById(id)}
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function officialTicketUrl(raw){try{var u=new URL(String(raw||''),location.href),c=String(u.searchParams.get('codigo')||'').trim(),s=String(u.searchParams.get('sig')||'').trim();if(c&&s)return '/ingresso/?codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s);var d=String(u.searchParams.get('destino')||'').trim();if(d){u=new URL(d);c=String(u.searchParams.get('codigo')||'').trim();s=String(u.searchParams.get('sig')||'').trim();if(c&&s)return '/ingresso/?codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s)}}catch(_){}return '#'}
+function officialTicketUrl(raw,code){try{var u=new URL(String(raw||''),'https://cariocaticket.com.br'),c=String(u.searchParams.get('codigo')||''),s=String(u.searchParams.get('sig')||'');if(u.protocol==='https:'&&/^(?:www\.)?cariocaticket\.com\.br$/.test(u.host)&&!u.username&&!u.password&&/^\/ingresso\/?$/.test(u.pathname)&&u.searchParams.getAll('codigo').length===1&&u.searchParams.getAll('sig').length===1&&/^[A-Z0-9][A-Z0-9-]{5,79}$/.test(c)&&/^[A-Za-z0-9_-]{16,128}$/.test(s)&&(!code||c===code))return 'https://cariocaticket.com.br/ingresso/?codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s)}catch(_){}return '#'}
 
 function digits(v){return String(v||'').replace(/\D/g,'')}
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
@@ -207,10 +210,11 @@ function syncControls(){
   $('refreshButton').disabled=blocked||state.catalogStatus==='loading'||state.loadBusy;
   $('loadButton').disabled=blocked||state.catalogStatus==='loading'||state.loadBusy||(!state.evento&&state.catalogStatus==='ready');
   $('loadButton').textContent=state.catalogStatus==='loading'?'Carregando eventos...':state.loadBusy?'Carregando evento...':state.catalogStatus==='error'?'Tentar novamente':'Carregar evento';
-  document.querySelectorAll('#content button,#content input,#content select,#content textarea').forEach(function(el){el.disabled=blocked||state.loadBusy||!state.data});
+  document.querySelectorAll('#content button,#content input,#content select,#content textarea').forEach(function(el){var ticket=el.closest('[data-history-code]');el.disabled=blocked||state.loadBusy||!state.data||!!(ticket&&state.historyPending[ticket.dataset.historyCode])});
   loading(blocked);
 }
 function clearEventData(resetForm,preserveIssued){
+  resetHistory();
   state.loadRequest++;
   state.loadBusy=false;
   state.data=null;
@@ -314,11 +318,62 @@ function applyGuest(){
   var o=$('guestSelect').selectedOptions&&$('guestSelect').selectedOptions[0];
   if(o&&o.value&&o.dataset.name){$('name').value=o.dataset.name;$('origin').value='CONVIDADO_PRIVADO';clearIssueKey()}
 }
+function resetHistory(){state.historyEpoch++;state.historyPending={};$('historyRows').innerHTML=''}
+function historySessionValid(){var session=readSession();return !!(session&&state.session&&session.token===state.session.token)}
+function historySessionGuard(){
+  if(historySessionValid())return true;
+  if(state.data)renderHistory(state.data);else resetHistory();
+  message('Sua sessão mudou ou expirou. Entre novamente pelo Portal do Produtor.','error');
+  return false;
+}
+async function copyHistoryLink(block,url,epoch){
+  if(epoch!==state.historyEpoch||!block.isConnected||!historySessionGuard())return;
+  var feedback=block.querySelector('[role=status]');
+  try{await copy(url);if(epoch===state.historyEpoch&&block.isConnected&&historySessionGuard())feedback.textContent='Link do ingresso copiado.'}
+  catch(_){
+    if(epoch!==state.historyEpoch||!block.isConnected||!historySessionGuard())return;
+    feedback.textContent='Não foi possível copiar automaticamente. Selecione e copie o link abaixo.';
+    var input=block.querySelector('input')||document.createElement('input');
+    input.readOnly=true;input.value=url;input.setAttribute('aria-label','Link do ingresso '+block.dataset.historyCode);block.appendChild(input);input.focus();input.select();
+  }
+}
+async function prepareHistoryTicket(block,action){
+  var code=block.dataset.historyCode;
+  if(state.mutationBusy||state.loadBusy||!state.data||state.historyPending[code]||!historySessionGuard())return;
+  var epoch=state.historyEpoch,producer=String(state.produtor.id),event=eventId(state.evento),token=state.session.token;
+  function current(){return epoch===state.historyEpoch&&block.isConnected&&producer===String(state.produtor&&state.produtor.id)&&event===eventId(state.evento)&&token===state.session.token}
+  var feedback=block.querySelector('[role=status]'),actions=block.querySelector('.ticket-actions');
+  state.historyPending[code]=true;syncControls();feedback.textContent='Consultando ingresso...';
+  try{
+    var r=await rpc('ctConsultaIngressosOperacionalPROD',[token,event,code,'']);
+    if(!current()||!historySessionGuard())return;
+    if(!r||r.sucesso!==true||r.autenticado!==true||r.autorizado!==true){
+      renderHistory(state.data);message('Não foi possível autorizar a consulta. Verifique sua sessão e o acesso ao evento.','error');return;
+    }
+    if(!r.filtroEvento||r.filtroEvento.eventoId!==event||!Array.isArray(r.ingressos))throw new Error('A consulta não confirmou o evento selecionado.');
+    var matches=r.ingressos.filter(function(t){return t&&t.codigo===code&&t.eventoId===event});
+    if(matches.length!==1)throw new Error('Não foi possível identificar um único ingresso deste evento.');
+    var ticket=matches[0],status=String(ticket.statusClasse||'').toUpperCase();
+    if(status!=='VALIDO'||ticket.compartilhamentoPermitido!==true){
+      actions.innerHTML='';feedback.textContent=status==='UTILIZADO'?'Ingresso já utilizado.':status==='CANCELADO'?'Ingresso cancelado.':status==='PENDENTE'?'Ingresso pendente.':'Compartilhamento não autorizado.';return;
+    }
+    var url=officialTicketUrl(ticket.ingressoCompartilhamentoUrl||ticket.ingressoUrl,code);
+    if(url==='#')throw new Error('Link seguro indisponível para este ingresso.');
+    var share='https://wa.me/?text='+encodeURIComponent('Cortesia Carioca Ticket\n\nAbrir ingresso: '+url);
+    actions.innerHTML='<a class="btn gold" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Abrir ingresso</a><button class="btn" type="button">Copiar link</button><a class="btn" href="'+esc(share)+'" target="_blank" rel="noopener noreferrer">Compartilhar</a>';
+    actions.querySelectorAll('a').forEach(function(link){link.onclick=function(e){if(!current()||state.mutationBusy||state.loadBusy||!historySessionGuard())e.preventDefault()}});
+    actions.querySelector('button').onclick=function(){copyHistoryLink(block,url,epoch)};
+    feedback.textContent='Link pronto. Toque em Abrir ingresso ou Compartilhar. O WhatsApp pede sua confirmação de envio.';
+    if(action==='copy')await copyHistoryLink(block,url,epoch);
+  }catch(e){if(current()&&historySessionGuard())feedback.textContent=e.message||'Não foi possível consultar o ingresso. Tente novamente.'}
+  finally{if(current()){delete state.historyPending[code];syncControls()}}
+}
 function renderHistory(data){
+  resetHistory();
   var rows=Array.isArray(data.recentes)?data.recentes:[];
   $('historyRows').innerHTML=rows.map(function(x){
     var active=String(x.status||'').toUpperCase()==='EMITIDA'||String(x.status||'').toUpperCase()==='RECONCILIACAO_PENDENTE';
-    var links=(x.codigos||[]).map(function(c){return '<code>'+esc(c)+'</code>'}).join('<br>');
+    var links=(x.codigos||[]).map(function(c){return '<div class="history-ticket" data-history-code="'+esc(c)+'"><code>'+esc(c)+'</code>'+(active?'<div class="ticket-actions"><button class="btn" data-history-action="open" type="button">Abrir ingresso</button><button class="btn" data-history-action="copy" type="button">Copiar link</button><button class="btn" data-history-action="share" type="button">Compartilhar</button></div><small role="status" aria-live="polite"></small>':'<small>Ingresso indisponível para compartilhamento.</small>')+'</div>'}).join('');
     return '<tr>'+
       '<td><b>'+esc(x.destinatarioNome)+'</b><br><small>'+esc(x.whatsappMascara||'')+'</small></td>'+
       '<td>'+esc(x.tipoNome)+'<br><small>'+esc(x.loteNome||'')+'</small><br>'+links+'</td>'+
@@ -333,6 +388,7 @@ function renderHistory(data){
   document.querySelectorAll('[data-cancel]').forEach(function(btn){
     btn.onclick=function(){cancelCourtesy(btn.dataset.cancel)};
   });
+  $('historyRows').querySelectorAll('[data-history-action]').forEach(function(btn){btn.onclick=function(){prepareHistoryTicket(btn.closest('[data-history-code]'),btn.dataset.historyAction)}});
 }
 function render(data,selection){
   var issueKey=state.issueKey,name=$('name').value,origin=$('origin').value;
@@ -368,6 +424,7 @@ async function load(afterMutation,selection){
   selection=selection||currentSelection();
   if(!selection.type)selection=null;
   state.loadBusy=true;
+  resetHistory();
   state.data=null;
   $('content').classList.add('hidden');
   message('Carregando cortesias do evento...','info');
@@ -391,7 +448,7 @@ async function saveLimit(){
   if(state.mutationBusy||state.loadBusy||!state.evento||!state.data)return;
   var value=Math.floor(Number($('courtesyLimit').value||0));
   if(value<0){message('Informe um limite válido.','error');return}
-  state.mutationBusy=true;syncControls();
+  state.mutationBusy=true;renderHistory(state.data);syncControls();
   try{
     var id=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctCortesiasSalvarConfigPROD',[state.session.token,id,{limiteCortesiasAcessos:value}]);
@@ -420,6 +477,7 @@ function renderIssued(r){
   state.issuedContext={producerId:String(state.produtor.id),eventId:eventId(state.evento)};
   var list=Array.isArray(r.ingressos)?r.ingressos:[];
   $('resultTickets').innerHTML='<div class="message show ok" style="margin-top:12px">'+esc(r.mensagem||'Cortesia emitida.')+'</div>'+list.map(function(t){
+    t=Object.assign({},t,{link:officialTicketUrl(t.link,String(t.codigo||''))});
     var msg='🎟️ Cortesia Carioca Ticket\n\n'+(t.nome||'Participante')+'\n'+(state.evento&&state.evento.nome||'Evento')+'\n\nAbrir ingresso: '+(t.link||'');
     return '<div class="ticket-result"><b>'+esc(t.nome||'Participante')+' · '+esc(t.codigo||'')+'</b><small>'+esc(t.tipo||'')+' · '+esc(t.loteNome||'')+'</small><div class="ticket-actions">'+
       (officialTicketUrl(t.link)!=='#'?'<a class="btn gold" href="'+esc(officialTicketUrl(t.link))+'" target="_blank" rel="noopener">Abrir ingresso</a><button class="btn" data-copy="'+esc(officialTicketUrl(t.link))+'" type="button">Copiar link</button><a class="btn" href="https://wa.me/?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">WhatsApp</a>':'<span>Link seguro indisponível.</span>')+
@@ -433,7 +491,7 @@ async function issue(){
   try{payload=issuePayload()}catch(e){message(e.message||String(e),'error');return}
   if(!payload.nome||payload.whatsapp.length<10||!payload.tipoId||!payload.loteId||!payload.motivo){message('Preencha nome, WhatsApp, tipo, lote e motivo.','error');return}
   if(state.data&&state.data.reconciliacao&&state.data.reconciliacao.consistente!==true){message('Existe divergência de reconciliação. Atualize/revise antes de emitir uma nova cortesia.','error');return}
-  state.issueBusy=true;state.mutationBusy=true;syncControls();
+  state.issueBusy=true;state.mutationBusy=true;renderHistory(state.data);syncControls();
   try{
     var eventId=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctCortesiasEmitirPROD',[state.session.token,eventId,payload]);
@@ -449,7 +507,7 @@ async function cancelCourtesy(id){
   var reason=prompt('Informe o motivo do cancelamento da cortesia:');
   if(!reason)return;
   if(!confirm('Cancelar esta cortesia? Ingressos já utilizados não podem ser cancelados.'))return;
-  state.mutationBusy=true;syncControls();
+  state.mutationBusy=true;renderHistory(state.data);syncControls();
   try{
     var eventId=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctCortesiasCancelarPROD',[state.session.token,eventId,id,reason]);
