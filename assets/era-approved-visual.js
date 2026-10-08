@@ -3,13 +3,14 @@
   'use strict';
   const EVENT = 'EVT-23112026-ERA-BEAUTY-EAC4B673';
   const URL = 'https://cariocaticket.com.br/assets/eventos/era-beauty-capa-oficial-20261008.jpg';
-  const FIELDS = ['capaUrl','posterUrl','destaque','descricaoCurta','descricaoCompleta'];
+  const CATEGORY = 'Beleza & Neg\u00f3cios';
+  const FIELDS = ['capaUrl','posterUrl','destaque','descricaoCurta','descricaoCompleta','categoria'];
   const dialog = document.createElement('dialog');
   dialog.className = 'era-visual-dialog'; dialog.setAttribute('aria-labelledby','eraVisualTitle');
   dialog.innerHTML = `<h2 id="eraVisualTitle">Visual aprovado do ERA BEAUTY</h2>
     <p>Confira a capa e os textos abaixo. Confirme para aplicar ao evento.</p>
     <img id="eraVisualImage" class="era-visual-image" alt="Prévia integral da capa aprovada do ERA BEAUTY" referrerpolicy="no-referrer" hidden>
-    <dl id="eraVisualTexts" hidden><dt>Destaque</dt><dd id="eraVisualHighlight"></dd><dt>Descrição curta</dt><dd id="eraVisualShort"></dd><dt>Descrição completa</dt><dd id="eraVisualFull"></dd></dl>
+    <dl id="eraVisualTexts" hidden><dt>Categoria</dt><dd id="eraVisualCategory"></dd><dt>Destaque</dt><dd id="eraVisualHighlight"></dd><dt>Descrição curta</dt><dd id="eraVisualShort"></dd><dt>Descrição completa</dt><dd id="eraVisualFull"></dd></dl>
     <p id="eraVisualStatus" class="era-visual-status" role="status" aria-live="polite"></p>
     <div class="era-visual-actions"><button type="button" id="eraVisualClose">Cancelar</button><button type="button" id="eraVisualCheck" hidden>Consultar novamente</button><button type="button" id="eraVisualConfirm" class="era-visual-confirm" disabled>Aplicar capa e textos</button></div>`;
   document.body.appendChild(dialog);
@@ -23,12 +24,12 @@
   }
   function previewValid(value) {
     return value?.sucesso === true && value.eventoId === EVENT && /^[a-f0-9]{64}$/.test(value.revisao || '') &&
-      value.proposto?.capaUrl === URL && value.proposto?.posterUrl === URL &&
+      value.proposto?.capaUrl === URL && value.proposto?.posterUrl === URL && value.proposto?.categoria === CATEGORY &&
       FIELDS.every(key => typeof value.proposto[key] === 'string');
   }
   function matches(value, proposed) { return FIELDS.every(key => value?.[key] === proposed[key]); }
   function render(value) {
-    current=value;el('Highlight').textContent=value.proposto.destaque;el('Short').textContent=value.proposto.descricaoCurta;el('Full').textContent=value.proposto.descricaoCompleta;
+    current=value;el('Category').textContent=value.proposto.categoria;el('Highlight').textContent=value.proposto.destaque;el('Short').textContent=value.proposto.descricaoCurta;el('Full').textContent=value.proposto.descricaoCompleta;
     el('Texts').hidden=false;el('Image').hidden=false;
     if (el('Image').getAttribute('src') !== URL) { imageReady=false;el('Image').src=URL; }
   }
