@@ -47,9 +47,10 @@
         image.alt = 'Capa de ' + event.nome;
         image.loading = index < 2 ? 'eager' : 'lazy';
         image.decoding = 'async';
-        image.hidden = true;
+        // Keep lazy images measurable so the browser can start loading near the viewport.
+        image.style.opacity = '0';
         fallback.textContent = 'Carregando capa…';
-        image.onload = function () { image.hidden = false; fallback.hidden = true; };
+        image.onload = function () { image.style.opacity = '1'; fallback.hidden = true; };
         image.onerror = function () { image.hidden = true; fallback.hidden = false; fallback.textContent = 'Capa indisponível'; };
         image.src = src;
         cover.appendChild(image);

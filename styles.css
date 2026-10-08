@@ -184,6 +184,7 @@ footer{margin-top:44px;border-top:1px solid #1f1f1f;background:#080808}
 .public-events-grid .catalog-card{display:flex;flex-direction:column;min-width:0}
 .public-events-grid .catalog-photo{aspect-ratio:1882/836;background:#080808;border-bottom:1px solid var(--line)}
 .public-events-grid .catalog-photo img{position:absolute;inset:0;object-fit:contain;transform:none}
+.public-events-grid .catalog-card:hover .catalog-photo img{transform:none}
 .catalog-image-fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted);font-size:14px;background:linear-gradient(140deg,#1c190f,#101010)}
 .public-events-grid .catalog-body{display:flex;flex-direction:column;flex:1;padding:20px}
 .catalog-title{font-size:24px;line-height:1.2;letter-spacing:-.02em;margin:6px 0 12px;overflow-wrap:anywhere}

@@ -21,6 +21,8 @@ async function fixture(page, options = {}) {
   await page.context().route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
     if (url.origin === ORIGIN) {
+      if (url.pathname === '/test-wide-cover.svg') return route.fulfill({ contentType: 'image/svg+xml', body:
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1882" height="836" viewBox="0 0 1882 836"><rect width="1882" height="836" fill="#163c4a"/><rect width="30" height="836" fill="#ffd66d"/><rect x="1852" width="30" height="836" fill="#ffd66d"/><g fill="white" font-family="Arial" text-anchor="middle"><text x="941" y="360" font-size="92">CAPA DE TESTE LOCAL</text><text x="941" y="490" font-size="54">1882 × 836 · bordas completas</text><text x="145" y="755" font-size="42">ESQUERDA</text><text x="1737" y="755" font-size="42">DIREITA</text></g></svg>' });
       if (url.pathname.includes('ct-analytics') || url.pathname === '/pwa-register.js')
         return route.fulfill({ contentType: 'text/javascript', body: '' });
       const relative = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
@@ -78,6 +80,41 @@ test('a single public catalog appears early, with complete covers and validated 
     await page.locator('#mobile-menu a[href="#todos-eventos"]').click();
     await expect(page.locator('#mobile-menu')).toBeHidden();
   }
+});
+
+const threeEvents = [...rows, { id: 'EVT-LOCAL-THIRD', nome: 'Evento fictício — teste local 3',
+  visual: { capaUrl: '/test-wide-cover.svg', categoria: 'Somente teste', descricaoCurta: 'Fixture local para conferir carregamento e bordas da capa.' } }];
+
+test('third event lazy cover loads after scrolling without hiding the image from layout', async ({ page }, testInfo) => {
+  await fixture(page, { result: { sucesso: true, eventos: threeEvents } });
+  await expect(page.locator('.catalog-card')).toHaveCount(3);
+  const card = page.locator('[data-event-id="EVT-LOCAL-THIRD"]');
+  const image = card.locator('img');
+  await expect(image).toHaveAttribute('loading', 'lazy');
+  await card.scrollIntoViewIfNeeded();
+  await expect.poll(() => image.evaluate(img => img.complete && img.naturalWidth === 1882), { timeout: 4000 }).toBe(true);
+  await expect(image).toBeVisible();
+  await expect(card.locator('.catalog-image-fallback')).toBeHidden();
+  await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + threeEvents[2].nome })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('catalog-three-events.png') });
+});
+
+test('hover preserves complete covers with at least three events', async ({ page }) => {
+  await fixture(page, { result: { sucesso: true, eventos: threeEvents } });
+  await expect(page.locator('.catalog-card')).toHaveCount(3);
+  const cover = page.locator('.catalog-photo').first();
+  const image = cover.locator('img');
+  await expect(image).toBeVisible();
+  await cover.hover();
+  // Wait for the legacy 250ms transform transition before measuring the final box.
+  await page.waitForTimeout(350);
+  const geometry = await image.evaluate(img => {
+    const bounds = img.getBoundingClientRect(), parent = img.parentElement.getBoundingClientRect();
+    return { transform: getComputedStyle(img).transform, fit: getComputedStyle(img).objectFit, width: bounds.width, coverWidth: parent.width };
+  });
+  expect(geometry.transform).toBe('none');
+  expect(geometry.fit).toBe('contain');
+  expect(geometry.width).toBeLessThanOrEqual(geometry.coverWidth);
 });
 
 test('search submitted while loading applies to the eventual response and clears without reloading', async ({ page }) => {

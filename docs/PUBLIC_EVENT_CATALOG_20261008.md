@@ -76,22 +76,35 @@ revisada após o arquivo oficial ficar disponível.
 
 ## Validação local
 
-- 16 testes Playwright do catálogo: 1365 × 768 e 412 × 915, todas as requisições
+- 20 testes Playwright do catálogo: 1365 × 768 e 412 × 915, todas as requisições
   interceptadas. Cobrem carregamento e busca antecipada, acentos, nova tentativa,
   timeout/resposta atrasada, vazio, imagem ausente/quebrada, conteúdo não confiável,
   evento futuro sem ID fixo, deduplicação, navegação, ausência de overflow e capas
   completas. Nenhum pedido, cobrança ou ingresso real foi criado.
+- Revisão adicional com três cards reproduziu, antes da correção, o lazy loading
+  preso em `display:none` e o hover com `matrix(1.025, 0, 0, 1.025, 0, 0)` nos dois
+  perfis. As quatro regressões passaram após manter a imagem no layout com
+  opacidade zero durante o carregamento e neutralizar o zoom legado nos cards
+  públicos. A terceira capa de teste tem dimensões 1882 × 836 e marcadores nas
+  bordas; é uma fixture sintética, sem substituir a arte oficial do ERA.
+- Os mocks restritivos de proteção financeira agora aceitam a consulta pública
+  de catálogo usada pela home na preparação da sessão. Nenhuma lógica financeira
+  de produto foi alterada.
 - `node tests/contracts.mjs`: 41 superfícies protegidas passaram.
 - `tests/eventos-privados-v1.mjs`: a execução direta no Windows falha na comparação
   literal de quebras de linha do cadastro comum (checkout com `core.autocrlf=true`).
-  Passou com normalização CRLF→LF apenas em memória, sem alterar os arquivos.
-  Os arquivos envolvidos estão idênticos à base.
+  Passou inicialmente com normalização CRLF→LF apenas em memória e depois
+  diretamente, após alinhar as quebras de linha do checkout local a LF. O conteúdo
+  dos arquivos envolvidos segue idêntico à base; não há alteração lógica.
 - Jornada Home → Evento → Checkout → PIX simulado → Minha Carioca → Ingresso:
   passou em desktop e mobile com respostas simuladas, sem cobrança real. O mock
   existente recebeu somente a resposta da nova RPC; o checkout não foi editado.
 - GitHub Pages verificado por leitura: fonte `main`, caminho `/`, build `legacy`.
   Esta branch não é fonte de publicação. Não houve merge ou deploy.
 
-Capturas locais: `test-results/public-event-catalog-*/catalog-home.png` e
-`catalog-viewport.png`. A suíte nova foi incluída no job local de homologação
+Capturas locais: `test-results/public-event-catalog-*/catalog-home.png`,
+`catalog-viewport.png` e `catalog-three-events.png`. As capturas de viewport e
+do terceiro card são preservadas também pelos artefatos de CI
+`catalogo-publico-desktop` e `catalogo-publico-mobile` por 14 dias, inclusive quando
+os testes passam. A suíte nova foi incluída no job local de homologação
 desktop/mobile do CI; não há chamada real ao novo backend nessa suíte.
