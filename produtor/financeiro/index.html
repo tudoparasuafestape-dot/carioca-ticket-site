@@ -73,10 +73,18 @@ button,select,input{font:inherit}
 
   <section id="dashboard" class="hidden">
     <section class="metrics">
-      <div class="metric gold"><small>Vendas confirmadas</small><strong id="confirmedSales">R$ 0,00</strong></div>
+      <div class="metric gold"><small id="confirmedSalesLabel">Vendas confirmadas</small><strong id="confirmedSales">R$ 0,00</strong></div>
+      <div id="eraCtFeeMetric" class="metric hidden"><small>Taxa CT apurada</small><strong id="eraCtFee">R$ 0,00</strong></div>
+      <div id="eraProducerNetMetric" class="metric gold hidden"><small>Líquido do produtor apurado</small><strong id="eraProducerNet">R$ 0,00</strong></div>
       <div class="metric green"><small>Saldo operacional interno</small><strong id="ledgerBalance">R$ 0,00</strong></div>
       <div class="metric blue"><small>Disponível para solicitar antecipação</small><strong id="anticipationAvailable">R$ 0,00</strong></div>
       <div class="metric"><small>Pagamentos planejados</small><strong id="plannedPayments">R$ 0,00</strong></div>
+    </section>
+
+    <section id="eraCompositionNote" class="card hidden" aria-live="polite">
+      <p class="note">Composição registrada nos pagamentos confirmados. O líquido apurado não representa saldo liquidado nem disponível para saque. A antecipação considera apenas o líquido elegível validado pelo servidor.</p>
+      <p id="eraOtherDeductions" class="note hidden" style="margin-top:8px"></p>
+      <p id="eraCompositionWarning" class="note off hidden" style="margin-top:8px"></p>
     </section>
 
     <div class="grid">
@@ -259,6 +267,7 @@ function render(r){
   var origem=ledger.porOrigem||{};
 
   document.getElementById('confirmedSales').textContent=money(vendas.confirmado);
+  renderEraComposition(r,vendas);
   document.getElementById('ledgerBalance').textContent=money(ledger.saldoOperacional);
   document.getElementById('anticipationAvailable').textContent=money(ant.disponivelSolicitar);
   document.getElementById('plannedPayments').textContent=money(sol.pagamentosPlanejados);
@@ -303,6 +312,37 @@ function render(r){
 
 function setGate(id,on,yes,no){
   var el=document.getElementById(id);el.textContent=on?yes:no;el.className=on?'on':'off';
+}
+
+// Presentation only: frozen composition and anticipation eligibility come from the server.
+function renderEraComposition(r,vendas){
+  var era=r.produtorId==='PROD-1D96238E910D473CBC159AABCC2EAA94'&&r.eventoId==='EVT-23112026-ERA-BEAUTY-EAC4B673'&&
+    state.produtor&&state.produtor.id===r.produtorId&&state.evento&&state.evento.id===r.eventoId;
+  ['eraCtFeeMetric','eraProducerNetMetric','eraCompositionNote'].forEach(function(id){document.getElementById(id).classList.toggle('hidden',!era)});
+  document.getElementById('confirmedSalesLabel').textContent=era?'Bruto confirmado':'Vendas confirmadas';
+  var fee=document.getElementById('eraCtFee'),net=document.getElementById('eraProducerNet');
+  var other=document.getElementById('eraOtherDeductions'),warning=document.getElementById('eraCompositionWarning');
+  fee.textContent=money(0);net.textContent=money(0);
+  other.textContent='';other.classList.add('hidden');
+  warning.textContent='';warning.classList.add('hidden');
+  if(!era)return;
+  var c=vendas.composicaoEra;
+  var valid=c&&['brutoConfirmado','taxaCtConfirmada','liquidoProdutorConfirmado','outrasDeducoesConfirmadas','pagamentosSemComposicao'].every(function(key){return typeof c[key]==='number'&&isFinite(c[key])&&c[key]>=0})&&Math.floor(c.pagamentosSemComposicao)===c.pagamentosSemComposicao;
+  if(!valid){
+    fee.textContent='Não apurada';net.textContent='Não apurado';
+    warning.textContent='Composição financeira indisponível. O bruto continua visível; a taxa CT e o líquido do produtor não podem ser apurados com os dados recebidos.';
+    warning.classList.remove('hidden');return;
+  }
+  document.getElementById('confirmedSales').textContent=money(c.brutoConfirmado);
+  fee.textContent=money(c.taxaCtConfirmada);net.textContent=money(c.liquidoProdutorConfirmado);
+  if(c.outrasDeducoesConfirmadas>0){
+    other.textContent='Outras deduções apuradas: '+money(c.outrasDeducoesConfirmadas)+'. Já descontadas do líquido do produtor.';
+    other.classList.remove('hidden');
+  }
+  if(c.pagamentosSemComposicao>0){
+    warning.textContent=c.pagamentosSemComposicao+' pagamento(s) confirmado(s) sem composição financeira válida: incluídos no bruto, mas excluídos do líquido apurado e da base de antecipação.';
+    warning.classList.remove('hidden');
+  }
 }
 
 async function requestAdvance(){
@@ -409,3 +449,4 @@ init();
 </script>
 </body>
 </html>
+
