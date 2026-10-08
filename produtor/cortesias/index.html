@@ -192,6 +192,19 @@ function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'
 function officialTicketUrl(raw,code){try{var u=new URL(String(raw||''),'https://cariocaticket.com.br'),c=String(u.searchParams.get('codigo')||''),s=String(u.searchParams.get('sig')||'');if(u.protocol==='https:'&&/^(?:www\.)?cariocaticket\.com\.br$/.test(u.host)&&!u.username&&!u.password&&/^\/ingresso\/?$/.test(u.pathname)&&u.searchParams.getAll('codigo').length===1&&u.searchParams.getAll('sig').length===1&&/^[A-Z0-9][A-Z0-9-]{5,79}$/.test(c)&&/^[A-Za-z0-9_-]{16,128}$/.test(s)&&(!code||c===code))return 'https://cariocaticket.com.br/ingresso/?codigo='+encodeURIComponent(c)+'&sig='+encodeURIComponent(s)}catch(_){}return '#'}
 
 function digits(v){return String(v||'').replace(/\D/g,'')}
+function whatsappPhone(value){
+  var raw=String(value||'').trim();
+  if(!/^\+?[\d\s().-]+$/.test(raw))return '';
+  var phone=digits(raw);
+  if(raw.charAt(0)==='+'&&!phone.startsWith('55'))return /^[1-9]\d{7,14}$/.test(phone)?phone:'';
+  if(raw.charAt(0)!=='+'&&(phone.length===10||phone.length===11))phone='55'+phone;
+  return /^55[1-9]{2}(?:[2-9]\d{7}|9\d{8})$/.test(phone)?phone:'';
+}
+function ticketWhatsapp(ticket,url){
+  var raw=String(ticket.telefone||'').trim();
+  var phone=(raw.charAt(0)==='+'?whatsappPhone(raw):'')||whatsappPhone(ticket.telefoneNormalizado)||whatsappPhone(raw);
+  return {direct:!!phone,url:'https://wa.me/'+phone+'?text='+encodeURIComponent('Cortesia Carioca Ticket\n\nAbrir ingresso: '+url)};
+}
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function readSession(){try{var raw=sessionStorage.getItem(STORAGE)||localStorage.getItem(STORAGE),d=raw?JSON.parse(raw):null;if(!d||!d.token)return null;if(d.expiraEm&&Date.parse(d.expiraEm)<=Date.now())return null;return d}catch(_){return null}}
 function cleanup(id){var p=pending[id];if(!p)return null;delete pending[id];clearTimeout(p.timer);try{p.frame.remove();p.form.remove()}catch(_){}return p}
@@ -210,7 +223,7 @@ function syncControls(){
   $('refreshButton').disabled=blocked||state.catalogStatus==='loading'||state.loadBusy;
   $('loadButton').disabled=blocked||state.catalogStatus==='loading'||state.loadBusy||(!state.evento&&state.catalogStatus==='ready');
   $('loadButton').textContent=state.catalogStatus==='loading'?'Carregando eventos...':state.loadBusy?'Carregando evento...':state.catalogStatus==='error'?'Tentar novamente':'Carregar evento';
-  document.querySelectorAll('#content button,#content input,#content select,#content textarea').forEach(function(el){var ticket=el.closest('[data-history-code]');el.disabled=blocked||state.loadBusy||!state.data||!!(ticket&&state.historyPending[ticket.dataset.historyCode])});
+  document.querySelectorAll('#content button,#content input,#content select,#content textarea').forEach(function(el){var ticket=el.closest('[data-history-code],[data-issued-code]');el.disabled=blocked||state.loadBusy||!state.data||!!(ticket&&state.historyPending[ticket.dataset.historyCode||ticket.dataset.issuedCode])});
   loading(blocked);
 }
 function clearEventData(resetForm,preserveIssued){
@@ -318,7 +331,15 @@ function applyGuest(){
   var o=$('guestSelect').selectedOptions&&$('guestSelect').selectedOptions[0];
   if(o&&o.value&&o.dataset.name){$('name').value=o.dataset.name;$('origin').value='CONVIDADO_PRIVADO';clearIssueKey()}
 }
-function resetHistory(){state.historyEpoch++;state.historyPending={};$('historyRows').innerHTML=''}
+function resetIssuedShares(){
+  $('resultTickets').querySelectorAll('[data-issued-code]').forEach(function(block){
+    var share=block.querySelector('[data-issued-share]');if(!share)return;
+    share.innerHTML='<button class="btn" type="button">Compartilhar</button>';
+    share.querySelector('button').onclick=function(){prepareHistoryTicket(block,'share')};
+    block.querySelector('[role=status]').textContent='';
+  });
+}
+function resetHistory(){state.historyEpoch++;state.historyPending={};$('historyRows').innerHTML='';resetIssuedShares()}
 function historySessionValid(){var session=readSession();return !!(session&&state.session&&session.token===state.session.token)}
 function historySessionGuard(){
   if(historySessionValid())return true;
@@ -338,32 +359,32 @@ async function copyHistoryLink(block,url,epoch){
   }
 }
 async function prepareHistoryTicket(block,action){
-  var code=block.dataset.historyCode;
+  var issued=block.hasAttribute('data-issued-code'),code=block.dataset.historyCode||block.dataset.issuedCode;
   if(state.mutationBusy||state.loadBusy||!state.data||state.historyPending[code]||!historySessionGuard())return;
   var epoch=state.historyEpoch,producer=String(state.produtor.id),event=eventId(state.evento),token=state.session.token;
   function current(){return epoch===state.historyEpoch&&block.isConnected&&producer===String(state.produtor&&state.produtor.id)&&event===eventId(state.evento)&&token===state.session.token}
-  var feedback=block.querySelector('[role=status]'),actions=block.querySelector('.ticket-actions');
+  var feedback=block.querySelector('[role=status]'),actions=block.querySelector(issued?'[data-issued-share]':'.ticket-actions');
   state.historyPending[code]=true;syncControls();feedback.textContent='Consultando ingresso...';
   try{
     var r=await rpc('ctConsultaIngressosOperacionalPROD',[token,event,code,'']);
     if(!current()||!historySessionGuard())return;
     if(!r||r.sucesso!==true||r.autenticado!==true||r.autorizado!==true){
-      renderHistory(state.data);message('Não foi possível autorizar a consulta. Verifique sua sessão e o acesso ao evento.','error');return;
+      renderHistory(state.data);syncControls();message('Não foi possível autorizar a consulta. Verifique sua sessão e o acesso ao evento.','error');return;
     }
     if(!r.filtroEvento||r.filtroEvento.eventoId!==event||!Array.isArray(r.ingressos))throw new Error('A consulta não confirmou o evento selecionado.');
     var matches=r.ingressos.filter(function(t){return t&&t.codigo===code&&t.eventoId===event});
     if(matches.length!==1)throw new Error('Não foi possível identificar um único ingresso deste evento.');
     var ticket=matches[0],status=String(ticket.statusClasse||'').toUpperCase();
     if(status!=='VALIDO'||ticket.compartilhamentoPermitido!==true){
-      actions.innerHTML='';feedback.textContent=status==='UTILIZADO'?'Ingresso já utilizado.':status==='CANCELADO'?'Ingresso cancelado.':status==='PENDENTE'?'Ingresso pendente.':'Compartilhamento não autorizado.';return;
+      block.querySelector('.ticket-actions').innerHTML='';feedback.textContent=status==='UTILIZADO'?'Ingresso já utilizado.':status==='CANCELADO'?'Ingresso cancelado.':status==='PENDENTE'?'Ingresso pendente.':'Compartilhamento não autorizado.';return;
     }
     var url=officialTicketUrl(ticket.ingressoCompartilhamentoUrl||ticket.ingressoUrl,code);
     if(url==='#')throw new Error('Link seguro indisponível para este ingresso.');
-    var share='https://wa.me/?text='+encodeURIComponent('Cortesia Carioca Ticket\n\nAbrir ingresso: '+url);
-    actions.innerHTML='<a class="btn gold" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Abrir ingresso</a><button class="btn" type="button">Copiar link</button><a class="btn" href="'+esc(share)+'" target="_blank" rel="noopener noreferrer">Compartilhar</a>';
+    var share=ticketWhatsapp(ticket,url);
+    actions.innerHTML=(issued?'':'<a class="btn gold" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Abrir ingresso</a><button class="btn" type="button">Copiar link</button>')+'<a class="btn" href="'+esc(share.url)+'" target="_blank" rel="noopener noreferrer">'+(share.direct?'Compartilhar':'Escolher destinatário no WhatsApp')+'</a>';
     actions.querySelectorAll('a').forEach(function(link){link.onclick=function(e){if(!current()||state.mutationBusy||state.loadBusy||!historySessionGuard())e.preventDefault()}});
-    actions.querySelector('button').onclick=function(){copyHistoryLink(block,url,epoch)};
-    feedback.textContent='Link pronto. Toque em Abrir ingresso ou Compartilhar. O WhatsApp pede sua confirmação de envio.';
+    if(!issued)actions.querySelector('button').onclick=function(){copyHistoryLink(block,url,epoch)};
+    feedback.textContent=share.direct?'Link pronto para o WhatsApp cadastrado neste ingresso. Toque em Compartilhar e confirme o envio no WhatsApp.':'Telefone cadastrado ausente ou inválido. Abrir e Copiar link continuam disponíveis. Escolha o destinatário no WhatsApp.';
     if(action==='copy')await copyHistoryLink(block,url,epoch);
   }catch(e){if(current()&&historySessionGuard())feedback.textContent=e.message||'Não foi possível consultar o ingresso. Tente novamente.'}
   finally{if(current()){delete state.historyPending[code];syncControls()}}
@@ -478,12 +499,12 @@ function renderIssued(r){
   var list=Array.isArray(r.ingressos)?r.ingressos:[];
   $('resultTickets').innerHTML='<div class="message show ok" style="margin-top:12px">'+esc(r.mensagem||'Cortesia emitida.')+'</div>'+list.map(function(t){
     t=Object.assign({},t,{link:officialTicketUrl(t.link,String(t.codigo||''))});
-    var msg='🎟️ Cortesia Carioca Ticket\n\n'+(t.nome||'Participante')+'\n'+(state.evento&&state.evento.nome||'Evento')+'\n\nAbrir ingresso: '+(t.link||'');
-    return '<div class="ticket-result"><b>'+esc(t.nome||'Participante')+' · '+esc(t.codigo||'')+'</b><small>'+esc(t.tipo||'')+' · '+esc(t.loteNome||'')+'</small><div class="ticket-actions">'+
-      (officialTicketUrl(t.link)!=='#'?'<a class="btn gold" href="'+esc(officialTicketUrl(t.link))+'" target="_blank" rel="noopener">Abrir ingresso</a><button class="btn" data-copy="'+esc(officialTicketUrl(t.link))+'" type="button">Copiar link</button><a class="btn" href="https://wa.me/?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">WhatsApp</a>':'<span>Link seguro indisponível.</span>')+
-      '</div></div>';
+    return '<div class="ticket-result" data-issued-code="'+esc(t.codigo||'')+'"><b>'+esc(t.nome||'Participante')+' · '+esc(t.codigo||'')+'</b><small>'+esc(t.tipo||'')+' · '+esc(t.loteNome||'')+'</small><div class="ticket-actions">'+
+      (officialTicketUrl(t.link)!=='#'?'<a class="btn gold" href="'+esc(officialTicketUrl(t.link))+'" target="_blank" rel="noopener">Abrir ingresso</a><button class="btn" data-copy="'+esc(officialTicketUrl(t.link))+'" type="button">Copiar link</button><span data-issued-share></span>':'<span>Link seguro indisponível.</span>')+
+      '</div><small role="status" aria-live="polite"></small></div>';
   }).join('');
   document.querySelectorAll('[data-copy]').forEach(function(b){b.onclick=async function(){try{await copy(b.dataset.copy);message('Link do ingresso copiado.','ok')}catch(e){message(e.message||String(e),'error')}}});
+  resetIssuedShares();
 }
 async function issue(){
   if(state.mutationBusy||state.loadBusy||!state.evento||!state.data)return;

@@ -14,7 +14,8 @@ const TICKET_ORIGIN='https://cariocaticket.com.br';
 
 function ticketUrl(code,sig='ASSINADA_E2E_1234567890'){return TICKET_ORIGIN+'/ingresso/?codigo='+encodeURIComponent(code)+'&sig='+sig}
 function consultation(code='CT-E2E-1',event='EVT-CORT-E2E',ticket={}){
-  return {sucesso:true,autenticado:true,autorizado:true,filtroEvento:{eventoId:event},ingressos:[{codigo:code,eventoId:event,statusClasse:'VALIDO',compartilhamentoPermitido:true,ingressoCompartilhamentoUrl:ticketUrl(code),...ticket}]};
+  const phone=code.endsWith('2')?'11988880002':'81999990001';
+  return {sucesso:true,autenticado:true,autorizado:true,filtroEvento:{eventoId:event},ingressos:[{codigo:code,eventoId:event,statusClasse:'VALIDO',compartilhamentoPermitido:true,telefone:phone,telefoneNormalizado:'55'+phone,ingressoCompartilhamentoUrl:ticketUrl(code),...ticket}]};
 }
 function historyTicket(page,code='CT-E2E-1'){return page.locator('#historyRows [data-history-code="'+code+'"]')}
 async function mockClipboard(page,denied=false){
@@ -687,7 +688,8 @@ test.describe('Links das cortesias já emitidas no histórico',()=>{
 
   test('gera A e B sem envio automático, recupera A e reabre o histórico com os mesmos ingressos',async({page})=>{
     await mockClipboard(page);
-    const state=fixture({history:[],onRequest:({method})=>{
+    const state=fixture({history:[],onRequest:({method,args})=>{
+      if(method===CONSULT){const phone=args[2].startsWith('CT-A-')?'81999990001':'11988880002';return consultation(args[2],args[1],{telefone:phone,telefoneNormalizado:'55'+phone})}
       if(method!==ISSUE)return;
       const name=calls(state,ISSUE).length===1?'A':'B';
       const codes=[1,2].map(n=>'CT-'+name+'-'+n);
@@ -707,14 +709,19 @@ test.describe('Links das cortesias já emitidas no histórico',()=>{
     expect(page.context().pages()).toHaveLength(1);
     await expect(page.locator('#resultTickets [data-copy]').first()).toHaveAttribute('data-copy',ticketUrl('CT-B-1'));
     const a=historyTicket(page,'CT-A-1');
+    await page.locator('#whatsapp').fill('21977770003');
     await a.getByRole('button',{name:'Copiar link',exact:true}).click();
     await expect(a.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl('CT-A-1'));
     await expect.poll(()=>page.evaluate(()=>window.copiedLinks)).toEqual([ticketUrl('CT-A-1')]);
     expect(calls(state,CONSULT)[0].args).toEqual(['CT-PROD-CORTESIA-E2E','EVT-CORT-E2E','CT-A-1','']);
+    await expect(a.getByRole('link',{name:'Compartilhar',exact:true})).toHaveAttribute('href',/^https:\/\/wa\.me\/5581999990001\?text=/);
+    const b=historyTicket(page,'CT-B-1');await b.getByRole('button',{name:'Compartilhar',exact:true}).click();
+    await expect(b.getByRole('link',{name:'Compartilhar',exact:true})).toHaveAttribute('href',/^https:\/\/wa\.me\/5511988880002\?text=/);
     await page.reload();await ready(page);
     await expect(page.locator('#resultTickets')).toBeEmpty();
     await historyTicket(page,'CT-A-2').getByRole('button',{name:'Copiar link',exact:true}).click();
     await expect.poll(()=>page.evaluate(()=>window.copiedLinks)).toEqual([ticketUrl('CT-A-2')]);
+    await expect(historyTicket(page,'CT-A-2').getByRole('link',{name:'Compartilhar',exact:true})).toHaveAttribute('href',/^https:\/\/wa\.me\/5581999990001\?text=/);
     expect(calls(state,ISSUE)).toHaveLength(2);
     expect(calls(state,CANCEL)).toHaveLength(0);
     expect(state.methods.some(x=>/Pagamento|Asaas|Checkout|Enviar|Whatsapp/i.test(x))).toBe(false);
@@ -729,7 +736,7 @@ test.describe('Links das cortesias já emitidas no histórico',()=>{
     expect(context.pages()).toHaveLength(1);
     await second.getByRole('button',{name:'Compartilhar',exact:true}).click();
     const share=second.getByRole('link',{name:'Compartilhar',exact:true});
-    await expect(share).toHaveAttribute('href',/^https:\/\/wa\.me\/\?text=/);
+    await expect(share).toHaveAttribute('href',/^https:\/\/wa\.me\/5511988880002\?text=/);
     const shareUrl=new URL(await share.getAttribute('href'));
     expect(shareUrl.searchParams.get('text')).toContain(ticketUrl('CT-E2E-2'));
     expect(shareUrl.searchParams.get('text')).not.toContain('CT-E2E-1');
@@ -866,5 +873,123 @@ test.describe('Links das cortesias já emitidas no histórico',()=>{
     await row.getByRole('button',{name:'Abrir ingresso',exact:true}).click();
     await expect(row.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl('CT-E2E-1'));
     expect(calls(state,CONSULT)).toHaveLength(2);expect(calls(state,ISSUE)).toHaveLength(0);
+  });
+});
+
+test.describe('WhatsApp do destinatário da cortesia',()=>{
+  test.skip(!BRANCH_MODE,'Somente mocks; não abre conversas nem envia mensagens reais.');
+
+  async function issueFixture(page,state){
+    await openCourtesy(page,state);await ready(page);
+    await page.locator('#name').fill('Pessoa Cortesia');await page.locator('#whatsapp').fill('21977770003');
+    await page.locator('#quantity').fill('2');await page.locator('#reason').fill('Teste simulado');
+    await page.locator('#issueButton').click();await expect(page.locator('#resultTickets [data-issued-code]')).toHaveCount(2);await ready(page);
+  }
+  function issuedTicket(page,code='CT-E2E-1'){return page.locator('#resultTickets [data-issued-code="'+code+'"]')}
+  async function expectRecipient(block,code,phone){
+    const link=block.getByRole('link',{name:phone?'Compartilhar':'Escolher destinatário no WhatsApp',exact:true});
+    await expect(link).toHaveAttribute('href',new RegExp('^https://wa\\.me/'+phone+'\\?text='));
+    const url=new URL(await link.getAttribute('href'));
+    expect(url.pathname).toBe('/'+phone);expect(url.searchParams.get('text')).toBe('Cortesia Carioca Ticket\n\nAbrir ingresso: '+ticketUrl(code));
+  }
+
+  test('normaliza BR de 10/11 dígitos, DDD 55, DDI explícito e número normalizado sem trocar destinatário',async({page})=>{
+    const cases=[
+      [{telefone:'(81) 99999-0001'},'5581999990001'],
+      [{telefone:'(11) 3456-7890'},'551134567890'],
+      [{telefone:'5581999990001'},'5581999990001'],
+      [{telefone:'+55 (81) 99999-0001'},'5581999990001'],
+      [{telefone:'55 11 3456-7890'},'551134567890'],
+      [{telefone:'(55) 99999-0001'},'5555999990001'],
+      [{telefone:'(55) 3456-7890'},'555534567890'],
+      [{telefone:'81*****0001',telefoneNormalizado:'5581999990001'},'5581999990001'],
+      [{telefone:'+1 (202) 555-0123',telefoneNormalizado:'12025550123'},'12025550123']
+    ];
+    let fields={};const state=fixture({issued:true,onRequest:({method,args})=>method===CONSULT?consultation(args[2],args[1],{telefoneNormalizado:'',...fields,whatsappUrl:'https://wa.me/5511988880002?text=OUTRO-INGRESSO'}):undefined});
+    await openCourtesy(page,state);await ready(page);
+    for(const [phone,expected] of cases)await test.step(JSON.stringify(phone),async()=>{
+      fields=phone;await page.locator('#loadButton').click();await ready(page);
+      const row=historyTicket(page);await row.getByRole('button',{name:'Compartilhar',exact:true}).click();
+      await expectRecipient(row,'CT-E2E-1',expected);
+      await expect(row).not.toContainText(expected);
+    });
+    expect(calls(state,ISSUE)).toHaveLength(0);expect(page.context().pages()).toHaveLength(1);
+  });
+
+  test('ausência, máscara e números inválidos oferecem escolha explícita sem usar formulário ou máscara do histórico',async({page})=>{
+    await mockClipboard(page);
+    const invalid=['','819999','81*****0001','5581*****999999999','00000000000','+55 81 9999990001','81999990001 ramal 2','551198888000222'];
+    let phone='';const state=fixture({issued:true,onRequest:({method,args})=>method===CONSULT?consultation(args[2],args[1],{telefone:phone,telefoneNormalizado:phone,whatsappUrl:'https://wa.me/5511988880002?text=NAO-USAR'}):undefined});
+    await openCourtesy(page,state);await ready(page);await page.locator('#whatsapp').fill('21977770003');
+    for(const value of invalid)await test.step(value||'ausente',async()=>{
+      phone=value;await page.locator('#loadButton').click();await ready(page);
+      const row=historyTicket(page);await row.getByRole('button',{name:'Compartilhar',exact:true}).click();
+      await expectRecipient(row,'CT-E2E-1','');await expect(row).toContainText('Telefone cadastrado ausente ou inválido');
+      await expect(row.getByRole('link',{name:'Compartilhar',exact:true})).toHaveCount(0);
+      await expect(row.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl('CT-E2E-1'));
+      await row.getByRole('button',{name:'Copiar link',exact:true}).click();
+      await expect(row).toContainText('Link do ingresso copiado');
+    });
+    expect(await page.evaluate(()=>window.copiedLinks)).toEqual(invalid.map(()=>ticketUrl('CT-E2E-1')));
+    expect(page.context().pages()).toHaveLength(1);
+  });
+
+  for(const idempotent of [false,true])test('resultado recém-emitido consulta o destinatário de cada ingresso'+(idempotent?' no retorno idempotente':''),async({page})=>{
+    const state=fixture({onRequest:({method})=>{
+      if(method===ISSUE&&idempotent){state.issued=true;return {sucesso:true,idempotente:true,ingressos:['CT-E2E-1','CT-E2E-2'].map(codigo=>({codigo,link:ticketUrl(codigo)}))}}
+    }});
+    await issueFixture(page,state);expect(calls(state,CONSULT)).toHaveLength(0);
+    await page.locator('#whatsapp').fill('31966660004');
+    for(const [code,phone] of [['CT-E2E-1','5581999990001'],['CT-E2E-2','5511988880002']]){
+      const row=issuedTicket(page,code);await expect(row.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl(code));
+      await row.getByRole('button',{name:'Compartilhar',exact:true}).click();await expectRecipient(row,code,phone);
+      await expect(row.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl(code));
+      await expect(row.locator('[data-copy]')).toHaveAttribute('data-copy',ticketUrl(code));
+      await expect(row).not.toContainText(phone);
+    }
+    expect(calls(state,CONSULT).map(c=>c.args)).toEqual(['CT-E2E-1','CT-E2E-2'].map(code=>['CT-PROD-CORTESIA-E2E','EVT-CORT-E2E',code,'']));
+    expect(calls(state,ISSUE)).toHaveLength(1);expect(page.context().pages()).toHaveLength(1);
+    expect(await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}))).not.toMatch(/5581999990001|5511988880002|wa\.me/);
+    await page.locator('#loadButton').click();await ready(page);
+    await expect(page.locator('#resultTickets a[href*="wa.me"]')).toHaveCount(0);
+    await expect(issuedTicket(page).getByRole('button',{name:'Compartilhar',exact:true})).toBeEnabled();
+  });
+
+  test('telefone ausente no recém-emitido mantém Abrir/Copiar e não promete conversa direcionada',async({page})=>{
+    await mockClipboard(page);
+    const state=fixture({onRequest:({method,args})=>method===CONSULT?consultation(args[2],args[1],{telefone:'',telefoneNormalizado:''}):undefined});
+    await issueFixture(page,state);const row=issuedTicket(page);
+    await row.getByRole('button',{name:'Compartilhar',exact:true}).click();await expectRecipient(row,'CT-E2E-1','');
+    await expect(row).toContainText('Telefone cadastrado ausente ou inválido');
+    await expect(row.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl('CT-E2E-1'));
+    await row.getByRole('button',{name:'Copiar link',exact:true}).click();
+    await expect.poll(()=>page.evaluate(()=>window.copiedLinks)).toEqual([ticketUrl('CT-E2E-1')]);
+    expect(calls(state,ISSUE)).toHaveLength(1);expect(page.context().pages()).toHaveLength(1);
+  });
+
+  for(const reset of ['reload','event','session'])test('descarta destinatário atrasado no resultado recém-emitido após '+reset,async({page})=>{
+    const delayed=deferred();const state=fixture({catalogs:{'PROD-E2E':catalog('PROD-E2E',[{id:'EVT-CORT-E2E'},{id:'OUTRO'}])},onRequest:({method,args})=>{
+      if(method===CONSULT)return delayed.promise;
+      if(method===LOAD&&args[1]==='OUTRO')return eventData('OUTRO');
+    }});
+    await issueFixture(page,state);const row=issuedTicket(page);
+    await row.getByRole('button',{name:'Compartilhar',exact:true}).click();await expect.poll(()=>calls(state,CONSULT).length).toBe(1);
+    await row.getByRole('button',{name:'Compartilhar',exact:true}).evaluate(b=>b.dispatchEvent(new Event('click')));
+    expect(calls(state,CONSULT)).toHaveLength(1);
+    if(reset==='reload'){await page.locator('#loadButton').click();await ready(page)}
+    else if(reset==='event'){await page.locator('#eventSelect').selectOption('OUTRO');await ready(page)}
+    else await page.evaluate(key=>{const s=JSON.parse(sessionStorage.getItem(key));s.token='OUTRA-SESSAO';sessionStorage.setItem(key,JSON.stringify(s))},STORAGE);
+    delayed.resolve(consultation());await page.waitForTimeout(150);
+    await expect(page.locator('#resultTickets a[href*="wa.me"]')).toHaveCount(0);
+    if(reset==='event')await expect(page.locator('#resultTickets')).toBeEmpty();
+    if(reset==='session')await expect(page.locator('#message')).toContainText('sessão mudou ou expirou');
+    expect(calls(state,ISSUE)).toHaveLength(1);expect(page.context().pages()).toHaveLength(1);
+  });
+
+  test('consulta negada no recém-emitido não expõe destino WhatsApp',async({page})=>{
+    const state=fixture({onRequest:({method,args})=>method===CONSULT?{...consultation(args[2],args[1]),autorizado:false}:undefined});
+    await issueFixture(page,state);await issuedTicket(page).getByRole('button',{name:'Compartilhar',exact:true}).click();
+    await expect(page.locator('#message')).toContainText('Não foi possível autorizar a consulta');
+    await expect(page.locator('#resultTickets a[href*="wa.me"]')).toHaveCount(0);expect(calls(state,ISSUE)).toHaveLength(1);
   });
 });
