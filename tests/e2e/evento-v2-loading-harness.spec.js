@@ -43,15 +43,12 @@ function observedHtml() {
   insertAfter('    var p=cleanup(payload.id);', mark('message-accepted'));
   insertAfter('.withSuccessHandler(function(res){', mark('success-start'));
   // This anchor distinguishes the initial failure handler from campaign handlers.
-  const failureAnchor = '.withFailureHandler(function(){\n              showError';
-  assert.equal(html.split(failureAnchor).length, 2, 'Failure observation anchor changed');
-  html = html.replace(failureAnchor, '.withFailureHandler(function(){\n' +
-    mark('failure-start') + '\n              showError');
+  insertAfter('.withFailureHandler(function(error){', mark('failure-start'));
   insertAfter('function render(res){', mark('render-start'));
   insertAfter('} catch (err) {', 'window.__loadingHarness.renderCaught(err);');
   insertAfter('function registrarAcessoCampanha(){', mark('campaign-start'));
   insertAfter("$('mobileBuy').classList.remove('hidden');", mark('render-complete'));
-  insertAfter('function showError(msg){', mark('show-error'));
+  insertAfter('function showError(msg,retryable){', mark('show-error'));
   insertAfter("$('errorBox').classList.remove('hidden');", mark('show-error-complete'));
   // Resource policy belongs to this synthetic document, not to the product file.
   const policy = "default-src 'none'; script-src 'unsafe-inline'; " +
@@ -182,7 +179,7 @@ async function isolated(t, action) {
     page.on('pageerror', error => pageErrors.push({ name: error.name, message: error.message }));
     const epoch = new Date('2030-01-01T00:00:00Z');
     await page.clock.install({ time: epoch });
-    await page.clock.pauseAt(epoch);
+    await page.clock.pauseAt(new Date(epoch.getTime() + 60000));
     await page.addInitScript(installObservation);
     await page.goto(localUrl, { waitUntil: 'load' });
     assert.equal(new URL(page.url()).hostname, '127.0.0.1');

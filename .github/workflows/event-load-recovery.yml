@@ -1,0 +1,29 @@
+name: Event load recovery (isolated)
+on:
+  pull_request:
+    paths:
+      - 'evento/index.html'
+      - 'evento-v2/index.html'
+      - 'assets/ct-analytics.js'
+      - 'tests/evento-transport-runtime.cjs'
+      - '.github/workflows/event-load-recovery.yml'
+      - 'package.json'
+jobs:
+  transport:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Exercise actual event pages against intercepted fixtures only
+        env:
+          CT_TEST_BROWSER: ${{ matrix.browser }}
+        run: node --test tests/evento-transport-runtime.cjs

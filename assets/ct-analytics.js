@@ -152,6 +152,8 @@ REGRAS:
 
   function emergencyEventFallback(){
     if(pageType()!=='EVENTO')return;
+    // Event pages with explicit recovery keep the visitor on the official URL.
+    if(document.getElementById('retryEventLoad'))return;
     window.setTimeout(function(){
       safe(function(){
         var box=document.getElementById('errorBox');
