@@ -179,6 +179,7 @@ var state={
   bootBusy:true,
   mutationBusy:false,
   data:null,
+  issuedContext:null,
   issueKey:null,
   issueBusy:false
 };
@@ -209,12 +210,15 @@ function syncControls(){
   document.querySelectorAll('#content button,#content input,#content select,#content textarea').forEach(function(el){el.disabled=blocked||state.loadBusy||!state.data});
   loading(blocked);
 }
-function clearEventData(resetForm){
+function clearEventData(resetForm,preserveIssued){
   state.loadRequest++;
   state.loadBusy=false;
   state.data=null;
   $('content').classList.add('hidden');
-  ['typeSelect','lotSelect','guestSelect','historyRows','resultTickets'].forEach(function(id){$(id).innerHTML=''});
+  ['typeSelect','lotSelect','guestSelect','historyRows'].forEach(function(id){$(id).innerHTML=''});
+  // A confirmed issue survives a transient refresh, hidden until access is revalidated.
+  // Context changes and explicit access denial always discard its signed links.
+  if(resetForm||!preserveIssued){$('resultTickets').innerHTML='';state.issuedContext=null}
   ['privateNote','guestField','guestsLink'].forEach(function(id){$(id).classList.add('hidden')});
   $('guestsLink').removeAttribute('href');
   ['activeCourtesy','activeIssues','cancelledIssues','ledgerCount','ticketCount'].forEach(function(id){$(id).textContent='0'});
@@ -246,8 +250,9 @@ async function loadCatalog(wanted){
   if(state.mutationBusy||state.catalogStatus==='loading'||!state.produtor)return;
   var request=++state.catalogRequest,producerId=String(state.produtor.id);
   var previous=eventId(state.evento),selection=currentSelection();
+  if(!previous&&state.issuedContext&&state.issuedContext.producerId===producerId)previous=state.issuedContext.eventId;
   if(wanted===undefined)wanted=previous;
-  clearEventData(false);
+  clearEventData(false,true);
   state.evento=null;
   state.eventos=[];
   state.catalogStatus='loading';
@@ -272,9 +277,10 @@ async function loadCatalog(wanted){
   }catch(e){
     if(request!==state.catalogRequest)return;
     state.catalogStatus='error';
-    clearEventData(true);
+    var preserveIssued=!r||(r.autenticado===true&&r.autorizado===true&&String(r.produtorId||'')===producerId);
+    clearEventData(!preserveIssued,preserveIssued);
     $('eventSelect').innerHTML='<option value="">Catálogo indisponível</option>';
-    message(e.message||String(e),'error');
+    message(($('resultTickets').hasChildNodes()?'A cortesia já foi emitida. Recarregue o evento para consultar os ingressos. ':'')+(e.message||String(e)),'error');
   }finally{if(request===state.catalogRequest)syncControls()}
 }
 function lotForType(){
@@ -373,7 +379,12 @@ async function load(afterMutation,selection){
     render(r,selection);
     if(r.reconciliacao&&r.reconciliacao.consistente!==true)message('A conferência encontrou divergência entre o ledger e os ingressos. Não emita novas cortesias até a reconciliação ser revisada.','error');
     else message('Cortesias carregadas com sucesso.','ok');
-  }catch(e){if(request===state.loadRequest){message(e.message||String(e),'error');clearEventData(false);syncControls()}}
+  }catch(e){if(request===state.loadRequest){
+    var preserveIssued=!(r&&(r.autenticado===false||r.autorizado===false));
+    clearEventData(!preserveIssued,preserveIssued);
+    message(($('resultTickets').hasChildNodes()?'A cortesia já foi emitida. Recarregue o evento para consultar os ingressos. ':'')+(e.message||String(e)),'error');
+    syncControls();
+  }}
   finally{if(request===state.loadRequest){state.loadBusy=false;syncControls()}}
 }
 async function saveLimit(){
@@ -406,6 +417,7 @@ function issuePayload(){
   };
 }
 function renderIssued(r){
+  state.issuedContext={producerId:String(state.produtor.id),eventId:eventId(state.evento)};
   var list=Array.isArray(r.ingressos)?r.ingressos:[];
   $('resultTickets').innerHTML='<div class="message show ok" style="margin-top:12px">'+esc(r.mensagem||'Cortesia emitida.')+'</div>'+list.map(function(t){
     var msg='🎟️ Cortesia Carioca Ticket\n\n'+(t.nome||'Participante')+'\n'+(state.evento&&state.evento.nome||'Evento')+'\n\nAbrir ingresso: '+(t.link||'');

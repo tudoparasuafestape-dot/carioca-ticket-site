@@ -560,6 +560,97 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
     await ready(page);
   });
 
+  for(const retryButton of ['loadButton','refreshButton']){
+    test(`emissão confirmada preserva links após falha transitória e retry por ${retryButton}`,async({page})=>{
+      let failReload=true;
+      let failCatalog=retryButton==='refreshButton';
+      const retry=deferred();
+      const state=fixture({catalogs:{'PROD-E2E':catalog('PROD-E2E',[{id:'EVT-CORT-E2E'},{id:'OUTRO'}])},onRequest:({method,args})=>{
+        if(method===CATALOG&&state.issued&&failCatalog)throw new Error('Falha transitória do catálogo após emissão');
+        if(method===LOAD&&args[1]==='OUTRO')return eventData('OUTRO');
+        if(method===LOAD&&state.issued){
+          if(failReload)throw new Error('Falha transitória após emissão confirmada');
+          return retry.promise;
+        }
+      }});
+      await openCourtesy(page,state);
+      await ready(page);
+      await page.locator('#name').fill('Pessoa Cortesia');
+      await page.locator('#whatsapp').fill('81999990000');
+      await page.locator('#quantity').fill('2');
+      await page.locator('#reason').fill('Relacionamento');
+      await page.locator('#issueButton').click();
+      await expect(page.locator('#message')).toContainText('Falha transitória após emissão confirmada');
+      await expect(page.locator('#message')).toContainText('A cortesia já foi emitida');
+      await expect(page.locator('#content')).toBeHidden();
+      await expect(page.locator('#issueButton')).toBeDisabled();
+      // Retained for this context, but hidden until a fresh response revalidates access.
+      const links=page.locator('#resultTickets a').filter({hasText:'Abrir ingresso'});
+      await expect(links).toHaveCount(2,{timeout:2000});
+      await expect(links.first()).toBeHidden();
+      const confirmedLinks=await links.evaluateAll(items=>items.map(item=>item.getAttribute('href')));
+      failReload=false;
+      await page.locator('#'+retryButton).click();
+      if(failCatalog){
+        await expect(page.locator('#message')).toContainText('Falha transitória do catálogo após emissão');
+        await expect(links).toHaveCount(2);
+        await expect(links.first()).toBeHidden();
+        failCatalog=false;
+        await page.getByRole('button',{name:'Tentar novamente'}).click();
+      }
+      await expect.poll(()=>calls(state,LOAD).length).toBe(3);
+      await expect(links.first()).toBeHidden();
+      await page.evaluate(()=>document.querySelector('#issueButton').dispatchEvent(new Event('click')));
+      expect(calls(state,ISSUE)).toHaveLength(1);
+      retry.resolve(baseData(state));
+      await ready(page);
+      await expect(links.first()).toBeVisible();
+      expect(await links.evaluateAll(items=>items.map(item=>item.getAttribute('href')))).toEqual(confirmedLinks);
+      expect(confirmedLinks).toEqual(['/ingresso/?codigo=CT-E2E-1&sig=ASSINADA','/ingresso/?codigo=CT-E2E-2&sig=ASSINADA']);
+      expect(calls(state,ISSUE)).toHaveLength(1);
+      await expect(page.locator('#activeCourtesy')).toHaveText('2');
+      await page.locator('#eventSelect').selectOption('OUTRO');
+      await ready(page);
+      await expect(page.locator('#resultTickets')).toBeEmpty();
+      await page.locator('#eventSelect').selectOption('EVT-CORT-E2E');
+      await ready(page);
+      await expect(page.locator('#resultTickets')).toBeEmpty();
+      expect(calls(state,ISSUE)).toHaveLength(1);
+    });
+  }
+
+  for(const deniedField of ['autenticado','autorizado'])for(const deniedMethod of [LOAD,CATALOG]){
+    test(`emissão confirmada descarta links se ${deniedMethod} nega ${deniedField}`,async({page})=>{
+      let denied=true;
+      const state=fixture({onRequest:({method})=>{
+        if(method===deniedMethod&&state.issued&&denied)return {...(method===CATALOG?catalog():baseData(state)),[deniedField]:false};
+      }});
+      await openCourtesy(page,state);
+      await ready(page);
+      await page.locator('#name').fill('Pessoa Cortesia');
+      await page.locator('#whatsapp').fill('81999990000');
+      await page.locator('#quantity').fill('2');
+      await page.locator('#reason').fill('Relacionamento');
+      await page.locator('#issueButton').click();
+      if(deniedMethod===CATALOG){
+        await expect.poll(()=>calls(state,ISSUE).length).toBe(1);
+        await ready(page);
+        await expect(page.locator('#resultTickets a').first()).toBeVisible();
+        await page.locator('#refreshButton').click();
+      }
+      await expect(page.locator('#message')).toHaveClass(/error/);
+      await expect(page.locator('#resultTickets')).toBeEmpty();
+      for(const id of ['name','whatsapp','reason'])await expect(page.locator('#'+id)).toHaveValue('');
+      await expect(page.locator('#content')).toBeHidden();
+      await expect(page.locator('#issueButton')).toBeDisabled();
+      denied=false;
+      await page.locator('#loadButton').click();
+      await ready(page);
+      await expect(page.locator('#resultTickets')).toBeEmpty();
+      expect(calls(state,ISSUE)).toHaveLength(1);
+    });
+  }
+
   test('atualização remove seleção revogada e usa apenas o catálogo atual',async({page})=>{
     const state=fixture({onRequest:({method,args})=>method===LOAD?eventData(args[1]):undefined});
     await openCourtesy(page,state);
