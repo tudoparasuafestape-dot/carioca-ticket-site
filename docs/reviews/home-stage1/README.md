@@ -63,6 +63,8 @@ Zoom foi verificado como **reflow equivalente a 200%** (janela física de 1440 p
 
 As falhas iniciais de fixture sem charset UTF-8 e da asserção de `<320px` para o cabeçalho anterior foram corrigidas. O novo limite mobile de 480px documenta o espaço necessário ao campo local rotulado e à ação de pesquisa, mantendo a capa na primeira tela; desktop conserva 320px.
 
+O primeiro CI Linux encontrou overflow do cabeçalho no teste adicional de CSS zoom 2, devido às métricas de fonte diferentes do Windows. O cabeçalho e seus links agora permitem quebra de linha quando o conteúdo ampliado não cabe; a asserção de overflow foi preservada.
+
 Não executados: `homologar` global, E2E de produção/canários reais, fluxos de outros módulos, Safari/iPhone/Firefox reais, APIs de tradução/Libras. O falso negativo inicial do contrato privado por CRLF foi confirmado em arquivo de produto idêntico à base e corrigido somente na leitura do teste. Nenhuma asserção foi retirada e nenhuma política privada foi alterada.
 
 ## Capturas

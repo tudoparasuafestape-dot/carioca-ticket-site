@@ -52,11 +52,11 @@
 .ct-home .skip-link { position: absolute; top: 8px; left: 16px; z-index: 5; padding: 12px 18px; background: var(--home-accent); color: var(--home-ink); transform: translateY(-200%); }
 .ct-home .skip-link:focus { transform: none; }
 .ct-home .topbar { border-bottom: 1px solid var(--home-line); background: var(--home-surface); }
-.ct-home .nav { min-height: 84px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.ct-home .nav { min-height: 84px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding-block: 14px; }
 .ct-home .brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; white-space: nowrap; font-size: 20px; font-weight: 750; letter-spacing: -.04em; }
 .ct-home .brand img { object-fit: contain; flex-shrink: 0; }
 .ct-home .brand b { font-weight: 450; }
-.ct-home .links { display: flex; gap: 26px; align-items: center; font-size: 14px; font-weight: 600; }
+.ct-home .links { display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: center; font-size: 14px; font-weight: 600; }
 .ct-home .links a { padding-block: 14px; text-decoration: none; }
 .ct-home .links a:hover { text-decoration: underline; }
 .ct-home .nav-tools { display: flex; align-items: center; gap: 12px; }
