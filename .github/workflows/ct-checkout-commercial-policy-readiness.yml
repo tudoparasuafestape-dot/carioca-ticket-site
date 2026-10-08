@@ -5,6 +5,8 @@ on:
     paths:
       - 'assets/checkout-commercial-policy.js'
       - 'checkout/**'
+      - 'produtor/financeiro/index.html'
+      - 'tests/era-finance-summary.runtime.js'
       - 'checkout-v2/**'
       - 'tests/checkout-commercial-policy.runtime.js'
       - 'tests/checkout-era-beauty.dom.js'
@@ -21,6 +23,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -28,6 +32,8 @@ jobs:
         run: node tests/checkout-commercial-policy.runtime.js
       - name: ERA checkout DOM and RPC regression (local mocks only)
         run: node tests/checkout-era-beauty.dom.js
+      - name: ERA producer financial summary (local mocks only)
+        run: node tests/era-finance-summary.runtime.js
       - name: Prepare browser regression dependencies
         run: |
           npm install --ignore-scripts
