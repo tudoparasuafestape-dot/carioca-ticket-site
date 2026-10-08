@@ -29,7 +29,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=20260919-1828">
+  <link rel="stylesheet" href="/styles.css?v=20261008-catalog">
   <link rel="prefetch" href="/produtor/" as="document">
   <script src="/pwa-register.js" defer></script>
 </head>
@@ -69,11 +69,38 @@
   </header>
 
   <main>
+    <section id="eventos" class="public-events shell" aria-labelledby="public-events-title">
+      <div id="todos-eventos" class="public-events-heading">
+        <div>
+          <span class="eyebrow">Agenda Carioca Ticket</span>
+          <h1 id="public-events-title">Eventos em destaque</h1>
+          <p id="event-count" aria-live="polite">Confira os eventos disponíveis para compra.</p>
+        </div>
+        <form id="event-search-form" class="event-search-form" role="search">
+          <label class="sr-only" for="event-search-input">Pesquisar eventos</label>
+          <input id="event-search-input" type="search" autocomplete="off" placeholder="Evento, categoria, cidade ou local">
+          <button type="submit">Pesquisar</button>
+        </form>
+      </div>
+      <p id="event-search-feedback" class="catalog-feedback" aria-live="polite"></p>
+      <div id="catalog-status" class="catalog-state" role="status">
+        <p id="catalog-status-message">Carregando eventos…</p>
+        <button id="catalog-retry" class="btn btn-secondary" type="button" hidden>Tentar novamente</button>
+      </div>
+      <div id="events-grid" class="events-grid public-events-grid" aria-busy="true"></div>
+      <div id="no-events" class="no-events" hidden>
+        <strong>Nenhum evento encontrado.</strong>
+        <p>Tente pesquisar por outro nome, categoria ou cidade.</p>
+        <button id="clear-event-search" type="button">Limpar pesquisa</button>
+      </div>
+      <noscript><p>Ative o JavaScript para consultar os eventos disponíveis. <a href="/ajuda/">Acesse a Central de Ajuda</a>.</p></noscript>
+    </section>
+
     <section class="hero">
       <div class="shell hero-grid">
         <div class="hero-copy">
           <span class="eyebrow">Carioca Ticket</span>
-          <h1>Seu evento começa com uma compra simples, segura e confiável.</h1>
+          <h2 class="brand-headline">Seu evento começa com uma compra simples, segura e confiável.</h2>
           <p>Ingressos digitais, pagamento por PIX ou cartão, confirmação automática e tecnologia para acompanhar a experiência do público do início ao fim.</p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#todos-eventos">Ver eventos</a>
@@ -100,94 +127,6 @@
             <div class="ticket-cut"></div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <section id="eventos" class="event-search-section">
-      <div class="shell">
-        <div class="event-search-box">
-          <div>
-            <span class="eyebrow">Encontre seu evento</span>
-            <h2>O que você quer viver?</h2>
-            <p>Pesquise por evento, artista, categoria, cidade ou local.</p>
-          </div>
-          <form id="event-search-form" class="event-search-form" role="search">
-            <label class="sr-only" for="event-search-input">Pesquisar eventos</label>
-            <input id="event-search-input" type="search" autocomplete="off" placeholder="Ex.: samba, Banda Sem Razão, Jaboatão">
-            <button type="submit">Pesquisar</button>
-          </form>
-          <p id="event-search-feedback" class="event-search-feedback" aria-live="polite"></p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section shell featured-event-section">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">Em destaque</span>
-          <h2>Próximo evento</h2>
-        </div>
-        <p>Compra online com emissão digital após a confirmação do pagamento.</p>
-      </div>
-
-      <article class="event-card">
-        <a class="event-photo" href="https://cariocaticket.com.br/evento/?v=20260920-0035&evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD" aria-label="Abrir Roda de Samba Estilo Carioca">
-          <img src="/assets/roda-samba-30-anos.webp" alt="30 anos da Banda Sem Razão">
-          <span class="event-date-chip">11 OUT 2026</span>
-        </a>
-        <div class="event-content">
-          <span class="event-kicker">Samba & pagode · edição especial</span>
-          <h3>Roda de Samba Estilo Carioca</h3>
-          <p class="event-meta">Domingo · 11/10/2026 · 15h às 22h</p>
-          <p>30 anos da Banda Sem Razão · Vevets Recepções · Candeias, Jaboatão dos Guararapes - PE.</p>
-          <div class="prices">
-            <span><small>Individual</small><strong>R$ 25</strong></span>
-            <span><small>Casadinha</small><strong>R$ 40</strong></span>
-          </div>
-        </div>
-        <div class="event-action">
-          <a class="btn btn-primary" href="https://cariocaticket.com.br/checkout/?v=20260920-0035&evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD">Comprar ingresso</a>
-          <a class="event-secondary" href="https://cariocaticket.com.br/evento/?v=20260920-0035&evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD">Ver página do evento →</a>
-          <small>PIX ou cartão de crédito</small>
-        </div>
-      </article>
-    </section>
-
-    <section id="todos-eventos" class="section shell all-events-section">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">Agenda Carioca Ticket</span>
-          <h2>Todos os eventos</h2>
-        </div>
-        <p id="event-count">1 evento disponível para compra.</p>
-      </div>
-
-      <div id="events-grid" class="events-grid">
-        <article class="catalog-card" data-search="roda de samba estilo carioca banda sem razão 30 anos samba pagode candeias jaboatão dos guararapes pernambuco vevets 11 outubro 2026">
-          <a class="catalog-photo" href="https://cariocaticket.com.br/evento/?v=20260920-0035&evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD" aria-label="Abrir Roda de Samba Estilo Carioca">
-            <img src="/assets/roda-samba-30-anos.webp" alt="30 anos da Banda Sem Razão">
-            <span class="catalog-status">Ingressos disponíveis</span>
-          </a>
-          <div class="catalog-body">
-            <span class="event-kicker">Samba & pagode</span>
-            <h3>Roda de Samba Estilo Carioca</h3>
-            <p class="catalog-meta">11/10/2026 · 15h às 22h</p>
-            <p>Vevets Recepções · Candeias · Jaboatão dos Guararapes - PE</p>
-            <div class="catalog-bottom">
-              <div>
-                <small>A partir de</small>
-                <strong>R$ 25</strong>
-              </div>
-              <a class="btn btn-primary" href="https://cariocaticket.com.br/evento/?v=20260920-0035&evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD">Ver evento</a>
-            </div>
-          </div>
-        </article>
-      </div>
-
-      <div id="no-events" class="no-events" hidden>
-        <strong>Nenhum evento encontrado.</strong>
-        <p>Tente pesquisar por outro nome, artista, categoria ou cidade.</p>
-        <button id="clear-event-search" type="button">Limpar pesquisa</button>
       </div>
     </section>
 
@@ -278,63 +217,9 @@
         });
       }
 
-      var form = document.getElementById('event-search-form');
-      var input = document.getElementById('event-search-input');
-      var cards = Array.prototype.slice.call(document.querySelectorAll('.catalog-card'));
-      var feedback = document.getElementById('event-search-feedback');
-      var count = document.getElementById('event-count');
-      var empty = document.getElementById('no-events');
-      var clear = document.getElementById('clear-event-search');
-
-      function normalize(value) {
-        return String(value || '')
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .toLowerCase()
-          .trim();
-      }
-
-      function applySearch(term) {
-        var query = normalize(term);
-        var visible = 0;
-
-        cards.forEach(function (card) {
-          var haystack = normalize(card.getAttribute('data-search') + ' ' + card.textContent);
-          var show = !query || haystack.indexOf(query) !== -1;
-          card.hidden = !show;
-          if (show) visible += 1;
-        });
-
-        if (empty) empty.hidden = visible !== 0;
-        if (count) count.textContent = visible === 1 ? '1 evento disponível para compra.' : visible + ' eventos disponíveis para compra.';
-
-        if (feedback) {
-          feedback.textContent = query
-            ? (visible ? visible + (visible === 1 ? ' evento encontrado.' : ' eventos encontrados.') : 'Nenhum evento encontrado para essa pesquisa.')
-            : '';
-        }
-
-        if (query) {
-          document.getElementById('todos-eventos').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }
-
-      if (form && input) {
-        form.addEventListener('submit', function (event) {
-          event.preventDefault();
-          applySearch(input.value);
-        });
-      }
-
-      if (clear && input) {
-        clear.addEventListener('click', function () {
-          input.value = '';
-          applySearch('');
-          input.focus();
-        });
-      }
     }());
   </script>
+  <script src="/assets/public-event-catalog.js?v=20261008" defer></script>
   <script src="/assets/ct-analytics.js?v=20260923a" defer></script>
 </body>
 </html>
