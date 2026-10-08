@@ -47,8 +47,8 @@ async function createFixture(browser, options = {}) {
     if (url.origin === ORIGIN) {
       if (url.pathname === '/checkout/' || url.pathname === '/checkout/index.html')
         return route.fulfill({ contentType: 'text/html; charset=utf-8', body: fs.readFileSync(path.join(ROOT, 'checkout/index.html'), 'utf8') });
-      if (url.pathname === '/assets/checkout-commercial-policy.js')
-        return route.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(ROOT, 'assets/checkout-commercial-policy.js'), 'utf8') });
+      if (['/assets/checkout-commercial-policy.js','/assets/fee-transparency.js','/assets/fee-transparency.css'].includes(url.pathname))
+        return route.fulfill({ contentType: url.pathname.endsWith('.css')?'text/css':'application/javascript', body: fs.readFileSync(path.join(ROOT, url.pathname), 'utf8') });
       return route.fulfill({ status: 200, contentType: 'application/javascript', body: '' });
     }
     if (url.origin !== 'https://script.google.com' || request.method() !== 'POST') {
@@ -61,6 +61,10 @@ async function createFixture(browser, options = {}) {
     try {
       assert.equal(params.get('ctMinhaCariocaAction'), 'publicRpc');
       if (method === 'ctCheckoutPublicoCarregarEventoPROD') result = catalog(state.eventId);
+      else if (method === 'ctPrecoPublicoLeituraPROD') {
+        const p=args[0],price=p.tipoId==='TYPE-2'?0:p.tipoId==='TYPE-1'?120:87,base=price*p.quantidade;
+        result={sucesso:true,ofertas:[{tipoId:p.tipoId,loteId:p.loteId,quantidade:p.quantidade,status:'CONFIRMADO',semTaxaConfirmada:true,resumo:{subtotalIngressos:base,taxaComprador:0,adicionaisComprador:0,totalComprador:base}}]};
+      }
       else if (method === 'ctPoliticaComercialPreviewPublicoPROD') {
         state.previews.push(args[0]);
         result = options.preview ? await options.preview(args[0], state.previews.length) : quote(args[0]);
@@ -95,9 +99,9 @@ async function createFixture(browser, options = {}) {
       const f = await createFixture(browser, { mobile }); await f.select(); await f.total(95.7);
       assert.equal(await f.page.locator('#feeBase').textContent(), amount(87));
       assert.equal(await f.page.locator('#feePlatform').textContent(), amount(8.7));
-      assert.match(await f.page.locator('#feeLabel').textContent(), /10%/);
+      assert.match(await f.page.locator('#feeLabel').textContent(), /Taxa de serviço/);
       assert(await f.page.locator('#feeSummary').isVisible());
-      await f.page.locator('#feeInfo').click(); assert.match(await f.page.locator('#modalText').textContent(), /plataforma/); await f.closeModal();
+      await f.page.locator('#feeInfo').click(); assert.match(await f.page.locator('#ctFeeText').textContent(), /Quando cobrada/); await f.page.keyboard.press('Escape');
       if (process.env.CT_EVIDENCE_DIR) { fs.mkdirSync(process.env.CT_EVIDENCE_DIR, { recursive: true }); await f.page.screenshot({ path: path.join(process.env.CT_EVIDENCE_DIR, mobile ? 'era-fee-mobile.png' : 'era-fee-desktop.png'), fullPage: true }); }
       await f.page.locator('#payButton').click(); await until(() => f.state.payments.length === 1, 'payment mock called');
       const payload = f.state.payments[0]; assert.equal(payload.politicaRevisaoVista, 'LOCAL-POLICY-R1');
@@ -170,12 +174,12 @@ async function createFixture(browser, options = {}) {
     });
     await test('legacy non-canary unchanged: no preview required and no revision field', async () => {
       const f = await createFixture(browser, { eventId: LEGACY }); await f.select(); await f.total(87);
-      assert.equal(f.state.previews.length, 0); assert(!(await f.page.locator('#feeSummary').isVisible())); await f.page.locator('#payButton').click(); await until(() => f.state.payments.length === 1, 'legacy payment');
+      assert.equal(f.state.previews.length, 0); assert(await f.page.locator('#feeSummary').isVisible()); await f.page.locator('#payButton').click(); await until(() => f.state.payments.length === 1, 'legacy payment');
       assert(!('politicaRevisaoVista' in f.state.payments[0])); await f.finish();
     });
     await test('authoritative free catalog price remains zero', async () => {
       const f = await createFixture(browser); await f.select(2); await f.total(0);
-      assert.equal(f.state.previews.length, 0); assert(!(await f.page.locator('#feeSummary').isVisible()));
+      assert.equal(f.state.previews.length, 0); assert(await f.page.locator('#feeSummary').isVisible());
       await f.page.locator('#payButton').click(); await until(() => f.state.payments.length === 1, 'free checkout mock');
       assert(!('politicaRevisaoVista' in f.state.payments[0])); await f.finish();
     });

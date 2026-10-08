@@ -44,8 +44,9 @@ ok(checkout.includes('feeTimer:null'),'checkout sem debounce do preview comercia
 ok(checkout.includes('setTimeout(function(){')&&checkout.includes('},180);'),'preview comercial sem debounce curto');
 
 ok(!checkout.includes('ctTaxasEventoPublicoSimularPROD'),'checkout ainda chama motor legado de taxa');
-ok(checkout.includes('Taxa Carioca Ticket · paga pelo produtor'),'checkout sem mensagem de taxa absorvida');
-ok(checkout.includes('Sua parte da taxa Carioca Ticket'),'checkout sem mensagem transparente de taxa dividida');
+const disclosure=fs.readFileSync('assets/fee-transparency.js','utf8');
+ok(checkout.includes('f.note(s)')&&disclosure.includes('O produtor absorve'),'checkout sem mensagem de taxa absorvida');
+ok(checkout.includes('f.money(s.taxaComprador)')&&disclosure.includes('taxaProdutor'),'checkout sem mensagem transparente de taxa dividida');
 
 for(const token of [
   'campoModoAcesso','PUBLICO','NAO_LISTADO','PRIVADO_CONVITE',

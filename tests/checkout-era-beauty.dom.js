@@ -135,6 +135,8 @@ class Element {
   }
   click() { if (!this.disabled) this.dispatchEvent({ type: 'click' }); }
   focus() { this.ownerDocument.activeElement = this; }
+  showModal() { this.open = true; }
+  close() { this.open = false; this.dispatchEvent({type:'close'}); }
   select() {}
   scrollIntoView() {}
   submit() { this.ownerDocument.forbidden('Real form submission'); }
@@ -192,7 +194,7 @@ function coupon(p) {
 
 function fixture(options = {}) {
   const clock = new Clock();
-  const state = { eventId: options.eventId || ERA, previews: [], coupons: [], payments: [], catalogs: [], unexpected: [], calls: [] };
+  const state = { eventId: options.eventId || ERA, previews: [], displayReads: [], coupons: [], payments: [], catalogs: [], unexpected: [], calls: [] };
   const forbidden = description => { state.unexpected.push(description); throw new Error('Forbidden external side effect: ' + description); };
   const document = new Document(HTML, forbidden);
   const url = new URL('https://checkout.local.test/checkout/?evento=' + encodeURIComponent(state.eventId));
@@ -217,6 +219,10 @@ function fixture(options = {}) {
   function rpc(method, args, success, failure) {
     const mappings = {
       ctCheckoutPublicoCarregarEventoPROD: ['catalogs', options.catalog || (() => catalog(state.eventId))],
+      ctPrecoPublicoLeituraPROD: ['displayReads', p => {
+        const price=p.tipoId==='TYPE-2'?0:p.tipoId==='TYPE-1'?120:87,base=price*p.quantidade;
+        return {sucesso:true,ofertas:[{tipoId:p.tipoId,loteId:p.loteId,quantidade:p.quantidade,status:'CONFIRMADO',semTaxaConfirmada:true,resumo:{subtotalIngressos:base,taxaComprador:0,adicionaisComprador:0,totalComprador:base}}]};
+      }],
       ctPoliticaComercialPreviewPublicoPROD: ['previews', options.preview || (p => quote(p))],
       ctCuponsPublicoValidarSeguroPROD: ['coupons', options.coupon || coupon],
       ctCheckoutPixPublicoIniciarPROD: ['payments', options.pay || (() => ({ sucesso: false, mensagem: 'LOCAL MOCK: no order or ticket is created.' }))]
@@ -252,6 +258,7 @@ function fixture(options = {}) {
     } });
   }
 
+  vm.runInContext(fs.readFileSync(path.join(ROOT,'assets/fee-transparency.js'),'utf8'),context);
   if (!options.noPolicy) vm.runInContext(POLICY, context, { filename: 'assets/checkout-commercial-policy.js', timeout: 1000 });
   const scripts = [...HTML.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(match => !/\bsrc\s*=/.test(match[1]));
   assert.equal(scripts.length, 2, 'Revisit harness integration if inline script topology changes');
@@ -310,9 +317,9 @@ test('87 + 8.70 = 95.70, explicit disclosure, exact revision and backend-only ch
   assert.equal(f.element('summaryPrice').textContent, 'Confirmando...');
   assert.equal(f.state.previews.length, 0, 'Preview is debounced'); f.settle(); f.total(95.7);
   assert.equal(f.element('feeBase').textContent, money(87)); assert.equal(f.element('feePlatform').textContent, money(8.7));
-  assert.equal(f.element('feeTotal').textContent, money(95.7)); assert.match(f.element('feeLabel').textContent, /10%/);
+  assert.equal(f.element('feeTotal').textContent, money(95.7)); assert.match(f.element('feeLabel').textContent, /Taxa de serviço/);
   assert(f.visible('feeSummary')); assert(!f.visible('feeStatus')); assert(!f.visible('feeAdditionalRow'));
-  f.click('feeInfo'); assert.match(f.element('modalText').textContent, /plataforma/); f.closeModal();
+  f.click('feeInfo'); assert.match(f.element('ctFeeText').textContent, /Quando cobrada/); f.element('ctFeeDialog').close();
   f.click('payButton'); assert.equal(f.state.payments.length, 1);
   const p = f.state.payments[0]; assert.equal(p.politicaRevisaoVista, 'LOCAL-POLICY-R1');
   assert.equal(p.politicaSubtotalVisto, 87); assert.equal(p.politicaTotalVisto, 95.7);
@@ -324,7 +331,7 @@ test('87 + 8.70 = 95.70, explicit disclosure, exact revision and backend-only ch
 
 test('backend-provided percentage and additional charge are displayed without hardcoding 10%', () => {
   const f = fixture({ preview(p) { const response = quote(p); Object.assign(response.resumo, { taxaCtPercentual: 5, taxaCtTotal: 4.35, taxaComprador: 4.35, adicionaisComprador: 2, totalComprador: 93.35 }); return response; } });
-  f.select(); f.settle(); f.total(93.35); assert.match(f.element('feeLabel').textContent, /5%/);
+  f.select(); f.settle(); f.total(93.35); assert.match(f.element('feeLabel').textContent, /Taxa de serviço/);
   assert.equal(f.element('feePlatform').textContent, money(4.35)); assert(f.visible('feeAdditionalRow'));
   assert.equal(f.element('feeAdditional').textContent, money(2)); f.finish();
 });
@@ -430,8 +437,8 @@ test('late quote cannot restore fee UI after type deselection', () => {
 
 test('old paid quote cannot contaminate a newer free catalog selection', () => {
   const f = fixture({ preview: () => PENDING }); f.select(); f.settle(); const old = f.pending(PREVIEW)[0];
-  f.select(2); f.total(0); old.resolve(quote(old.request)); f.total(0);
-  assert(!f.visible('feeSummary')); f.click('payButton'); assert.equal(f.state.payments.length, 1);
+  f.select(2); f.settle(); f.total(0); old.resolve(quote(old.request)); f.total(0);
+  assert(f.visible('feeSummary')); f.click('payButton'); assert.equal(f.state.payments.length, 1);
   assert(!('politicaRevisaoVista' in f.state.payments[0]));
   assert(!('politicaSubtotalVisto' in f.state.payments[0])); assert(!('politicaTotalVisto' in f.state.payments[0])); f.finish();
 });
@@ -605,30 +612,30 @@ test('ERA catalog policy flag cannot disable the authoritative quote gate', () =
 
 test('non-ERA paid checkout has no preview and no revision, even if catalog advertises policy', () => {
   const f = fixture({ eventId: LEGACY, catalog() { return { ...catalog(LEGACY), politicaComercialAtiva: true }; } });
-  f.select(); f.settle(); f.total(87); assert.equal(f.state.previews.length, 0); assert(!f.visible('feeSummary'));
+  f.select(); f.settle(); f.total(87); assert.equal(f.state.previews.length, 0); assert(f.visible('feeSummary'));
   f.click('payButton'); assert.equal(f.state.payments.length, 1); assert(!('politicaRevisaoVista' in f.state.payments[0]));
   assert(!('politicaSubtotalVisto' in f.state.payments[0])); assert(!('politicaTotalVisto' in f.state.payments[0])); f.finish();
 });
 
 test('non-ERA coupon retains legacy direct-render behavior and no revision', () => {
   const f = fixture({ eventId: LEGACY }); f.select(); f.input('quantity', '2'); f.participants();
-  const before = f.document.querySelector('[data-name]'); f.apply(); f.total(154);
+  const before = f.document.querySelector('[data-name]'); f.apply(); f.settle(); f.total(154);
   assert.strictEqual(f.document.querySelector('[data-name]'), before, 'Legacy coupon response must not call updateSummary/rebuild participants');
-  assert(f.visible('promoSummary')); assert(!f.visible('feeSummary')); assert.equal(f.state.previews.length, 0);
+  assert(f.visible('promoSummary')); assert(f.visible('feeSummary')); assert.equal(f.state.previews.length, 0);
   f.click('payButton'); assert.equal(f.state.payments[0].cupomCodigo, 'LOCAL10'); assert(!('politicaRevisaoVista' in f.state.payments[0]));
   assert(!('politicaSubtotalVisto' in f.state.payments[0])); assert(!('politicaTotalVisto' in f.state.payments[0])); f.finish();
 });
 
-test('non-ERA delayed coupon keeps its established response behavior', () => {
+test('non-ERA delayed coupon does not advertise a subtotal for a different quantity', () => {
   const f = fixture({ eventId: LEGACY, coupon: () => PENDING }); f.select(); f.apply(); const old = f.pending(COUPON)[0];
-  f.input('quantity', '2'); old.resolve(coupon(old.request)); f.total(77);
+  f.input('quantity', '2'); old.resolve(coupon(old.request)); f.settle(); assert.equal(f.element('summaryPrice').textContent,'A confirmar');
   assert(f.visible('promoSummary')); assert.equal(f.state.previews.length, 0); f.finish();
 });
 
 test('authentic free catalog lot remains zero, no preview and no revision for PIX or card', () => {
   for (const method of ['PIX', 'CREDIT_CARD']) {
     const f = fixture(); f.select(2); f.method(method); f.settle(); f.total(0);
-    assert.equal(f.state.previews.length, 0); assert(!f.visible('feeSummary')); assert(!f.visible('feeStatus'));
+    assert.equal(f.state.previews.length, 0); assert(f.visible('feeSummary')); assert(!f.visible('feeStatus'));
     f.click('payButton'); assert.equal(f.state.payments.length, 1); assert(!('politicaRevisaoVista' in f.state.payments[0]));
   assert(!('politicaSubtotalVisto' in f.state.payments[0])); assert(!('politicaTotalVisto' in f.state.payments[0])); f.finish();
   }

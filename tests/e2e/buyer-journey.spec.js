@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { feeReadFixture } = require('./fee-read-fixture');
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
@@ -178,6 +179,8 @@ async function installMock(page, state) {
         } else if(method==='ctEventoPublicoCarregarPROD'){
           expect(String(args[0]||'')).toBe(EVENT_ID);
           result=eventFixture();
+        } else if(method==='ctPrecoPublicoLeituraPROD'){
+          result=feeReadFixture(checkoutFixture(),args[0]);
         } else if(method==='ctEventoPublicoCarregarVideoDataPROD'){
           result={sucesso:false};
         } else if(method==='ctCheckoutPublicoCarregarEventoPROD'){

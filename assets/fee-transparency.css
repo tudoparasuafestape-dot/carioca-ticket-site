@@ -1,0 +1,17 @@
+.ct-price{display:flex;flex-direction:column;gap:6px;min-width:0;text-align:left;font-size:14px;line-height:1.5;color:#263247}
+.ct-price-total{font-size:20px;line-height:1.3;color:#111827}
+.ct-price-parts,.ct-price-unit,.ct-price-note{display:block;overflow-wrap:anywhere}
+.ct-price-note,.ct-price-unit{font-size:12px;color:#475467}
+.ct-fee-link{display:block;align-self:flex-start;border:0!important;padding:8px 0!important;min-height:44px!important;background:transparent!important;color:#77520b!important;font:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px;text-align:left;cursor:pointer}
+.ct-fee-link:focus-visible,.ct-fee-close:focus-visible{outline:3px solid #155eef;outline-offset:3px}
+.ct-fee-dialog{box-sizing:border-box;width:calc(100% - 32px);max-width:460px;max-height:calc(100dvh - 40px);overflow:auto;border:1px solid #cdd5df;border-radius:18px;padding:24px;color:#182230;background:#fff;box-shadow:0 24px 80px #0005;font:16px/1.6 Arial,sans-serif}
+.ct-fee-dialog::backdrop{background:#10182899}
+.ct-fee-dialog h2{font-size:22px;line-height:1.3;margin:0 0 16px}
+.ct-fee-composition{padding:14px;background:#fff8e6;border-radius:10px;overflow-wrap:anywhere}
+.ct-fee-close{min-height:44px;width:100%;border:1px solid #8a6414;border-radius:9px;background:#ffcf57;color:#211800;font:inherit;font-weight:700;cursor:pointer}
+.ct-offer{flex:1 1 220px;padding:12px;background:#fff;border:1px solid #e4e7ec;border-radius:12px}
+.ct-offer h4{margin:0 0 8px;font-size:14px}
+#startingComposition{margin-top:10px}.ct-order-composition{margin:16px 0}
+#startingPrice .ct-price-parts,#startingPrice .ct-price-note,#startingPrice .ct-price-unit{color:#f2f4f7}
+#startingPrice .ct-fee-link{color:#ffcf57!important}
+@media(max-width:390px){.ct-fee-dialog{padding:18px}.ct-price-total{font-size:18px}.ticket-top{flex-wrap:wrap}.ticket-summary{gap:10px;flex-wrap:wrap}}

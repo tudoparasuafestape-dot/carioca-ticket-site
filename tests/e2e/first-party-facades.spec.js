@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { feeReadFixture } = require('./fee-read-fixture');
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
@@ -75,6 +76,7 @@ function checkoutFixture() {
 }
 
 function rpcResult(method, args) {
+  if(method==='ctPrecoPublicoLeituraPROD')return feeReadFixture(checkoutFixture(),args[0]);
   switch (method) {
     case 'ctCentralAcessoObterCapacidadesPROD':
       return {
