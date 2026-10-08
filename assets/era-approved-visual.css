@@ -1,0 +1,7 @@
+.era-visual-dialog{box-sizing:border-box;width:min(690px,calc(100% - 28px));max-height:92dvh;padding:24px;border:1px solid #d9e1eb;border-radius:18px;background:#fff;color:#17243b;box-shadow:0 24px 80px #09172b55}
+.era-visual-dialog::backdrop{background:#07172bb8}.era-visual-dialog h2{font-size:23px;margin:0 0 8px}.era-visual-dialog p{line-height:1.5}
+.era-visual-image{width:100%;max-height:235px;object-fit:contain;background:#101010;border-radius:10px;margin:10px 0}.era-visual-image[hidden]{display:none}
+.era-visual-dialog dl{margin:12px 0}.era-visual-dialog dt{font-size:12px;font-weight:700;text-transform:uppercase;color:#516079;margin-top:12px}.era-visual-dialog dd{margin:4px 0;line-height:1.5;overflow-wrap:anywhere}
+.era-visual-status{background:#edf4ff;border-radius:8px;padding:12px;margin:12px 0}.era-visual-status[data-error=true]{background:#fff0ef;color:#a12a22}
+.era-visual-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.era-visual-actions button{min-height:44px;padding:11px 16px;border:1px solid #bac7d8;border-radius:8px;background:#fff;color:#17243b;font:inherit;font-weight:700;cursor:pointer}.era-visual-actions .era-visual-confirm{background:#1257c7;border-color:#1257c7;color:#fff}.era-visual-actions button:disabled{opacity:.5;cursor:wait}.era-visual-dialog :focus-visible{outline:3px solid #5a9cff;outline-offset:3px}
+@media(max-width:480px){.era-visual-dialog{padding:18px}.era-visual-actions{flex-direction:column-reverse}.era-visual-actions button{width:100%}}
