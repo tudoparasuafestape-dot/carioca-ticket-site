@@ -890,10 +890,11 @@ if (producerPage) {
 
 const home = read('index.html');
 if (home) {
-  if (!/href=["'][^"']*\/evento\//i.test(home)) {
+  const publicCatalog = home.includes('/assets/public-event-catalog.js') ? read('assets/public-event-catalog.js') : '';
+  if (!/href=["'][^"']*\/evento\//i.test(home) && !publicCatalog.includes("'/evento/?evento='")) {
     fail('index.html', 'home sem rota oficial /evento/');
   }
-  if (!/href=["'][^"']*\/checkout\//i.test(home)) {
+  if (!/href=["'][^"']*\/checkout\//i.test(home) && !publicCatalog.includes("'/checkout/?evento='")) {
     fail('index.html', 'home sem rota oficial /checkout/');
   }
 }

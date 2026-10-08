@@ -110,7 +110,8 @@ test.describe('Ativação financeira Master do Produtor',()=>{
       const id=String(p.get('ctMinhaCariocaRequestId')||'');
       const method=String(p.get('metodo')||'');
       let resultado=null;
-      if(method==='ctFinanceiroProdutorMasterListarPROD')resultado={sucesso:true,autorizado:true,itens:[{produtorId:'PROD-E2E',produtorNome:'Produtor E2E',provedorAmbiente:'PRODUCAO',statusOnboarding:'PENDENTE_CREDENCIAL',credencialConfigurada:false,recebimentoHabilitado:false,splitHabilitado:false,prontoParaVendas:false,credencialRefEsperada:'CT_SECRET_ASAAS_PRODUCAO_PROD_E2E'}],contagem:{pendentes:1,prontos:0}};
+      if(method==='ctEventosPublicosListarPROD')resultado={sucesso:true,eventos:[]};
+      else if(method==='ctFinanceiroProdutorMasterListarPROD')resultado={sucesso:true,autorizado:true,itens:[{produtorId:'PROD-E2E',produtorNome:'Produtor E2E',provedorAmbiente:'PRODUCAO',statusOnboarding:'PENDENTE_CREDENCIAL',credencialConfigurada:false,recebimentoHabilitado:false,splitHabilitado:false,prontoParaVendas:false,credencialRefEsperada:'CT_SECRET_ASAAS_PRODUCAO_PROD_E2E'}],contagem:{pendentes:1,prontos:0}};
       else if(method==='ctFinanceiroProdutorMasterProntidaoPROD')resultado={sucesso:true,autorizado:true,credencialRefEsperada:'CT_SECRET_ASAAS_PRODUCAO_PROD_E2E',vinculoProviderCompleto:true,segredoExiste:false,providerValidado:false,podeAtivar:false,segredoExposto:false,movimentouDinheiro:false,erroProvider:'CREDENCIAL_NAO_ENCONTRADA',termosVersaoAtual:'CT-FIN-PROD-2026-09'};
       else throw new Error('Método inesperado: '+method);
       await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,true,resultado,'')+', "*");<\/script></body></html>'});

@@ -171,7 +171,11 @@ async function installMock(page, state) {
     let result=null, ok=true, error='';
     try {
       if(action==='publicRpc'){
-        if(method==='ctEventoPublicoCarregarPROD'){
+        if(method==='ctEventosPublicosListarPROD'){
+          const event=eventFixture();
+          expect(args).toEqual([]);
+          result={sucesso:true,eventos:[{...event.evento,visual:event.visual}]};
+        } else if(method==='ctEventoPublicoCarregarPROD'){
           expect(String(args[0]||'')).toBe(EVENT_ID);
           result=eventFixture();
         } else if(method==='ctEventoPublicoCarregarVideoDataPROD'){

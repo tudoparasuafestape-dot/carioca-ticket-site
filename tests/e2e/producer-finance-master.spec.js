@@ -94,7 +94,9 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
       const id=String(p.get('ctMinhaCariocaRequestId')||'');
       const method=String(p.get('metodo')||'');
       let resultado=null;
-      if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
+      if(method==='ctEventosPublicosListarPROD'){
+        resultado={sucesso:true,eventos:[]};
+      }else if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
         resultado={sucesso:true,autenticado:true,autorizado:true,usuario:{id:'USR-PROD'},produtores:[{id:'PROD-E2E',nomeFantasia:'Produtor E2E',eventos:[{id:'EVT-E2E',nome:'Evento E2E'}]}]};
       }else if(method==='ctContaCariocaPayPortalResumoPROD'){
         resultado={sucesso:true,autorizado:true,produtorId:'PROD-E2E',eventoId:'EVT-E2E',perfil:'PRODUTOR_TITULAR',

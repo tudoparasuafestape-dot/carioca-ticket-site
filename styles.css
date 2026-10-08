@@ -170,3 +170,51 @@ footer{margin-top:44px;border-top:1px solid #1f1f1f;background:#080808}
 @media(max-width:430px){
   .nav-cta{display:none}
 }
+
+/* One public catalog: covers, search and purchase links share the same events. */
+.public-events{padding-top:32px;padding-bottom:48px}
+.public-events [hidden]{display:none!important}
+.public-events-heading{display:flex;align-items:center;justify-content:space-between;gap:28px}
+.public-events h1{font-size:clamp(30px,4vw,46px);letter-spacing:-.04em;line-height:1.1;margin:8px 0}
+.public-events-heading p{font-size:13px;color:var(--muted);margin:0}
+.public-events .event-search-form{max-width:490px;flex:1;min-width:0}
+.catalog-feedback{font-size:13px;color:var(--muted);margin:10px 0}
+.catalog-feedback:empty{display:none}
+.public-events-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:22px}
+.public-events-grid .catalog-card{display:flex;flex-direction:column;min-width:0}
+.public-events-grid .catalog-photo{aspect-ratio:1882/836;background:#080808;border-bottom:1px solid var(--line)}
+.public-events-grid .catalog-photo img{position:absolute;inset:0;object-fit:contain;transform:none}
+.public-events-grid .catalog-card:hover .catalog-photo img{transform:none}
+.catalog-image-fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted);font-size:14px;background:linear-gradient(140deg,#1c190f,#101010)}
+.public-events-grid .catalog-body{display:flex;flex-direction:column;flex:1;padding:20px}
+.catalog-title{font-size:24px;line-height:1.2;letter-spacing:-.02em;margin:6px 0 12px;overflow-wrap:anywhere}
+.catalog-title a{text-decoration:none}
+.catalog-title a:hover{text-decoration:underline}
+.public-events-grid .catalog-body>p{font-size:13px;margin-bottom:8px;overflow-wrap:anywhere}
+.catalog-actions{display:flex;align-items:center;gap:20px;padding-top:14px;margin-top:auto}
+.catalog-actions .btn{width:auto;min-height:46px}
+.catalog-actions .event-secondary{padding:10px 0}
+.catalog-state{margin-top:22px;padding:28px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+.catalog-state p{margin:0;color:var(--muted)}
+.catalog-state .btn{margin-top:16px;cursor:pointer;font:inherit}
+.public-events :focus-visible{outline:3px solid var(--gold2);outline-offset:4px}
+.brand-headline{font-size:clamp(36px,5vw,60px);line-height:1.08;letter-spacing:-.045em;margin:16px 0 22px}
+@media(max-width:900px){
+  .public-events-heading{display:block}
+  .public-events .event-search-form{margin-top:16px;max-width:none}
+}
+@media(max-width:600px){
+  .public-events{padding-top:22px;padding-bottom:28px}
+  .public-events .event-search-form{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .public-events .event-search-form input{font-size:13px;padding:0 12px;min-height:46px}
+  .public-events .event-search-form button{padding:0 12px;font-size:12px;min-height:46px}
+  .public-events-grid{grid-template-columns:1fr;gap:18px;margin-top:18px}
+  .public-events-grid .catalog-body{padding:15px}
+  .catalog-title{font-size:21px;margin:4px 0 9px}
+  .catalog-actions{gap:16px;padding-top:10px}
+  .catalog-actions .btn{font-size:13px;padding:0 16px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .public-events .btn{transition:none}
+}
