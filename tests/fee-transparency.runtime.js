@@ -6,6 +6,7 @@ for(const key of Object.keys(s))for(const bad of [undefined,null,'0',NaN,Infinit
 assert.equal(fee.summary({...s,totalComprador:87}),null);
 assert(fee.summary({subtotalIngressos:120,taxaComprador:0,adicionaisComprador:6,totalComprador:126,taxaProdutor:12}));
 assert.equal(fee.quote({sucesso:true,degradado:true,resumo:s}),null);
+assert.equal(fee.quote({sucesso:true,degradado:false,cacheStale:true,resumo:s}),null);
 assert.equal(fee.snapshot({...s}),null);
 assert(fee.snapshot({...s,comissoes:[]}));
 const snap={subtotalIngressos:120,taxaComprador:12,totalComprador:138,comissoes:[{fonteCusteio:'COMPRADOR',valorCalculado:6},{fonteCusteio:'PRODUTOR',valorCalculado:40}]};

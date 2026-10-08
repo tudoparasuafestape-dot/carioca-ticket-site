@@ -13,7 +13,7 @@
       adicionaisComprador:s.adicionaisComprador,totalComprador:s.totalComprador,
       taxaProdutor:validNumber(s.taxaProdutor)?s.taxaProdutor:null,pagadorTaxa:s.pagadorTaxa};
   }
-  function quote(r){return r&&r.sucesso===true&&r.degradado===false?summary(r.resumo):null;}
+  function quote(r){return r&&r.sucesso===true&&r.degradado===false&&r.cacheStale!==true?summary(r.resumo):null;}
   function snapshot(s){
     if(!s||!Array.isArray(s.comissoes))return null;
     var extra=0;

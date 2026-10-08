@@ -806,7 +806,7 @@
         state.feeSelection='';
         state.feeQuotedAt=0;
         state.feePreview=null;
-        el.feeSummary.classList.add('hidden');
+        displayFeePending();
         el.feeStatus.classList.toggle('hidden',!message);
         el.feeStatusText.textContent=message||'';
         el.feeRetry.classList.add('hidden');
@@ -820,7 +820,7 @@
         state.feeSelection='';
         state.feeQuotedAt=0;
         state.feePreview=null;
-        el.feeSummary.classList.add('hidden');
+        displayFeePending();
         el.feeStatus.classList.remove('hidden');
         el.feeStatusText.textContent='Não foi possível confirmar o total com a taxa. Atualize o total para continuar.';
         el.feeRetry.classList.remove('hidden');
@@ -862,7 +862,7 @@
             .withSuccessHandler(function(res){
               if(seq!==state.feeSeq||selection!==quoteSelectionKey())return;
               var helper=window.CTCheckoutCommercialPolicy;
-              if(!helper||!helper.validQuote(res,valorIngressos)){
+              if(!helper||!helper.validQuote(res,valorIngressos)||res.cacheStale===true){
                 feeUnavailable();
                 return;
               }
@@ -885,6 +885,14 @@
       }
 
       var displaySeq=0,displayTimer=null,displayedOrderId='',displayedOrderSummary=null;
+      function displayFeePending(){
+        var f=window.CTFeeTransparency;
+        el.feeBase.textContent=el.feePlatform.textContent=el.feeTotal.textContent='A confirmar';
+        el.feeAdditionalRow.classList.add('hidden');
+        el.feeNote.textContent='O ingresso, a taxa e o total ainda não foram confirmados.';
+        el.feeSummary.classList.remove('hidden');
+        document.getElementById('feeInfo').onclick=function(){f.explain(null,this);};
+      }
       function displayFee(summary){
         var f=window.CTFeeTransparency,s=f.summary(summary);if(!s)return;
         el.feeBase.textContent=f.money(s.subtotalIngressos);
@@ -898,7 +906,7 @@
       }
       function displayLegacyFee(base){
         var seq=++displaySeq;
-        el.feeSummary.classList.add('hidden');el.summaryPrice.textContent='Confirmando…';
+        displayFeePending();el.summaryPrice.textContent='Confirmando…';
         var type=state.type,lot=state.lot,q=quantity(),coupon=state.promotion;
         if(displayTimer){clearTimeout(displayTimer);displayTimer=null;}
         if(!type||!lot)return;
@@ -907,7 +915,7 @@
         displayTimer=null;
         google.script.run.withSuccessHandler(function(res){
           if(seq!==displaySeq||state.type!==type||state.lot!==lot||quantity()!==q||state.promotion!==coupon)return;
-          var o=res&&res.sucesso===true&&res.ofertas&&res.ofertas.find(function(o){return o.tipoId===type.id&&o.loteId===lot.id&&o.quantidade===q;});
+          var o=res&&res.sucesso===true&&res.cacheStale!==true&&res.degradado!==true&&res.eventoId===state.eventId&&res.canal==='OFFICIAL'&&res.ofertas&&res.ofertas.find(function(o){return o.tipoId===type.id&&o.loteId===lot.id&&o.quantidade===q;});
           var s=o&&o.status==='CONFIRMADO'?window.CTFeeTransparency.summary(o.resumo):null;
           if(coupon){
             var discounted=coupon.calculo&&coupon.calculo.valorFinalTotal;

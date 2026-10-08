@@ -9,7 +9,7 @@
     var status=node('p','Confirmando os valores dos ingressos, taxas e totais…');status.setAttribute('role','status');tickets.appendChild(status);
     google.script.run.withSuccessHandler(function(result){
       if(current!==sequence)return;
-      if(!result||result.sucesso!==true||result.eventoId!==eventId||result.canal!==channel||!Array.isArray(result.ofertas))return failed();
+      if(!result||result.sucesso!==true||result.cacheStale===true||result.degradado===true||result.eventoId!==eventId||result.canal!==channel||!Array.isArray(result.ofertas))return failed();
       var offers=result.ofertas;
       tickets.replaceChildren();
       var allKnown=offers.length>0&&offers.every(function(o){return (catalog.tipos||[]).some(function(t){return t.id===o.tipoId&&(t.lotes||[]).some(function(l){return l.id===o.loteId;});});}),min=null;

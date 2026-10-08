@@ -889,7 +889,7 @@
         if(!state.type||!state.lot){
           ++state.feeSeq;
           if(state.feeTimer){clearTimeout(state.feeTimer);state.feeTimer=null;}
-          el.feeSummary.classList.add('hidden');
+          displayFeePending();
           el.summary.classList.add('hidden');
           el.participants.innerHTML='';
           return;
@@ -927,7 +927,7 @@
 
       function atualizarTaxa(valorIngressos,precoUnitario,quantidadeVendas){
         el.summaryPrice.textContent='Confirmando…';
-        el.feeSummary.classList.add('hidden');
+        displayFeePending();
         var seq=++state.feeSeq;
 
         if(state.feeTimer){
@@ -946,7 +946,7 @@
           state.feeRevision='';
           state.feeQuotedAt=0;
           state.feePreview=null;
-          el.feeSummary.classList.add('hidden');
+          displayFeePending();
           displayLegacyFee(valorIngressos);
           return;
         }
@@ -972,7 +972,7 @@
             var resumo=res&&res.resumo?res.resumo:null;
             if(!res||res.sucesso!==true||!resumo){
               state.feeReady=false;
-              el.feeSummary.classList.add('hidden');
+              displayFeePending();
               el.summaryPrice.textContent='A confirmar';
               return;
             }
@@ -980,7 +980,7 @@
             state.feeReady=true;
 
             var display=window.CTFeeTransparency.quote(res);
-            if(!display||Math.round(display.subtotalIngressos*100)!==Math.round(valorIngressos*100)){el.feeSummary.classList.add('hidden');el.summaryPrice.textContent='A confirmar';return;}
+            if(!display||Math.round(display.subtotalIngressos*100)!==Math.round(valorIngressos*100)){displayFeePending();el.summaryPrice.textContent='A confirmar';return;}
             displayFee(display);
 
           })
@@ -991,7 +991,7 @@
             state.feeRevision='';
             state.feeQuotedAt=0;
             state.feePreview=null;
-            el.feeSummary.classList.add('hidden');
+            displayFeePending();
             el.summaryPrice.textContent='A confirmar';
           })
             .ctPoliticaComercialPreviewPublicoPROD({
@@ -1011,6 +1011,14 @@
       }
 
       var displaySeq=0,displayTimer=null,displayedOrderId='',displayedOrderSummary=null;
+      function displayFeePending(){
+        var f=window.CTFeeTransparency;
+        el.feeBase.textContent=el.feePlatform.textContent=el.feeTotal.textContent='A confirmar';
+        el.feeAdditionalRow.classList.add('hidden');
+        el.feeNote.textContent='O ingresso, a taxa e o total ainda não foram confirmados.';
+        el.feeSummary.classList.remove('hidden');
+        document.getElementById('feeInfo').onclick=function(){f.explain(null,this);};
+      }
       function displayFee(summary){
         var f=window.CTFeeTransparency,s=f.summary(summary);if(!s)return;
         el.feeBase.textContent=f.money(s.subtotalIngressos);
@@ -1024,7 +1032,7 @@
       }
       function displayLegacyFee(base){
         var seq=++displaySeq;
-        el.feeSummary.classList.add('hidden');el.summaryPrice.textContent='Confirmando…';
+        displayFeePending();el.summaryPrice.textContent='Confirmando…';
         var type=state.type,lot=state.lot,q=quantity(),coupon=state.promotion;
         if(displayTimer){clearTimeout(displayTimer);displayTimer=null;}
         if(!type||!lot)return;
@@ -1033,7 +1041,7 @@
         displayTimer=null;
         google.script.run.withSuccessHandler(function(res){
           if(seq!==displaySeq||state.type!==type||state.lot!==lot||quantity()!==q||state.promotion!==coupon)return;
-          var o=res&&res.sucesso===true&&res.ofertas&&res.ofertas.find(function(o){return o.tipoId===type.id&&o.loteId===lot.id&&o.quantidade===q;});
+          var o=res&&res.sucesso===true&&res.cacheStale!==true&&res.degradado!==true&&res.eventoId===state.eventId&&res.canal==='V2'&&res.ofertas&&res.ofertas.find(function(o){return o.tipoId===type.id&&o.loteId===lot.id&&o.quantidade===q;});
           var s=o&&o.status==='CONFIRMADO'?window.CTFeeTransparency.summary(o.resumo):null;
           if(coupon){
             var discounted=coupon.calculo&&coupon.calculo.valorFinalTotal;

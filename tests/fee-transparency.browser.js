@@ -80,7 +80,20 @@ async function checkDialog(f){
   });
   await test('missing fee never becomes zero',async()=>{
    const f=await fixture(browser,{quote:async(p,n,r)=>{delete r.resumo.taxaComprador;return r;}});await f.select();await f.page.locator('#feeRetry').waitFor({state:'visible'});
-   assert.equal(await f.page.locator('#summaryPrice').textContent(),'A confirmar');assert(!(await f.page.locator('#feeSummary').isVisible()));await f.close();
+   assert.equal(await f.page.locator('#summaryPrice').textContent(),'A confirmar');assert(await f.page.locator('#feeInfo').isVisible());await checkDialog(f);await f.close();
+  });
+  for(const route of ['checkout','checkout-v2'])for(const mode of ['pending','unknown','failed','stale'])await test(route+' '+mode+' keeps explanation and no fake amounts',async()=>{
+   const data=catalog('OTHER');data.politicaComercial.ativa=false;
+   const f=await fixture(browser,{route,width:route==='checkout'?320:390,eventId:'OTHER',catalog:data,read:async(p,n,r)=>{
+    if(mode==='pending')await delay(1500);
+    if(mode==='failed')return {sucesso:false};
+    if(mode==='stale')return {...r,cacheStale:true,degradado:true};
+    return {...r,ofertas:r.ofertas.map(o=>({...o,status:'INDEFINIDO',resumo:undefined}))};
+   }});await f.select();if(mode!=='pending')await f.page.waitForFunction(()=>document.querySelector('#summaryPrice').textContent==='A confirmar');
+   assert(await f.page.locator('#feeInfo').isVisible());assert.equal(await f.page.locator('#feePlatform').textContent(),'A confirmar');
+   if(process.env.CT_EVIDENCE_DIR&&mode==='unknown')await f.page.screenshot({path:path.join(process.env.CT_EVIDENCE_DIR,route+'-unknown.png'),fullPage:true});
+   await f.page.locator('#feeInfo').click();assert.match(await f.page.locator('#ctFeeComposition').textContent(),/ainda não foram confirmados/);await f.page.keyboard.press('Escape');
+   assert(!f.calls.some(c=>/IniciarPROD|Reservar/.test(c.method)));await f.close();
   });
   await test('legacy presentation does not add a quote revision to orders',async()=>{
    const f=await fixture(browser,{eventId:'OTHER'});await f.select();await f.total(87);await checkDialog(f);

@@ -221,7 +221,7 @@ function fixture(options = {}) {
       ctCheckoutPublicoCarregarEventoPROD: ['catalogs', options.catalog || (() => catalog(state.eventId))],
       ctPrecoPublicoLeituraPROD: ['displayReads', p => {
         const price=p.tipoId==='TYPE-2'?0:p.tipoId==='TYPE-1'?120:87,base=price*p.quantidade;
-        return {sucesso:true,ofertas:[{tipoId:p.tipoId,loteId:p.loteId,quantidade:p.quantidade,status:'CONFIRMADO',semTaxaConfirmada:true,resumo:{subtotalIngressos:base,taxaComprador:0,adicionaisComprador:0,totalComprador:base}}]};
+        return {sucesso:true,eventoId:p.eventoId,canal:p.canal,ofertas:[{tipoId:p.tipoId,loteId:p.loteId,quantidade:p.quantidade,status:'CONFIRMADO',semTaxaConfirmada:true,resumo:{subtotalIngressos:base,taxaComprador:0,adicionaisComprador:0,totalComprador:base}}]};
       }],
       ctPoliticaComercialPreviewPublicoPROD: ['previews', options.preview || (p => quote(p))],
       ctCuponsPublicoValidarSeguroPROD: ['coupons', options.coupon || coupon],
@@ -338,7 +338,7 @@ test('backend-provided percentage and additional charge are displayed without ha
 
 test('120 + 12 = 132; card and quantity changes invalidate then requote', () => {
   const f = fixture(); f.select(1); f.settle(); f.total(132);
-  f.method('CREDIT_CARD'); assert(!f.visible('feeSummary')); f.settle(); f.total(132);
+  f.method('CREDIT_CARD'); assert(f.visible('feeSummary')); assert.equal(f.element('feePlatform').textContent, 'A confirmar'); assert.equal(f.element('feeTotal').textContent, 'A confirmar'); f.settle(); f.total(132);
   assert.equal(f.state.previews.at(-1).formaPagamento, 'CREDIT_CARD');
   f.input('quantity', '2'); f.settle(); f.total(264);
   assert.equal(f.element('feeBase').textContent, money(240)); assert.equal(f.element('feePlatform').textContent, money(24));
@@ -365,7 +365,7 @@ const unsafe = {
 for (const [name, mutate] of Object.entries(unsafe)) test('unsafe quote blocks payment: ' + name, () => {
   const f = fixture({ preview(p) { const response = quote(p); return mutate(response) === null ? null : response; } });
   f.select(); f.settle(); assert.equal(f.element('summaryPrice').textContent, 'A confirmar');
-  assert(!f.visible('feeSummary')); assert(f.visible('feeRetry'));
+  assert(f.visible('feeSummary')); assert.equal(f.element('feePlatform').textContent, 'A confirmar'); assert.equal(f.element('feeTotal').textContent, 'A confirmar'); assert(f.visible('feeRetry'));
   f.click('payButton'); assert.equal(f.state.payments.length, 0); assert(f.element('modalBg').classList.contains('open')); f.finish();
 });
 
@@ -431,7 +431,7 @@ for (const late of ['success', 'failure']) test('late quote ' + late + ' cannot 
 test('late quote cannot restore fee UI after type deselection', () => {
   const f = fixture({ preview: () => PENDING }); f.select(); f.settle(); const old = f.pending(PREVIEW)[0];
   f.change('typeSelect', ''); old.resolve(quote(old.request));
-  assert(!f.visible('summary')); assert(!f.visible('feeSummary')); assert(!f.visible('feeStatus'));
+  assert(!f.visible('summary')); assert(f.visible('feeSummary')); assert.equal(f.element('feePlatform').textContent, 'A confirmar'); assert.equal(f.element('feeTotal').textContent, 'A confirmar'); assert(!f.visible('feeStatus'));
   f.click('payButton'); assert.equal(f.state.payments.length, 0); f.finish();
 });
 
@@ -445,7 +445,7 @@ test('old paid quote cannot contaminate a newer free catalog selection', () => {
 
 test('coupon validation blocks old-total payment; apply and remove requote', () => {
   const f = fixture({ coupon: () => PENDING }); f.select(); f.settle(); f.apply();
-  assert.equal(f.element('summaryPrice').textContent, 'Confirmando...'); assert(!f.visible('feeSummary'));
+  assert.equal(f.element('summaryPrice').textContent, 'Confirmando...'); assert(f.visible('feeSummary')); assert.equal(f.element('feePlatform').textContent, 'A confirmar'); assert.equal(f.element('feeTotal').textContent, 'A confirmar');
   f.click('payButton'); assert.equal(f.state.payments.length, 0); f.closeModal();
   const call = f.pending(COUPON)[0]; call.resolve(coupon(call.request)); f.settle(); f.total(84.7);
   assert(f.visible('promoSummary')); assert.equal(f.state.previews.at(-1).cupomCodigo, 'LOCAL10');
@@ -457,7 +457,7 @@ test('coupon validation blocks old-total payment; apply and remove requote', () 
 test('coupon request suppresses an older in-flight full-price quote', () => {
   const f = fixture({ preview: () => PENDING, coupon: () => PENDING }); f.select(); f.settle();
   const old = f.pending(PREVIEW)[0]; f.apply(); old.resolve(quote(old.request));
-  assert(!f.visible('feeSummary')); assert.equal(f.element('summaryPrice').textContent, 'Confirmando...');
+  assert(f.visible('feeSummary')); assert.equal(f.element('feePlatform').textContent, 'A confirmar'); assert.equal(f.element('feeTotal').textContent, 'A confirmar'); assert.equal(f.element('summaryPrice').textContent, 'Confirmando...');
   const c = f.pending(COUPON)[0]; c.resolve(coupon(c.request)); f.settle();
   const discounted = f.pending(PREVIEW)[0]; discounted.resolve(quote(discounted.request)); f.total(84.7); f.finish();
 });
@@ -471,7 +471,7 @@ for (const change of ['quantity', 'method', 'lot', 'type', 'remove']) test('late
   if (change === 'remove') f.click('couponRemove');
   old.resolve(coupon(old.request)); f.settle(); assert(!f.visible('promoSummary'));
   assert.equal(f.element('couponApply').disabled, false);
-  if (change === 'lot' || change === 'type') assert(!f.visible('feeSummary'));
+  if (change === 'lot' || change === 'type') { assert(f.visible('feeSummary')); assert.equal(f.element('feePlatform').textContent, 'A confirmar'); assert.equal(f.element('feeTotal').textContent, 'A confirmar'); }
   else { f.total(change === 'quantity' ? 191.4 : 95.7); assert.equal(f.state.previews.at(-1).cupomCodigo, ''); }
   f.finish();
 });
@@ -535,7 +535,7 @@ for (const count of [1, 2]) test('PRECO_ATUALIZADO reloads 87 to 120, restores b
   f.element('marketing').checked = true;
   f.click('payButton'); assert.equal(f.state.payments.length, 1); assert.equal(f.state.catalogs.length, 2);
   assert.equal(f.state.payments[0].politicaSubtotalVisto, 87 * count); assert.equal(f.state.payments[0].politicaTotalVisto, round(95.7 * count));
-  assert(!f.visible('feeSummary')); assert.equal(f.element('summaryPrice').textContent, 'Confirmando...');
+  assert(f.visible('feeSummary')); assert.equal(f.element('feePlatform').textContent, 'A confirmar'); assert.equal(f.element('feeTotal').textContent, 'A confirmar'); assert.equal(f.element('summaryPrice').textContent, 'Confirmando...');
   const refreshed = catalog(ERA); Object.assign(refreshed.tipos[0].lotes[0], { precoNumero: 120, preco: money(120) });
   f.pending(CATALOG)[0].resolve(refreshed); f.settle(); f.total(132 * count);
   assert.equal(f.element('typeSelect').value, 'TYPE-0'); assert.equal(f.element('lotSelect').value, 'LOT-0');
@@ -582,7 +582,7 @@ for (const failure of ['unsuccessful response', 'RPC error']) test('PRECO_ATUALI
   f.select(); f.settle(); f.click('payButton'); f.clock.tick(1000);
   assert.equal(f.state.payments.length, 1); assert.equal(f.state.catalogs.length, 2); assert.equal(f.state.previews.length, 1);
   assert(f.visible('closedPanel')); assert(!f.visible('salePanel')); assert(!f.visible('buyerPanel')); assert(!f.visible('payActionPanel'));
-  assert(!f.visible('feeSummary')); assert.notEqual(f.element('summaryPrice').textContent, money(95.7)); f.finish();
+  assert(f.visible('feeSummary')); assert.equal(f.element('feePlatform').textContent, 'A confirmar'); assert.equal(f.element('feeTotal').textContent, 'A confirmar'); assert.notEqual(f.element('summaryPrice').textContent, money(95.7)); f.finish();
 });
 
 test('unsuccessful payment response permits explicit retry with same key', () => {
@@ -644,7 +644,7 @@ test('authentic free catalog lot remains zero, no preview and no revision for PI
 for (const [label, price] of [['missing', undefined], ['null', null], ['blank', ''], ['numeric string', '87'], ['zero string', '0'], ['NaN', NaN], ['Infinity', Infinity], ['negative', -1]]) test('invalid catalog price fails closed: ' + label, () => {
   const f = fixture({ catalog() { const response = catalog(ERA); response.tipos[0].lotes[0].precoNumero = price; return response; } });
   f.select(); f.settle(); assert.equal(f.element('summaryPrice').textContent, 'A confirmar');
-  assert(!f.visible('feeSummary')); assert.equal(f.state.previews.length, 0, 'Do not quote an invalid catalog price');
+  assert(f.visible('feeSummary')); assert.equal(f.element('feePlatform').textContent, 'A confirmar'); assert.equal(f.element('feeTotal').textContent, 'A confirmar'); assert.equal(f.state.previews.length, 0, 'Do not quote an invalid catalog price');
   f.click('payButton'); assert.equal(f.state.payments.length, 0); f.finish();
 });
 

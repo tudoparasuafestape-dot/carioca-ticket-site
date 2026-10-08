@@ -63,7 +63,7 @@ async function createFixture(browser, options = {}) {
       if (method === 'ctCheckoutPublicoCarregarEventoPROD') result = catalog(state.eventId);
       else if (method === 'ctPrecoPublicoLeituraPROD') {
         const p=args[0],price=p.tipoId==='TYPE-2'?0:p.tipoId==='TYPE-1'?120:87,base=price*p.quantidade;
-        result={sucesso:true,ofertas:[{tipoId:p.tipoId,loteId:p.loteId,quantidade:p.quantidade,status:'CONFIRMADO',semTaxaConfirmada:true,resumo:{subtotalIngressos:base,taxaComprador:0,adicionaisComprador:0,totalComprador:base}}]};
+        result={sucesso:true,eventoId:p.eventoId,canal:p.canal,ofertas:[{tipoId:p.tipoId,loteId:p.loteId,quantidade:p.quantidade,status:'CONFIRMADO',semTaxaConfirmada:true,resumo:{subtotalIngressos:base,taxaComprador:0,adicionaisComprador:0,totalComprador:base}}]};
       }
       else if (method === 'ctPoliticaComercialPreviewPublicoPROD') {
         state.previews.push(args[0]);
@@ -149,7 +149,7 @@ async function createFixture(browser, options = {}) {
       await f.select(); await until(() => f.state.previews.length === 1, 'first delayed quote');
       await f.page.locator('#quantity').fill('2'); await f.total(191.4); await delay(850); await f.total(191.4);
       await f.page.locator('#quantity').fill('3'); await until(() => f.state.previews.length === 3, 'third quote');
-      await f.page.locator('#typeSelect').selectOption(''); await delay(250); assert(!(await f.page.locator('#feeSummary').isVisible())); assert(!(await f.page.locator('#feeStatus').isVisible())); await f.finish();
+      await f.page.locator('#typeSelect').selectOption(''); await delay(250); assert(await f.page.locator('#feeInfo').isVisible()); assert.equal(await f.page.locator('#feePlatform').textContent(),'A confirmar'); assert(!(await f.page.locator('#feeStatus').isVisible())); await f.finish();
     });
     await test('coupon apply/remove requotes; validation blocks paying old amount', async () => {
       const f = await createFixture(browser, { async coupon(p) { await delay(300); return coupon(p); } });
