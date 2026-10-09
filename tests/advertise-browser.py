@@ -21,7 +21,10 @@ with sync_playwright() as pw:
    for locale in ['pt-BR','en-US','es','zh-Hans']:
     page.select_option('#advertise-language',locale)
     assert page.locator('html').get_attribute('lang')==locale
-    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(width,theme,locale)
+    if not page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'):
+     page.screenshot(path=str(OUT/f'overflow-{width}-{theme}-{locale}.png'),full_page=True)
+     print(page.evaluate("[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1).map(e=>[e.tagName,e.className,e.getBoundingClientRect().right])"))
+     raise AssertionError((width,theme,locale))
     for a in page.locator('[data-proposal]').all():
      u=urlsplit(a.get_attribute('href'));q=parse_qs(u.query)
      assert u.scheme=='https' and u.netloc=='wa.me' and u.path=='/5581999311509'
