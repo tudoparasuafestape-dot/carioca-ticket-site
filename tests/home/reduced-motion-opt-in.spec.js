@@ -436,10 +436,42 @@ test('failed ad artwork keeps its unavailable playback controls and motion note 
 test('reduced-motion explanations and enabled Start controls at 320px with 150% text', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 900 });
   const state = await setup(page);
+  async function expectAdFooterSeparation(scale) {
+    for (const carousel of CAROUSELS.slice(1)) {
+      const parts = [
+        ['advertising label', '.eyebrow'],
+        ['playback status', '.ad-playback-state'],
+        ['playback controls', '.ad-controls']
+      ];
+      const boxes = [];
+      for (const [name, selector] of parts) {
+        const element = page.locator(`${carousel.host} ${selector}`);
+        await expect(element).toBeVisible();
+        const box = await element.boundingBox();
+        expect(box, `${carousel.name}: ${name} at ${scale}% text`).not.toBeNull();
+        expect(box.width).toBeGreaterThan(0);
+        expect(box.height).toBeGreaterThan(0);
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(321);
+        boxes.push({ name, ...box });
+      }
+      for (let first = 0; first < boxes.length; first++) {
+        for (let second = first + 1; second < boxes.length; second++) {
+          const a = boxes[first], b = boxes[second];
+          const overlapX = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+          const overlapY = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+          expect(overlapX > 0.5 && overlapY > 0.5,
+            `${carousel.name}: ${a.name} overlaps ${b.name} at 320px/${scale}% text`).toBe(false);
+        }
+      }
+    }
+  }
+  await expectAdFooterSeparation(100);
   await page.locator('#accessibility-toggle').click();
   for (let step = 0; step < 5; step++) await page.locator('#font-up').click();
   await expect(page.locator('#font-reset')).toHaveText('150%');
   await page.locator('#accessibility-toggle').click();
+  await expectAdFooterSeparation(150);
   for (const carousel of [EVENTS, CAROUSELS[1]]) {
     await reveal(page, carousel);
     await expectPaused(page, carousel);
@@ -448,11 +480,36 @@ test('reduced-motion explanations and enabled Start controls at 320px with 150% 
     const note = await page.locator(carousel.note).boundingBox();
     expect(note.x).toBeGreaterThanOrEqual(0);
     expect(note.x + note.width).toBeLessThanOrEqual(321);
-    await page.locator(carousel.host).screenshot({
-      path: testInfo.outputPath(`${carousel.name === 'events' ? 'events' : 'primary-ad'}-reduced-motion-320px-text150.png`)
+    // Keep the real sticky header and page geometry. Centering the actual
+    // control gives truthful viewport evidence without hiding or restyling it.
+    await page.locator(carousel.toggle).evaluate(node => node.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }));
+    const unobscured = await page.locator(carousel.toggle).evaluate(node => {
+      const rect = node.getBoundingClientRect(), header = document.querySelector('.topbar').getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      return rect.top >= header.bottom && rect.bottom <= innerHeight && node.contains(hit);
+    });
+    expect(unobscured, `${carousel.name}: Start must be visible below the sticky header`).toBe(true);
+    await page.screenshot({
+      path: testInfo.outputPath(`${carousel.name === 'events' ? 'events-start' : 'primary-ad-controls'}-reduced-motion-320px-text150.png`)
     });
   }
+  // The full page from its true top also records the event explanation, which
+  // is below the tall event card and cannot share the Start button's viewport.
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  await page.screenshot({ path: testInfo.outputPath('home-reduced-motion-320px-text150-full-page.png'), fullPage: true });
   await expectReduced(page);
+  // The footer layout is shared by both media preferences. Recheck the same
+  // narrow geometry without reduced motion, without adding another test matrix.
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  for (const carousel of CAROUSELS.slice(1)) await expect(page.locator(carousel.note)).toBeHidden();
+  expect(await page.evaluate(() => window.originalMotionQuery.matches)).toBe(false);
+  await expectAdFooterSeparation(150);
+  await page.locator('#accessibility-toggle').click();
+  await page.locator('#font-reset').click();
+  await expect(page.locator('#font-reset')).toHaveText('100%');
+  await page.locator('#accessibility-toggle').click();
+  await expectAdFooterSeparation(100);
   await assertIsolated(state);
 });
 
