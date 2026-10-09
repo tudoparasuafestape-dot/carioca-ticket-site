@@ -272,7 +272,7 @@
 .ct-home .faq-list details:first-child { border-top:1px solid var(--home-line); }
 .ct-home .faq-list summary { cursor:pointer; font-size:.9375rem; font-weight:650; padding:8px 0; }
 .ct-home .faq-list p { font-size:.875rem; padding:8px 0 12px; }
-.ct-home .footer-grid .footer-title { font-size:.8125rem; font-weight:750; color:var(--home-gold-text); margin:10px 0 14px; padding-bottom:10px; border-bottom:2px solid var(--home-accent); letter-spacing:0; }
+.ct-home .footer-grid .footer-title { font-size:.8125rem; font-weight:750; color:var(--home-gold-text); margin:10px 0 14px; padding-bottom:10px; border-bottom:2px solid var(--home-accent); letter-spacing:0; max-width:100%; overflow-wrap:anywhere; }
 @media(min-width:1441px) { .ct-home .nav { column-gap:16px; } }
 @media(max-width:1200px) { .ct-home .links { display:none; } .ct-home .menu-toggle { display:inline-flex; } .ct-home .brand-location { margin-right:auto; } }
 @media(max-width:900px) { .ct-home .security-grid { grid-template-columns:1fr; padding:28px; } .ct-home .faq-section { grid-template-columns:1fr; gap:24px; } }
