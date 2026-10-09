@@ -63,7 +63,21 @@ async function headerFits(page) {
     return problems;
   });
   expect(problems).toEqual([]);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const layout = await page.evaluate(() => ({
+    width: innerWidth, scrollWidth: document.documentElement.scrollWidth,
+    overflow: Array.from(document.querySelectorAll('body *')).filter(node => {
+      const box = node.getBoundingClientRect();
+      if (!node.getClientRects().length || box.right <= innerWidth) return false;
+      for (let parent = node.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+        if (['hidden', 'clip', 'auto', 'scroll'].includes(getComputedStyle(parent).overflowX)) return false;
+      }
+      return true;
+    }).map(node => {
+      const box = node.getBoundingClientRect();
+      return { tag: node.tagName, id: node.id, class: String(node.className), text: node.textContent.trim().slice(0, 100), left: box.left, right: box.right, top: box.top };
+    }).slice(0, 30)
+  }));
+  expect(layout.scrollWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.width);
 }
 const destinations = ['#todos-eventos', '/minha-carioca/conta/?v=20260919-2158', '#produtores', '/produtor/', '/parceiro/programa/', '#seguranca', '/ajuda/', '/sobre/'];
 
