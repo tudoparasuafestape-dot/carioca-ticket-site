@@ -6,7 +6,7 @@ Base conferida: `8d6ef2da57f69ed6b3e4201d090a570ac3c2c66a` em `main`, em 09/10/2
 
 A branch foi reconciliada com main `62ed8b511802ea3be97fcca3154d6ab002a8edbc` (PR179), preservando os dois commits originais do PR170. As duas páginas do evento e `assets/home-theme.js` não tinham mudanças concorrentes. A home já possui Claro/Escuro/Modo; este PR acrescenta tema compartilhado e áudio somente às páginas do evento.
 
-A lista permitida da prévia agora inclui os três recursos locais adicionados à home: `home-event-rail.js`, `public-share.js` e `public-share.css`. Um cenário novo verifica carregamento sem falhas de scripts/CSS/imagens, ausência de erros JavaScript e sincronização de tema nas duas rotas. A suíte passa a ter 18 cenários. O workflow isolado existente também executa as configurações atuais de home e catálogo e guarda seus resultados. Triggers, permissões `contents: read`, runner, timeout e ausência de secrets permanecem iguais. Não há execução manual de workflow ou acesso ao backend.
+A lista permitida da prévia agora inclui os três recursos locais adicionados à home: `home-event-rail.js`, `public-share.js` e `public-share.css`. Um cenário novo verifica carregamento sem falhas de scripts/CSS/imagens, ausência de erros JavaScript e sincronização de tema nas duas rotas. A suíte passa a ter 18 cenários. O workflow isolado existente também executa as configurações atuais de home e catálogo e guarda seus resultados. O checkout usa histórico completo, assim como o workflow da home, porque um contrato de preservação consulta o commit histórico `edcfe04d`. Triggers, permissões `contents: read`, runner, timeout e ausência de secrets permanecem iguais. Não há execução manual de workflow ou acesso ao backend.
 
 Os resultados e capturas abaixo são históricos até a conclusão dos checks do head integrado. Capturas atualizadas ficam no artifact `event-accessibility-review` da execução correspondente. Os limites de dispositivos reais e voz humana continuam válidos.
 
@@ -43,7 +43,7 @@ Endereço: `http://127.0.0.1:42971/evento/?evento=PREVIEW-EVENT` (ou `/evento-v2
 
 A prévia aceita somente loopback, tem lista explícita de arquivos permitidos, recusa POST e checkout, desativa analytics/PWA e intercepta o envio de formulários com uma resposta sintética. A CSP bloqueia conexões, frames e formulários externos. A suíte acrescenta interceptação de rede. Não consulta RPC operacional, não cria compras ou ingressos e não usa dados reais. O link original de compra é preservado no DOM para comparação, mas o clique é bloqueado na prévia.
 
-## Evidências
+## Evidências históricas da implementação original
 
 - Suíte isolada: 17 cenários cobrindo ambas as rotas, limpeza de texto, vozes tardias/ausentes/remotas, início e pausa que falham, chunks, eventos tardios, alteração da descrição, navegação, preferência da home, outra aba, sistema, armazenamento bloqueado, contraste dos controles, reflow e eventos sem capa.
 - Regressão existente: 20 cenários de transporte/carregamento com fixtures no Chromium.
@@ -52,7 +52,7 @@ A prévia aceita somente loopback, tem lista explícita de arquivos permitidos, 
 - Revisão independente: corrigida herança da cor do nome no fallback sem imagem. `.cover-fallback` mantém o texto branco sobre seu gradiente escuro, inclusive no tema claro. A regra do logotipo foi limitada ao fallback para impedir que `.cover img` aplique a ele a altura da capa e esconda o título por recorte. As capturas `screenshots/{evento,evento-v2}-no-cover-{light,dark}-{390,1440}.png` cobrem ausência simultânea de `capaUrl` e `posterUrl`, título contido na área visível, logotipo de até 90 px e contraste calculado acima de 4,5:1 mesmo usando o limite mais claro do gradiente/overlay.
 - `screenshots/*-audio-*.png` e `capture-audio.json`: estados ouvir, lendo, pausado/continuar e parado com a voz real local do Windows, em viewport 390. Capturas feitas no head `bccd69b` antes da correção exclusivamente visual do fallback; o código TTS permaneceu idêntico.
 - [`native-speech-audit.json`](native-speech-audit.json): auditoria **sem mock de voz**, em Windows, Chromium 140.0.7339.16 e Edge 154.0.4258.62, headless. Ambos expuseram Microsoft Daniel/Maria pt-BR locais e confirmaram estados de início, pausa, retomada e parada. Após navegação: `speaking=false`, `paused=false`, `pending=false`.
-- O workflow `event-accessibility-isolated.yml` executa somente a suíte de fixtures; a prova externa de Libras é manual e não é executada pelo CI.
+- Na implementação original, o workflow `event-accessibility-isolated.yml` executava somente a suíte de fixtures do evento; na integração atual, inclui também home e catálogo; a prova externa de Libras é manual e não é executada pelo CI.
 
 ## Limites de validação
 
