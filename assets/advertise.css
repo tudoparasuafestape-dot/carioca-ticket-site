@@ -1,0 +1,67 @@
+/* Scoped to /anuncie/. Shared home tokens retain the site's theme preference. */
+.ct-advertise { --home-accent:#f4c542; --home-ink:#171717; }
+.ct-advertise .shell { width:min(1120px,calc(100% - 48px)); }
+.ct-advertise .ad-brand { display:inline-flex; align-items:center; min-height:48px; padding:6px 14px; border-radius:10px; background:#171717; line-height:0; }
+.ct-advertise .ad-brand img { width:170px; height:60px; object-fit:contain; }
+.ct-advertise .ad-preferences { display:flex; flex-wrap:wrap; gap:12px 20px; }
+.ct-advertise .ad-preferences[hidden] { display:none; }
+.ct-advertise .theme-control select { max-width:145px; }
+.ct-advertise .ad-hero { display:grid; grid-template-columns:1.2fr 1fr; gap:64px; align-items:center; padding-block:72px; }
+.ct-advertise h1 { font-size:clamp(2.4rem,4.6vw,4.4rem); line-height:1.03; margin:18px 0 24px; max-width:13em; }
+.ct-advertise .ad-lead { max-width:41em; font-size:1.125rem; line-height:1.7; }
+.ct-advertise .ad-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:30px; }
+.ct-advertise .btn { min-height:48px; gap:14px; }
+.ct-advertise .ad-art { min-height:370px; display:flex; flex-direction:column; justify-content:space-between; padding:32px; background:#171717; border:1px solid #4a4a4a; color:#fff; border-radius:24px; box-shadow:12px 12px 0 #f4c542; }
+.ct-advertise .ad-art-top { display:flex; justify-content:space-between; gap:12px; color:#f4c542; font-size:.75rem; font-weight:750; letter-spacing:.14em; }
+.ct-advertise .ad-art-top>span:last-child { font-size:2rem; line-height:1; }
+.ct-advertise .ad-art .ad-art-title { color:#fff; font-size:clamp(2rem,3.2vw,3rem); font-weight:650; line-height:1.1; letter-spacing:-.035em; margin:36px 0; }
+.ct-advertise .ad-art-bottom { border-top:1px solid #606060; padding-top:16px; color:#d6d6d6; font-size:.8125rem; }
+.ct-advertise .ad-section { padding-block:44px; border-top:1px solid var(--home-line); }
+.ct-advertise .ad-section-heading { max-width:720px; margin-bottom:28px; }
+.ct-advertise .ad-section-heading p { margin-top:16px; line-height:1.65; }
+.ct-advertise .ad-slots { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.ct-advertise .ad-slot { display:flex; align-items:flex-start; gap:20px; padding:24px; border:1px solid var(--home-line); border-radius:16px; background:var(--home-surface); }
+.ct-advertise .ad-number { color:var(--home-text); font-size:1.5rem; border-bottom:3px solid #f4c542; padding-bottom:6px; }
+.ct-advertise h3 { font-size:1.2rem; }
+.ct-advertise .ad-slot p { margin-top:10px; line-height:1.6; }
+.ct-advertise .ad-note { margin-block:20px 0; font-size:.875rem; line-height:1.6; max-width:85ch; }
+.ct-advertise .ad-plans { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+.ct-advertise .ad-plan { display:flex; flex-direction:column; padding:28px; border:1px solid var(--home-line); border-top:4px solid #f4c542; border-radius:16px; background:var(--home-surface); }
+.ct-advertise .ad-plan .ad-duration { color:var(--home-text); font-size:2rem; font-weight:700; margin-top:22px; letter-spacing:-.04em; }
+.ct-advertise .ad-plan-copy { line-height:1.6; margin:14px 0 28px; flex:1; }
+.ct-advertise .ad-plan .btn { margin-top:auto; }
+.ct-advertise .ad-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px; padding-left:24px; margin:32px 0 0; }
+.ct-advertise .ad-steps li { padding-left:8px; }
+.ct-advertise .ad-steps li::marker { color:var(--home-text); font-weight:700; }
+.ct-advertise .ad-steps p { margin-top:12px; line-height:1.6; }
+.ct-advertise .ad-close { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:28px; padding:32px; margin-top:16px; background:var(--home-soft); border:1px solid var(--home-line); border-radius:20px; }
+.ct-advertise .ad-close>div { flex:1 1 380px; }
+.ct-advertise .ad-close p { margin-top:14px; line-height:1.6; }
+.ct-advertise footer { margin-top:64px; }
+.ct-advertise .ad-footer { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:24px; padding-block:28px; }
+.ct-advertise .ad-home { display:inline-flex; align-items:center; min-height:44px; }
+.ct-advertise .ad-art,.ct-advertise .ad-plan,.ct-advertise .ad-slot,.ct-advertise .ad-steps li { min-width:0; overflow-wrap:anywhere; }
+@media(max-width:800px) {
+ .ct-advertise .ad-hero { grid-template-columns:1fr; gap:36px; padding-block:44px; }
+ .ct-advertise .ad-art { min-height:280px; margin-right:12px; }
+ .ct-advertise .ad-plans,.ct-advertise .ad-steps { grid-template-columns:1fr; }
+ .ct-advertise .ad-slots { grid-template-columns:1fr; }
+ .ct-advertise .ad-plan-copy { margin-bottom:24px; }
+}
+@media(max-width:420px) {
+ .ct-advertise .shell { width:calc(100% - 32px); }
+ .ct-advertise .ad-preferences { gap:8px; }
+ .ct-advertise .theme-control { flex-wrap:wrap; gap:4px; }
+ .ct-advertise .theme-control label { width:100%; }
+ .ct-advertise .ad-art,.ct-advertise .ad-plan,.ct-advertise .ad-close { padding:24px; }
+ .ct-advertise .ad-actions .btn { width:100%; }
+ .ct-advertise .ad-close>div { flex-basis:100%; }
+}
+/* Home navigation uses a two-column mobile grid; this page has its own header. */
+.ct-advertise .nav { display:flex; flex-wrap:wrap; gap:16px 24px; }
+.ct-advertise .theme-control select { width:auto; max-width:100%; font-size:.875rem; }
+.ct-advertise .ad-hero>div { min-width:0; }
+.ct-advertise h1,.ct-advertise h2 { overflow-wrap:anywhere; }
+.ct-advertise .theme-control label { position:static; width:auto; height:auto; overflow:visible; clip-path:none; }
+@media(max-width:420px) { .ct-advertise .theme-control label { width:100%; } }
+.ct-advertise .ad-number { flex:0 0 auto; white-space:nowrap; }
