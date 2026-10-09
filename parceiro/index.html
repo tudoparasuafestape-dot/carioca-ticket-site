@@ -343,7 +343,7 @@
         <article class="metric blue">
           <small>Vendas elegíveis</small>
           <strong id="metricBase">R$ 0,00</strong>
-          <div class="note">Base líquida considerada pelo motor comercial</div>
+          <div class="note">Base registrada das vendas elegíveis</div>
         </article>
         <article class="metric gold">
           <small>Comissão a receber</small>
@@ -373,6 +373,7 @@
           <div>
             <h3>Comissões recentes</h3>
             <div class="section-desc">Cancelamentos e estornos ficam separados do valor válido.</div>
+            <div id="repassePolicy" class="section-desc">A receber não significa disponível para repasse. A data de elegibilidade está em definição; não há pagamento automático.</div>
           </div>
           <span id="validCommissionBadge" class="badge pending">R$ 0,00 válido</span>
         </div>
@@ -757,7 +758,11 @@ window.CTParceiroFirebase = Object.freeze({
     el.metricBase.textContent=resumo.baseElegivel||money(resumo.baseElegivelNumero);
     el.metricReceive.textContent=resumo.comissaoAReceber||money(resumo.comissaoAReceberNumero);
     el.metricPaid.textContent=resumo.comissaoPaga||money(resumo.comissaoPagaNumero);
-    el.metricRate.textContent='Regra-base: '+formatNumero(p.percentualBase)+'%';
+    el.metricRate.textContent='Novas comissões: '+formatNumero(p.percentualBase)+'% do nominal, sem taxas ou juros';
+    var repasse=r.politicaRepasse||{};
+    document.getElementById('repassePolicy').textContent=repasse.diasUteisAposEvento
+      ? 'Regra de elegibilidade: '+formatNumero(repasse.diasUteisAposEvento)+' dias úteis após o evento, no mesmo prazo do produtor. A data exata depende da definição do calendário de feriados e da data-base. A receber não significa disponível; não há pagamento automático.'
+      : 'A receber não significa disponível para repasse. A data de elegibilidade está em definição; não há pagamento automático.';
     el.validCommissionBadge.textContent=(resumo.totalValido||money(resumo.totalValidoNumero))+' válido';
 
     renderProdutores(r.produtores||[]);
