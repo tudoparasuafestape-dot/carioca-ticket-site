@@ -65,7 +65,7 @@ node --test tests/evento-transport-runtime.cjs
 
 | Verificação | Resultado |
 | --- | --- |
-| Nova suíte da home + proteção do preview | 20/20 aprovados em Chromium; zero flaky/skipped |
+| Nova suíte da home + proteção do preview + pintura das capturas | 22/22 aprovados em Chromium; zero flaky/skipped |
 | Catálogo existente desktop/mobile | 20/20 aprovados, incluindo timeout e resposta atrasada |
 | Recuperação do PR 163, evento e evento-v2 | 20/20 aprovados em Chromium com rede bloqueada |
 | `contracts.mjs` | 41 superfícies aprovadas |
@@ -88,11 +88,24 @@ Não executados: `homologar` global, E2E de produção/canários reais, fluxos d
 
 Todas as capturas de revisão usam fixtures fictícias identificadas; não representam a agenda ou preços reais.
 
+- Preview servido, página completa: [claro](screenshots/preview-light-full.png) · [escuro](screenshots/preview-dark-full.png)
+- Preview servido, janela após rolagem até o produtor: [claro](screenshots/preview-light-producer-viewport.png) · [escuro](screenshots/preview-dark-producer-viewport.png)
+- Detalhe direto do elemento no navegador: [claro](screenshots/preview-light-producer.png) · [escuro](screenshots/preview-dark-producer.png)
 - [Preview com faixa de isolamento](screenshots/preview-local.png)
 - [Desktop claro](screenshots/light-1440.png) · [Desktop escuro](screenshots/dark-1440.png)
 - [320px claro](screenshots/light-320.png) · [320px escuro](screenshots/dark-320.png)
 - [Reflow equivalente a 200%](screenshots/reflow-200-percent.png)
 - [Erro com retry](screenshots/catalog-error.png) · [Informações/capas ausentes](screenshots/missing-data.png)
+
+### Conferência do painel do produtor
+
+O painel vazio informado na revisão **não foi reproduzido na interface**. Na inspeção, a visualização reduzida de `preview-dark-full.png` omitiu texto do painel e das capas; abrir **o mesmo PNG em resolução original** mostrou esses elementos completos. Portanto, não há evidência de falha de CSS ou de texto ausente no arquivo. O mecanismo interno da visualização reduzida não foi diagnosticado. Para aprovar o visual, prefira o arquivo original e as capturas da janela após rolagem, que também mostram o painel inteiro.
+
+O preview HTTP isolado foi capturado em Chromium a 1440 × 1000, nos dois temas. Antes de cada captura aguardamos `document.fonts.ready`, decodificação das imagens e dois frames de pintura; a captura completa percorre a página e retorna ao topo, sem mudar o tamanho da janela. Nenhum pixel, conteúdo ou estilo foi acrescentado à imagem.
+
+Asserções sobre os **bytes PNG** confirmaram **8.192 pixels dourados** no painel em cada tema, tanto no recorte direto quanto em duas capturas completas consecutivas. As duas capturas de cada tema tiveram SHA-256 idêntico. O DOM contém `DA IDEIA / ao último aplauso. / CARIOCA TICKET`, com texto `rgb(213, 187, 130)` sobre `rgb(36, 36, 36)`, fontes carregadas, zero erro de página e zero pedido externo. Medições e hashes: [claro](screenshots/preview-light-paint.json) · [escuro](screenshots/preview-dark-paint.json).
+
+Esta conferência altera somente testes, método de captura e evidências; **nenhum arquivo de produto mudou em relação a `3dde63be`**. O CI desse SHA passou integralmente; a nova rodada local passou nos 22 testes da home, incluindo os dois testes de pintura. Não foi repetida a materialização da referência v11 bloqueada.
 
 ## Ponto de parada
 

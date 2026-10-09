@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { events, cover } = require('../fixtures/home-stage1.cjs');
+const { capture } = require('./capture.cjs');
 const ROOT = path.resolve(__dirname, '../..');
 const ORIGIN = 'http://127.0.0.1:4174';
 const EVIDENCE = path.join(ROOT, 'docs/reviews/home-stage1/screenshots');
@@ -45,17 +46,7 @@ async function noOverflow(page) {
   expect(outside).toEqual([]);
 }
 async function screenshot(page, name, fullPage = false) {
-  fs.mkdirSync(EVIDENCE, { recursive: true });
-  await expect.poll(() => page.locator('img').evaluateAll(images => images.every(img => img.complete))).toBe(true);
-  const viewport = page.viewportSize();
-  // Paint the entire document before capture: some headless builds omit offscreen
-  // decorative text/images from full-page screenshots despite complete assets.
-  if (fullPage) await page.setViewportSize({ ...viewport, height: await page.evaluate(() => document.documentElement.scrollHeight) });
-  try {
-    await page.screenshot({ path: path.join(EVIDENCE, name + '.png'), fullPage });
-  } finally {
-    if (fullPage) await page.setViewportSize(viewport);
-  }
+  await capture(page, path.join(EVIDENCE, name + '.png'), fullPage);
 }
 
 test('initial system theme, live system changes, explicit override and persistence', async ({ page }) => {
