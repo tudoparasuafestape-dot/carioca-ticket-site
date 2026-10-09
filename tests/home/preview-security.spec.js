@@ -96,6 +96,7 @@ for (const theme of ['light', 'dark']) {
       }
       return route.continue();
     });
+    await page.addInitScript(value => localStorage.setItem('ct-home-theme', value), theme);
     await page.emulateMedia({ colorScheme: theme });
     await page.goto(ORIGIN);
     await expect(page.locator('.catalog-card')).toHaveCount(2);
