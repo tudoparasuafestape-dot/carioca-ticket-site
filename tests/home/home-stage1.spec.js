@@ -467,7 +467,7 @@ test('approved ad rotation keeps the label visible, pauses for keyboard and hono
   await expect(page.locator('#advertising-secondary')).toBeVisible();
   const ad = page.locator('#advertising-primary');
   await ad.scrollIntoViewIfNeeded();
-  await expect(ad.getByRole('button', { name: 'Reproduzir', exact: true })).toBeVisible();
+  await expect(ad.getByRole('button', { name: 'Pausar', exact: true })).toBeVisible();
   await expect(ad.locator('.eyebrow')).toBeVisible();
   const before = await ad.boundingBox();
   await ad.getByRole('button', { name: 'Próxima publicidade' }).focus();
@@ -478,6 +478,7 @@ test('approved ad rotation keeps the label visible, pauses for keyboard and hono
   const after = await ad.boundingBox();
   expect(after.height).toBeCloseTo(before.height, 0);
   await expect(ad.getByRole('button', { name: 'Próxima publicidade' })).toBeFocused();
+  await expect(ad.getByRole('button', { name: 'Reproduzir', exact: true })).toBeVisible();
   await ad.getByRole('button', { name: 'Publicidade anterior' }).click();
   await expect(ad.locator('.ad-campaign')).toBeVisible();
   expect(state.errors).toEqual([]);
@@ -792,6 +793,10 @@ for (const width of [320, 1440]) for (const locale of Object.keys(dictionaries))
         const descriptionKey = ad.slot === 'primary' ? 'adTpssfDescription' : 'adPriscilaDescription';
         const ctaKey = ad.slot === 'primary' ? 'adTpssfCta' : 'adPriscilaCta';
         await slot.scrollIntoViewIfNeeded();
+        // Translation/reflow is checked on a deliberately paused campaign.
+        // Keep the independent autoplay tests responsible for timing behavior.
+        await slot.locator('.ad-controls button').first().focus();
+        if (!(await link.isVisible())) await slot.locator('.ad-controls button').last().click();
         await expect(link).toBeVisible();
         await expect(link).toHaveAttribute('href', ad.href);
         await expect(link).not.toHaveAttribute('translate', 'no');
