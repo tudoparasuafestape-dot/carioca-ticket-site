@@ -8,6 +8,15 @@ on:
       - 'tests/institutional-language.runtime.cjs'
       - 'tests/institutional-language.browser.cjs'
       - 'tests/fixtures/institutional-source-text.json'
+      - 'index.html'
+      - 'assets/home-i18n.js'
+      - 'assets/institutional-language.*'
+      - 'ajuda/index.html'
+      - 'sobre/index.html'
+      - 'termos/index.html'
+      - 'privacidade/index.html'
+      - 'cancelamento-reembolso/index.html'
+      - 'tests/public-language-integration.browser.cjs'
       - 'package.json'
       - '.github/workflows/public-i18n-isolated.yml'
 permissions:
@@ -41,3 +50,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Exercise real Chromium with isolated fixtures only
         run: node tests/institutional-language.browser.cjs
+      - name: Exercise actual home and institutional pages in isolated Chromium
+        run: node tests/public-language-integration.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-language-page-screenshots
+          path: test-results/public-language
+          if-no-files-found: ignore
