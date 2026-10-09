@@ -67,6 +67,7 @@
     "adTitle": "Anuncie aqui",
     "adCopy": "Sua marca pode aparecer aqui. Divulgue seu negócio na Carioca Ticket.",
     "adCta": "Quero anunciar",
+    "adLearnMore": "Saiba mais",
     "adTpssfDescription": "Locação de materiais para eventos",
     "adTpssfCta": "Fale sobre locação pelo WhatsApp",
     "adPriscilaDescription": "Nail Designer",
@@ -240,6 +241,7 @@
     "adTitle": "Advertise here",
     "adCopy": "Your brand could appear here. Promote your business on Carioca Ticket.",
     "adCta": "I want to advertise",
+    "adLearnMore": "Learn more",
     "adTpssfDescription": "Event equipment rentals",
     "adTpssfCta": "Ask about rentals on WhatsApp",
     "adPriscilaDescription": "Nail designer",
@@ -413,6 +415,7 @@
     "adTitle": "Anúnciate aquí",
     "adCopy": "Tu marca puede aparecer aquí. Promociona tu negocio en Carioca Ticket.",
     "adCta": "Quiero anunciarme",
+    "adLearnMore": "Más información",
     "adTpssfDescription": "Alquiler de materiales para eventos",
     "adTpssfCta": "Consulta alquileres por WhatsApp",
     "adPriscilaDescription": "Diseñadora de uñas",
@@ -586,6 +589,7 @@
     "adTitle": "在此投放广告",
     "adCopy": "您的品牌可以展示在这里。在 Carioca Ticket 推广您的业务。",
     "adCta": "我要投放广告",
+    "adLearnMore": "了解更多",
     "adTpssfDescription": "活动用品租赁",
     "adTpssfCta": "通过 WhatsApp 咨询租赁",
     "adPriscilaDescription": "美甲设计师",
@@ -772,6 +776,7 @@
   });
   api.setLocale(locale);
 }());
+
 
 
 

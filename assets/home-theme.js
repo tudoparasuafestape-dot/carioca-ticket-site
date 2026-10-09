@@ -3,11 +3,11 @@
   // Run before the home stylesheet to avoid flashing the opposite theme.
   var root = document.documentElement;
   var key = 'ct-home-theme';
-  var preference = 'system';
+  var preference = 'dark';
   var system = window.matchMedia('(prefers-color-scheme: dark)');
   try {
     var saved = localStorage.getItem(key);
-    if (saved === 'light' || saved === 'dark') preference = saved;
+    if (saved === 'light' || saved === 'dark' || saved === 'system') preference = saved;
   } catch (_) { /* Theme switching remains available without storage. */ }
 
   function apply() {
@@ -29,15 +29,15 @@
       preference = select.value;
       apply();
       try {
-        if (preference === 'system') localStorage.removeItem(key);
-        else localStorage.setItem(key, preference);
+        localStorage.setItem(key, preference);
       } catch (_) { /* Keep the explicit choice for this page even when writes fail. */ }
     });
     window.addEventListener('storage', function (event) {
       if (event.key !== key && event.key !== null) return;
-      preference = event.newValue === 'light' || event.newValue === 'dark' ? event.newValue : 'system';
+      preference = event.newValue === 'light' || event.newValue === 'dark' || event.newValue === 'system' ? event.newValue : 'dark';
       select.value = preference;
       apply();
     });
   });
 }());
+
