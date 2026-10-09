@@ -27,7 +27,7 @@ async function prepare(page,routeName,mode) {
   }
   return page.locator('[data-public-share]');
 }
-for(const width of [320,1440]) for(const routeName of ['home']) for(const mode of ['native','absent','cancel','copy-fails','pending']) {
+for(const width of [320,1440]) for(const routeName of ['home','program']) for(const mode of ['native','absent','cancel','copy-fails','pending']) {
  test(`${routeName} share / ${mode} / ${width}px: public canonical only, no automatic send`,async({page})=>{
   await page.setViewportSize({width,height:915});
   const host=await prepare(page,routeName,mode),button=host.locator('button');
@@ -35,6 +35,11 @@ for(const width of [320,1440]) for(const routeName of ['home']) for(const mode o
   await expect(button).toHaveAccessibleName(routeName==='home'?'Compartilhar site':'Compartilhar apresentação');
   const box=await button.boundingBox();expect(box.height).toBeGreaterThanOrEqual(44);
   expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(width);
+  if(routeName==='program' && mode==='native') {
+    const target=path.join(ROOT,'docs/reviews/public-program-share',`program-${width}.png`);
+    fs.mkdirSync(path.dirname(target),{recursive:true});
+    await page.screenshot({path:target});
+  }
   expect(await page.evaluate(()=>window.shareCalls.length+window.copies.length)).toBe(0);
   const canonical='https://cariocaticket.com.br/'+(routeName==='program'?'parceiro/programa/':'');
   await button.click();
