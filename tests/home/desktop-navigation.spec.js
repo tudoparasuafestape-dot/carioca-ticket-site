@@ -52,6 +52,14 @@ async function headerFits(page) {
         if (Math.min(a.box.right, b.box.right) - Math.max(a.box.left, b.box.left) > 1 && Math.min(a.box.bottom, b.box.bottom) - Math.max(a.box.top, b.box.top) > 1) problems.push('overlap: ' + a.name + ' / ' + b.name);
       }
     }
+    // The brand's text can paint outside its flex box when enlarged.
+    // Measure the actual text fragments, not only the wrapper rectangle.
+    const range = document.createRange();
+    range.selectNodeContents(document.querySelector('.brand span'));
+    for (const text of range.getClientRects()) for (const control of visible.filter(item => item.name !== 'brand')) {
+      const box = control.box;
+      if (Math.min(text.right, box.right) - Math.max(text.left, box.left) > 1 && Math.min(text.bottom, box.bottom) - Math.max(text.top, box.top) > 1) problems.push('brand text overlaps: ' + control.name);
+    }
     return problems;
   });
   expect(problems).toEqual([]);
@@ -145,7 +153,7 @@ test('anchor navigation and browser back close the disclosure without trapping f
   assertClean(state);
 });
 
-for (const width of [412, 1201, 1351, 1440, 1920]) for (const locale of ['pt-BR', 'en-US', 'es', 'zh-Hans']) {
+for (const width of [320, 412, 1201, 1351, 1440, 1920]) for (const locale of ['pt-BR', 'en-US', 'es', 'zh-Hans']) {
   test('translated menu supports 150 percent text / ' + width + 'px / ' + locale, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.addInitScript(value => localStorage.setItem('ct-home-locale', value), locale);

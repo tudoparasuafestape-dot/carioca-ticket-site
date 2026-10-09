@@ -312,7 +312,8 @@
   .ct-home #location-dialog { padding:20px; }
 }
 @media(max-width:360px) {
-  .ct-home .brand span { max-width:65px; font-size:.875rem; }
+  .ct-home .brand span { max-width:none; font-size:.875rem; }
+  .ct-home .producer-top-link { max-width:170px; }
   .ct-home .brand-location .location-trigger .home-icon { display:none; }
   .ct-home .nav { gap:6px; }
 }
