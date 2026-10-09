@@ -382,6 +382,6 @@
   .ct-home .ad-stage { order:0; }
   .ct-home .ad-rotation .ad-motion-note { order:1; margin:0 12px; }
   .ct-home .ad-controls { order:2; position:static; margin:0 12px; flex-wrap:wrap; }
-  .ct-home .ad-rotation .eyebrow { order:3; position:static; margin:0 12px; align-self:flex-start; }
-  .ct-home .ad-playback-state { order:4; position:static; margin:0 12px; text-align:left; }
+  .ct-home .ad-rotation .eyebrow { order:4; position:static; margin:0 12px; align-self:flex-start; }
+  .ct-home .ad-playback-state { order:3; position:static; margin:0 12px; text-align:left; }
 }
