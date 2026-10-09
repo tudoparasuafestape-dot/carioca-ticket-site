@@ -169,7 +169,7 @@
   .ct-home .section { padding-block: 36px; }
   .ct-home .cta-box { align-items: flex-start; flex-direction: column; }
   .ct-home .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
-  .ct-home .footer-brand { grid-column: 1 / -1; }
+  .ct-home .footer-brand, .ct-home .footer-contact { grid-column: 1 / -1; }
 }
 @media (max-width: 360px) {
   .ct-home .brand span { max-width: 65px; white-space: normal; font-size:0.9375rem; line-height: 1.1; }

@@ -824,3 +824,52 @@ for (const width of [320, 1440]) for (const locale of Object.keys(dictionaries))
     expect(state.blocked).toEqual([]);
   });
 }
+
+for (const width of [320, 375, 390]) for (const enlarged of [false, true]) {
+  test('mobile contact email stays whole / ' + width + 'px / ' + (enlarged ? '150%' : '100%'), async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const state = await fixture(page);
+    await loaded(page);
+    if (enlarged) {
+      await page.locator('#accessibility-toggle').click();
+      for (let i = 0; i < 5; i++) await page.locator('#font-up').click();
+      await page.locator('#accessibility-toggle').click();
+    }
+    const contact = page.locator('.footer-contact'), email = contact.locator('a[href^="mailto:"]');
+    await expect(email).toHaveAttribute('href', 'mailto:contato@cariocaticket.com.br');
+    await expect(email).toHaveText('contato@cariocaticket.com.br');
+    async function geometry() {
+      return email.evaluate(node => {
+        const text = node.firstChild, lines = new Map(), range = document.createRange();
+        for (let i = 0; i < text.textContent.length; i++) {
+          range.setStart(text, i); range.setEnd(text, i + 1);
+          const rect = range.getBoundingClientRect(), y = Math.round(rect.top);
+          lines.set(y, (lines.get(y) || '') + text.textContent[i]);
+        }
+        const box = node.getBoundingClientRect(), column = node.parentElement.getBoundingClientRect();
+        return { lines: Array.from(lines.values()), fontSize: getComputedStyle(node).fontSize,
+          left: box.left, right: box.right, columnLeft: column.left, columnRight: column.right,
+          width: node.clientWidth, scrollWidth: node.scrollWidth, viewport: innerWidth };
+      });
+    }
+    // Reproduce the previous two-column layout in this synthetic page only.
+    const previous = await page.addStyleTag({ content: '.ct-home .footer-grid > .footer-contact { grid-column: auto !important; }' });
+    await email.scrollIntoViewIfNeeded();
+    const before = await geometry();
+    await previous.evaluate(node => node.remove());
+    await email.scrollIntoViewIfNeeded();
+    const after = await geometry();
+    console.log('FOOTER_CONTACT_REFLOW', JSON.stringify({ width, enlarged, before, after }));
+    if (width === 320 && enlarged) expect(before.lines.length).toBeGreaterThan(1);
+    expect(after.fontSize).toBe(before.fontSize);
+    expect(after.lines).toEqual(['contato@cariocaticket.com.br']);
+    expect(after.left).toBeGreaterThanOrEqual(after.columnLeft);
+    expect(after.right).toBeLessThanOrEqual(after.columnRight + 1);
+    expect(after.right).toBeLessThanOrEqual(after.viewport);
+    expect(after.scrollWidth).toBeLessThanOrEqual(after.width + 1);
+    await noOverflow(page);
+    await screenshot(page, 'footer-contact-' + width + '-' + (enlarged ? 'text150' : 'text100'));
+    expect(state.errors).toEqual([]);
+    expect(state.blocked).toEqual([]);
+  });
+}
