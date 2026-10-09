@@ -138,9 +138,18 @@
     if (moving || performance.now() < clickBlockedUntil) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
   document.addEventListener('visibilitychange', function () { if (document.hidden && moving) finish(false); schedule(); });
-  reduced.addEventListener('change', function () { if (reduced.matches) { stop(); if (moving) finish(false); } schedule(); });
+  reduced.addEventListener('change', function () {
+    if (reduced.matches) { stop(); if (moving) finish(false); }
+    // Re-enable the explicit resume control when the preference changes back.
+    // Keep the user's paused state; never restart motion automatically.
+    labels(); schedule();
+  });
   new IntersectionObserver(function (entries) { visible = entries[0].intersectionRatio >= .25; schedule(); }, { threshold: .25 }).observe(grid);
-  new ResizeObserver(function () { if (moving) clearAnimation(); paint(); schedule(); }).observe(grid);
+  new ResizeObserver(function () {
+    // A resize commits the incoming card and its counter as one state update.
+    if (moving) { finish(false); return; }
+    paint(); labels(); schedule();
+  }).observe(grid);
   function reset() {
     clearTimeout(timer); clearAnimation(); drag = null; index = 0;
     cards = Array.from(grid.children);

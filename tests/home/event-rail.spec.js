@@ -185,3 +185,30 @@ test('hidden document freezes event and advertisement timers, image failure keep
   await expect(ad.locator('.ad-house')).toBeVisible(); await expect(ad.locator('.ad-controls')).toBeHidden();
   await expect(ad.locator('.eyebrow')).toHaveText('Publicidade');
 });
+test('turning reduced motion off immediately enables explicit resume without navigating',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'}); await open(page,2);
+  const pause=page.locator('#event-rail-pause');
+  await expect(pause).toBeDisabled(); await expect(pause).toHaveText('Retomar rotação');
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await expect(pause).toBeEnabled(); await expect(pause).toHaveText('Retomar rotação');
+  await active(page,0);
+});
+test('resize during manual transition commits the new card and matching visible counter',async({page})=>{
+  await page.clock.install({time:new Date('2030-01-01T12:00:00Z')});
+  await page.clock.pauseAt(new Date('2030-01-01T12:00:01Z'));
+  await open(page,2);
+  // Trigger and inspect synchronously: the native ResizeObserver may run before
+  // an asynchronous locator assertion, even while the animation clock is paused.
+  const started=await page.evaluate(()=>{
+    const grid=document.getElementById('events-grid');
+    document.getElementById('event-rail-next').click();
+    const moving=grid.dataset.moving==='true';
+    grid.style.width='80%';
+    return moving;
+  });
+  expect(started).toBe(true);
+  await active(page,1);
+  await expect(page.locator('#event-rail-position')).toHaveText('2 de 2');
+  await expect(page.locator('.catalog-card:not([inert])')).toContainText(rows(2)[1].nome);
+  await expect(page.locator('#event-rail-pause')).toHaveText('Retomar rotação');
+});
