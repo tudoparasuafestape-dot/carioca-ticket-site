@@ -1,20 +1,20 @@
 {
-  "validatedAt": "2026-10-09T05:16:12.594753+00:00",
+  "validatedAt": "2026-10-09T05:31:26.414826+00:00",
   "branch": "fix/home-mode-menu-20261009",
-  "base": "b2ae77055a8c9c6e9ad33618cba38c8df558e2be",
+  "base": "a4b8be7c608ecb263df80ecb66008c35bb690a43",
   "environment": "Chromium; home uses intercepted fixtures/localhost only; catalog uses independent PR168 mock audit, explicit loopback, offline=true and serviceWorkers=block",
   "preview": "http://127.0.0.1:4176",
   "home": {
-    "startTime": "2026-10-09T05:09:51.480Z",
-    "duration": 321807.19,
+    "startTime": "2026-10-09T05:25:44.603Z",
+    "duration": 299635.594,
     "expected": 60,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
   },
   "catalog": {
-    "startTime": "2026-10-09T05:09:50.114Z",
-    "duration": 136295.821,
+    "startTime": "2026-10-09T05:25:45.190Z",
+    "duration": 111757.841,
     "expected": 20,
     "skipped": 0,
     "unexpected": 0,
@@ -144,7 +144,7 @@
     "libraryRetried": false,
     "geolocationAdded": false,
     "pr168FilesPreserved": true,
-    "pr165StatusAtReview": "OPEN; not incorporated before its authorized publisher merges it",
+    "pr165StatusAtReview": "MERGED into a4b8be7c608ecb263df80ecb66008c35bb690a43; inherited Central icon preserved exactly",
     "remainingScope": [
       "Geolocation",
       "IBGE registration migration",
@@ -153,5 +153,16 @@
       "Chinese variant confirmation",
       "Human screen-reader review"
     ]
+  },
+  "finalBaseReview": {
+    "reviewedHead": "1854cfd56d2b248d8963e0c4a0bc25b6354ffe03",
+    "base": "a4b8be7c608ecb263df80ecb66008c35bb690a43",
+    "rebaseConflicts": 0,
+    "rebaseOnlySourceDifference": "central/index.html, inherited from main; all home code and assets unchanged",
+    "centralMatchesMain": true,
+    "priorHeadCI": "All checks passed; published static smoke correctly skipped on pull request",
+    "facadeScenariosPerViewport": 208,
+    "webVitalsMeasured": false,
+    "libraryCaptureUpload": "Official prepared upload flow unavailable in this executor; local captures provided; no library_file_ids returned"
   }
 }

@@ -1,7 +1,7 @@
 # Home V1 — revisão consolidada
 
 Branch: `fix/home-mode-menu-20261009`
-Base atual: `b2ae77055a8c9c6e9ad33618cba38c8df558e2be` (PR168 integrado pelo executor responsável; rebase da home sem conflitos).
+Base atual: `a4b8be7c608ecb263df80ecb66008c35bb690a43` (PR168 e PR165 integrados pelos executores responsáveis; rebase da home sem conflitos).
 Preview local: http://127.0.0.1:4176
 Esta branch não foi mesclada nem publicada em produção.
 
@@ -29,13 +29,13 @@ Após o bloqueio HTTP 403 da Library, o proprietário forneceu os arquivos no Do
 | Tudo Para Sua Festa | `assets/home-ad-tpssf.png` — 2172 × 724 | `https://www.instagram.com/tudoparasuafestape/` | Primeiro espaço, inspecionado |
 | Priscila Ferreira | `assets/home-ad-priscila.png` — 2170 × 725 | `https://wa.me/5581996200696` — "Clique aqui e faça seu agendamento" | Segundo espaço, inspecionado |
 
-As artes são horizontais e seus textos ficam pequenos em 320px. Cada link inclui uma transcrição HTML legível dos mesmos textos aprovados, sem criar oferta ou serviço. Ela fornece o nome acessível do link, permanece em português com `lang="pt-BR"` e `translate="no"`, e mantém contraste mínimo de 4,5:1 nos dois temas. A imagem permanece integral e sem deformação. O rótulo incorporado nas próprias artes permanece intacto; a etiqueta da home garante a posição inferior esquerda nos dois espaços. Os PNGs somam aproximadamente 2,68 MB sem compressão adicional e usam carregamento sob demanda.
+As artes são horizontais e seus textos ficam pequenos em 320px. Cada link inclui uma transcrição HTML legível dos mesmos textos aprovados, sem criar oferta ou serviço. Ela fornece o nome acessível do link, permanece em português com `lang="pt-BR"` e `translate="no"`, e mantém contraste mínimo de 4,5:1 nos dois temas. A imagem permanece integral e sem deformação. O rótulo incorporado nas próprias artes permanece intacto; a etiqueta da home garante a posição inferior esquerda nos dois espaços. Os PNGs somam aproximadamente 2,68 MB sem compressão adicional e usam carregamento sob demanda. Esse peso é uma ressalva de desempenho; Web Vitals não foram medidos.
 
 O PDF de referência inicial também não pôde ser materializado. A composição segue o checklist textual posteriormente consolidado pelo proprietário; não há alegação de leitura visual do PDF bloqueado.
 
 ## Limites preservados
 
-- `styles.css`, evento, checkout, autenticação, produtor, parceiro, central e backend não foram editados. PR160 e o trabalho concorrente do PR165 não foram incorporados.
+- `styles.css`, evento, checkout, autenticação, produtor, parceiro, central e backend não foram editados por esta branch. PR160 não foi incorporado. O ícone da Central publicado pelo PR165 é herdado de main e permanece idêntico à base.
 - O trecho do adaptador POST/iframe de `public-event-catalog.js` permanece idêntico à base: somente `ctEventosPublicosListarPROD`, mesmos argumentos e validações de resposta/origem/timeout.
 - Não há alteração de preço, elegibilidade de evento, privacidade ou URL de compra. Dados ausentes continuam explícitos, sem preenchimento inventado.
 - A seleção grava apenas preferência local. Não usa geolocalização, geocoder, API de tradução, Libras, serviço contratado ou pedido de permissão de localização.
