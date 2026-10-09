@@ -6,19 +6,21 @@ const { events, cover } = require('../fixtures/home-stage1.cjs');
 const { capture } = require('./capture.cjs');
 const ROOT = path.resolve(__dirname, '../..');
 const ORIGIN = 'http://127.0.0.1:4174';
-const EVIDENCE = path.join(ROOT, 'docs/reviews/home-stage1/screenshots');
+const EVIDENCE = path.join(ROOT, 'docs/reviews/home-v1/screenshots');
 
 async function fixture(page, options = {}) {
-  const state = { methods: [], errors: [], blocked: [], attempts: 0 };
+  const state = { methods: [], errors: [], blocked: [], attempts: 0, cities: 0 };
   page.on('pageerror', error => state.errors.push(error.message));
   await page.context().route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
     if (url.origin === ORIGIN && request.method() === 'GET') {
+      if (options.noControls && url.pathname.endsWith('home-controls.js')) return route.fulfill({ contentType: 'text/javascript', body: '' });
+      if (url.pathname.endsWith('home-municipalities.json')) { state.cities++; if (options.cityFailure && state.cities === 1) return route.fulfill({ status: 503, body: 'Unavailable fixture' }); }
       if (url.pathname.startsWith('/__fixture/')) return route.fulfill({ contentType: 'image/svg+xml', body: cover(url.pathname.includes('music') ? 'music' : 'creative') });
       if (url.pathname === '/pwa-register.js' || url.pathname.includes('ct-analytics')) return route.fulfill({ contentType: 'text/javascript', body: '' });
       const file = path.resolve(ROOT, url.pathname === '/' ? 'index.html' : url.pathname.slice(1));
       if (!file.startsWith(ROOT + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return route.fulfill({ status: 404, body: 'Fixture missing' });
-      const type = file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : 'image/png';
+      const type = file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';
       return route.fulfill({ contentType: type, body: fs.readFileSync(file) });
     }
     const params = new URLSearchParams(request.postData() || '');
@@ -96,22 +98,32 @@ test('invalid saved theme follows system and storage write failures retain the e
   expect(state.errors).toEqual([]);
 });
 
-test('search and location intersect without extra RPC, and clearing restores the catalog', async ({ page }) => {
+async function chooseCity(page, state, city) {
+  await page.getByLabel('Cidade ou local', { exact: true }).click();
+  await page.locator('#location-uf').selectOption(state);
+  await expect(page.locator('#city-search')).toBeEnabled();
+  await page.locator('#city-search').fill(city);
+  await page.locator('#city-options').getByRole('button', { name: city, exact: true }).click();
+  await page.locator('#location-apply').click();
+}
+test('search and official location intersect without extra RPC, and clearing restores the catalog', async ({ page }) => {
   const state = await fixture(page);
   await loaded(page);
+  expect(state.cities).toBe(0);
+  await chooseCity(page, 'PE', 'Caruaru');
   await page.getByLabel('Pesquisar eventos').fill('MUSICA');
-  await page.getByLabel('Cidade ou local').fill('outra cidade');
   await page.getByRole('button', { name: 'Pesquisar', exact: true }).click();
   await expect(page.locator('#no-events')).toBeVisible();
+  await expect(page.locator('.active-place')).toHaveText('Caruaru / PE');
   await page.getByRole('button', { name: 'Limpar pesquisa' }).click();
   await loaded(page);
   await expect(page.getByLabel('Pesquisar eventos')).toBeFocused();
-  await expect(page.getByLabel('Cidade ou local')).toHaveValue('');
-  await page.getByLabel('Cidade ou local').fill('ESPACO');
-  await page.getByLabel('Cidade ou local').press('Enter');
+  await expect(page.getByLabel('Cidade ou local')).toHaveValue('Todos os lugares');
+  await chooseCity(page, 'PE', 'Recife');
   await expect(page.locator('.catalog-card')).toHaveCount(1);
   await expect(page.locator('.catalog-card')).toContainText(events[0].nome);
   expect(state.methods).toEqual(['ctEventosPublicosListarPROD']);
+  expect(state.cities).toBe(1);
   expect(state.errors).toEqual([]);
 });
 
@@ -177,7 +189,7 @@ test('200% layout reflow and text enlargement keep controls reachable', async ({
   await fixture(zoomPage);
   await loaded(zoomPage);
   await noOverflow(zoomPage);
-  await zoomPage.getByLabel('Cidade ou local').fill('cidade');
+  await zoomPage.getByLabel('Pesquisar eventos').fill('demonstração');
   await zoomPage.getByRole('button', { name: 'Pesquisar', exact: true }).click();
   await loaded(zoomPage);
   await screenshot(zoomPage, 'reflow-200-percent');
@@ -266,4 +278,224 @@ test('without JavaScript the home gives a recovery destination and hides script-
   await expect(page.locator('#event-search-form')).toBeHidden();
   await expect(page.locator('#producerPortalCta')).toBeVisible();
   await context.close();
+});
+
+for (const locale of ['pt-BR', 'en-US', 'es', 'zh-Hans']) {
+  for (const width of [320, 1440]) {
+    test(`interface ${locale} at ${width}px keeps producer facts and navigation`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 915 });
+      const state = await fixture(page);
+      await loaded(page);
+      await page.locator('#accessibility-toggle').click();
+      await page.locator('#home-language').selectOption(locale);
+      await expect(page.locator('html')).toHaveAttribute('lang', locale);
+      await expect(page.locator('#home-language')).toHaveValue(locale);
+      const heading = await page.locator('h1').textContent();
+      expect(heading).not.toBe('headline');
+      if (locale !== 'pt-BR') expect(heading).not.toContain('Seu próximo');
+      for (const event of events) {
+        const card = page.locator(`[data-event-id="${event.id}"]`);
+        for (const field of ['nome', 'data', 'horario', 'local', 'cidade', 'uf']) await expect(card).toContainText(event[field]);
+        await expect(card.locator('.catalog-description')).toHaveText(event.visual.descricaoCurta);
+        await expect(card.locator('.btn-primary')).toHaveAttribute('href', `/checkout/?evento=${event.id}`);
+      }
+      await noOverflow(page);
+      expect(state.methods).toHaveLength(1);
+      await page.locator('#accessibility-toggle').click();
+      if (width === 320) {
+        await page.locator('.menu-toggle').click();
+        await expect(page.locator('#mobile-menu')).toBeVisible();
+        const texts = await page.locator('[data-i18n]').evaluateAll(nodes => nodes.filter(n => n.textContent === n.dataset.i18n).map(n => n.dataset.i18n));
+        expect(texts).toEqual([]);
+        await screenshot(page, `language-${locale}-menu-320`);
+      }
+      await page.reload();
+      await expect(page.locator('html')).toHaveAttribute('lang', locale);
+      expect(state.errors).toEqual([]);
+      expect(state.blocked).toEqual([]);
+    });
+  }
+}
+
+test('official interior city is selected, arbitrary text cannot apply, saved city is verified', async ({ page }) => {
+  const state = await fixture(page);
+  await loaded(page);
+  await page.locator('.brand-location .location-trigger').click();
+  await page.locator('#location-uf').selectOption('PE');
+  await expect(page.locator('#city-search')).toBeEnabled();
+  await page.locator('#city-search').fill('cidade que não existe');
+  await expect(page.locator('#location-apply')).toBeDisabled();
+  await expect(page.locator('#location-status')).toContainText('Nenhuma cidade');
+  await page.locator('#city-search').fill('Caruaru');
+  await expect(page.locator('#location-apply')).toBeDisabled();
+  await page.getByRole('button', { name: 'Caruaru', exact: true }).click();
+  await expect(page.locator('#location-apply')).toBeEnabled();
+  await page.locator('#location-apply').click();
+  await expect(page.locator('.active-place')).toHaveText('Caruaru / PE');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ct-home-location')));
+  expect(saved).toEqual({ id: '2604106', uf: 'PE', name: 'Caruaru' });
+  await page.reload();
+  await expect(page.locator('.active-place')).toHaveText('Caruaru / PE');
+  await expect(page.locator('.catalog-card')).toHaveCount(1);
+  expect(state.errors).toEqual([]);
+});
+
+test('city list error recovers locally and all preferences work with unavailable storage', async ({ page }) => {
+  await page.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('Unavailable', 'SecurityError'); } }); });
+  const state = await fixture(page, { cityFailure: true });
+  await loaded(page);
+  await page.getByLabel('Cidade ou local').click();
+  await expect(page.locator('#location-retry')).toBeVisible();
+  await page.locator('#location-retry').click();
+  await page.locator('#location-uf').selectOption('PE');
+  await expect(page.locator('#city-search')).toBeEnabled();
+  await page.locator('#city-search').fill('Recife');
+  await page.getByRole('button', { name: 'Recife', exact: true }).click();
+  await page.locator('#location-apply').click();
+  await expect(page.locator('.catalog-card')).toHaveCount(1);
+  await page.locator('#accessibility-toggle').click();
+  await page.locator('#home-language').selectOption('en-US');
+  await page.locator('#font-up').click();
+  await expect(page.locator('#font-reset')).toHaveText('110%');
+  expect(state.cities).toBe(2);
+  expect(state.errors).toEqual([]);
+});
+
+test('periods show concrete dates, categories preserve location and empty results preserve controls', async ({ page }) => {
+  await page.clock.install({ time: new Date('2030-12-20T12:00:00Z') });
+  const state = await fixture(page);
+  await loaded(page);
+  await page.locator('#filters-toggle').click();
+  await page.locator('[data-period="week"]').click();
+  await loaded(page);
+  await expect(page.locator('#period-dates')).toContainText('16');
+  await expect(page.locator('#period-dates')).toContainText('22');
+  await page.locator('[data-period="weekend"]').click();
+  await expect(page.locator('.catalog-card')).toHaveCount(1);
+  await expect(page.locator('.catalog-card')).toContainText('Encontro criativo');
+  await expect(page.locator('#period-dates')).toContainText('21');
+  await chooseCity(page, 'PE', 'Recife');
+  await expect(page.locator('#no-events')).toBeVisible();
+  await expect(page.locator('.active-place')).toHaveText('Recife / PE');
+  await expect(page.locator('[data-period="weekend"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('[data-period="all"]').click();
+  await page.locator('#category-choices').getByRole('button', { name: 'Música · fixture', exact: true }).click();
+  await expect(page.locator('.active-place')).toHaveText('Recife / PE');
+  await expect(page.locator('#category-choices button[aria-pressed="true"]')).toBeFocused();
+  await expect(page.locator('.catalog-card')).toHaveCount(1);
+  await page.locator('#reset-filters').click();
+  await loaded(page);
+  expect(state.methods).toHaveLength(1);
+  expect(state.errors).toEqual([]);
+});
+
+for (const theme of ['light', 'dark']) {
+  test(`sticky header, 150% text, keyboard menu and reduced motion at 320px / ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 650 });
+    await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
+    const state = await fixture(page);
+    await loaded(page);
+    await page.locator('#accessibility-toggle').click();
+    for (let i = 0; i < 5; i++) await page.locator('#font-up').click();
+    await expect(page.locator('#font-reset')).toHaveText('150%');
+    await page.locator('#accessibility-toggle').click();
+    await noOverflow(page);
+    await page.locator('.menu-toggle').click();
+    await page.locator('#mobile-menu a[href="#seguranca"]').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#seguranca')).toBeFocused();
+    const geometry = await page.evaluate(() => ({ header: document.querySelector('.topbar').getBoundingClientRect().toJSON(), target: document.querySelector('#seguranca').getBoundingClientRect().toJSON(), position: getComputedStyle(document.querySelector('.topbar')).position }));
+    expect(geometry.position).toBe('sticky');
+    expect(geometry.header.top).toBe(0);
+    expect(geometry.header.height).toBeLessThan(170);
+    expect(geometry.target.top).toBeGreaterThanOrEqual(geometry.header.bottom);
+    expect(geometry.target.top).toBeLessThanOrEqual(geometry.header.bottom + 40);
+    await screenshot(page, `text-150-${theme}-320`);
+    await page.locator('.menu-toggle').click();
+    const menu = page.locator('#mobile-menu');
+    await expect(menu).toBeVisible();
+    expect(await menu.evaluate(el => el.clientHeight <= innerHeight - document.querySelector('.topbar').offsetHeight)).toBe(true);
+    expect(await menu.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(29, 29, 29)');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.menu-toggle')).toBeFocused();
+    expect(state.errors).toEqual([]);
+  });
+}
+
+test('advertising is labeled at bottom left and the approved WhatsApp is only an explicit link', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.geolocationCalls = 0;
+    navigator.geolocation.getCurrentPosition = () => { window.geolocationCalls++; };
+    navigator.geolocation.watchPosition = () => { window.geolocationCalls++; };
+  });
+  const state = await fixture(page);
+  await loaded(page);
+  const ad = page.locator('#advertising-primary');
+  await expect(ad.locator('.eyebrow')).toHaveText('Publicidade');
+  await expect(ad.locator('.eyebrow')).toHaveCSS('position', 'absolute');
+  const geometry = await ad.evaluate(el => { const a = el.getBoundingClientRect(), b = el.querySelector('.eyebrow').getBoundingClientRect(); return { left: b.left - a.left, bottom: a.bottom - b.bottom }; });
+  expect(geometry.left).toBeLessThan(30);
+  expect(geometry.bottom).toBeLessThan(25);
+  await expect(page.locator('#advertising-contact')).toHaveAttribute('href', 'https://wa.me/5581999311509?text=Ol%C3%A1%21%20Quero%20anunciar%20na%20Carioca%20Ticket.');
+  await expect(page.locator('#advertising-contact')).toHaveAttribute('rel', 'noopener noreferrer');
+  expect(await page.evaluate(() => window.geolocationCalls)).toBe(0);
+  expect(state.methods).toEqual(['ctEventosPublicosListarPROD']);
+  expect(state.blocked).toEqual([]);
+});
+
+test('prepared ad rotation keeps the label visible, pauses for keyboard and honors reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const state = await fixture(page);
+  await loaded(page);
+  await expect(page.locator('#advertising-secondary')).toBeHidden();
+  await page.evaluate(() => CTHome.mountAdvertisements(document.querySelector('#advertising-primary'), [{ src: '/__fixture/music.svg', href: '/__blocked', alt: 'Publicidade sintética de teste', width: 1882, height: 836 }]));
+  const ad = page.locator('#advertising-primary');
+  await ad.scrollIntoViewIfNeeded();
+  await expect(ad.getByRole('button', { name: 'Reproduzir', exact: true })).toBeVisible();
+  await expect(ad.locator('.eyebrow')).toBeVisible();
+  const before = await ad.boundingBox();
+  await ad.getByRole('button', { name: 'Próxima publicidade' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(ad.locator('.ad-campaign')).toBeVisible();
+  await expect(ad.locator('.ad-house')).toBeHidden();
+  await expect(ad.locator('.eyebrow')).toBeVisible();
+  const after = await ad.boundingBox();
+  expect(after.height).toBeCloseTo(before.height, 0);
+  await expect(ad.getByRole('button', { name: 'Próxima publicidade' })).toBeFocused();
+  await ad.getByRole('button', { name: 'Publicidade anterior' }).click();
+  await expect(ad.locator('.ad-house')).toBeVisible();
+  expect(state.errors).toEqual([]);
+});
+
+test('invalid language and municipality preferences cannot break catalog or fabricate a place', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('ct-home-locale', '__proto__');
+    localStorage.setItem('ct-home-location', JSON.stringify({ uf: 'PE', id: '0000000', name: 'Fabricated' }));
+  });
+  const state = await fixture(page);
+  await loaded(page);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
+  await expect(page.locator('.active-place')).toHaveText('Todos os lugares');
+  expect(state.errors).toEqual([]);
+});
+
+
+test('an unavailable optional controls script does not block the catalog or keyword search', async ({ page }) => {
+  const state = await fixture(page, { noControls: true });
+  await loaded(page);
+  await expect(page.locator('#event-location-input')).toBeDisabled();
+  await expect(page.locator('#accessibility-toggle')).toBeHidden();
+  await page.locator('#event-search-input').fill('MUSICA');
+  await page.getByRole('button', { name: 'Pesquisar', exact: true }).click();
+  await expect(page.locator('.catalog-card')).toHaveCount(1);
+  expect(state.errors).toEqual([]);
+});
+
+test('home controls have unique IDs after composition', async ({ page }) => {
+  await fixture(page);
+  const duplicates = await page.locator('[id]').evaluateAll(nodes => {
+    const ids = nodes.map(node => node.id);
+    return ids.filter((id, index) => ids.indexOf(id) !== index);
+  });
+  expect(duplicates).toEqual([]);
 });

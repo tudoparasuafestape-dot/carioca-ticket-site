@@ -1,0 +1,83 @@
+{
+  "validatedAt": "2026-10-09T01:59:01.834949+00:00",
+  "branch": "fix/home-mode-menu-20261009",
+  "base": "bb9f00564d11389aba069604f9fffe56f7f98de4",
+  "environment": "Chromium; intercepted fixtures and localhost only; service workers blocked",
+  "preview": "http://127.0.0.1:4176",
+  "home": {
+    "startTime": "2026-10-09T01:52:08.652Z",
+    "duration": 173015.423,
+    "expected": 40,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "catalog": {
+    "startTime": "2026-10-09T01:55:06.069Z",
+    "duration": 38218.92,
+    "expected": 20,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "contracts": {
+    "regressionSurfaces": 41,
+    "auditedPages": 67,
+    "scriptsPassed": [
+      "contracts.mjs",
+      "journey-contracts.mjs",
+      "full-surface-audit.mjs",
+      "politica-comercial.contract.mjs",
+      "eventos-privados-v1.mjs",
+      "campanhas-recompensas.contract.mjs",
+      "comissoes-promotores.contract.mjs",
+      "producer-portal-performance.contract.mjs",
+      "checkout_gratuito_contract.py"
+    ]
+  },
+  "staticChecks": [
+    "node --check (five changed JS assets)",
+    "git diff --check"
+  ],
+  "protectedPathsUnchanged": [
+    "styles.css",
+    "checkout/",
+    "evento/",
+    "evento-v2/",
+    "central/",
+    "produtor/",
+    "produtor-v2/",
+    "minha-carioca/"
+  ],
+  "sourceSha256": {
+    "index.html": "d78b33362b5994cf532c8b0e88f98142d0ce8ff9da716568fb92a94b291fc9a5",
+    "assets/home.css": "ab70590b28556967c62ae3da587bbf7fb40c00ed34161cd6372d30d519ca9be8",
+    "assets/home-theme.js": "4401bd40c5dca021c12db79e5d92ab78bd410851f77fba0fb67ed05279ec2e38",
+    "assets/home-i18n.js": "6410f41cef0f99f25adb35f7db28ecdcc0e9e11754245954a52751b7762452a9",
+    "assets/home-controls.js": "df1f4ec7db0f24b2702fca05554bc5cbf6521c82fd8f74a5f506d6dd845669fc",
+    "assets/home-navigation.js": "bc4d9f7698039731ead84e9a78e728b41829ebd8c856e8f63e9f54a24da0e628",
+    "assets/home-advertisements.js": "f6f12c4128f0df9da89a96ef553146806c9842b4aefa87bb4b17a1b0a73ebd11",
+    "assets/home-municipalities.json": "8784d41a8c48a6518bc035bdb28c29a46388887ca2da6a4744f90ab3c14804eb",
+    "assets/public-event-catalog.js": "e017855d964ea26687624eeb210e7462e42b62cb0051b3f691bcb0433c95b351"
+  },
+  "notRun": [
+    "Real mobile devices",
+    "Human screen-reader review",
+    "Production transactions, login codes, ticket issuance and check-in",
+    "Visual integration of blocked Library artwork"
+  ],
+  "blockers": [
+    "Library materialization of TPSSF and Priscila artwork returned HTTP 403; no local image bytes; campaigns remain hidden"
+  ],
+  "resolvedDuringValidation": [
+    "Removed duplicate city-retry control",
+    "Kept first catalog cover below 320px desktop / 480px mobile",
+    "Full PNG header antialias variance (12–17 pixels) replaced by exact producer-paint comparison in the dedicated paint regression test"
+  ],
+  "targetedAfterVisualReview": {
+    "tests": 3,
+    "passed": 3,
+    "purpose": "Sticky anchor offset after removing duplicate scroll-padding + scroll-margin compensation; 200% reflow and 150% fonts in both themes"
+  },
+  "sourceSha256Basis": "Git blob bytes after line-ending normalization"
+}

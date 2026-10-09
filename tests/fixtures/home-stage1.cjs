@@ -1,10 +1,10 @@
 // Synthetic review data only. No production IDs, attendees or prices.
 const events = [
   { id: 'PREVIEW-MUSICA', nome: 'Encontro de música — demonstração', data: '20/12/2030', horario: '18h às 22h',
-    local: 'Espaço de demonstração', cidade: 'Cidade exemplo', uf: 'PE',
+    local: 'Espaço de demonstração', cidade: 'Recife', uf: 'PE',
     visual: { capaUrl: '/__fixture/music.svg', categoria: 'Música · fixture', descricaoCurta: 'Evento fictício para revisar a apresentação da home.' } },
   { id: 'PREVIEW-CRIATIVO', nome: 'Encontro criativo — demonstração', data: '21/12/2030', horario: '10h às 16h',
-    local: 'Auditório de demonstração', cidade: 'Outra cidade', uf: 'RJ',
+    local: 'Auditório de demonstração', cidade: 'Caruaru', uf: 'PE',
     visual: { capaUrl: '/__fixture/creative.svg', categoria: 'Cultura · fixture', descricaoCurta: 'Dados sintéticos, sem venda ou emissão de ingresso.' } }
 ];
 function cover(kind) {

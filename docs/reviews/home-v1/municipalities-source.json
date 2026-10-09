@@ -1,0 +1,7 @@
+{
+  "source": "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome",
+  "retrievedAt": "2026-10-09T01:24:05.271297+00:00",
+  "sourceSha256": "d9eec8439bc8c5dc2f7db6332a8e5569f5a3f637988e26aebc513412d4069d5c",
+  "rows": 5571,
+  "purpose": "Manual municipality selector only; no geolocation or coordinates are sent."
+}
