@@ -25,7 +25,7 @@ A static bundle can cover current reviewed event texts only. It cannot automatic
 
 Inventory based on main 41ba64152c2f9dbb13309eda488d0f44ab6e6706. Public includes pages accessible before authentication; being reachable does not make financial or account behavior part of the design exception.
 
-1. Public discovery: `/`, `/evento/`, `/evento-v2/`, `/roda-de-samba/`, `404.html`. Home dictionaries already exist, but event description translation and cross-page integration remain outstanding. Review card and carousel copy, error/retry/loading states, share text, ARIA, titles, and audio. Event routes await directions changes.
+1. Public discovery: `/anuncie/` (new page in parallel preparation), `/`, `/evento/`, `/evento-v2/`, `/roda-de-samba/`, `404.html`. Home dictionaries already exist, but event description translation and cross-page integration remain outstanding. Review card and carousel copy, error/retry/loading states, share text, ARIA, titles, and audio. Event routes await directions changes.
 2. Public institutional: `/ajuda/`, `/sobre/`, `/termos/`, `/privacidade/`, `/cancelamento-reembolso/`. Coordinate logo changes first. Legal translations are informational alongside unchanged originals.
 3. Public partner acquisition/documentation: `/parceiro/programa/`, `/parceiro/ativar/`, `/parceiro/conduta/`, `/parceiro/manual/`, `/parceiro/regras-comerciais/`, `/parceiro/regulamento/`, `/parceiro/tratamento-dados/`. Program page mixes marketing and registration; preserve all actions and conditions. Public dynamically supplied material descriptions need the same source-bound translation contract.
 4. Public purchase, invitation and ticket entry surfaces: `/checkout/`, `/checkout-v2/`, `/convite/`, `/campanha/`, `/consulta/`, `/ingresso/`. Translate presentation only in a separately reviewed phase; preserve calculations, fields, validation semantics, IDs, rules, payloads, navigation and transaction behavior. Merge checkout work only after its safe-exit changes are reconciled.
@@ -36,6 +36,6 @@ Other repository routes are operational/authenticated and are not silently consi
 
 ## Validation
 
-Run `node --check assets/public-i18n.js` and `node --test tests/public-i18n.runtime.cjs`. These are isolated VM/DOM-contract tests with no backend or browser traffic, not browser end-to-end tests. Do not run legacy aggregate tests that can target production.
+Run `node --check assets/public-i18n.js` and `node --test tests/public-i18n.runtime.cjs`. The dedicated public-i18n-isolated.yml PR workflow runs both commands without npm install or network-facing test code. These are isolated VM/DOM-contract tests with no backend or browser traffic, not browser end-to-end tests. Do not run legacy aggregate tests that can target production.
 
 Integration remains responsible for four-language desktop/mobile visual and browser tests, reload/navigation/back-forward, storage restrictions, repeated language changes, same-origin tabs, unknown event and changed source fallback, unchanged URLs/IDs/dates/values/payloads, and speech cancellation/appropriate local voices. No voice available must leave readable text and an honest localized status. Current speech module is Portuguese-only and is untouched here.

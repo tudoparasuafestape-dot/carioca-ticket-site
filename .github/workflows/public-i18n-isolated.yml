@@ -1,0 +1,22 @@
+name: Public language contracts (isolated)
+on:
+  pull_request:
+    paths:
+      - 'assets/public-i18n.js'
+      - 'tests/public-i18n.runtime.cjs'
+      - '.github/workflows/public-i18n-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  language-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check syntax and exercise isolated VM and DOM contracts
+        run: |
+          node --check assets/public-i18n.js
+          node --test tests/public-i18n.runtime.cjs
