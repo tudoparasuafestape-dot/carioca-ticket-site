@@ -88,12 +88,12 @@ with sync_playwright() as pw:
             page.evaluate('event => CTEventDirections.render(event)', dict(EVENT, tipoEvento=value))
             assert page.locator('#directions-details').is_visible()
         # A denied clipboard selects the address for manual copying.
-        page.evaluate("navigator.clipboard.writeText=async()=>{throw new Error('denied')}")
+        page.evaluate("() => {navigator.clipboard.writeText=async()=>{throw new Error('denied')};}")
         page.locator('#directions-copy').click()
         assert page.locator('#directions-address').evaluate('e => document.activeElement === e && e.selectionEnd === e.value.length')
         assert 'selecionado' in page.locator('#directions-status').inner_text()
         # A pending copy cannot race a newer render, even of the same destination.
-        page.evaluate("navigator.clipboard.writeText=()=>new Promise(resolve=>window.finishCopy=resolve)")
+        page.evaluate("() => {navigator.clipboard.writeText=()=>new Promise(resolve=>window.finishCopy=resolve);}")
         page.locator('#directions-copy').click()
         assert page.locator('#directions-copy').is_disabled()
         page.evaluate('event => CTEventDirections.render(event)', EVENT)
