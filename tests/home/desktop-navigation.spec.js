@@ -190,6 +190,17 @@ for (const width of [320, 412, 1201, 1351, 1440, 1920]) for (const locale of ['p
     await menu.locator('a').last().focus(); await expect(menu.locator('a').last()).toBeFocused();
     expect(await menu.evaluate(node => node.getBoundingClientRect().bottom <= innerHeight)).toBe(true);
     await page.keyboard.press('Tab'); await expect(page.locator('.producer-top-link')).toBeFocused();
+    if (width === 320) {
+      const footer = page.locator('.footer-grid');
+      await footer.scrollIntoViewIfNeeded();
+      const headingOverflow = await footer.locator('.footer-title').evaluateAll(nodes => nodes.filter(node => {
+        const box = node.getBoundingClientRect(), parent = node.parentElement.getBoundingClientRect();
+        return box.right > parent.right + 1 || node.scrollWidth > node.clientWidth + 1;
+      }).map(node => node.textContent));
+      expect(headingOverflow).toEqual([]);
+      await headerFits(page);
+      await capture(page, path.join(EVIDENCE, 'navigation-footer-text150-' + locale + '-320.png'));
+    }
     assertClean(state);
   });
 }
