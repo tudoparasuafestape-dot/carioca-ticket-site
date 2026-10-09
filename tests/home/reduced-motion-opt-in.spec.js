@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { fixture } = require('./rail-fixture.cjs');
+const { fixture, events } = require('./rail-fixture.cjs');
 
 // This suite uses only the existing fully intercepted home fixture. It must run
 // with playwright.home.config.cjs, never the production/default E2E config.
@@ -24,6 +24,19 @@ const MOBILE = { viewport: { width: 390, height: 664 }, hasTouch: true, isMobile
 async function installProbe(page) {
   await page.evaluate(carousels => {
     window.motionProbe = {};
+    // Observe writes after ordinary page initialization. Carousel playback and
+    // Pause/Resume must not persist or overwrite even an identical preference.
+    window.motionStorageWrites = [];
+    if (!window.motionStorageProbeInstalled) {
+      window.motionStorageProbeInstalled = true;
+      for (const method of ['setItem', 'removeItem', 'clear']) {
+        const original = Storage.prototype[method];
+        Storage.prototype[method] = function (...args) {
+          window.motionStorageWrites.push({ method, args });
+          return original.apply(this, args);
+        };
+      }
+    }
     carousels.forEach(carousel => {
       const node = document.querySelector(carousel.track);
       const active = () => carousel.name === 'events'
@@ -66,8 +79,8 @@ async function setup(page, reducedMotion = 'reduce', options = {}) {
     }
     window.originalMatchMedia = window.matchMedia;
   }, { standalone: !!options.standalone, missingEventNote: !!options.missingEventNote });
-  const state = await fixture(page, { missingAds: !!options.missingAds });
-  await expect(page.locator('.catalog-card')).toHaveCount(2);
+  const state = await fixture(page, { missingAds: !!options.missingAds, ...(options.singleEvent ? { result: { sucesso: true, eventos: [events[0]] } } : {}) });
+  await expect(page.locator('.catalog-card')).toHaveCount(options.singleEvent ? 1 : 2);
   for (const carousel of CAROUSELS.slice(1)) await expect(page.locator(`${carousel.track} > .ad-slide`)).toHaveCount(2);
   // Freeze only after the fixture has loaded. All subsequent 4,999/5,000 ms
   // boundaries are deterministic and cannot elapse during a locator assertion.
@@ -111,6 +124,17 @@ async function expectPaused(page, carousel) {
 
 async function expectPlaying(page, carousel) {
   await expect(page.locator(carousel.toggle)).toHaveText(carousel.name === 'events' ? 'Pausar rotação' : 'Pausar');
+}
+
+async function pause(page, carousel, input = 'mouse') {
+  await expectPlaying(page, carousel);
+  const toggle = page.locator(carousel.toggle);
+  // Real pointer activation preserves the intent captured before focusin pauses.
+  // Merely focusing and pressing Enter would deliberately resume instead.
+  if (input === 'touch') await toggle.tap();
+  else { await toggle.click(); await page.mouse.move(0, 0); }
+  await expectPaused(page, carousel);
+  await page.clock.runFor(0);
 }
 
 async function resume(page, carousel, input = 'keyboard') {
@@ -179,30 +203,117 @@ async function storageSnapshot(page) {
   }));
 }
 
-test('reduced motion explains each initial pause and leaves every Start control enabled', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 4000 });
-  const state = await setup(page);
-  for (const carousel of CAROUSELS) {
-    expect((await geometry(page, carousel.track)).visible).toBe(true);
-    await expectPaused(page, carousel);
-    await expect(page.locator(carousel.toggle)).toBeEnabled();
-    await expect(page.locator(carousel.note)).toBeVisible();
-    await expect(page.locator(carousel.note)).not.toHaveText(/^\s*$/);
+for (const reducedMotion of ['reduce', 'no-preference']) {
+  for (const standalone of [false, true]) {
+    test(`fresh ${standalone ? 'emulated standalone' : 'browser'} entry / ${reducedMotion}: all carousels start automatically with visible Pause`, async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 4000 });
+      const state = await setup(page, reducedMotion, { standalone });
+      const before = await storageSnapshot(page);
+      const started = await page.evaluate(() => performance.now());
+      if (standalone) expect(await page.evaluate(() => matchMedia('(display-mode: standalone)').matches)).toBe(true);
+      for (const carousel of CAROUSELS) {
+        expect((await geometry(page, carousel.track)).visible).toBe(true);
+        await expectPlaying(page, carousel);
+        await expect(page.locator(carousel.toggle)).toBeVisible();
+        await expect(page.locator(carousel.toggle)).toBeEnabled();
+        if (reducedMotion === 'reduce') {
+          await expect(page.locator(carousel.note)).toBeVisible();
+          await expect(page.locator(carousel.note)).not.toHaveText(/^\s*$/);
+        } else await expect(page.locator(carousel.note)).toBeHidden();
+        expect(await active(page, carousel)).toBe(0);
+      }
+      // No carousel interaction, explicit Start, focus change or visibility
+      // reset precedes these 0/5/10-second fresh-entry observations.
+      for (const elapsed of [5, 10]) {
+        await page.clock.runFor(5000);
+        for (const carousel of CAROUSELS) {
+          expect(await active(page, carousel)).toBe(elapsed === 5 ? 1 : 0);
+          await expectPlaying(page, carousel);
+          if (reducedMotion === 'reduce') await expectNoAnimation(page, carousel);
+        }
+      }
+      for (const carousel of CAROUSELS) {
+        const swaps = await changes(page, carousel);
+        expect(swaps.map(change => change.index)).toEqual([1, 0]);
+        expect(swaps[0].at - started).toBeGreaterThan(0);
+        expect(swaps[0].at - started).toBeLessThanOrEqual(5000);
+        if (reducedMotion === 'reduce' || carousel !== EVENTS) expect(swaps[1].at - swaps[0].at).toBe(5000);
+        else {
+          expect(swaps[1].at - swaps[0].at).toBeGreaterThanOrEqual(4900);
+          expect(swaps[1].at - swaps[0].at).toBeLessThanOrEqual(5100);
+        }
+      }
+      if (standalone && reducedMotion === 'reduce') {
+        // Preserve explicit per-carousel controls coverage in emulated standalone
+        // after proving the untouched startup default above.
+        for (const carousel of CAROUSELS) {
+          await pause(page, carousel);
+          await resetChanges(page, carousel);
+          await page.clock.runFor(5000);
+          expect(await changes(page, carousel)).toEqual([]);
+          await resume(page, carousel);
+          await page.clock.runFor(4999);
+          expect(await changes(page, carousel)).toEqual([]);
+          await page.clock.runFor(1);
+          expect((await changes(page, carousel)).length).toBe(1);
+          await expectNoAnimation(page, carousel);
+        }
+      }
+      expect(await storageSnapshot(page)).toEqual(before);
+      expect(await page.evaluate(() => window.motionStorageWrites)).toEqual([]);
+      expect(await page.evaluate(() => ({ original: window.originalMotionQuery.matches,
+        current: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        unchanged: window.matchMedia === window.originalMatchMedia })))
+        .toEqual({ original: reducedMotion === 'reduce', current: reducedMotion === 'reduce', unchanged: true });
+      expect(await page.evaluate(() => navigator.serviceWorker.controller)).toBeNull();
+      await assertIsolated(state);
+    });
   }
-  await page.clock.runFor(15000);
-  for (const carousel of CAROUSELS) expect(await changes(page, carousel)).toEqual([]);
-  await expectReduced(page);
-  await assertIsolated(state);
+}
+
+
+test('mobile 390×664 fresh reduced-motion entry auto-loops without scroll, focus or control interaction', async ({ browser }, testInfo) => {
+  const context = await browser.newContext(MOBILE);
+  try {
+    const page = await context.newPage(), state = await setup(page);
+    const before = await page.evaluate(() => ({ y: scrollY, focus: document.activeElement.tagName }));
+    const storage = await storageSnapshot(page);
+    const visible = await geometry(page, EVENTS.track);
+    expect(visible.visible).toBe(true);
+    expect(visible.ratio).toBeGreaterThan(0);
+    expect(visible.ratio).toBeLessThan(0.25);
+    await expectPlaying(page, EVENTS);
+    expect(await active(page, EVENTS)).toBe(0);
+    // Ordinary viewport frames preserve the genuinely small initial intersection.
+    // No reveal(), scrolling, pointer/focus action or explicit Resume is used.
+    await page.screenshot({ path: testInfo.outputPath('fresh-mobile-reduced-auto-00s.png') });
+    for (const elapsed of [5, 10]) {
+      await page.clock.runFor(5000);
+      expect(await active(page, EVENTS)).toBe(elapsed === 5 ? 1 : 0);
+      await expectPlaying(page, EVENTS);
+      await expectNoAnimation(page, EVENTS);
+      expect(await page.evaluate(() => ({ y: scrollY, focus: document.activeElement.tagName }))).toEqual(before);
+      await page.screenshot({ path: testInfo.outputPath(`fresh-mobile-reduced-auto-${String(elapsed).padStart(2, '0')}s.png`) });
+    }
+    const swaps = await changes(page, EVENTS);
+    expect(swaps.map(change => change.index)).toEqual([1, 0]);
+    expect(swaps[1].at - swaps[0].at).toBe(5000);
+    expect(await storageSnapshot(page)).toEqual(storage);
+    expect(await page.evaluate(() => window.motionStorageWrites)).toEqual([]);
+    await expectReduced(page);
+    await assertIsolated(state);
+  } finally { await context.close(); }
 });
 
 for (const carousel of CAROUSELS) {
   for (const input of ['keyboard', 'touch']) {
-    test(`${carousel.name}: ${input} Start opts in at exact five-second intervals without animation; Pause persists`, async ({ browser }) => {
+    test(`${carousel.name}: ${input} Resume restarts at exact five-second intervals without animation; Pause persists`, async ({ browser }) => {
       const context = await browser.newContext(input === 'touch' ? MOBILE : { viewport: { width: 1440, height: 1000 }, serviceWorkers: 'block' });
       try {
         const page = await context.newPage(), state = await setup(page);
         await reveal(page, carousel);
         const initial = await active(page, carousel);
+        await pause(page, carousel, input === 'touch' ? 'touch' : 'mouse');
         await resume(page, carousel, input);
         const started = await page.evaluate(() => performance.now());
         for (let interval = 1; interval <= 3; interval++) {
@@ -216,7 +327,7 @@ for (const carousel of CAROUSELS) {
           await expectReduced(page);
         }
         await expect(page.locator(carousel.note)).toBeVisible();
-        // Space exercises a different keyboard activation than Start's Enter.
+        // Space exercises a different keyboard activation than Resume's Enter.
         if (input === 'touch') await page.locator(carousel.toggle).tap();
         else await page.locator(carousel.toggle).press('Space');
         await expectPaused(page, carousel);
@@ -228,10 +339,22 @@ for (const carousel of CAROUSELS) {
     });
   }
 
-  test(`${carousel.name}: Start never opts another visible carousel in`, async ({ page }) => {
+  test(`${carousel.name}: Pause and Resume are independent of the other visible carousels`, async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 4000 });
     const state = await setup(page);
-    for (const item of CAROUSELS) expect((await geometry(page, item.track)).visible).toBe(true);
+    for (const item of CAROUSELS) {
+      expect((await geometry(page, item.track)).visible).toBe(true);
+      await expectPlaying(page, item);
+    }
+    await pause(page, carousel);
+    await page.clock.runFor(11000);
+    expect(await changes(page, carousel)).toEqual([]);
+    for (const other of CAROUSELS.filter(item => item !== carousel)) {
+      expect((await changes(page, other)).map(change => change.index)).toEqual([1, 0]);
+      await expectPlaying(page, other);
+      await pause(page, other);
+      await resetChanges(page, other);
+    }
     await resume(page, carousel);
     await page.clock.runFor(10000);
     expect((await changes(page, carousel)).map(change => change.index)).toEqual([1, 0]);
@@ -282,6 +405,7 @@ for (const carousel of CAROUSELS) {
   test(`${carousel.name}: manual previous/next and link focus retain their deliberate pause`, async ({ page }) => {
     const state = await setup(page);
     await reveal(page, carousel);
+    await pause(page, carousel);
     for (const control of [carousel.next, carousel.previous]) {
       await resume(page, carousel);
       const before = await active(page, carousel);
@@ -308,11 +432,12 @@ for (const carousel of CAROUSELS) {
     await assertIsolated(state);
   });
 
-  test(`${carousel.name}: hidden and offscreen timers respect the existing per-instance opt-in`, async ({ page }) => {
+  test(`${carousel.name}: hidden and offscreen timers preserve per-instance Pause and Resume`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 664 });
     const state = await setup(page);
     await reveal(page, carousel);
-    // Neither returning from the background nor re-entering the viewport grants consent.
+    await pause(page, carousel);
+    // Neither returning from the background nor re-entering the viewport resumes a manual pause.
     await hidden(page, true);
     await page.clock.runFor(11000);
     await hidden(page, false);
@@ -350,56 +475,56 @@ for (const carousel of CAROUSELS) {
   });
 }
 
-test('all three opt-ins are memory-only and a reload restores the reduced-motion pauses', async ({ page }) => {
+test('all three manual pauses are memory-only and reload restores fresh reduced-motion autoplay', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 4000 });
   const state = await setup(page), before = await storageSnapshot(page);
-  for (const carousel of CAROUSELS) await resume(page, carousel);
-  await page.clock.runFor(5000);
-  for (const carousel of CAROUSELS) expect((await changes(page, carousel)).length).toBe(1);
+  for (const carousel of CAROUSELS) await pause(page, carousel);
+  await page.clock.runFor(11000);
+  for (const carousel of CAROUSELS) expect(await changes(page, carousel)).toEqual([]);
   expect(await storageSnapshot(page)).toEqual(before);
+  expect(await page.evaluate(() => window.motionStorageWrites)).toEqual([]);
   await expectReduced(page);
 
   await page.reload({ waitUntil: 'load' });
   await expect(page.locator('.catalog-card')).toHaveCount(2);
   await installProbe(page);
   for (const carousel of CAROUSELS) {
-    await expectPaused(page, carousel);
+    expect((await geometry(page, carousel.track)).visible).toBe(true);
+    await expectPlaying(page, carousel);
     await expect(page.locator(carousel.toggle)).toBeEnabled();
     await expect(page.locator(carousel.note)).toBeVisible();
   }
-  await page.clock.runFor(15000);
-  for (const carousel of CAROUSELS) expect(await changes(page, carousel)).toEqual([]);
+  await page.clock.runFor(10000);
+  for (const carousel of CAROUSELS) {
+    expect((await changes(page, carousel)).map(change => change.index)).toEqual([1, 0]);
+    await expectNoAnimation(page, carousel);
+  }
   expect(await storageSnapshot(page)).toEqual(before);
+  expect(await page.evaluate(() => window.motionStorageWrites)).toEqual([]);
   await expectReduced(page);
   expect(state.errors).toEqual([]);
   expect(state.blocked).toEqual([]);
   expect(state.methods).toEqual(['ctEventosPublicosListarPROD', 'ctEventosPublicosListarPROD']);
 });
 
-test('emulated standalone display mode preserves genuine reduced motion and per-carousel explicit Start', async ({ page }) => {
+for (const reducedMotion of ['reduce', 'no-preference']) test(`a single event / ${reducedMotion} never rotates or exposes playback controls`, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 4000 });
-  const state = await setup(page, 'reduce', { standalone: true });
-  expect(await page.evaluate(() => matchMedia('(display-mode: standalone)').matches)).toBe(true);
-  for (const carousel of CAROUSELS) {
-    await expectPaused(page, carousel);
-    await expect(page.locator(carousel.toggle)).toBeEnabled();
-    await expect(page.locator(carousel.note)).toBeVisible();
-    await resume(page, carousel);
-    await page.clock.runFor(5000);
-    expect((await changes(page, carousel)).length).toBe(1);
-    await expectNoAnimation(page, carousel);
-    await page.locator(carousel.toggle).press('Space');
-    await expectPaused(page, carousel);
-    await expectReduced(page);
-  }
-  expect(await page.evaluate(() => navigator.serviceWorker.controller)).toBeNull();
+  const state = await setup(page, reducedMotion, { singleEvent: true });
+  await expect(page.locator('#event-rail-controls')).toBeHidden();
+  await expect(page.locator(EVENTS.note)).toBeHidden();
+  await expect(page.locator('#events-grid')).toHaveAttribute('tabindex', '-1');
+  await page.clock.runFor(16000);
+  expect(await active(page, EVENTS)).toBe(0);
+  expect(await changes(page, EVENTS)).toEqual([]);
+  await expect(page.locator('#events-grid')).not.toHaveAttribute('data-moving', 'true');
   await assertIsolated(state);
 });
 
-test('a missing optional event-note lookup does not break reduced-motion Start', async ({ page }) => {
+test('a missing optional event-note lookup does not break reduced-motion Resume', async ({ page }) => {
   const state = await setup(page, 'reduce', { missingEventNote: true });
   expect(await page.evaluate(() => document.getElementById('event-rail-motion-note'))).toBeNull();
   await reveal(page, EVENTS);
+  await pause(page, EVENTS);
   await resume(page, EVENTS);
   await page.clock.runFor(4999);
   expect(await changes(page, EVENTS)).toEqual([]);
@@ -433,7 +558,7 @@ test('failed ad artwork keeps its unavailable playback controls and motion note 
   await assertIsolated(state);
 });
 
-test('reduced-motion explanations and enabled Start controls at 320px with 150% text', async ({ page }, testInfo) => {
+test('reduced-motion explanations and enabled Pause controls at 320px with 150% text', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 900 });
   const state = await setup(page);
   async function expectAdFooterSeparation(scale) {
@@ -474,7 +599,7 @@ test('reduced-motion explanations and enabled Start controls at 320px with 150% 
   await expectAdFooterSeparation(150);
   for (const carousel of [EVENTS, CAROUSELS[1]]) {
     await reveal(page, carousel);
-    await expectPaused(page, carousel);
+    await expectPlaying(page, carousel);
     await expect(page.locator(carousel.toggle)).toBeEnabled();
     await expect(page.locator(carousel.note)).toBeVisible();
     const note = await page.locator(carousel.note).boundingBox();
@@ -488,13 +613,13 @@ test('reduced-motion explanations and enabled Start controls at 320px with 150% 
       const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
       return rect.top >= header.bottom && rect.bottom <= innerHeight && node.contains(hit);
     });
-    expect(unobscured, `${carousel.name}: Start must be visible below the sticky header`).toBe(true);
+    expect(unobscured, `${carousel.name}: Pause must be visible below the sticky header`).toBe(true);
     await page.screenshot({
-      path: testInfo.outputPath(`${carousel.name === 'events' ? 'events-start' : 'primary-ad-controls'}-reduced-motion-320px-text150.png`)
+      path: testInfo.outputPath(`${carousel.name === 'events' ? 'events-pause' : 'primary-ad-controls'}-reduced-motion-320px-text150.png`)
     });
   }
   // The full page from its true top also records the event explanation, which
-  // is below the tall event card and cannot share the Start button's viewport.
+  // is below the tall event card and cannot share the Pause button's viewport.
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
   await page.screenshot({ path: testInfo.outputPath('home-reduced-motion-320px-text150-full-page.png'), fullPage: true });
@@ -529,11 +654,13 @@ async function verticalTouch(page, selector) {
   } finally { await cdp.detach(); }
 }
 
-for (const carousel of CAROUSELS) test(`${carousel.name}: real vertical touch scrolling neither grants nor removes opt-in`, async ({ browser }) => {
+for (const carousel of CAROUSELS) test(`${carousel.name}: real vertical touch scrolling preserves manual Pause and explicit Resume`, async ({ browser }) => {
   const context = await browser.newContext(MOBILE);
   try {
     const page = await context.newPage(), state = await setup(page);
     const touchTarget = carousel.name === 'events' ? '.catalog-card:not([inert]) .catalog-photo' : carousel.track;
+    await reveal(page, carousel);
+    await pause(page, carousel, 'touch');
     await reveal(page, carousel);
     await verticalTouch(page, touchTarget);
     await expectPaused(page, carousel);
@@ -554,7 +681,7 @@ for (const carousel of CAROUSELS) test(`${carousel.name}: real vertical touch sc
   } finally { await context.close(); }
 });
 
-test('canceling the native share stub keeps opted-in events paused until another explicit Start', async ({ browser }) => {
+test('canceling the native share stub keeps automatic events paused until explicit Resume', async ({ browser }) => {
   const context = await browser.newContext(MOBILE);
   try {
     const page = await context.newPage();
@@ -570,7 +697,7 @@ test('canceling the native share stub keeps opted-in events paused until another
     });
     const state = await setup(page);
     await reveal(page, EVENTS);
-    await resume(page, EVENTS, 'touch');
+    await expectPlaying(page, EVENTS);
     const share = page.locator('.catalog-card:not([inert]) [data-public-share="event"]');
     const button = share.getByRole('button');
     await button.tap();
