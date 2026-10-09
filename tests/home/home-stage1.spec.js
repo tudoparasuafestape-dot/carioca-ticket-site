@@ -582,10 +582,14 @@ for (const locale of Object.keys(dictionaries)) {
     expect(uncovered).toEqual([]);
     const unlabeledAttributes = await page.locator('[aria-label], [placeholder]').evaluateAll(nodes => nodes.filter(node => {
       if (node.id === 'events-grid' || node.classList.contains('catalog-card')) return false; // Dynamic interpolated labels are asserted below.
+      // Event-share fallback labels are translated by their isolated component.
+      if (node.matches('[data-public-share="event"] input')) return false;
       const aria = node.getAttribute('aria-label'), placeholder = node.getAttribute('placeholder');
       return (aria && !node.dataset.i18nAriaLabel && aria !== 'Carioca Ticket') || (placeholder && !node.dataset.i18nPlaceholder);
     }).map(node => ({ id: node.id, aria: node.getAttribute('aria-label'), placeholder: node.getAttribute('placeholder') })));
     expect(unlabeledAttributes).toEqual([]);
+    const shareMessageLabels = { 'pt-BR':'Mensagem do evento para compartilhar', 'en-US':'Event message to share', 'es':'Mensaje del evento para compartir', 'zh-Hans':'用于分享的活动消息' };
+    for (const input of await page.locator('[data-public-share="event"] input').all()) await expect(input).toHaveAttribute('aria-label', shareMessageLabels[locale]);
     await expect(page.locator('#events-grid')).toHaveAttribute('aria-label', dictionary.eventFeature);
     for (let i = 0; i < events.length; i++) await expect(page.locator('.catalog-card').nth(i)).toHaveAttribute('aria-label', dictionary.railPosition.replace('{n}', String(i + 1)).replace('{total}', String(events.length)));
 
@@ -873,6 +877,7 @@ for (const width of [320, 375, 390]) for (const enlarged of [false, true]) {
     expect(state.blocked).toEqual([]);
   });
 }
+
 
 
 
