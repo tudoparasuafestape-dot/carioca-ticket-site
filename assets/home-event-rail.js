@@ -112,15 +112,18 @@
   grid.addEventListener('dragstart', function (event) { event.preventDefault(); });
   grid.addEventListener('pointerdown', function (event) {
     if (!event.isPrimary || event.button !== 0 || cards.length < 2 || sharing.size) return;
-    stop();
-    if (moving) { clickBlockedUntil = performance.now() + 700; finish(false); }
+    // Suspend while intent is unknown. Scrolling the page is not a request to
+    // permanently pause the carousel, unlike a horizontal swipe or activation.
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY, dx: 0, horizontal: false };
+    clearTimeout(timer);
+    if (moving) { clickBlockedUntil = performance.now() + 700; finish(false); }
   });
   grid.addEventListener('pointermove', function (event) {
     if (!drag || event.pointerId !== drag.id) return;
     var dx = event.clientX - drag.x, dy = event.clientY - drag.y;
-    if (!drag.horizontal && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) { drag = null; return; }
+    if (!drag.horizontal && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) { drag = null; schedule(); return; }
     if (!drag.horizontal && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+      stop();
       drag.horizontal = true; grid.setPointerCapture(event.pointerId); grid.classList.add('is-dragging');
     }
     if (!drag.horizontal) return;
@@ -140,21 +143,34 @@
       clickBlockedUntil = performance.now() + 700;
       if (!cancelled && Math.abs(gesture.dx) > Math.min(60, step() * .18)) go(gesture.dx < 0 ? 1 : -1, true);
       else paint();
-    }
+    } else if (!cancelled) stop();
+    schedule();
   }
-  grid.addEventListener('pointerup', function (event) { release(event, false); });
-  grid.addEventListener('pointercancel', function (event) { release(event, true); });
+  window.addEventListener('pointerup', function (event) { release(event, false); });
+  window.addEventListener('pointercancel', function (event) { release(event, true); });
   grid.addEventListener('click', function (event) {
     if (moving || performance.now() < clickBlockedUntil) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
-  document.addEventListener('visibilitychange', function () { if (document.hidden && moving) finish(false); schedule(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      // App switching can interrupt a touch without delivering pointerup.
+      // Discard transient contact, never the user's intentional paused state.
+      if (drag && grid.hasPointerCapture(drag.id)) grid.releasePointerCapture(drag.id);
+      drag = null;
+      if (moving) finish(false);
+      else { grid.classList.remove('is-dragging'); paint(); }
+    }
+    schedule();
+  });
   reduced.addEventListener('change', function () {
     if (reduced.matches) { stop(); if (moving) finish(false); }
     // Re-enable the explicit resume control when the preference changes back.
     // Keep the user's paused state; never restart motion automatically.
     labels(); schedule();
   });
-  new IntersectionObserver(function (entries) { visible = entries[0].intersectionRatio >= .25; schedule(); }, { threshold: .25 }).observe(grid);
+  // A short mobile viewport may show the cover but less than 25% of the tallest
+  // card. Start when the rail enters view; fully offscreen rails still stop.
+  new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; schedule(); }, { threshold: 0 }).observe(grid);
   new ResizeObserver(function () {
     // A resize commits the incoming card and its counter as one state update.
     if (moving) { finish(false); return; }
@@ -178,4 +194,5 @@
   document.addEventListener('ct:language', labels);
   reset();
 }());
+
 
