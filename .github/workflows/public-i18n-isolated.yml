@@ -1,0 +1,60 @@
+name: Public language contracts (isolated)
+on:
+  pull_request:
+    paths:
+      - 'assets/public-i18n.js'
+      - 'tests/public-i18n.runtime.cjs'
+      - 'assets/institutional-translations.js'
+      - 'tests/institutional-language.runtime.cjs'
+      - 'tests/institutional-language.browser.cjs'
+      - 'tests/fixtures/institutional-source-text.json'
+      - 'index.html'
+      - 'assets/home-i18n.js'
+      - 'assets/institutional-language.*'
+      - 'ajuda/index.html'
+      - 'sobre/index.html'
+      - 'termos/index.html'
+      - 'privacidade/index.html'
+      - 'cancelamento-reembolso/index.html'
+      - 'tests/public-language-integration.browser.cjs'
+      - 'package.json'
+      - '.github/workflows/public-i18n-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  language-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check syntax and exercise isolated VM and DOM contracts
+        run: |
+          node --check assets/public-i18n.js
+          node --test tests/public-i18n.runtime.cjs
+  institutional-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify authored dictionary contracts
+        run: |
+          node --check assets/institutional-translations.js
+          node --test tests/institutional-language.runtime.cjs
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Exercise real Chromium with isolated fixtures only
+        run: node tests/institutional-language.browser.cjs
+      - name: Exercise actual home and institutional pages in isolated Chromium
+        run: node tests/public-language-integration.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-language-page-screenshots
+          path: test-results/public-language
+          if-no-files-found: ignore

@@ -42,7 +42,7 @@ http.createServer((req, res) => {
     html = html.replace(/<link rel="prefetch"[^>]+>/, '');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(home-location\.(?:js|css)|home\.css|home-theme\.js|home-install\.js|home-navigation\.js|home-i18n\.js|home-controls\.js|home-advertisements\.js|home-event-rail\.js|public-share\.(js|css)|home-ad-(tpssf|priscila)\.png|home-municipalities\.json|public-event-catalog\.js|carioca-ticket-(simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(home-location\.(?:js|css)|home\.css|home-theme\.js|home-install\.js|home-navigation\.js|home-i18n\.js|public-i18n\.js|home-controls\.js|home-advertisements\.js|home-event-rail\.js|public-share\.(js|css)|home-ad-(tpssf|priscila)\.png|home-municipalities\.json|public-event-catalog\.js|carioca-ticket-(simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/html; charset=utf-8', '<h1>Destino bloqueado no preview</h1><p>Este ambiente permite revisar somente a home com dados sintéticos.</p><a href="/">Voltar à home</a>');
   const file = path.join(ROOT, url.pathname.slice(1));
   let body = fs.readFileSync(file);
@@ -56,4 +56,5 @@ http.createServer((req, res) => {
   const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';
   send(res, 200, type, body);
 }).listen(port, '127.0.0.1', () => console.log(`Synthetic home preview: ${origin}`));
+
 

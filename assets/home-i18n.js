@@ -723,10 +723,11 @@
     };
   }
 
-  var locale = 'pt-BR';
+  var sharedLanguage = window.CTPublicI18n;
+  var locale = sharedLanguage ? sharedLanguage.getLocale() : 'pt-BR';
   var sourceLanguage = document.documentElement.lang || 'pt-BR';
   function has(object, key) { return Object.prototype.hasOwnProperty.call(object, key); }
-  try { var saved = localStorage.getItem('ct-home-locale'); if (has(dictionaries, saved)) locale = saved; } catch (_) {}
+  if (!sharedLanguage) { try { var saved = localStorage.getItem('ct-home-locale'); if (has(dictionaries, saved)) locale = saved; } catch (_) {} }
   function message(key, values) {
     var language = api.locale;
     var dictionary = dictionaries[language];
@@ -760,22 +761,37 @@
     categoryLabel: categoryLabel,
     setLocale: function (value) {
       if (!has(dictionaries, value)) return;
-      api.locale = value;
-      document.documentElement.lang = value;
-      apply(document);
-      document.getElementById('home-language').value = value;
-      document.querySelectorAll('input[name="home-language-choice"]').forEach(function (radio) { radio.checked = radio.value === value; });
-      document.getElementById('producer-language-note').hidden = value === sourceLanguage;
-      try { localStorage.setItem('ct-home-locale', value); } catch (_) {}
-      document.dispatchEvent(new CustomEvent('ct:language'));
+      if (sharedLanguage) {
+        var previous = sharedLanguage.getLocale();
+        sharedLanguage.setLocale(value);
+        // Changed values are rendered by the shared event exactly once.
+        if (previous === value) renderLocale(value);
+      } else {
+        try { localStorage.setItem('ct-home-locale', value); } catch (_) {}
+        renderLocale(value);
+      }
     }
   };
+  function renderLocale(value) {
+    if (!has(dictionaries, value)) return;
+    api.locale = value;
+    document.documentElement.lang = value;
+    apply(document);
+    document.getElementById('home-language').value = value;
+    document.querySelectorAll('input[name="home-language-choice"]').forEach(function (radio) { radio.checked = radio.value === value; });
+    document.getElementById('producer-language-note').hidden = value === sourceLanguage;
+    document.dispatchEvent(new CustomEvent('ct:language'));
+  }
+  // Preserve the public CTHome / ct:language contract used by filters, rails,
+  // sharing and the separately prepared location feature. No duplicate storage.
+  if (sharedLanguage) document.addEventListener('ct:public-language', function () { renderLocale(sharedLanguage.getLocale()); });
   document.getElementById('home-language').addEventListener('change', function (event) { api.setLocale(event.target.value); });
   document.querySelectorAll('input[name="home-language-choice"]').forEach(function (radio) {
     radio.addEventListener('change', function () { if (radio.checked) api.setLocale(radio.value); });
   });
   api.setLocale(locale);
 }());
+
 
 
 

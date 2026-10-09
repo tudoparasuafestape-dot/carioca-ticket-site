@@ -1,0 +1,13 @@
+/* Scoped language controls; shared layout and approved logo styles stay intact. */
+body[data-institutional-page] [hidden]{display:none!important}
+.ct-public-language-bar{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding-block:8px 12px;flex-wrap:wrap;font-size:13px}
+.ct-public-language-bar label{font-weight:700}
+.ct-public-language-bar select{font:inherit;color:#f6f0e4;background:#171512;border:1px solid #9b7936;border-radius:8px;min-height:44px;max-width:100%;padding:8px 12px}
+.ct-public-language-bar select:focus-visible,.ct-legal-original>summary:focus-visible{outline:3px solid #f4c85b;outline-offset:4px}
+.ct-language-legal-notice{margin-block:24px 0}
+.ct-legal-original{margin-block:20px 32px;padding:18px;border:1px solid #9b7936;border-radius:14px;min-width:0}
+.ct-legal-original>summary{cursor:pointer;font-weight:700;min-height:44px;display:list-item;align-content:center;color:#f4c85b;overflow-wrap:anywhere}
+.ct-legal-original-content{border-top:1px solid #514323;margin-top:12px;padding-top:12px;overflow-wrap:anywhere}
+.ct-legal-original-content .shell{width:100%}.ct-legal-original-content .page-hero{padding:16px 0}.ct-legal-original-content .page-content{padding-bottom:0}
+body[data-institutional-page] main,body[data-institutional-page] footer{overflow-wrap:anywhere}
+@media(max-width:600px){.ct-public-language-bar{justify-content:space-between}.ct-legal-original{padding:12px}.ct-legal-original-content h2{font-size:24px}}

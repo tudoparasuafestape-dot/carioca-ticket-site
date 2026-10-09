@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-public-i18n-root>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -12,8 +12,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/assets/public-logo-links.css?v=20261009">
+  <link rel="stylesheet" href="/assets/institutional-language.css?v=20261009">
+  <script src="/assets/public-i18n.js?v=20261009-public-language" defer></script>
+  <script src="/assets/institutional-translations.js?v=20261009" defer></script>
+  <script src="/assets/institutional-language.js?v=20261009" defer></script>
 </head>
-<body>
+<body data-institutional-page="termos">
   <header class="topbar">
     <div class="shell nav">
       <a class="brand" href="/" aria-label="Carioca Ticket">
@@ -22,15 +26,44 @@
           <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
         </picture>
       </a>
-      <nav class="links" aria-label="Principal">
-        <a href="/#eventos">Eventos</a><a href="/#produtores">Para produtores</a><a href="/#seguranca">Segurança</a><a href="/ajuda/">Ajuda</a>
+      <nav class="links" aria-label="Principal" data-public-i18n-aria-label="publicNavigation">
+        <a href="/#eventos"><span lang="pt-BR" data-public-i18n="institutional.text.0">Eventos</span></a><a href="/#produtores"><span lang="pt-BR" data-public-i18n="institutional.text.1">Para produtores</span></a><a href="/#seguranca"><span lang="pt-BR" data-public-i18n="institutional.text.2">Segurança</span></a><a href="/ajuda/"><span lang="pt-BR" data-public-i18n="institutional.text.3">Ajuda</span></a>
       </nav>
-      <a class="nav-cta" href="/roda-de-samba/">Comprar ingresso</a>
+      <a class="nav-cta" href="/roda-de-samba/"><span lang="pt-BR" data-public-i18n="institutional.text.4">Comprar ingresso</span></a>
+    </div>
+    <div id="public-language-bar" class="shell ct-public-language-bar" hidden>
+      <label for="public-language" lang="pt-BR" data-public-i18n="publicLanguage">Idioma</label>
+      <select id="public-language" name="public-language">
+        <option value="pt-BR" lang="pt-BR" translate="no">Português (Brasil)</option>
+        <option value="en-US" lang="en-US" translate="no">English (US)</option>
+        <option value="es" lang="es" translate="no">Español</option>
+        <option value="zh-Hans" lang="zh-Hans" translate="no">简体中文</option>
+      </select>
     </div>
   </header>
   
 <main>
-  <section class="page-hero"><div class="shell"><span class="eyebrow">Termos</span><h1>Termos de Uso</h1><p>Condições gerais para utilização do site, checkout, ingresso digital e recursos da Carioca Ticket.</p></div></section>
+<div class="shell"><p id="legal-translation-notice" class="notice ct-language-legal-notice" lang="pt-BR" data-public-i18n="informativeTranslation" hidden>Tradução informativa. Consulte também o texto original.</p></div>
+  <section class="page-hero"><div class="shell"><span class="eyebrow"><span lang="pt-BR" data-public-i18n="institutional.text.55">Termos</span></span><h1><span lang="pt-BR" data-public-i18n="institutional.text.37">Termos de Uso</span></h1><p><span lang="pt-BR" data-public-i18n="institutional.text.56">Condições gerais para utilização do site, checkout, ingresso digital e recursos da Carioca Ticket.</span></p></div></section>
+  <section class="page-content"><div class="shell prose">
+    <h2><span lang="pt-BR" data-public-i18n="institutional.text.57">1. Plataforma</span></h2>
+    <p><span lang="pt-BR" data-public-i18n="institutional.text.58">A Carioca Ticket fornece tecnologia para divulgação, venda, pagamento, emissão e validação de ingressos. O produtor do evento é responsável pelas informações, programação, realização e condições específicas do evento disponibilizadas ao público.</span></p>
+    <h2><span lang="pt-BR" data-public-i18n="institutional.text.59">2. Compra e dados informados</span></h2>
+    <p><span lang="pt-BR" data-public-i18n="institutional.text.60">O comprador deve fornecer informações corretas e manter acesso ao e-mail e telefone informados. A emissão do ingresso depende da confirmação do pagamento e das regras de disponibilidade do lote selecionado.</span></p>
+    <h2><span lang="pt-BR" data-public-i18n="institutional.text.61">3. Pagamentos</span></h2>
+    <p><span lang="pt-BR" data-public-i18n="institutional.text.62">Pagamentos podem ser oferecidos por PIX e cartão conforme disponibilidade. Dados completos de cartão são processados no ambiente do provedor de pagamentos e não devem ser enviados diretamente à Carioca Ticket.</span></p>
+    <h2><span lang="pt-BR" data-public-i18n="institutional.text.63">4. Ingresso digital</span></h2>
+    <p><span lang="pt-BR" data-public-i18n="institutional.text.64">O ingresso e o respectivo QR Code são destinados ao acesso correspondente à compra. O usuário deve protegê-los contra compartilhamento indevido e apresentar o código válido na entrada do evento.</span></p>
+    <h2><span lang="pt-BR" data-public-i18n="institutional.text.65">5. Uso indevido</span></h2>
+    <p><span lang="pt-BR" data-public-i18n="institutional.text.66">É proibido tentar contornar controles de pagamento, duplicar ingressos, explorar falhas técnicas, interferir no funcionamento da plataforma ou utilizar dados de terceiros sem autorização.</span></p>
+    <h2><span lang="pt-BR" data-public-i18n="institutional.text.67">6. Suporte</span></h2>
+    <p><span lang="pt-BR" data-public-i18n="institutional.text.68">Questões relacionadas à plataforma podem ser encaminhadas para</span> <a class="text-link" href="mailto:contato@cariocaticket.com.br">contato@cariocaticket.com.br</a><span lang="pt-BR" data-public-i18n="institutional.text.69">. Questões próprias da realização do evento também poderão depender do produtor responsável.</span></p>
+    <h2><span lang="pt-BR" data-public-i18n="institutional.text.70">7. Atualizações</span></h2>
+    <p><span lang="pt-BR" data-public-i18n="institutional.text.71">Estes termos podem ser atualizados à medida que novos recursos sejam disponibilizados. A versão vigente será publicada neste endereço.</span></p>
+    <div class="page-updated"><span lang="pt-BR" data-public-i18n="institutional.text.72">Versão publicada em 17/09/2026.</span></div>
+  </div></section>
+<div class="shell"><details id="legal-original" class="ct-legal-original" lang="pt-BR" hidden><summary lang="pt-BR" data-public-i18n="publicOriginal">Ler o texto original em português</summary><div class="ct-legal-original-content" lang="pt-BR" translate="no">
+  <section class="page-hero"><div class="shell"><span class="eyebrow">Termos</span><h2>Termos de Uso</h2><p>Condições gerais para utilização do site, checkout, ingresso digital e recursos da Carioca Ticket.</p></div></section>
   <section class="page-content"><div class="shell prose">
     <h2>1. Plataforma</h2>
     <p>A Carioca Ticket fornece tecnologia para divulgação, venda, pagamento, emissão e validação de ingressos. O produtor do evento é responsável pelas informações, programação, realização e condições específicas do evento disponibilizadas ao público.</p>
@@ -48,15 +81,17 @@
     <p>Estes termos podem ser atualizados à medida que novos recursos sejam disponibilizados. A versão vigente será publicada neste endereço.</p>
     <div class="page-updated">Versão publicada em 17/09/2026.</div>
   </div></section>
+</div></details></div>
 </main>
   <footer>
     <div class="shell footer-grid footer-grid-4">
-      <div class="footer-brand"><a class="footer-home-logo" href="/" aria-label="Carioca Ticket — página inicial"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a><p>Ingressos, tecnologia e experiências para eventos.</p></div>
-      <div><strong>Institucional</strong><a href="/sobre/">Sobre nós</a><a href="/#produtores">Para produtores</a><a href="/ajuda/">Central de Ajuda</a></div>
-      <div><strong>Legal</strong><a href="/termos/">Termos de Uso</a><a href="/privacidade/">Política de Privacidade</a><a href="/cancelamento-reembolso/">Cancelamento e reembolso</a></div>
-      <div><strong>Contato</strong><a href="mailto:contato@cariocaticket.com.br">contato@cariocaticket.com.br</a><a href="https://instagram.com/cariocaticketbr" target="_blank" rel="noopener">@cariocaticketbr</a><span>cariocaticket.com.br</span></div>
+      <div class="footer-brand"><a class="footer-home-logo" href="/" aria-label="Carioca Ticket — página inicial" data-public-i18n-aria-label="publicHome"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a><p><span lang="pt-BR" data-public-i18n="institutional.text.30">Ingressos, tecnologia e experiências para eventos.</span></p></div>
+      <div><strong><span lang="pt-BR" data-public-i18n="institutional.text.44">Institucional</span></strong><a href="/sobre/"><span lang="pt-BR" data-public-i18n="institutional.text.54">Sobre nós</span></a><a href="/#produtores"><span lang="pt-BR" data-public-i18n="institutional.text.1">Para produtores</span></a><a href="/ajuda/"><span lang="pt-BR" data-public-i18n="institutional.text.5">Central de Ajuda</span></a></div>
+      <div><strong><span lang="pt-BR" data-public-i18n="institutional.text.36">Legal</span></strong><a href="/termos/"><span lang="pt-BR" data-public-i18n="institutional.text.37">Termos de Uso</span></a><a href="/privacidade/"><span lang="pt-BR" data-public-i18n="institutional.text.38">Política de Privacidade</span></a><a href="/cancelamento-reembolso/"><span lang="pt-BR" data-public-i18n="institutional.text.39">Cancelamento e reembolso</span></a></div>
+      <div><strong><span lang="pt-BR" data-public-i18n="institutional.text.40">Contato</span></strong><a href="mailto:contato@cariocaticket.com.br">contato@cariocaticket.com.br</a><a href="https://instagram.com/cariocaticketbr" target="_blank" rel="noopener">@cariocaticketbr</a><span>cariocaticket.com.br</span></div>
     </div>
-    <div class="shell footer-bottom">© 2026 Carioca Ticket. Todos os direitos reservados.</div>
+    <div class="shell footer-bottom"><span lang="pt-BR" data-public-i18n="institutional.text.43">© 2026 Carioca Ticket. Todos os direitos reservados.</span></div>
   </footer>
 </body>
 </html>
+
