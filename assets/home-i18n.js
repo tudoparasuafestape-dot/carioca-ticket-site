@@ -68,7 +68,7 @@
     "adCopy": "Sua marca pode aparecer aqui. Divulgue seu negócio na Carioca Ticket.",
     "adCta": "Quero anunciar",
     "adTpssfDescription": "Locação de materiais para eventos",
-    "adTpssfCta": "Conheça a Tudo Para Sua Festa",
+    "adTpssfCta": "Fale sobre locação pelo WhatsApp",
     "adPriscilaDescription": "Nail Designer",
     "adPriscilaCta": "Clique aqui e faça seu agendamento",
     "producerEyebrow": "Para quem faz acontecer",
@@ -235,7 +235,7 @@
     "adCopy": "Your brand could appear here. Promote your business on Carioca Ticket.",
     "adCta": "I want to advertise",
     "adTpssfDescription": "Event equipment rentals",
-    "adTpssfCta": "Discover Tudo Para Sua Festa",
+    "adTpssfCta": "Ask about rentals on WhatsApp",
     "adPriscilaDescription": "Nail designer",
     "adPriscilaCta": "Book your appointment",
     "producerEyebrow": "For those who make it happen",
@@ -402,7 +402,7 @@
     "adCopy": "Tu marca puede aparecer aquí. Promociona tu negocio en Carioca Ticket.",
     "adCta": "Quiero anunciarme",
     "adTpssfDescription": "Alquiler de materiales para eventos",
-    "adTpssfCta": "Conoce Tudo Para Sua Festa",
+    "adTpssfCta": "Consulta alquileres por WhatsApp",
     "adPriscilaDescription": "Diseñadora de uñas",
     "adPriscilaCta": "Reserva tu cita",
     "producerEyebrow": "Para quienes lo hacen posible",
@@ -569,7 +569,7 @@
     "adCopy": "您的品牌可以展示在这里。在 Carioca Ticket 推广您的业务。",
     "adCta": "我要投放广告",
     "adTpssfDescription": "活动用品租赁",
-    "adTpssfCta": "了解 Tudo Para Sua Festa",
+    "adTpssfCta": "通过 WhatsApp 咨询租赁",
     "adPriscilaDescription": "美甲设计师",
     "adPriscilaCta": "预约服务",
     "producerEyebrow": "为活动创造者而设",
@@ -748,6 +748,7 @@
   });
   api.setLocale(locale);
 }());
+
 
 
 

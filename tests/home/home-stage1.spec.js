@@ -11,10 +11,10 @@ const i18nSource = fs.readFileSync(path.join(ROOT, 'assets/home-i18n.js'), 'utf8
 const dictionaries = JSON.parse(i18nSource.match(/var dictionaries = (\{[\s\S]*?\n\});/)[1]);
 const approvedAds = [
   { slot: 'primary', name: 'tpssf', width: 2172, height: 724, title: 'Tudo Para Sua Festa',
-    href: 'https://www.instagram.com/tudoparasuafestape/', cta: 'Conheça a Tudo Para Sua Festa',
+    href: 'https://wa.me/5581995023085?text=Ol%C3%A1%21%20Vim%20pela%20Carioca%20Ticket%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20loca%C3%A7%C3%A3o%20de%20materiais%20para%20festas.', cta: 'Fale sobre locação pelo WhatsApp',
     sha256: '4714a8243dc0f61dd565390a54c98734c40864eb5d25f885a8cc2092edcc28c9' },
   { slot: 'secondary', name: 'priscila', width: 2170, height: 725, title: 'Priscila Ferreira',
-    href: 'https://wa.me/5581996200696', cta: 'Clique aqui e faça seu agendamento',
+    href: 'https://wa.me/5581996200696?text=Ol%C3%A1%21%20Vim%20pela%20Carioca%20Ticket%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20servi%C3%A7os%20e%20hor%C3%A1rios%20dispon%C3%ADveis%20para%20agendamento.', cta: 'Clique aqui e faça seu agendamento',
     sha256: '0695b960e396903f73a72b24dfc97fdc63678889f32dee47a9e4c2ab0254bdaa' }
 ];
 
@@ -873,4 +873,5 @@ for (const width of [320, 375, 390]) for (const enlarged of [false, true]) {
     expect(state.blocked).toEqual([]);
   });
 }
+
 
