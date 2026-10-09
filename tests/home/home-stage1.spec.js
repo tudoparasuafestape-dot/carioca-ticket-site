@@ -19,6 +19,7 @@ const approvedAds = [
 ];
 
 async function fixture(page, options = {}) {
+  await page.addInitScript(() => { Math.random = () => 0; });
   const state = { methods: [], errors: [], blocked: [], attempts: 0, cities: 0 };
   page.on('pageerror', error => state.errors.push(error.message));
   await page.context().route('**/*', async route => {
@@ -57,7 +58,7 @@ async function loaded(page) { await expect(page.locator('.catalog-card')).toHave
 async function noOverflow(page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const outside = await page.locator('main a, main input, main button, header select').evaluateAll(nodes => nodes.filter(node => {
-    if (!node.getClientRects().length) return false;
+    if (!node.getClientRects().length || node.closest('.catalog-card[inert]')) return false;
     const rect = node.getBoundingClientRect();
     return rect.left < -1 || rect.right > innerWidth + 1;
   }).map(node => node.textContent || node.id));
@@ -186,8 +187,8 @@ for (const theme of ['light', 'dark']) {
       for (const event of events) {
         const card = page.locator(`[data-event-id="${event.id}"]`);
         for (const field of ['nome', 'data', 'horario', 'local', 'cidade', 'uf']) await expect(card).toContainText(event[field]);
-        await expect(card.getByRole('link', { name: 'Ver evento', exact: true })).toHaveAttribute('href', '/evento/?evento=' + event.id);
-        await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
+        await expect(card.getByRole('link', { name: 'Ver evento', exact: true, includeHidden: true })).toHaveAttribute('href', '/evento/?evento=' + event.id);
+        await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome, includeHidden: true })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
         expect(await card.locator('img').evaluate(img => getComputedStyle(img).objectFit)).toBe('contain');
       }
       await expect(page.locator('.catalog-card')).not.toContainText(['R$']);
@@ -237,7 +238,7 @@ test('missing and broken images have usable fallbacks and absent fields remain e
   await expect(page.locator('.catalog-image-fallback')).toHaveText(['Capa indisponível', 'Capa indisponível']);
   await expect(page.locator('.catalog-card').first()).toContainText('Data e horário não informados');
   await expect(page.locator('.catalog-card').first()).toContainText('Local não informado');
-  await expect(page.getByRole('link', { name: /^Comprar ingresso:/ })).toHaveCount(2);
+  await expect(page.locator('.catalog-actions .btn-primary')).toHaveCount(2);
   await screenshot(page, 'missing-data');
 });
 
@@ -563,7 +564,7 @@ for (const locale of Object.keys(dictionaries)) {
     await expect(page.locator('#event-count')).toHaveText(dictionary.availableMany.replace('{n}', '2'));
     const uncovered = await page.evaluate(() => {
       const allowedText = new Set(['Carioca', 'Ticket', 'CARIOCA TICKET', 'contato@cariocaticket.com.br', '@cariocaticketbr', 'cariocaticket.com.br', 'A−', 'A-', 'A+']);
-      const dynamic = '#active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
+      const dynamic = '#event-rail-position, #event-rail-announcement, #active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       const result = [];
       while (walker.nextNode()) {
@@ -575,13 +576,19 @@ for (const locale of Object.keys(dictionaries)) {
     });
     expect(uncovered).toEqual([]);
     const unlabeledAttributes = await page.locator('[aria-label], [placeholder]').evaluateAll(nodes => nodes.filter(node => {
+      if (node.id === 'events-grid' || node.classList.contains('catalog-card')) return false; // Dynamic interpolated labels are asserted below.
       const aria = node.getAttribute('aria-label'), placeholder = node.getAttribute('placeholder');
       return (aria && !node.dataset.i18nAriaLabel && aria !== 'Carioca Ticket') || (placeholder && !node.dataset.i18nPlaceholder);
     }).map(node => ({ id: node.id, aria: node.getAttribute('aria-label'), placeholder: node.getAttribute('placeholder') })));
     expect(unlabeledAttributes).toEqual([]);
+    await expect(page.locator('#events-grid')).toHaveAttribute('aria-label', dictionary.eventFeature);
+    for (let i = 0; i < events.length; i++) await expect(page.locator('.catalog-card').nth(i)).toHaveAttribute('aria-label', dictionary.railPosition.replace('{n}', String(i + 1)).replace('{total}', String(events.length)));
 
     await expect(page.locator('.brand-location .location-trigger')).toHaveAccessibleName(dictionary.choosePlace + ' ' + dictionary.allPlaces);
+    await page.locator('#events-grid').focus();
+    await page.keyboard.press('Home');
     for (const event of events) {
+      if (event !== events[0]) await page.keyboard.press('ArrowRight');
       const card = page.locator(`[data-event-id="${event.id}"]`);
       const title = card.locator('.catalog-title a');
       await expect(title).toHaveText(event.nome);
