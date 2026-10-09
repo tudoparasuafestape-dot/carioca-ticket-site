@@ -20,12 +20,13 @@ for (const width of [320, 768, 1000, 1440]) for (const theme of ['light', 'dark'
     await page.setViewportSize({ width, height: 1000 });
     await page.addInitScript(theme => localStorage.setItem('ct-home-theme', theme), theme);
     const state = await fixture(page, { random: 0.9 });
+    await expect(page.locator('.catalog-card')).toHaveCount(2);
     for (const locale of ['pt-BR', 'en-US', 'es', 'zh-Hans']) {
       await page.evaluate(locale => CTHome.setLocale(locale), locale);
       for (const name of ['primary', 'secondary']) {
         const slot = page.locator('#advertising-' + name);
         await campaign(slot);
-        const before = await slot.boundingBox();
+        const before = await slot.evaluate(el => ({ height: el.getBoundingClientRect().height, top: el.getBoundingClientRect().top + scrollY, nextTop: el.nextElementSibling.getBoundingClientRect().top + scrollY }));
         const geometry = await slot.locator('.ad-campaign').evaluate(link => {
           const img = link.querySelector('img'), caption = link.querySelector('.ad-caption');
           const i = img.getBoundingClientRect(), c = caption.getBoundingClientRect();
@@ -41,9 +42,10 @@ for (const width of [320, 768, 1000, 1440]) for (const theme of ['light', 'dark'
         if (locale === 'pt-BR' || locale === 'en-US') await slot.screenshot({ path: testInfo.outputPath(`ad-${name}-${width}-${theme}-${locale}.png`) });
         await slot.locator('.ad-controls button').last().click();
         await expect(slot.locator('.ad-house')).toBeVisible();
-        const house = await slot.boundingBox();
+        const house = await slot.evaluate(el => ({ height: el.getBoundingClientRect().height, top: el.getBoundingClientRect().top + scrollY, nextTop: el.nextElementSibling.getBoundingClientRect().top + scrollY }));
         expect(Math.abs(before.height - house.height)).toBeLessThanOrEqual(1);
-        expect(Math.abs(before.y - house.y)).toBeLessThanOrEqual(1);
+        expect(Math.abs(before.top - house.top)).toBeLessThanOrEqual(1);
+        expect(Math.abs(before.nextTop - house.nextTop)).toBeLessThanOrEqual(1);
         await slot.locator('.ad-controls button').last().click();
         expect(Math.abs(before.height - (await slot.boundingBox()).height)).toBeLessThanOrEqual(1);
       }
@@ -62,6 +64,7 @@ for (const width of [320, 768, 1000, 1440]) for (const theme of ['light', 'dark'
 test('desktop compact height comparison and enlarged text reflow', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
   const state = await fixture(page);
+  await expect(page.locator('.catalog-card')).toHaveCount(2);
   const measurements = [];
   for (const name of ['primary', 'secondary']) {
     const slot = page.locator('#advertising-' + name);
@@ -85,10 +88,10 @@ test('desktop compact height comparison and enlarged text reflow', async ({ page
       await campaign(slot);
       expect(await slot.evaluate(el => [...el.querySelectorAll('.ad-caption,.ad-controls')].every(n => n.scrollWidth <= n.clientWidth + 1))).toBe(true);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+      await slot.screenshot({ path: testInfo.outputPath(`ad-${name}-${width}-text150.png`) });
       const before = (await slot.boundingBox()).height;
       await slot.locator('.ad-controls button').last().click();
       expect(Math.abs(before - (await slot.boundingBox()).height)).toBeLessThanOrEqual(1);
-      await slot.screenshot({ path: testInfo.outputPath(`ad-${name}-${width}-text150.png`) });
     }
   }
   expect(state.errors).toEqual([]); expect(state.blocked).toEqual([]);
