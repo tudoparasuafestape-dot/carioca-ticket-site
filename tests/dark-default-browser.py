@@ -30,6 +30,7 @@ with sync_playwright() as p:
     assert page.locator('html').get_attribute('data-home-theme')==expected,(path,osmode,saved)
     assert page.locator('#home-theme').input_value()==('system' if saved=='system' else expected)
     page.reload();assert page.locator('html').get_attribute('data-home-theme')==expected
+    page.wait_for_function("paints.some(x=>x.name==='first-contentful-paint')")
     assert all(x['theme']==expected for x in page.evaluate('paints'))
     checks.append([path,osmode,saved,expected])
    c.close()
@@ -55,7 +56,18 @@ with sync_playwright() as p:
    page.locator('#'+slot).screenshot(path=str(OUT/f'{slot}-{width}.png'))
  for locale,label in [('pt-BR','Saiba mais'),('en-US','Learn more'),('es','Más información'),('zh-Hans','了解更多')]:
   page.evaluate('l=>{CTHome.setLocale(l)}',locale)
-  assert page.locator('.ad-house a[href="/anuncie/"]').first.inner_text()==label
+  page.set_viewport_size(dict(width=320,height=1000))
+  page.evaluate("document.documentElement.style.setProperty('--home-font-scale','1.5')")
+  for slot in ['advertising-primary','advertising-secondary']:
+   house=page.locator('#'+slot+' .ad-house')
+   if not house.is_visible():page.locator('#'+slot+' .ad-controls button').last.click()
+   for action in house.locator('a').all():
+    action.scroll_into_view_if_needed();box=action.bounding_box()
+    assert box['height']>=44 and box['x']>=0 and box['x']+box['width']<=321,(locale,slot,box)
+   assert house.locator('a[href="/anuncie/"]').inner_text()==label
+   page.locator('#'+slot).screenshot(path=str(OUT/f'{slot}-320-{locale}-text150.png'))
+  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+ page.evaluate("document.documentElement.style.removeProperty('--home-font-scale')")
  # Native explicit secondary CTA navigates to the existing destination, and Back works.
  link=page.locator('#advertising-primary .ad-house a[href="/anuncie/"]');link.click();page.wait_for_url(ORIGIN+'/anuncie/');page.go_back();assert page.url==ORIGIN+'/'
  assert page.locator('.ad-campaign[href^="https://wa.me/5581995023085"]').count()==1
