@@ -92,7 +92,12 @@ com URL local explícita e todas as requisições mockadas. Os 41 contratos e
 incorporado já contém a correção de normalização LF/CRLF daquele teste.
 
 O artefato de migração preparado no backend #282 define a sequência futura:
-backup/schema autorizados na preparação do backend, backend validado e só
-depois site. O novo site mantém fallback neutro com backend anterior. Migração,
+**backend bridge em todos os escritores → preparação/backup fora do lock →
+cabeçalho CT → cabeçalho EVENTO → site**. A versão anterior do plano (`ae8da65`)
+foi rejeitada por disputar o lock do checkout e por corrida no rollback.
+A migração V2 não usa lock transacional nem remove cabeçalhos. O bridge mantém
+checkout/e-mails ativos e comissões pendentes sem consumir retries durante
+schema parcial; não exige pausa de vendas. O novo site mantém fallback neutro
+com backend anterior. Migração,
 publicação, calendário/data-base e recuperação de valores pagos continuam
 dependendo das autorizações/decisões registradas no plano do backend.
