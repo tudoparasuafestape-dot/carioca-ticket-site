@@ -32,6 +32,7 @@ for (const route of ['evento', 'evento-v2']) {
       await page.locator('#home-theme').selectOption(theme);
       await page.locator('#description-listen').click();
       await page.evaluate(() => window.addEventListener('pagehide', () => sessionStorage.setItem('logo-cancel-count', String(__speech.cancels))));
+      await page.keyboard.press('Tab');
       await logo.focus();
       await expect(logo).toHaveCSS('outline-style', 'solid');
       await page.keyboard.press('Enter');
@@ -57,6 +58,11 @@ for (const route of ['evento', 'evento-v2']) {
       await page.locator('#home-theme').selectOption(theme);
       for (const width of [320, 390, 768, 1440]) {
         await page.setViewportSize({ width, height: 1000 });
+        for (const selector of ['.brand', '.customer-link', '#home-theme']) {
+          const bounds = await page.locator(selector).boundingBox();
+          expect(bounds.width).toBeGreaterThanOrEqual(44);
+          expect(bounds.height).toBeGreaterThanOrEqual(44);
+        }
         for (const state of ['idle', 'playing', 'paused', 'resumed', 'stopped']) {
           if (state === 'playing' || state === 'resumed') await listen.click();
           if (state === 'paused') await page.locator('#description-pause').click();
@@ -67,6 +73,7 @@ for (const route of ['evento', 'evento-v2']) {
           expect(icon).not.toBe('none');
           expect(await contrast(listen)).toBeGreaterThanOrEqual(4.5);
           const enabled = state === 'playing' || state === 'resumed' ? page.locator('#description-pause') : listen;
+          await page.keyboard.press('Tab');
           await enabled.focus();
           await expect(enabled).toHaveCSS('outline-style', 'solid');
           await expect(enabled).toHaveCSS('outline-width', '3px');

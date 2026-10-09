@@ -20,6 +20,8 @@
 .ct-event #description-stop::before { width:14px; height:14px; flex-basis:14px; border-radius:2px; }
 .ct-event .description-audio button:enabled:active { box-shadow:none; }
 .ct-event .brand { min-height:44px; border-radius:6px; }
+.ct-event .customer-link { min-height:44px; }
+.ct-event .customer-link:focus-visible,
 .ct-event .brand:focus-visible,
 .ct-event .description-audio button:focus-visible,
 .ct-event .theme-control select:focus-visible { outline:3px solid var(--event-accent); outline-offset:3px; }
