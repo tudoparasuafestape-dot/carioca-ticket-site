@@ -5,7 +5,7 @@
   // Approved local PNGs: original bytes preserved; provenance in the review report.
   var campaigns = {
     primary: [{ src: '/assets/home-ad-tpssf.png', width: 2172, height: 724,
-      href: 'https://www.instagram.com/tudoparasuafestape/', title: 'Tudo Para Sua Festa',
+      href: 'https://wa.me/5581995023085?text=Ol%C3%A1%21%20Vim%20pela%20Carioca%20Ticket%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20loca%C3%A7%C3%A3o%20de%20materiais%20para%20festas.', title: 'Tudo Para Sua Festa',
       descriptionKey: 'adTpssfDescription', ctaKey: 'adTpssfCta' }],
     secondary: [{ src: '/assets/home-ad-priscila.png', width: 2170, height: 725,
       href: 'https://wa.me/5581996200696?text=Ol%C3%A1%21%20Vim%20pela%20Carioca%20Ticket%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20servi%C3%A7os%20e%20hor%C3%A1rios%20dispon%C3%ADveis%20para%20agendamento.', title: 'Priscila Ferreira',

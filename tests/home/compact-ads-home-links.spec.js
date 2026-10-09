@@ -49,6 +49,13 @@ for (const width of [320, 768, 1000, 1440]) for (const theme of ['light', 'dark'
         await slot.locator('.ad-controls button').last().click();
         expect(Math.abs(before.height - (await slot.boundingBox()).height)).toBeLessThanOrEqual(1);
       }
+      const rental = new URL(await page.locator('#advertising-primary .ad-campaign').getAttribute('href'));
+      expect(rental.origin + rental.pathname).toBe('https://wa.me/5581995023085');
+      expect([...rental.searchParams.keys()]).toEqual(['text']);
+      expect(rental.searchParams.get('text')).toBe('Olá! Vim pela Carioca Ticket e gostaria de mais informações sobre locação de materiais para festas.');
+      await expect(page.locator('#advertising-primary .ad-campaign')).toHaveAttribute('target', '_blank');
+      await expect(page.locator('#advertising-primary .ad-campaign')).toHaveAttribute('rel', 'noopener noreferrer');
+      await expect(page.locator('#advertising-primary .ad-campaign-cta')).toContainText('WhatsApp');
       const url = new URL(await page.locator('#advertising-secondary .ad-campaign').getAttribute('href'));
       expect(url.origin + url.pathname).toBe('https://wa.me/5581996200696');
       expect([...url.searchParams.keys()]).toEqual(['text']);
