@@ -105,7 +105,7 @@ for (const width of [320, 1200, 1201, 1440, 1920]) {
     for (let i = 0; i < destinations.length; i++) { await expect(links.nth(i)).toBeFocused(); await page.keyboard.press('Tab'); }
     await expect(menu).toBeHidden(); await expect(page.locator('.producer-top-link')).toBeFocused();
     await button.click(); await button.click(); await expect(menu).toBeHidden();
-    await button.click(); await page.locator('h1').click(); await expect(menu).toBeHidden();
+    await button.click(); await page.mouse.click(2, 2); await expect(menu).toBeHidden();
     await button.click(); await links.first().focus(); await page.keyboard.press('Escape'); await expect(button).toBeFocused();
     await button.click(); await page.locator('#accessibility-toggle').click();
     await expect(menu).toBeHidden(); await expect(page.locator('#home-accessibility')).toBeVisible();
