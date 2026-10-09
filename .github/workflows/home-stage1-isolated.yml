@@ -62,3 +62,11 @@ jobs:
           name: home-language-review
           path: test-results/home-stage1/**/language-flags-*.png
 
+
+      - name: Keep installation and Instagram screenshots for review
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: home-install-social-review
+          path: test-results/home-stage1/**/install-social-*.png
+

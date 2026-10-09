@@ -38,7 +38,9 @@
   function show() {
     if (!panel || !canShow()) { hide(); return; }
     if (!deferredPrompt && !iosSafari()) return;
+    action.setAttribute('data-i18n', deferredPrompt ? 'installAction' : 'installManual');
     action.textContent = deferredPrompt ? 'Instalar' : 'Como instalar';
+    if (window.CTHome && window.CTHome.applyTranslations) window.CTHome.applyTranslations(panel);
     action.disabled = false;
     action.hidden = false;
     help.hidden = true;
