@@ -192,3 +192,45 @@ test('preview refuses writes, checkout and foreign Host headers', async ({ reque
   expect((await request.get('/checkout/?evento=PREVIEW-EVENT')).status()).toBe(403);
   expect((await request.get('/evento/', { headers: { Host: 'foreign.example' } })).status()).toBe(403);
 });
+for (const route of ['evento', 'evento-v2']) {
+  test(`${route}: missing cover keeps the fallback title readable in both themes`, async ({ page }) => {
+    await speech(page);
+    await page.goto(`/${route}/?evento=PREVIEW-EVENT&scenario=no-cover`);
+    await expect(page.locator('#app')).toBeVisible();
+    await expect(page.locator('#coverImage')).toBeHidden();
+    await expect(page.locator('#coverImage')).not.toHaveAttribute('src');
+    await expect(page.locator('#coverFallback')).toBeVisible();
+    await expect(page.locator('#fallbackEventName')).toHaveText('Encontro de música — demonstração');
+    const out = path.resolve('docs/reviews/event-accessibility/screenshots');
+    fs.mkdirSync(out, { recursive: true });
+    for (const theme of ['light', 'dark']) {
+      await page.locator('#home-theme').selectOption(theme);
+      await expect(page.locator('#fallbackEventName')).toHaveCSS('color', 'rgb(255, 255, 255)');
+      // Conservative contrast: #131a22 is the lightest solid base of this fallback gradient.
+      const contrast = await page.locator('#fallbackEventName').evaluate(el => {
+        function luminance(rgb) {
+          const c = rgb.map(value => { const x = value / 255; return x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4; });
+          return c[0] * .2126 + c[1] * .7152 + c[2] * .0722;
+        }
+        const foreground = getComputedStyle(el).color.match(/\d+/g).slice(0,3).map(Number);
+        // Include the gold radial overlay at its maximum opacity for a stricter upper bound.
+        const background = [19, 26, 34].map((value, i) => Math.round(value * .8 + [255, 214, 109][i] * .2));
+        return (luminance(foreground) + .05) / (luminance(background) + .05);
+      });
+      expect(contrast).toBeGreaterThanOrEqual(4.5);
+      for (const width of [390, 1440]) {
+        await page.setViewportSize({ width, height: 1000 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+        const bounds = await page.locator('#fallbackEventName').evaluate(el => {
+          const title = el.getBoundingClientRect();
+          const cover = document.querySelector('.cover').getBoundingClientRect();
+          const logo = document.querySelector('.cover-brand').getBoundingClientRect();
+          return { contained: title.left >= cover.left && title.right <= cover.right && title.top >= cover.top && title.bottom <= cover.bottom, logoHeight: logo.height };
+        });
+        expect(bounds.contained).toBe(true);
+        expect(bounds.logoHeight).toBeLessThanOrEqual(90);
+        await page.locator('.cover').screenshot({ path: path.join(out, `${route}-no-cover-${theme}-${width}.png`) });
+      }
+    }
+  });
+}

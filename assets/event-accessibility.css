@@ -1,5 +1,7 @@
 /* Scoped to the two public event pages; home and partner styles stay independent. */
 .ct-event { --event-text:#fff; --event-muted:#c5cad1; --event-surface:#111820; --event-border:#69717d; --event-accent:#ffd66d; color-scheme:dark; }
+.ct-event .cover-fallback { color:#fff; }
+.ct-event .cover-fallback .cover-brand { width:min(220px,60%); height:auto; min-height:0; max-height:90px; object-fit:contain; }
 .ct-event .theme-control { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--event-text); }
 .ct-event .theme-control[hidden] { display:none; }
 .ct-event .theme-control select { min-height:44px; max-width:130px; border:1px solid var(--event-border); border-radius:10px; padding:7px; background:var(--event-surface); color:var(--event-text); font:inherit; }

@@ -20,6 +20,10 @@ HTMLFormElement.prototype.submit = function () {
   if (fields.get('ctMinhaCariocaAction') !== 'publicRpc' ||
       !['ctEventoPublicoCarregarPROD','ctEventosPublicosListarPROD'].includes(method)) throw new Error('Blocked in synthetic preview');
   const result = method === 'ctEventosPublicosListarPROD' ? ${JSON.stringify({ sucesso: true, eventos: events })} : ${JSON.stringify(fixture)};
+  if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'no-cover') {
+    result.visual.capaUrl = '';
+    result.visual.posterUrl = '';
+  }
   setTimeout(() => window.dispatchEvent(new MessageEvent('message', {
     origin: 'https://script.google.com',
     data: { ctMinhaCariocaPost: true, id: fields.get('ctMinhaCariocaRequestId'), ok: true, resultado: result }

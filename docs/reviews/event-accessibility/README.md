@@ -37,10 +37,12 @@ A prévia aceita somente loopback, tem lista explícita de arquivos permitidos, 
 
 ## Evidências
 
-- Suíte isolada: 15 cenários cobrindo ambas as rotas, limpeza de texto, vozes tardias/ausentes/remotas, início e pausa que falham, chunks, eventos tardios, alteração da descrição, navegação, preferência da home, outra aba, sistema, armazenamento bloqueado, contraste dos controles e reflow.
+- Suíte isolada: 17 cenários cobrindo ambas as rotas, limpeza de texto, vozes tardias/ausentes/remotas, início e pausa que falham, chunks, eventos tardios, alteração da descrição, navegação, preferência da home, outra aba, sistema, armazenamento bloqueado, contraste dos controles, reflow e eventos sem capa.
 - Regressão existente: 20 cenários de transporte/carregamento com fixtures no Chromium.
 - Contratos: 41 superfícies protegidas e contrato de eventos privados aprovados.
 - `screenshots/light-{320,390,768,1440}.png` e `dark-{320,390,768,1440}.png`: capturas com dados fictícios e voz simulada para tornar a interface determinística. Sem overflow horizontal nas quatro larguras. O contraste medido dos novos botões habilitados excede 4,5:1 nos dois temas.
+- Revisão independente: corrigida herança da cor do nome no fallback sem imagem. `.cover-fallback` mantém o texto branco sobre seu gradiente escuro, inclusive no tema claro. A regra do logotipo foi limitada ao fallback para impedir que `.cover img` aplique a ele a altura da capa e esconda o título por recorte. As capturas `screenshots/{evento,evento-v2}-no-cover-{light,dark}-{390,1440}.png` cobrem ausência simultânea de `capaUrl` e `posterUrl`, título contido na área visível, logotipo de até 90 px e contraste calculado acima de 4,5:1 mesmo usando o limite mais claro do gradiente/overlay.
+- `screenshots/*-audio-*.png` e `capture-audio.json`: estados ouvir, lendo, pausado/continuar e parado com a voz real local do Windows, em viewport 390. Capturas feitas no head `bccd69b` antes da correção exclusivamente visual do fallback; o código TTS permaneceu idêntico.
 - [`native-speech-audit.json`](native-speech-audit.json): auditoria **sem mock de voz**, em Windows, Chromium 140.0.7339.16 e Edge 154.0.4258.62, headless. Ambos expuseram Microsoft Daniel/Maria pt-BR locais e confirmaram estados de início, pausa, retomada e parada. Após navegação: `speaking=false`, `paused=false`, `pending=false`.
 - O workflow `event-accessibility-isolated.yml` executa somente a suíte de fixtures; a prova externa de Libras é manual e não é executada pelo CI.
 
@@ -79,7 +81,7 @@ O módulo `https://vlibras.gov.br/app/vlibras-initial-CMx6VRWn.js`, observado no
 
 ### Licença e decisão de escopo
 
-O [repositório do widget](https://github.com/spbgovbr-vlibras/vlibras-web-browsers) e seu [LICENSE](https://github.com/spbgovbr-vlibras/vlibras-web-browsers/blob/master/LICENSE) declaram LGPLv3. Já os termos do serviço/marca/avatares incluem restrições para usos comerciais e publicitários e pedem autorização nesses casos. A aplicação dessas condições ao portal comercial de ingressos deve ser esclarecida antes de usar o serviço em produção; não presumir que a licença do código resolve o serviço hospedado e os avatares.
+O [repositório do widget](https://github.com/spbgovbr-vlibras/vlibras-web-browsers) e seu [LICENSE](https://github.com/spbgovbr-vlibras/vlibras-web-browsers/blob/master/LICENSE) declaram LGPLv3. Essa é a licença do código e não uma proibição geral de utilização comercial. Uma questão separada aparece nos [Termos de Uso oficiais](https://www.vlibras.gov.br/privacy.html), seção “Restrições de Uso”, atualizados em 27/08/2026: a cláusula referente à marca, aos avatares ou ao serviço para fins comerciais/publicitários diz que o uso “depende de autorização prévia e expressa dos responsáveis pelo projeto”. A fonte está identificada; não concluímos que acessibilidade em qualquer site comercial esteja proibida. A aplicação exata dessa cláusula ao serviço hospedado neste portal precisa ser esclarecida. Não houve aceite de novos termos nem contato com o fornecedor.
 
 O [portal oficial](https://www.gov.br/governodigital/pt-br/acessibilidade-e-usuario/vlibras) também explica que tradução automática não substitui intérprete humano. Não foi contratado Hand Talk, criada credencial, contatado fornecedor ou alterado ambiente de produção.
 

@@ -1,12 +1,12 @@
 {
-  "date": "2026-10-09T09:34:12.245Z",
+  "date": "2026-10-09T09:47:52.334Z",
   "base": "8d6ef2da57f69ed6b3e4201d090a570ac3c2c66a",
   "isolatedSuite": {
-    "expected": 15,
+    "expected": 17,
     "unexpected": 0,
     "flaky": 0,
     "skipped": 0,
-    "durationMs": 159961.025
+    "durationMs": 70048.459
   },
   "existingTransportSuite": {
     "passed": 20,
@@ -27,5 +27,6 @@
   "themes": [
     "light",
     "dark"
-  ]
+  ],
+  "reviewFix": "White fallback title, contained title bounds and bounded logo in both themes/routes without capaUrl or posterUrl"
 }
