@@ -40,10 +40,15 @@
   function currentLink() { menu.querySelectorAll('a').forEach(function (link) { if (link.getAttribute('href') === (location.hash || '#todos-eventos')) link.setAttribute('aria-current', 'location'); else link.removeAttribute('aria-current'); }); }
   function onHistoryNavigation() {
     var hadFocus = menu.contains(document.activeElement);
-    setMenu(false); currentLink(); if (hadFocus) button.focus();
+    setMenu(false); currentLink();
+    // Browser history may restore anchor focus after popstate. Keep focus on
+    // the destination section rather than a link in the now-hidden disclosure.
+    var target = location.hash && document.getElementById(location.hash.slice(1));
+    if (target) { target.tabIndex = -1; target.focus({ preventScroll: true }); }
+    else if (hadFocus) button.focus();
   }
   window.addEventListener('hashchange', onHistoryNavigation);
   window.addEventListener('popstate', onHistoryNavigation);
-  window.addEventListener('pageshow', onHistoryNavigation);
+  window.addEventListener('pageshow', function () { setMenu(false); currentLink(); });
   currentLink();
 }());

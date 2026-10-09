@@ -138,14 +138,16 @@ test('anchor navigation and browser back close the disclosure without trapping f
   await expect(page).toHaveURL(ORIGIN + '/#seguranca');
   await button.click(); await menu.locator('a').first().focus();
   await page.goBack(); await expect(page).toHaveURL(ORIGIN + '/#produtores');
-  await expect(menu).toBeHidden(); await expect(button).toBeFocused();
+  await expect(menu).toBeHidden(); await expect(page.locator('#produtores')).toBeFocused();
   await button.click(); await expect(menu.locator('a[href="#produtores"]')).toHaveAttribute('aria-current', 'location');
   await page.goForward(); await expect(page).toHaveURL(ORIGIN + '/#seguranca'); await expect(menu).toBeHidden();
+  await expect(page.locator('#seguranca')).toBeFocused();
   assertClean(state);
 });
 
-for (const locale of ['pt-BR', 'en-US', 'es', 'zh-Hans']) {
-  test('desktop menu is translated and supports 150 percent text / ' + locale, async ({ page }) => {
+for (const width of [412, 1201, 1351, 1440, 1920]) for (const locale of ['pt-BR', 'en-US', 'es', 'zh-Hans']) {
+  test('translated menu supports 150 percent text / ' + width + 'px / ' + locale, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
     await page.addInitScript(value => localStorage.setItem('ct-home-locale', value), locale);
     const state = await fixture(page), dictionary = dictionaries[locale], button = page.locator('.menu-toggle'), menu = page.locator('#mobile-menu');
     await expect(button.locator('.menu-label')).toHaveText(dictionary.menuLabel);
@@ -162,6 +164,7 @@ for (const locale of ['pt-BR', 'en-US', 'es', 'zh-Hans']) {
     await expect(button).toHaveAccessibleName(dictionary.closeMenu);
     await expect(menu).toHaveAccessibleName(dictionary.mobileNavigation);
     await headerFits(page);
+    await capture(page, path.join(EVIDENCE, 'navigation-text150-' + locale + '-' + width + '.png'));
     await menu.locator('a').last().focus(); await expect(menu.locator('a').last()).toBeFocused();
     expect(await menu.evaluate(node => node.getBoundingClientRect().bottom <= innerHeight)).toBe(true);
     await page.keyboard.press('Tab'); await expect(page.locator('.producer-top-link')).toBeFocused();

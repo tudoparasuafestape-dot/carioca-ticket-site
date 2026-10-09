@@ -518,7 +518,7 @@ test('home controls have unique IDs after composition', async ({ page }) => {
 
 test('all dictionaries have complete keys and interpolation tokens; shared words are intentional', () => {
   const sameWords = {
-    'en-US': ['pix', 'checkin', 'legal'],
+    'en-US': ['menuLabel', 'pix', 'checkin', 'legal'],
     es: ['theme', 'mode', 'light', 'explore', 'login', 'language', 'larger', 'agenda', 'filters', 'thisWeek', 'pix', 'events', 'legal', 'foundOne', 'foundMany', 'viewEvent', 'adPause'],
     'zh-Hans': ['pix']
   };

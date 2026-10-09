@@ -278,7 +278,9 @@
   .ct-home .menu-toggle,.ct-home #accessibility-toggle { width:auto; padding-inline:12px; gap:6px; }
   .ct-home .menu-label,.ct-home .accessibility-label { display:inline; font-weight:650; }
   .ct-home .links { gap:12px; }
-  .ct-home .brand-location { gap:12px; }
+  .ct-home .brand-location { flex-direction:column; align-items:flex-start; gap:0; }
+  .ct-home .brand img { width:32px; height:32px; }
+  .ct-home .brand-location .location-trigger { min-height:28px; padding:2px 0; }
   .ct-home .nav-tools,.ct-home .producer-top-link { flex-shrink:0; }
   .ct-home .mobile-menu { width:1040px; max-width:calc(100vw - 64px); }
   .ct-home .mobile-menu-inner { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding:16px; }
