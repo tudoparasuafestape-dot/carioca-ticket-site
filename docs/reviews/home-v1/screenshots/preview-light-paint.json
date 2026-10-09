@@ -19,12 +19,12 @@
     {
       "repeat": 1,
       "goldPixels": 8429,
-      "sha256": "7e244fe61d988940749f81f90caae93592df05bd91063641fba6cb348a264795"
+      "sha256": "f67172c8111269f3a67a995bed14f97f01943494ef38a6bf7f8e1852902e86a3"
     },
     {
       "repeat": 2,
       "goldPixels": 8429,
-      "sha256": "e058dc89cebf11683d00cee8665383fda6a891c7dd909fcda420eb35a6a950ab"
+      "sha256": "7d13340f11a450e9ee556174414b4d004450fffdf59cc4a3de467bf7cdd26326"
     }
   ],
   "externalRequests": 0,

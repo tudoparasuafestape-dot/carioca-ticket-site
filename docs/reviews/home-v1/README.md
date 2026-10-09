@@ -1,8 +1,8 @@
 # Home V1 — revisão consolidada
 
-Branch: `fix/home-mode-menu-20261009`  
-Base: `bb9f00564d11389aba069604f9fffe56f7f98de4` (PR164 já publicado anteriormente).  
-Preview local: http://127.0.0.1:4176  
+Branch: `fix/home-mode-menu-20261009`
+Base atual: `b2ae77055a8c9c6e9ad33618cba38c8df558e2be` (PR168 integrado pelo executor responsável; rebase da home sem conflitos).
+Preview local: http://127.0.0.1:4176
 Esta branch não foi mesclada nem publicada em produção.
 
 ## O que revisar
@@ -66,7 +66,7 @@ npx playwright test --config=playwright.catalog-isolated.config.cjs
 
 O primeiro conjunto cobre temas, teclado/foco, largura 320/412/768/1440, reflow equivalente a zoom 200%, CSS zoom adicional, texto 150%, quatro idiomas, preferências indisponíveis/inválidas, local oficial e recuperação, períodos/categorias, catálogo vazio/erro/retry, imagens ausentes, preservação dos links/transportes, ausência de JavaScript e falha de módulo opcional. A publicidade usa as artes reais: bytes preservados, proporção integral, contraste da transcrição, destinos, etiqueta inferior esquerda, foco, pausa, movimento reduzido e recuperação quando as imagens falham. Cliques no preview abrem somente a página local de bloqueio.
 
-O segundo exercita os 20 testes existentes do catálogo público em desktop e mobile com interceptação integral. Os scripts de contratos protegem 41 superfícies, 67 páginas e as jornadas comerciais/operacionais. Não há comando de lint configurado no projeto; os scripts alterados passam por `node --check` e `git diff --check`.
+O segundo exercita os 20 testes existentes do catálogo público em desktop e mobile com interceptação integral. Após o rebase sobre PR168, a configuração exclusiva do catálogo declara `CT_BRANCH_MODE=1`, origem loopback, `offline: true` e service workers bloqueados, compatíveis com a nova guarda independente. Os arquivos e testes do PR168 permanecem intactos. Os scripts de contratos protegem 41 superfícies, 67 páginas e as jornadas comerciais/operacionais. Não há comando de lint configurado no projeto; os scripts alterados passam por `node --check` e `git diff --check`.
 
 ### Revisão de idiomas do PR167
 

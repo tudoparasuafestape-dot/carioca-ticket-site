@@ -1,20 +1,20 @@
 {
-  "validatedAt": "2026-10-09T02:24:05.551940+00:00",
+  "validatedAt": "2026-10-09T05:16:12.594753+00:00",
   "branch": "fix/home-mode-menu-20261009",
-  "base": "bb9f00564d11389aba069604f9fffe56f7f98de4",
-  "environment": "Chromium; intercepted fixtures and localhost only; service workers blocked",
+  "base": "b2ae77055a8c9c6e9ad33618cba38c8df558e2be",
+  "environment": "Chromium; home uses intercepted fixtures/localhost only; catalog uses independent PR168 mock audit, explicit loopback, offline=true and serviceWorkers=block",
   "preview": "http://127.0.0.1:4176",
   "home": {
-    "startTime": "2026-10-09T02:19:45.051Z",
-    "duration": 132375.277,
-    "expected": 50,
+    "startTime": "2026-10-09T05:09:51.480Z",
+    "duration": 321807.19,
+    "expected": 60,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
   },
   "catalog": {
-    "startTime": "2026-10-09T02:22:02.536Z",
-    "duration": 32838.166999999994,
+    "startTime": "2026-10-09T05:09:50.114Z",
+    "duration": 136295.821,
     "expected": 20,
     "skipped": 0,
     "unexpected": 0,
@@ -36,7 +36,7 @@
     ]
   },
   "staticChecks": [
-    "node --check (five changed JS assets)",
+    "node --check (home JS assets, preview server and isolated catalog config)",
     "git diff --check"
   ],
   "protectedPathsUnchanged": [
@@ -50,36 +50,31 @@
     "minha-carioca/"
   ],
   "sourceSha256": {
-    "index.html": "25d57a87cb09ffe8f2338c4347755bea872d7881fff653fb4ef147761f8846b7",
-    "assets/home.css": "ab70590b28556967c62ae3da587bbf7fb40c00ed34161cd6372d30d519ca9be8",
+    "index.html": "5e1a8a1e4cde8dec9e6d53c2c3d8a23ae7f12a7a30f93eead7272dbd78367657",
+    "assets/home.css": "d65ae127c72d3c2f69d4489d4380e25cbf1687a2fa3277eef801a563aee82413",
     "assets/home-theme.js": "4401bd40c5dca021c12db79e5d92ab78bd410851f77fba0fb67ed05279ec2e38",
     "assets/home-i18n.js": "a79648a28d1f43cf60463ed21b0c3be1878a1c949d62a30aa4abe35740935ec4",
     "assets/home-controls.js": "cdf9f41e4269ac824311a0e3b6f8ecb776eb197c3353e63306ad190d5f36b1d6",
     "assets/home-navigation.js": "ea69775e749501fe6c6a25472b3c739c4cd05b81999bb50996f5d0e3b24a73e1",
-    "assets/home-advertisements.js": "264542d806d97bf058f6cf7b603a9284cc0bb0eacbecaae4e064518d341ee385",
+    "assets/home-advertisements.js": "68f644d9a2d62d8a1b3925158b894b14ea8bfa5ec96460c3eeee08bf70c83936",
     "assets/home-municipalities.json": "8784d41a8c48a6518bc035bdb28c29a46388887ca2da6a4744f90ab3c14804eb",
-    "assets/public-event-catalog.js": "46cc4f57f1671f0d2894bceed41a65d434503b107ea9c4b119b2ed4d6629bf38"
+    "assets/public-event-catalog.js": "46cc4f57f1671f0d2894bceed41a65d434503b107ea9c4b119b2ed4d6629bf38",
+    "assets/home-ad-priscila.png": "0695b960e396903f73a72b24dfc97fdc63678889f32dee47a9e4c2ab0254bdaa",
+    "assets/home-ad-tpssf.png": "4714a8243dc0f61dd565390a54c98734c40864eb5d25f885a8cc2092edcc28c9",
+    "playwright.catalog-isolated.config.cjs": "18d334721ec6e29abe726a58c6a926a53f557482908247626c9b3b271e8976ef"
   },
   "notRun": [
     "Real mobile devices",
     "Human screen-reader review",
-    "Production transactions, login codes, ticket issuance and check-in",
-    "Visual integration of blocked Library artwork"
+    "Production transactions, login codes, ticket issuance and check-in"
   ],
-  "blockers": [
-    "Library materialization of TPSSF and Priscila artwork returned HTTP 403; no local image bytes; campaigns remain hidden"
-  ],
+  "blockers": [],
   "resolvedDuringValidation": [
     "Removed duplicate city-retry control",
     "Kept first catalog cover below 320px desktop / 480px mobile",
     "Full PNG header antialias variance (12–17 pixels) replaced by exact producer-paint comparison in the dedicated paint regression test"
   ],
-  "targetedAfterVisualReview": {
-    "tests": 3,
-    "passed": 3,
-    "purpose": "Sticky anchor offset after removing duplicate scroll-padding + scroll-margin compensation; 200% reflow and 150% fonts in both themes"
-  },
-  "sourceSha256Basis": "Git blob bytes after line-ending normalization",
+  "sourceSha256Basis": "Git index blob bytes after line-ending normalization",
   "languageReview": {
     "previousHead": "30ea0804adfd94a759dfbd1351107f45318ebc38",
     "locales": [
@@ -100,5 +95,63 @@
     "sourceLanguageFallback": "pt-BR is the original document editorial declaration; no per-event language metadata or automatic detection is introduced",
     "libraryRetried": false,
     "geolocationAdded": false
+  },
+  "advertisingReview": {
+    "previousRemoteHead": "e2ea9bf17d9c3a5e3206318f94be745f331076b8",
+    "source": "Owner-provided extensionless PNGs in Downloads; identified by pixels; unchanged bytes",
+    "provenance": "advertising-source.json",
+    "sourceImageCount": 2,
+    "artworkScreenshots": [
+      "advertising-priscila-dark-1440.png",
+      "advertising-priscila-dark-320.png",
+      "advertising-priscila-dark-412.png",
+      "advertising-priscila-dark-768.png",
+      "advertising-priscila-light-1440.png",
+      "advertising-priscila-light-320.png",
+      "advertising-priscila-light-412.png",
+      "advertising-priscila-light-768.png",
+      "advertising-tpssf-dark-1440.png",
+      "advertising-tpssf-dark-320.png",
+      "advertising-tpssf-dark-412.png",
+      "advertising-tpssf-dark-768.png",
+      "advertising-tpssf-light-1440.png",
+      "advertising-tpssf-light-320.png",
+      "advertising-tpssf-light-412.png",
+      "advertising-tpssf-light-768.png"
+    ],
+    "addedTests": 10,
+    "viewports": [
+      320,
+      412,
+      768,
+      1440
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "captionMinimumContrast": 4.5,
+    "verified": [
+      "Exact source SHA256",
+      "Full uncropped aspect ratio",
+      "Approved text and destinations",
+      "Visible bottom-left advertising labels",
+      "Keyboard focus and pause",
+      "Reduced motion",
+      "Missing image recovery",
+      "Local preview rejects external ad navigation"
+    ],
+    "libraryRetried": false,
+    "geolocationAdded": false,
+    "pr168FilesPreserved": true,
+    "pr165StatusAtReview": "OPEN; not incorporated before its authorized publisher merges it",
+    "remainingScope": [
+      "Geolocation",
+      "IBGE registration migration",
+      "Event audio",
+      "Libras",
+      "Chinese variant confirmation",
+      "Human screen-reader review"
+    ]
   }
 }
