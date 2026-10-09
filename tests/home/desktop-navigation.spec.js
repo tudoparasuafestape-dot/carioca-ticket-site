@@ -178,6 +178,9 @@ for (const width of [320, 412, 1201, 1351, 1440, 1920]) for (const locale of ['p
     await expect(button).toHaveAccessibleName(dictionary.openMenu);
     await expect(page.locator('#accessibility-toggle')).toHaveAccessibleName(dictionary.accessibility);
     await expect(page.locator('#accessibility-toggle .accessibility-label')).toHaveText(dictionary.language);
+    await expect(page.locator('#accessibility-toggle .accessibility-label')).toBeVisible();
+    await expect(page.locator('#accessibility-toggle svg')).toBeVisible();
+    await expect(page.locator('#accessibility-toggle svg')).toHaveAttribute('aria-hidden', 'true');
     await expect(page.locator('#home-language')).toHaveCount(1);
     await headerFits(page);
     await page.locator('#accessibility-toggle').click();
@@ -185,6 +188,13 @@ for (const width of [320, 412, 1201, 1351, 1440, 1920]) for (const locale of ['p
     await expect(page.getByRole('radio', { name: 'Português', exact: true })).toBeVisible();
     expect(await page.locator('#home-language option').evaluateAll(nodes => nodes.map(node => node.value))).toEqual(['pt-BR', 'en-US', 'es', 'zh-Hans']);
     for (let i = 0; i < 5; i++) await page.locator('#font-up').click();
+    await expect(page.locator('#accessibility-toggle .accessibility-label')).toBeVisible();
+    const languageFits = await page.locator('#accessibility-toggle .accessibility-label').evaluate(label => {
+      const box = label.getBoundingClientRect(), button = label.closest('button').getBoundingClientRect();
+      return box.left >= button.left && box.right <= button.right && label.scrollWidth <= label.clientWidth + 1;
+    });
+    expect(languageFits).toBe(true);
+    if (width <= 600) expect(await page.locator('.topbar').evaluate(header => header.getBoundingClientRect().height)).toBeLessThanOrEqual(170);
     await button.click();
     await expect(button).toHaveAccessibleName(dictionary.closeMenu);
     await expect(menu).toHaveAccessibleName(dictionary.mobileNavigation);
@@ -231,4 +241,5 @@ test.describe('navigation at equivalent 200 percent browser zoom', () => {
     assertClean(state);
   });
 });
+
 

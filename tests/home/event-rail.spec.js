@@ -253,7 +253,7 @@ for(const slot of ['primary','secondary']) test(`${slot} advertisement: existing
   expect(timings[1].time-timings[0].time).toBeLessThanOrEqual(5100);
   await expect(ad.locator('.eyebrow')).toHaveText('Publicidade');
   const href=await ad.locator('.ad-campaign').getAttribute('href');
-  expect(href).toBe(slot==='primary'?'https://www.instagram.com/tudoparasuafestape/':'https://wa.me/5581996200696');
+  expect(href).toBe(slot==='primary'?'https://www.instagram.com/tudoparasuafestape/':'https://wa.me/5581996200696?text=' + encodeURIComponent('Olá! Vim pela Carioca Ticket e gostaria de mais informações sobre os serviços e horários disponíveis para agendamento.'));
   await expect(ad.locator('.ad-house')).toBeVisible();
   await ad.getByRole('button',{name:'Próxima publicidade'}).click(); await page.mouse.move(0,0);
   await page.locator('#event-search-input').focus(); await ad.scrollIntoViewIfNeeded();
@@ -313,4 +313,5 @@ test('resize during manual transition commits the new card and matching visible 
   await expect(page.locator('.catalog-card:not([inert])')).toContainText(rows(2)[1].nome);
   await expect(page.locator('#event-rail-pause')).toHaveText('Retomar rotação');
 });
+
 
