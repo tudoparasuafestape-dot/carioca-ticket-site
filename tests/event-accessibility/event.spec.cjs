@@ -234,3 +234,30 @@ for (const route of ['evento', 'evento-v2']) {
     }
   });
 }
+
+test('integrated current home loads its local assets and shares theme with both event routes', async ({ page }) => {
+  const failures = [];
+  const errors = [];
+  page.on('response', response => {
+    if (['script', 'stylesheet', 'image'].includes(response.request().resourceType()) && response.status() >= 400) failures.push(response.status() + ' ' + new URL(response.url()).pathname);
+  });
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/');
+  await expect(page.locator('.catalog-card').first()).toBeVisible();
+  for (const resource of ['/assets/home-event-rail.js', '/assets/public-share.js', '/assets/public-share.css']) {
+    const response = await page.request.get(resource);
+    expect(response.status()).toBe(200);
+  }
+  for (const route of ['evento', 'evento-v2']) {
+    await page.goto('/');
+    await page.locator('#home-theme').selectOption('light');
+    await page.goto('/' + route + '/?evento=PREVIEW-EVENT');
+    await expect(page.locator('#app')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-home-theme', 'light');
+    await page.locator('#home-theme').selectOption('dark');
+    await page.goto('/');
+    await expect(page.locator('#home-theme')).toHaveValue('dark');
+  }
+  expect(failures).toEqual([]);
+  expect(errors).toEqual([]);
+});

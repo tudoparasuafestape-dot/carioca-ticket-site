@@ -11,14 +11,15 @@ const i18nSource = fs.readFileSync(path.join(ROOT, 'assets/home-i18n.js'), 'utf8
 const dictionaries = JSON.parse(i18nSource.match(/var dictionaries = (\{[\s\S]*?\n\});/)[1]);
 const approvedAds = [
   { slot: 'primary', name: 'tpssf', width: 2172, height: 724, title: 'Tudo Para Sua Festa',
-    href: 'https://www.instagram.com/tudoparasuafestape/', cta: 'Conheça a Tudo Para Sua Festa',
+    href: 'https://wa.me/5581995023085?text=Ol%C3%A1%21%20Vim%20pela%20Carioca%20Ticket%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20loca%C3%A7%C3%A3o%20de%20materiais%20para%20festas.', cta: 'Fale sobre locação pelo WhatsApp',
     sha256: '4714a8243dc0f61dd565390a54c98734c40864eb5d25f885a8cc2092edcc28c9' },
   { slot: 'secondary', name: 'priscila', width: 2170, height: 725, title: 'Priscila Ferreira',
-    href: 'https://wa.me/5581996200696', cta: 'Clique aqui e faça seu agendamento',
+    href: 'https://wa.me/5581996200696?text=Ol%C3%A1%21%20Vim%20pela%20Carioca%20Ticket%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20servi%C3%A7os%20e%20hor%C3%A1rios%20dispon%C3%ADveis%20para%20agendamento.', cta: 'Clique aqui e faça seu agendamento',
     sha256: '0695b960e396903f73a72b24dfc97fdc63678889f32dee47a9e4c2ab0254bdaa' }
 ];
 
 async function fixture(page, options = {}) {
+  await page.addInitScript(() => { Math.random = () => 0; });
   const state = { methods: [], errors: [], blocked: [], attempts: 0, cities: 0 };
   page.on('pageerror', error => state.errors.push(error.message));
   await page.context().route('**/*', async route => {
@@ -31,7 +32,7 @@ async function fixture(page, options = {}) {
       if (url.pathname === '/pwa-register.js' || url.pathname.includes('ct-analytics')) return route.fulfill({ contentType: 'text/javascript', body: '' });
       if (options.missingTranslation && url.pathname === '/assets/home-i18n.js') {
         const reduced = JSON.parse(JSON.stringify(dictionaries));
-        delete reduced['en-US'].mainNavigation;
+        delete reduced['en-US'].mobileNavigation;
         return route.fulfill({ contentType: 'text/javascript', body: i18nSource.replace(/var dictionaries = (\{[\s\S]*?\n\});/, 'var dictionaries = ' + JSON.stringify(reduced) + ';') });
       }
       const file = path.resolve(ROOT, url.pathname === '/' ? 'index.html' : url.pathname.slice(1));
@@ -57,7 +58,7 @@ async function loaded(page) { await expect(page.locator('.catalog-card')).toHave
 async function noOverflow(page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const outside = await page.locator('main a, main input, main button, header select').evaluateAll(nodes => nodes.filter(node => {
-    if (!node.getClientRects().length) return false;
+    if (!node.getClientRects().length || node.closest('.catalog-card[inert]')) return false;
     const rect = node.getBoundingClientRect();
     return rect.left < -1 || rect.right > innerWidth + 1;
   }).map(node => node.textContent || node.id));
@@ -170,7 +171,7 @@ test('keyboard skip link, mobile disclosure, escape, anchor focus and resizing',
   await page.locator('#mobile-menu a').first().focus();
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(page.locator('#mobile-menu')).toBeHidden();
-  await expect(page.locator('.links a').first()).toBeFocused();
+  await expect(button).toBeFocused();
 });
 
 for (const theme of ['light', 'dark']) {
@@ -186,8 +187,8 @@ for (const theme of ['light', 'dark']) {
       for (const event of events) {
         const card = page.locator(`[data-event-id="${event.id}"]`);
         for (const field of ['nome', 'data', 'horario', 'local', 'cidade', 'uf']) await expect(card).toContainText(event[field]);
-        await expect(card.getByRole('link', { name: 'Ver evento', exact: true })).toHaveAttribute('href', '/evento/?evento=' + event.id);
-        await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
+        await expect(card.getByRole('link', { name: 'Ver evento', exact: true, includeHidden: true })).toHaveAttribute('href', '/evento/?evento=' + event.id);
+        await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome, includeHidden: true })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
         expect(await card.locator('img').evaluate(img => getComputedStyle(img).objectFit)).toBe('contain');
       }
       await expect(page.locator('.catalog-card')).not.toContainText(['R$']);
@@ -237,7 +238,7 @@ test('missing and broken images have usable fallbacks and absent fields remain e
   await expect(page.locator('.catalog-image-fallback')).toHaveText(['Capa indisponível', 'Capa indisponível']);
   await expect(page.locator('.catalog-card').first()).toContainText('Data e horário não informados');
   await expect(page.locator('.catalog-card').first()).toContainText('Local não informado');
-  await expect(page.getByRole('link', { name: /^Comprar ingresso:/ })).toHaveCount(2);
+  await expect(page.locator('.catalog-actions .btn-primary')).toHaveCount(2);
   await screenshot(page, 'missing-data');
 });
 
@@ -466,7 +467,7 @@ test('approved ad rotation keeps the label visible, pauses for keyboard and hono
   await expect(page.locator('#advertising-secondary')).toBeVisible();
   const ad = page.locator('#advertising-primary');
   await ad.scrollIntoViewIfNeeded();
-  await expect(ad.getByRole('button', { name: 'Reproduzir', exact: true })).toBeVisible();
+  await expect(ad.getByRole('button', { name: 'Pausar', exact: true })).toBeVisible();
   await expect(ad.locator('.eyebrow')).toBeVisible();
   const before = await ad.boundingBox();
   await ad.getByRole('button', { name: 'Próxima publicidade' }).focus();
@@ -477,6 +478,7 @@ test('approved ad rotation keeps the label visible, pauses for keyboard and hono
   const after = await ad.boundingBox();
   expect(after.height).toBeCloseTo(before.height, 0);
   await expect(ad.getByRole('button', { name: 'Próxima publicidade' })).toBeFocused();
+  await expect(ad.getByRole('button', { name: 'Reproduzir', exact: true })).toBeVisible();
   await ad.getByRole('button', { name: 'Publicidade anterior' }).click();
   await expect(ad.locator('.ad-campaign')).toBeVisible();
   expect(state.errors).toEqual([]);
@@ -517,7 +519,7 @@ test('home controls have unique IDs after composition', async ({ page }) => {
 
 test('all dictionaries have complete keys and interpolation tokens; shared words are intentional', () => {
   const sameWords = {
-    'en-US': ['pix', 'checkin', 'legal'],
+    'en-US': ['menuLabel', 'pix', 'checkin', 'legal'],
     es: ['theme', 'mode', 'light', 'explore', 'login', 'language', 'larger', 'agenda', 'filters', 'thisWeek', 'pix', 'events', 'legal', 'foundOne', 'foundMany', 'viewEvent', 'adPause'],
     'zh-Hans': ['pix']
   };
@@ -546,6 +548,22 @@ async function checkAnnotatedCopy(page, locale) {
   expect(mismatch).toEqual([]);
 }
 
+async function unlocalizedVisibleCopy(page) {
+  return page.evaluate(() => {
+      const allowedText = new Set(['Carioca', 'Ticket', 'CARIOCA TICKET', 'contato@cariocaticket.com.br', '@cariocaticketbr', 'cariocaticket.com.br', 'A−', 'A-', 'A+']);
+      const dynamic = '#event-rail-position, #event-rail-announcement, #active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
+      const sourceOnly = '.language-choice span[translate="no"], .catalog-original[translate="no"], .ad-campaign-title[translate="no"], [data-share-event-title][translate="no"], .active-place[translate="no"], #active-filters > span[translate="no"], #category-choices button[translate="no"], #city-options button[translate="no"]';
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const result = [];
+      while (walker.nextNode()) {
+        const node = walker.currentNode, text = node.textContent.trim(), parent = node.parentElement;
+        if (!/\p{L}/u.test(text) || !parent || parent.closest('script,style,noscript,[aria-hidden="true"],[data-i18n],#home-language option,#location-uf option') || parent.closest(sourceOnly) || parent.closest(dynamic) || allowedText.has(text)) continue;
+        if (parent.getClientRects().length && getComputedStyle(parent).visibility !== 'hidden') result.push({ text, tag: parent.tagName, id: parent.id });
+      }
+      return result;
+  });
+}
+
 for (const locale of Object.keys(dictionaries)) {
   test(`complete visible and accessible interface, source language and dynamic states / ${locale}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 915 });
@@ -556,32 +574,26 @@ for (const locale of Object.keys(dictionaries)) {
     await page.locator('#home-language').selectOption(locale);
     await checkAnnotatedCopy(page, locale);
     await expect(page).toHaveTitle(dictionary.pageTitle);
-    await expect(page.locator('.links')).toHaveAttribute('aria-label', dictionary.mainNavigation);
     await expect(page.locator('#mobile-menu')).toHaveAttribute('aria-label', dictionary.mobileNavigation);
     await expect(page.locator('footer [data-i18n="myAccount"]')).toHaveText(dictionary.myAccount);
     await expect(page.locator('#event-search-input')).toHaveAttribute('placeholder', dictionary.searchPlaceholder);
     await expect(page.locator('#event-count')).toHaveText(dictionary.availableMany.replace('{n}', '2'));
-    const uncovered = await page.evaluate(() => {
-      const allowedText = new Set(['Carioca', 'Ticket', 'CARIOCA TICKET', 'contato@cariocaticket.com.br', '@cariocaticketbr', 'cariocaticket.com.br', 'A−', 'A-', 'A+']);
-      const dynamic = '#active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-      const result = [];
-      while (walker.nextNode()) {
-        const node = walker.currentNode, text = node.textContent.trim(), parent = node.parentElement;
-        if (!/\p{L}/u.test(text) || !parent || parent.closest('script,style,noscript,[aria-hidden="true"],[data-i18n],[translate="no"],#home-language option,#location-uf option') || parent.closest(dynamic) || allowedText.has(text)) continue;
-        if (parent.getClientRects().length && getComputedStyle(parent).visibility !== 'hidden') result.push({ text, tag: parent.tagName, id: parent.id });
-      }
-      return result;
-    });
+    const uncovered = await unlocalizedVisibleCopy(page);
     expect(uncovered).toEqual([]);
     const unlabeledAttributes = await page.locator('[aria-label], [placeholder]').evaluateAll(nodes => nodes.filter(node => {
+      if (node.id === 'events-grid' || node.classList.contains('catalog-card')) return false; // Dynamic interpolated labels are asserted below.
       const aria = node.getAttribute('aria-label'), placeholder = node.getAttribute('placeholder');
       return (aria && !node.dataset.i18nAriaLabel && aria !== 'Carioca Ticket') || (placeholder && !node.dataset.i18nPlaceholder);
     }).map(node => ({ id: node.id, aria: node.getAttribute('aria-label'), placeholder: node.getAttribute('placeholder') })));
     expect(unlabeledAttributes).toEqual([]);
+    await expect(page.locator('#events-grid')).toHaveAttribute('aria-label', dictionary.eventFeature);
+    for (let i = 0; i < events.length; i++) await expect(page.locator('.catalog-card').nth(i)).toHaveAttribute('aria-label', dictionary.railPosition.replace('{n}', String(i + 1)).replace('{total}', String(events.length)));
 
     await expect(page.locator('.brand-location .location-trigger')).toHaveAccessibleName(dictionary.choosePlace + ' ' + dictionary.allPlaces);
+    await page.locator('#events-grid').focus();
+    await page.keyboard.press('Home');
     for (const event of events) {
+      if (event !== events[0]) await page.keyboard.press('ArrowRight');
       const card = page.locator(`[data-event-id="${event.id}"]`);
       const title = card.locator('.catalog-title a');
       await expect(title).toHaveText(event.nome);
@@ -660,10 +672,10 @@ test('missing translation falls back to Portuguese with the correct language; in
   await loaded(page);
   await page.locator('#accessibility-toggle').click();
   await page.locator('#home-language').selectOption('en-US');
-  await expect(page.locator('.links')).toHaveAttribute('aria-label', dictionaries['pt-BR'].mainNavigation);
-  await expect(page.locator('.links')).toHaveAttribute('lang', 'pt-BR');
-  await expect(page.locator('.links [data-i18n="explore"]')).toHaveText(dictionaries['en-US'].explore);
-  await expect(page.locator('.links [data-i18n="explore"]')).toHaveAttribute('lang', 'en-US');
+  await expect(page.locator('#mobile-menu')).toHaveAttribute('aria-label', dictionaries['pt-BR'].mobileNavigation);
+  await expect(page.locator('#mobile-menu')).toHaveAttribute('lang', 'pt-BR');
+  await expect(page.locator('#mobile-menu [data-i18n="events"]')).toHaveText(dictionaries['en-US'].events);
+  await expect(page.locator('#mobile-menu [data-i18n="events"]')).toHaveAttribute('lang', 'en-US');
   await page.evaluate(() => CTHome.setLocale('__proto__'));
   await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
   expect(await page.evaluate(() => CTHome.t('unknown-key'))).toBe('unknown-key');
@@ -692,8 +704,9 @@ for (const theme of ['light', 'dark']) {
         await expect(link).toHaveAttribute('href', ad.href);
         await expect(link).toHaveAttribute('target', '_blank');
         await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-        await expect(link).toHaveAttribute('lang', 'pt-BR');
-        await expect(link).toHaveAttribute('translate', 'no');
+        await expect(link).not.toHaveAttribute('translate', 'no');
+        await expect(link.locator('.ad-campaign-title')).toHaveAttribute('lang', 'pt-BR');
+        await expect(link.locator('.ad-campaign-title')).toHaveAttribute('translate', 'no');
         await expect(link).toHaveAccessibleName(new RegExp(ad.title + '.*' + ad.cta));
         await expect(link.locator('.ad-campaign-cta')).toHaveText(ad.cta);
         await expect.poll(() => link.locator('img').evaluate(img => img.complete && img.naturalWidth)).toBe(ad.width);
@@ -743,3 +756,122 @@ test('missing approved artwork recovers to the actionable house advertisement', 
   }
   expect(state.errors).toEqual([]);
 });
+
+test('translation audit cannot exempt untranslated campaign actions with translate=no', async ({ page }) => {
+  const state = await fixture(page);
+  await loaded(page);
+  await expect(page.locator('#advertising-primary .ad-campaign')).toBeVisible();
+  await page.evaluate(() => {
+    const link = document.querySelector('#advertising-primary .ad-campaign');
+    link.setAttribute('translate', 'no');
+    const action = link.querySelector('.ad-campaign-cta');
+    action.removeAttribute('data-i18n');
+    action.textContent = 'AÇÃO SEM TRADUÇÃO';
+  });
+  expect(await unlocalizedVisibleCopy(page)).toContainEqual({ text: 'AÇÃO SEM TRADUÇÃO', tag: 'SPAN', id: '' });
+  expect(state.errors).toEqual([]);
+  expect(state.blocked).toEqual([]);
+});
+
+for (const width of [320, 1440]) for (const locale of Object.keys(dictionaries)) {
+  test('campaign HTML language after render, enlargement and reload / ' + width + 'px / ' + locale, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const state = await fixture(page), dictionary = dictionaries[locale];
+    await loaded(page);
+    await page.locator('#accessibility-toggle').click();
+    await page.locator('#home-language').selectOption(locale);
+    if (width === 320) for (let i = 0; i < 5; i++) await page.locator('#font-up').click();
+    await page.locator('#accessibility-toggle').click();
+    expect(await page.evaluate(() => localStorage.getItem('ct-home-locale'))).toBe(locale);
+    for (const reloaded of [false, true]) {
+      if (reloaded) { await page.reload(); await loaded(page); }
+      await expect(page.locator('html')).toHaveAttribute('lang', locale);
+      await expect(page.locator('#home-language')).toHaveValue(locale);
+      for (const ad of approvedAds) {
+        const slot = page.locator('#advertising-' + ad.slot), link = slot.locator('.ad-campaign');
+        const descriptionKey = ad.slot === 'primary' ? 'adTpssfDescription' : 'adPriscilaDescription';
+        const ctaKey = ad.slot === 'primary' ? 'adTpssfCta' : 'adPriscilaCta';
+        await slot.scrollIntoViewIfNeeded();
+        // Translation/reflow is checked on a deliberately paused campaign.
+        // Keep the independent autoplay tests responsible for timing behavior.
+        await slot.locator('.ad-controls button').first().focus();
+        if (!(await link.isVisible())) await slot.locator('.ad-controls button').last().click();
+        await expect(link).toBeVisible();
+        await expect(link).toHaveAttribute('href', ad.href);
+        await expect(link).not.toHaveAttribute('translate', 'no');
+        await expect(link.locator('.ad-campaign-title')).toHaveText(ad.title);
+        await expect(link.locator('.ad-campaign-title')).toHaveAttribute('lang', 'pt-BR');
+        await expect(link.locator('.ad-campaign-title')).toHaveAttribute('translate', 'no');
+        await expect(link.locator('[data-i18n="' + descriptionKey + '"]')).toHaveText(dictionary[descriptionKey]);
+        await expect(link.locator('[data-i18n="' + descriptionKey + '"]')).toHaveAttribute('lang', locale);
+        await expect(link.locator('.ad-campaign-cta')).toHaveText(dictionary[ctaKey]);
+        await expect(link.locator('.ad-campaign-cta')).toHaveAttribute('lang', locale);
+        await expect(link).toHaveAccessibleName(new RegExp(ad.title + '.*' + dictionary[ctaKey]));
+        await expect(link.locator('img')).toHaveAttribute('src', '/assets/home-ad-' + ad.name + '.png');
+        const caption = await link.locator('.ad-caption').evaluate(node => ({
+          width: node.clientWidth, scroll: node.scrollWidth, right: node.getBoundingClientRect().right, viewport: innerWidth
+        }));
+        expect(caption.scroll).toBeLessThanOrEqual(caption.width + 1);
+        expect(caption.right).toBeLessThanOrEqual(caption.viewport);
+        await noOverflow(page);
+        if (!reloaded && locale === 'en-US') await screenshot(page, 'ad-caption-english-' + ad.slot + '-' + width);
+      }
+      expect(await unlocalizedVisibleCopy(page)).toEqual([]);
+    }
+    expect(state.methods).toEqual(['ctEventosPublicosListarPROD', 'ctEventosPublicosListarPROD']);
+    expect(state.errors).toEqual([]);
+    expect(state.blocked).toEqual([]);
+  });
+}
+
+for (const width of [320, 375, 390]) for (const enlarged of [false, true]) {
+  test('mobile contact email stays whole / ' + width + 'px / ' + (enlarged ? '150%' : '100%'), async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const state = await fixture(page);
+    await loaded(page);
+    if (enlarged) {
+      await page.locator('#accessibility-toggle').click();
+      for (let i = 0; i < 5; i++) await page.locator('#font-up').click();
+      await page.locator('#accessibility-toggle').click();
+    }
+    const contact = page.locator('.footer-contact'), email = contact.locator('a[href^="mailto:"]');
+    await expect(email).toHaveAttribute('href', 'mailto:contato@cariocaticket.com.br');
+    await expect(email).toHaveText('contato@cariocaticket.com.br');
+    async function geometry() {
+      return email.evaluate(node => {
+        const text = node.firstChild, lines = new Map(), range = document.createRange();
+        for (let i = 0; i < text.textContent.length; i++) {
+          range.setStart(text, i); range.setEnd(text, i + 1);
+          const rect = range.getBoundingClientRect(), y = Math.round(rect.top);
+          lines.set(y, (lines.get(y) || '') + text.textContent[i]);
+        }
+        const box = node.getBoundingClientRect(), column = node.parentElement.getBoundingClientRect();
+        return { lines: Array.from(lines.values()), fontSize: getComputedStyle(node).fontSize,
+          left: box.left, right: box.right, columnLeft: column.left, columnRight: column.right,
+          width: node.clientWidth, scrollWidth: node.scrollWidth, viewport: innerWidth };
+      });
+    }
+    // Reproduce the previous two-column layout in this synthetic page only.
+    const previous = await page.addStyleTag({ content: '.ct-home .footer-grid > .footer-contact { grid-column: auto !important; }' });
+    await email.scrollIntoViewIfNeeded();
+    const before = await geometry();
+    await previous.evaluate(node => node.remove());
+    await email.scrollIntoViewIfNeeded();
+    const after = await geometry();
+    console.log('FOOTER_CONTACT_REFLOW', JSON.stringify({ width, enlarged, before, after }));
+    if (width === 320 && enlarged) expect(before.lines.length).toBeGreaterThan(1);
+    expect(after.fontSize).toBe(before.fontSize);
+    expect(after.lines).toEqual(['contato@cariocaticket.com.br']);
+    expect(after.left).toBeGreaterThanOrEqual(after.columnLeft);
+    expect(after.right).toBeLessThanOrEqual(after.columnRight + 1);
+    expect(after.right).toBeLessThanOrEqual(after.viewport);
+    expect(after.scrollWidth).toBeLessThanOrEqual(after.width + 1);
+    await noOverflow(page);
+    await screenshot(page, 'footer-contact-' + width + '-' + (enlarged ? 'text150' : 'text100'));
+    expect(state.errors).toEqual([]);
+    expect(state.blocked).toEqual([]);
+  });
+}
+
+

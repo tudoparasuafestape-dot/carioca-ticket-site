@@ -2,6 +2,14 @@
 
 Base conferida: `8d6ef2da57f69ed6b3e4201d090a570ac3c2c66a` em `main`, em 09/10/2026. Branch isolada: `feat/event-accessibility-20261009`.
 
+## Integração com a home publicada em 09/10/2026
+
+A branch foi reconciliada com main `62ed8b511802ea3be97fcca3154d6ab002a8edbc` (PR179), preservando os dois commits originais do PR170. As duas páginas do evento e `assets/home-theme.js` não tinham mudanças concorrentes. A home já possui Claro/Escuro/Modo; este PR acrescenta tema compartilhado e áudio somente às páginas do evento.
+
+A lista permitida da prévia agora inclui os três recursos locais adicionados à home: `home-event-rail.js`, `public-share.js` e `public-share.css`. Um cenário novo verifica carregamento sem falhas de scripts/CSS/imagens, ausência de erros JavaScript e sincronização de tema nas duas rotas. A suíte passa a ter 18 cenários. O workflow isolado existente também executa as configurações atuais de home e catálogo e guarda seus resultados. Triggers, permissões `contents: read`, runner, timeout e ausência de secrets permanecem iguais. Não há execução manual de workflow ou acesso ao backend.
+
+Os resultados e capturas abaixo são históricos até a conclusão dos checks do head integrado. Capturas atualizadas ficam no artifact `event-accessibility-review` da execução correspondente. Os limites de dispositivos reais e voz humana continuam válidos.
+
 ## Implementação
 
 - `evento/index.html` e `evento-v2/index.html` carregam o `assets/home-theme.js` existente. O seletor usa a mesma chave `ct-home-theme`, com Claro, Escuro e Automático; acompanha preferência do sistema e mudanças em outra aba. Não houve edição em `index.html`, `assets/home.css`, `assets/home-theme.js` ou no Programa Parceiro.

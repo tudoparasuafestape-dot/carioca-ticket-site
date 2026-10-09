@@ -25,6 +25,14 @@ jobs:
       - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --config=playwright.event-accessibility.config.cjs
+      - name: Current home against synthetic fixtures only
+        env:
+          CT_BASE_URL: http://127.0.0.1:4174
+          CT_EXPECTED_HOST: 127.0.0.1
+          CT_BRANCH_MODE: '1'
+        run: npx playwright test --config=playwright.home.config.cjs
+      - name: Current public catalog against intercepted fixtures only
+        run: npx playwright test --config=playwright.catalog-isolated.config.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -32,3 +40,5 @@ jobs:
           path: |
             test-results/event-accessibility*
             docs/reviews/event-accessibility/screenshots/
+            test-results/home-stage1*
+            test-results/catalog-isolated*

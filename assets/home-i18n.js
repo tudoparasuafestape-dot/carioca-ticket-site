@@ -1,8 +1,9 @@
 (function () {
   'use strict';
-  // Interface copy only. Producer-supplied names, places and descriptions are never translated.
+  // Interface copy and curated category labels only. Producer names, places and descriptions stay original.
   var dictionaries = {
   "pt-BR": {
+    "menuLabel": "Menu",
     "theme": "Tema",
     "mode": "Modo",
     "light": "Claro",
@@ -24,7 +25,7 @@
     "security": "Segurança",
     "help": "Ajuda",
     "about": "Sobre a Carioca Ticket",
-    "accessibility": "Acessibilidade",
+    "accessibility": "Idioma e acessibilidade",
     "language": "Idioma",
     "smaller": "Diminuir texto",
     "larger": "Aumentar texto",
@@ -66,6 +67,10 @@
     "adTitle": "Anuncie aqui",
     "adCopy": "Sua marca pode aparecer aqui. Divulgue seu negócio na Carioca Ticket.",
     "adCta": "Quero anunciar",
+    "adTpssfDescription": "Locação de materiais para eventos",
+    "adTpssfCta": "Fale sobre locação pelo WhatsApp",
+    "adPriscilaDescription": "Nail Designer",
+    "adPriscilaCta": "Clique aqui e faça seu agendamento",
     "producerEyebrow": "Para quem faz acontecer",
     "producerTitle": "Seu evento. Nossa tecnologia.",
     "producerCopy": "Venda de ingressos, gestão e check-in digital em uma jornada integrada.",
@@ -144,9 +149,28 @@
     "adPosition": "Publicidade {n} de {total}",
     "pageTitle": "Carioca Ticket | Ingressos e tecnologia para eventos",
     "mainNavigation": "Navegação principal",
-    "mobileNavigation": "Navegação mobile"
+    "mobileNavigation": "Menu de navegação",
+    "eventFeature": "Destaque de eventos",
+    "railPause": "Pausar rotação",
+    "railPlay": "Retomar rotação",
+    "railPrevious": "Evento anterior",
+    "railNext": "Próximo evento",
+    "railPosition": "{n} de {total}",
+    "railHelp": "Deslize para os lados ou use as setas para explorar.",
+    "motionChoice": "Movimento reduzido: trocas sem animação, a cada 5 s durante a reprodução. Você pode pausar este carrossel.",
+    "railSlide": "evento",
+    "railCarousel": "carrossel",
+    "adPausedState": "Rotação pausada",
+    "adPlayingState": "Troca a cada 5 s",
+    "shareSite": "Compartilhar site",
+    "shareEvent": "Compartilhar evento:",
+    "shareProgram": "Compartilhar apresentação",
+    "shareCopied": "Link copiado.",
+    "shareFailed": "Não foi possível copiar. Selecione o link abaixo para copiar.",
+    "shareLink": "Link público para compartilhar"
   },
   "en-US": {
+    "menuLabel": "Menu",
     "theme": "Theme",
     "mode": "Mode",
     "light": "Light",
@@ -168,7 +192,7 @@
     "security": "Security",
     "help": "Help",
     "about": "About Carioca Ticket",
-    "accessibility": "Accessibility",
+    "accessibility": "Language and accessibility",
     "language": "Language",
     "smaller": "Decrease text size",
     "larger": "Increase text size",
@@ -210,6 +234,10 @@
     "adTitle": "Advertise here",
     "adCopy": "Your brand could appear here. Promote your business on Carioca Ticket.",
     "adCta": "I want to advertise",
+    "adTpssfDescription": "Event equipment rentals",
+    "adTpssfCta": "Ask about rentals on WhatsApp",
+    "adPriscilaDescription": "Nail designer",
+    "adPriscilaCta": "Book your appointment",
     "producerEyebrow": "For those who make it happen",
     "producerTitle": "Your event. Our technology.",
     "producerCopy": "Ticket sales, management and digital check-in in one journey.",
@@ -288,9 +316,28 @@
     "adPosition": "Advertisement {n} of {total}",
     "pageTitle": "Carioca Ticket | Tickets and event technology",
     "mainNavigation": "Main navigation",
-    "mobileNavigation": "Mobile navigation"
+    "mobileNavigation": "Navigation menu",
+    "eventFeature": "Featured events",
+    "railPause": "Pause rotation",
+    "railPlay": "Resume rotation",
+    "railPrevious": "Previous event",
+    "railNext": "Next event",
+    "railPosition": "{n} of {total}",
+    "railHelp": "Swipe sideways or use the arrows to explore.",
+    "motionChoice": "Reduced motion: slides change without animation every 5 s while playing. You can pause this carousel.",
+    "railSlide": "event",
+    "railCarousel": "carousel",
+    "adPausedState": "Rotation paused",
+    "adPlayingState": "Changes every 5 s",
+    "shareSite": "Share website",
+    "shareEvent": "Share event:",
+    "shareProgram": "Share presentation",
+    "shareCopied": "Link copied.",
+    "shareFailed": "Could not copy. Select the link below to copy it.",
+    "shareLink": "Public link to share"
   },
   "es": {
+    "menuLabel": "Menú",
     "theme": "Tema",
     "mode": "Modo",
     "light": "Claro",
@@ -312,7 +359,7 @@
     "security": "Seguridad",
     "help": "Ayuda",
     "about": "Sobre Carioca Ticket",
-    "accessibility": "Accesibilidad",
+    "accessibility": "Idioma y accesibilidad",
     "language": "Idioma",
     "smaller": "Reducir texto",
     "larger": "Aumentar texto",
@@ -354,6 +401,10 @@
     "adTitle": "Anúnciate aquí",
     "adCopy": "Tu marca puede aparecer aquí. Promociona tu negocio en Carioca Ticket.",
     "adCta": "Quiero anunciarme",
+    "adTpssfDescription": "Alquiler de materiales para eventos",
+    "adTpssfCta": "Consulta alquileres por WhatsApp",
+    "adPriscilaDescription": "Diseñadora de uñas",
+    "adPriscilaCta": "Reserva tu cita",
     "producerEyebrow": "Para quienes lo hacen posible",
     "producerTitle": "Tu evento. Nuestra tecnología.",
     "producerCopy": "Venta de entradas, gestión y control de acceso digital en una sola experiencia.",
@@ -432,9 +483,28 @@
     "adPosition": "Publicidad {n} de {total}",
     "pageTitle": "Carioca Ticket | Entradas y tecnología para eventos",
     "mainNavigation": "Navegación principal",
-    "mobileNavigation": "Navegación móvil"
+    "mobileNavigation": "Menú de navegación",
+    "eventFeature": "Eventos destacados",
+    "railPause": "Pausar avance",
+    "railPlay": "Reanudar avance",
+    "railPrevious": "Evento previo",
+    "railNext": "Evento siguiente",
+    "railPosition": "{n} entre {total}",
+    "railHelp": "Desliza a los lados o usa las flechas para explorar.",
+    "motionChoice": "Movimiento reducido: cambios sin animación cada 5 s durante la reproducción. Puedes pausar este carrusel.",
+    "railSlide": "diapositiva de evento",
+    "railCarousel": "carrusel",
+    "adPausedState": "Rotación pausada",
+    "adPlayingState": "Cambia cada 5 s",
+    "shareSite": "Compartir sitio",
+    "shareEvent": "Compartir evento:",
+    "shareProgram": "Compartir presentación",
+    "shareCopied": "Enlace copiado.",
+    "shareFailed": "No se pudo copiar. Selecciona el enlace de abajo para copiarlo.",
+    "shareLink": "Enlace público para compartir"
   },
   "zh-Hans": {
+    "menuLabel": "菜单",
     "theme": "主题",
     "mode": "模式",
     "light": "浅色",
@@ -456,7 +526,7 @@
     "security": "安全",
     "help": "帮助",
     "about": "关于 Carioca Ticket",
-    "accessibility": "无障碍功能",
+    "accessibility": "语言与无障碍",
     "language": "语言",
     "smaller": "缩小文字",
     "larger": "放大文字",
@@ -498,6 +568,10 @@
     "adTitle": "在此投放广告",
     "adCopy": "您的品牌可以展示在这里。在 Carioca Ticket 推广您的业务。",
     "adCta": "我要投放广告",
+    "adTpssfDescription": "活动用品租赁",
+    "adTpssfCta": "通过 WhatsApp 咨询租赁",
+    "adPriscilaDescription": "美甲设计师",
+    "adPriscilaCta": "预约服务",
     "producerEyebrow": "为活动创造者而设",
     "producerTitle": "您的活动，我们的技术。",
     "producerCopy": "售票、管理与数字验票，一体化体验。",
@@ -576,9 +650,50 @@
     "adPosition": "广告 {n}/{total}",
     "pageTitle": "Carioca Ticket | 门票与活动技术",
     "mainNavigation": "主导航",
-    "mobileNavigation": "移动导航"
+    "mobileNavigation": "导航菜单",
+    "eventFeature": "精选活动",
+    "railPause": "暂停轮播",
+    "railPlay": "继续轮播",
+    "railPrevious": "上一个活动",
+    "railNext": "下一个活动",
+    "railPosition": "第 {n} 项，共 {total} 项",
+    "railHelp": "左右滑动或使用箭头浏览。",
+    "motionChoice": "已减少动态效果：播放时每 5 秒切换一次，不显示动画。您可以暂停此轮播。",
+    "railSlide": "活动",
+    "railCarousel": "轮播",
+    "adPausedState": "轮播已暂停",
+    "adPlayingState": "每 5 秒切换",
+    "shareSite": "分享网站",
+    "shareEvent": "分享活动:",
+    "shareProgram": "分享介绍",
+    "shareCopied": "链接已复制。",
+    "shareFailed": "无法复制。请选择下方链接进行复制。",
+    "shareLink": "用于分享的公开链接"
   }
 };
+
+  // Curated interface category labels only. Never translate arbitrary producer copy.
+  // The original category remains the filter key and is never written back.
+  var categoryLabels = {
+    'Beleza': { 'en-US': 'Beauty', es: 'Belleza', 'zh-Hans': '美容' },
+    'Beleza & Negócios': { 'en-US': 'Beauty & Business', es: 'Belleza y negocios', 'zh-Hans': '美容与商业' },
+    'Samba e Pagode': { 'en-US': 'Samba & Pagode', es: 'Samba y Pagode', 'zh-Hans': 'Samba 与 Pagode' }
+  };
+  var categoryAliases = {
+    'Beleza e Negócios': 'Beleza & Negócios',
+    'Samba & Pagode': 'Samba e Pagode',
+    'Samba & pagode': 'Samba e Pagode'
+  };
+  function categoryLabel(value) {
+    var original = String(value || '').trim();
+    var key = has(categoryAliases, original) ? categoryAliases[original] : original;
+    var known = has(categoryLabels, key);
+    return {
+      text: known && api.locale !== 'pt-BR' ? categoryLabels[key][api.locale] : original,
+      language: known ? api.locale : sourceLanguage,
+      known: known
+    };
+  }
 
   var locale = 'pt-BR';
   var sourceLanguage = document.documentElement.lang || 'pt-BR';
@@ -614,17 +729,26 @@
     sourceLanguage: sourceLanguage,
     t: function (key, values) { return message(key, values).text; },
     applyTranslations: apply,
+    categoryLabel: categoryLabel,
     setLocale: function (value) {
       if (!has(dictionaries, value)) return;
       api.locale = value;
       document.documentElement.lang = value;
       apply(document);
       document.getElementById('home-language').value = value;
+      document.querySelectorAll('input[name="home-language-choice"]').forEach(function (radio) { radio.checked = radio.value === value; });
       document.getElementById('producer-language-note').hidden = value === sourceLanguage;
       try { localStorage.setItem('ct-home-locale', value); } catch (_) {}
       document.dispatchEvent(new CustomEvent('ct:language'));
     }
   };
   document.getElementById('home-language').addEventListener('change', function (event) { api.setLocale(event.target.value); });
+  document.querySelectorAll('input[name="home-language-choice"]').forEach(function (radio) {
+    radio.addEventListener('change', function () { if (radio.checked) api.setLocale(radio.value); });
+  });
   api.setLocale(locale);
 }());
+
+
+
+

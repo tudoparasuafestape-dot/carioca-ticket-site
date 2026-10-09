@@ -49,10 +49,11 @@
     var range = H.dateRange(), dates = range ? new Intl.DateTimeFormat(H.locale, { day: 'numeric', month: 'short', year: 'numeric' }) : null;
     var rangeLabel = range ? dates.format(range.start) + ' – ' + dates.format(range.end) : '';
     $('period-dates').textContent = rangeLabel;
+    var category = H.categoryLabel(H.filters.category);
     var active = [H.filters.location && label, rangeLabel, H.filters.category].filter(Boolean);
     $('active-filters').hidden = !active.length;
     $('active-filters').replaceChildren();
-    [[H.filters.location && label, 'pt-BR'], [rangeLabel, H.locale], [H.filters.category, H.sourceLanguage]].filter(function (part) { return part[0]; }).forEach(function (part, index) {
+    [[H.filters.location && label, 'pt-BR'], [rangeLabel, H.locale], [category.text, category.language]].filter(function (part) { return part[0]; }).forEach(function (part, index) {
       if (index) $('active-filters').appendChild(document.createTextNode(' · '));
       var span = document.createElement('span'); span.textContent = part[0]; span.lang = part[1]; span.setAttribute('translate', 'no'); $('active-filters').appendChild(span);
     });
@@ -68,8 +69,9 @@
     $('collections').hidden = !names.length && !H.filters.category;
     if (H.filters.category && !names.includes(H.filters.category)) names.unshift(H.filters.category);
     [''].concat(names).forEach(function (name) {
-      var button = document.createElement('button'); button.type = 'button'; button.textContent = name || H.t('allCategories');
-      if (name) { button.lang = H.sourceLanguage; button.setAttribute('translate', 'no'); } else { button.dataset.i18n = 'allCategories'; }
+      var category = H.categoryLabel(name);
+      var button = document.createElement('button'); button.type = 'button'; button.textContent = category.text || H.t('allCategories');
+      if (name) { button.lang = category.language; button.setAttribute('translate', 'no'); } else { button.dataset.i18n = 'allCategories'; }
       button.setAttribute('aria-pressed', String(H.filters.category === name));
       button.addEventListener('click', function () { H.filters.category = name; H.changed(); }); host.appendChild(button);
       if (hadFocus && H.filters.category === name) button.focus({ preventScroll: true });
@@ -163,3 +165,4 @@
   $('event-location-input').disabled = false;
   measureHeader(); updateLabels();
 }());
+
