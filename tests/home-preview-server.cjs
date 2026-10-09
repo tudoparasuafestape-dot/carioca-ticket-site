@@ -40,10 +40,13 @@ http.createServer((req, res) => {
     html = html.replace(/<link rel="prefetch"[^>]+>/, '');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(home\.css|home-theme\.js|home-navigation\.js|home-i18n\.js|home-controls\.js|home-advertisements\.js|home-municipalities\.json|public-event-catalog\.js|carioca-ticket-(simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(home\.css|home-theme\.js|home-navigation\.js|home-i18n\.js|home-controls\.js|home-advertisements\.js|home-ad-(tpssf|priscila)\.png|home-municipalities\.json|public-event-catalog\.js|carioca-ticket-(simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/html; charset=utf-8', '<h1>Destino bloqueado no preview</h1><p>Este ambiente permite revisar somente a home com dados sintéticos.</p><a href="/">Voltar à home</a>');
   const file = path.join(ROOT, url.pathname.slice(1));
   let body = fs.readFileSync(file);
+  if (url.pathname.endsWith('home-advertisements.js')) {
+    body = body.toString('utf8').replace(/href: 'https:\/\/[^']+'/g, "href: '/__blocked'");
+  }
   if (url.pathname.endsWith('public-event-catalog.js')) {
     body = body.toString('utf8').replace(/https:\/\/script\.google\.com\/macros\/s\/[^']+\/exec/, `${origin}/__fixture/catalog`)
       .replace("event.origin !== 'https://script.google.com'", `event.origin !== '${origin}'`);

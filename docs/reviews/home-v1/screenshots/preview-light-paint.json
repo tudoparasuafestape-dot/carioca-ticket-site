@@ -9,7 +9,7 @@
   "background": "rgb(32, 32, 32)",
   "region": {
     "x": 858.21875,
-    "y": 1298.390625,
+    "y": 1713.640625,
     "width": 460.78125,
     "height": 328.96875
   },
@@ -19,12 +19,12 @@
     {
       "repeat": 1,
       "goldPixels": 8429,
-      "sha256": "3a4655e803017df024245b0e6181c7759c5391979b5710c8aa7d910cecc7a3c0"
+      "sha256": "7e244fe61d988940749f81f90caae93592df05bd91063641fba6cb348a264795"
     },
     {
       "repeat": 2,
       "goldPixels": 8429,
-      "sha256": "282766aa21e8c55cb656a111cd797302a4b1dcbef7f9abc43d4e28011273c05a"
+      "sha256": "e058dc89cebf11683d00cee8665383fda6a891c7dd909fcda420eb35a6a950ab"
     }
   ],
   "externalRequests": 0,

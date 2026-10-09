@@ -311,11 +311,16 @@
 .ct-home .ad-stage { width:100%; }
 .ct-home .ad-slide { width:100%; }
 .ct-home .ad-house { min-height:180px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:20px; padding:32px 36px; }
-.ct-home .ad-campaign { display:block; }
+.ct-home .ad-campaign { display:block; text-decoration:none; }
 .ct-home .ad-campaign img { display:block; width:100%; height:auto; object-fit:contain; }
+.ct-home .ad-caption { display:grid; gap:6px; padding:16px 24px; color:var(--home-text); font-size:1rem; }
+.ct-home .ad-caption strong { font-size:1.125rem; }
+.ct-home .ad-campaign-cta { color:var(--home-gold-text); font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+.ct-home .ad-campaign:focus-visible { outline-offset:-4px; }
 .ct-home .ad-controls { display:flex; justify-content:flex-end; gap:6px; position:absolute; bottom:10px; right:16px; }
 .ct-home .ad-controls button { min-height:40px; min-width:40px; border:1px solid var(--home-line); border-radius:8px; color:var(--home-text); background:var(--home-surface); padding:6px; font-size:.75rem; }
 @media(max-width:600px) { .ct-home .ad-house { padding:24px; } .ct-home .ad-rotation .eyebrow { left:12px; font-size:.625rem; letter-spacing:0; } .ct-home .ad-controls { right:10px; gap:4px; } }
+@media(max-width:600px) { .ct-home .ad-rotation { padding-bottom:96px; } .ct-home .ad-controls { bottom:44px; } .ct-home .ad-caption { padding:16px; } }
 /* Keep the catalog in the first viewport despite the new controls. */
 .ct-home .public-events { padding-top:26px; }
 .ct-home .catalog-heading { margin-top:20px; margin-bottom:14px; }

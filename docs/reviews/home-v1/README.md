@@ -18,16 +18,18 @@ Esta branch não foi mesclada nem publicada em produção.
 - Seções de produtor, pagamento, FAQ e rodapé; emissão do ingresso somente após confirmação do pagamento e texto de privacidade do cartão preservados.
 - Anuncie aqui com WhatsApp comercial confirmado pelo proprietário: `https://wa.me/5581999311509`, mensagem preenchida sem envio automático. Etiqueta Publicidade permanente no canto inferior esquerdo.
 
-## Publicidade e materialização pendente
+## Publicidade com artes locais aprovadas
 
-A estrutura reutilizável comporta duas peças por espaço, intervalo de 5 segundos, setas e pausa. Pausa quando há foco, ponteiro sobre o espaço, documento oculto ou espaço fora da tela; inicia pausada com movimento reduzido. A etiqueta Publicidade fica fora das peças. O segundo espaço fica depois de pagamento e antes do FAQ, mas permanece oculto enquanto não houver arte completa.
+A estrutura reutilizável alterna uma arte aprovada com Anuncie aqui em cada espaço, com intervalo de 5 segundos, setas e pausa. A arte aparece primeiro. Pausa quando há foco, ponteiro sobre o espaço, documento oculto ou espaço fora da tela; inicia pausada com movimento reduzido. A etiqueta Publicidade fica fora das peças, no canto inferior esquerdo. O segundo espaço fica depois de pagamento e antes do FAQ. Se uma imagem falhar, o espaço retorna a Anuncie aqui e oculta os controles de alternância.
 
-As duas artes aprovadas foram resolvidas na Library, porém a transferência oficial retornou HTTP 403. Nenhum byte de imagem foi materializado ou inspecionado neste executor. Não houve substituição nem contorno do bloqueio. Os arrays de campanhas permanecem vazios, portanto nenhum banner incompleto ou controle de alternância aparece como recurso pronto.
+Após o bloqueio HTTP 403 da Library, o proprietário forneceu os arquivos no Downloads do notebook. Não houve nova tentativa de transferência nem contorno do bloqueio. Ambos eram PNGs sem extensão. A identificação foi feita pelos pixels: **publicidade 1 é Priscila Ferreira; publicidade 2 é Tudo Para Sua Festa**. As cópias em `assets/` são idênticas aos originais, verificadas por SHA256; não houve recorte, filtro, redesenho ou recompressão. Dimensões, tamanho e hashes constam em `advertising-source.json`.
 
-| Peça aprovada | Referência Library | Destino confirmado | Estado |
+| Peça aprovada | Arquivo local incorporado | Destino confirmado | Estado |
 | --- | --- | --- | --- |
-| Tudo Para Sua Festa | `libfile_b317775e1818819193e73a9a7b62e6ef` — `Tudo-Para-Sua-Festa-banner-institucional-proposta.png` | `https://www.instagram.com/tudoparasuafestape/` | Aguardando transferência legível e inspeção |
-| Priscila Ferreira | `libfile_8eacd0eda7d481919a13296b376dce4c` — `priscila-ferreira-banner-home.png` | `https://wa.me/5581996200696` — “Clique aqui e faça seu agendamento” | Aguardando transferência legível e inspeção |
+| Tudo Para Sua Festa | `assets/home-ad-tpssf.png` — 2172 × 724 | `https://www.instagram.com/tudoparasuafestape/` | Primeiro espaço, inspecionado |
+| Priscila Ferreira | `assets/home-ad-priscila.png` — 2170 × 725 | `https://wa.me/5581996200696` — "Clique aqui e faça seu agendamento" | Segundo espaço, inspecionado |
+
+As artes são horizontais e seus textos ficam pequenos em 320px. Cada link inclui uma transcrição HTML legível dos mesmos textos aprovados, sem criar oferta ou serviço. Ela fornece o nome acessível do link, permanece em português com `lang="pt-BR"` e `translate="no"`, e mantém contraste mínimo de 4,5:1 nos dois temas. A imagem permanece integral e sem deformação. O rótulo incorporado nas próprias artes permanece intacto; a etiqueta da home garante a posição inferior esquerda nos dois espaços. Os PNGs somam aproximadamente 2,68 MB sem compressão adicional e usam carregamento sob demanda.
 
 O PDF de referência inicial também não pôde ser materializado. A composição segue o checklist textual posteriormente consolidado pelo proprietário; não há alegação de leitura visual do PDF bloqueado.
 
@@ -62,7 +64,7 @@ npx playwright test --config=playwright.home.config.cjs
 npx playwright test --config=playwright.catalog-isolated.config.cjs
 ```
 
-O primeiro conjunto cobre temas, teclado/foco, largura 320/412/768/1440, reflow equivalente a zoom 200%, CSS zoom adicional, texto 150%, quatro idiomas, preferências indisponíveis/inválidas, local oficial e recuperação, períodos/categorias, catálogo vazio/erro/retry, imagens ausentes, preservação dos links/transportes, ausência de JavaScript e falha de módulo opcional. A alternância publicitária é verificada com arte sintética, sem usar as peças bloqueadas.
+O primeiro conjunto cobre temas, teclado/foco, largura 320/412/768/1440, reflow equivalente a zoom 200%, CSS zoom adicional, texto 150%, quatro idiomas, preferências indisponíveis/inválidas, local oficial e recuperação, períodos/categorias, catálogo vazio/erro/retry, imagens ausentes, preservação dos links/transportes, ausência de JavaScript e falha de módulo opcional. A publicidade usa as artes reais: bytes preservados, proporção integral, contraste da transcrição, destinos, etiqueta inferior esquerda, foco, pausa, movimento reduzido e recuperação quando as imagens falham. Cliques no preview abrem somente a página local de bloqueio.
 
 O segundo exercita os 20 testes existentes do catálogo público em desktop e mobile com interceptação integral. Os scripts de contratos protegem 41 superfícies, 67 páginas e as jornadas comerciais/operacionais. Não há comando de lint configurado no projeto; os scripts alterados passam por `node --check` e `git diff --check`.
 
@@ -80,4 +82,4 @@ Limites da validação: Chromium automatizado. Não executado em aparelhos Andro
 
 ## Ponto de parada
 
-Revisar o conjunto no preview e nas capturas. Resolver o acesso às duas artes e validar os banners completos antes de aprovar essa parte. Não há autorização nesta entrega para merge, deploy ou rollback.
+Revisar o conjunto no preview e nas capturas `advertising-*`, agora com as duas artes reais. Geolocalização, migração de cadastro, áudio e Libras continuam fora desta fatia; a variante chinesa e a revisão humana com leitor de tela seguem pendentes. Não há autorização nesta entrega para merge, deploy ou rollback do PR167.

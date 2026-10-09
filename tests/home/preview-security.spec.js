@@ -34,6 +34,22 @@ test('review server serves fixtures and rejects external destinations and all tr
   expect(rpc).toEqual(['ctEventosPublicosListarPROD']);
   expect(external).toEqual([]);
   expect(errors).toEqual([]);
+  for (const name of ['tpssf', 'priscila']) {
+    const artwork = await request.get(ORIGIN + `/assets/home-ad-${name}.png`);
+    expect(artwork.status()).toBe(200);
+    expect(artwork.headers()['content-type']).toBe('image/png');
+  }
+  for (const slot of ['primary', 'secondary']) {
+    const link = page.locator(`#advertising-${slot} .ad-campaign`);
+    await expect(link).toHaveAttribute('href', '/__blocked');
+    await link.scrollIntoViewIfNeeded();
+    const opened = page.context().waitForEvent('page');
+    await link.click();
+    const popup = await opened;
+    await expect(popup.getByRole('heading')).toHaveText('Destino bloqueado no preview');
+    await popup.close();
+  }
+  expect(external).toEqual([]);
   await capture(page, path.join(EVIDENCE, 'preview-local.png'));
   expect((await request.post(ORIGIN + '/__fixture/catalog', { form: { metodo: 'TRANSACTION_MUST_BE_BLOCKED', argsJson: '[]', ctMinhaCariocaAction: 'publicRpc' } })).status()).toBe(403);
   expect((await request.post(ORIGIN + '/checkout/')).status()).toBe(405);

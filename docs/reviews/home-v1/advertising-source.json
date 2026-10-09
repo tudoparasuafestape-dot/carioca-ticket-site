@@ -1,0 +1,29 @@
+{
+  "source": "Local files provided by the owner in Downloads; extensionless PNGs, visually inspected before copying",
+  "libraryRetried": false,
+  "transformations": "None. Original bytes preserved.",
+  "artwork": [
+    {
+      "providedName": "publicidade 1",
+      "identifiedByPixels": "Priscila Ferreira — Nail Designer",
+      "path": "assets/home-ad-priscila.png",
+      "width": 2170,
+      "height": 725,
+      "bytes": 1386852,
+      "sha256": "0695b960e396903f73a72b24dfc97fdc63678889f32dee47a9e4c2ab0254bdaa",
+      "destination": "https://wa.me/5581996200696",
+      "cta": "Clique aqui e faça seu agendamento"
+    },
+    {
+      "providedName": "publicidade 2",
+      "identifiedByPixels": "Tudo Para Sua Festa — Locação de materiais para eventos",
+      "path": "assets/home-ad-tpssf.png",
+      "width": 2172,
+      "height": 724,
+      "bytes": 1292395,
+      "sha256": "4714a8243dc0f61dd565390a54c98734c40864eb5d25f885a8cc2092edcc28c9",
+      "destination": "https://www.instagram.com/tudoparasuafestape/",
+      "cta": "Conheça a Tudo Para Sua Festa"
+    }
+  ]
+}

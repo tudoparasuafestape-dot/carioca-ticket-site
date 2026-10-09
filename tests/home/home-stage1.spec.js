@@ -9,6 +9,14 @@ const ORIGIN = 'http://127.0.0.1:4174';
 const EVIDENCE = path.join(ROOT, 'docs/reviews/home-v1/screenshots');
 const i18nSource = fs.readFileSync(path.join(ROOT, 'assets/home-i18n.js'), 'utf8');
 const dictionaries = JSON.parse(i18nSource.match(/var dictionaries = (\{[\s\S]*?\n\});/)[1]);
+const approvedAds = [
+  { slot: 'primary', name: 'tpssf', width: 2172, height: 724, title: 'Tudo Para Sua Festa',
+    href: 'https://www.instagram.com/tudoparasuafestape/', cta: 'Conheça a Tudo Para Sua Festa',
+    sha256: '4714a8243dc0f61dd565390a54c98734c40864eb5d25f885a8cc2092edcc28c9' },
+  { slot: 'secondary', name: 'priscila', width: 2170, height: 725, title: 'Priscila Ferreira',
+    href: 'https://wa.me/5581996200696', cta: 'Clique aqui e faça seu agendamento',
+    sha256: '0695b960e396903f73a72b24dfc97fdc63678889f32dee47a9e4c2ab0254bdaa' }
+];
 
 async function fixture(page, options = {}) {
   const state = { methods: [], errors: [], blocked: [], attempts: 0, cities: 0 };
@@ -16,6 +24,7 @@ async function fixture(page, options = {}) {
   await page.context().route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
     if (url.origin === ORIGIN && request.method() === 'GET') {
+      if (options.missingAds && /home-ad-(tpssf|priscila)\.png$/.test(url.pathname)) return route.fulfill({ status: 404, body: 'Missing approved artwork fixture' });
       if (options.noControls && url.pathname.endsWith('home-controls.js')) return route.fulfill({ contentType: 'text/javascript', body: '' });
       if (url.pathname.endsWith('home-municipalities.json')) { state.cities++; if (options.cityFailure && state.cities === 1) return route.fulfill({ status: 503, body: 'Unavailable fixture' }); }
       if (url.pathname.startsWith('/__fixture/')) return route.fulfill({ contentType: 'image/svg+xml', body: cover(url.pathname.includes('music') ? 'music' : 'creative') });
@@ -450,12 +459,11 @@ test('advertising is labeled at bottom left and the approved WhatsApp is only an
   expect(state.blocked).toEqual([]);
 });
 
-test('prepared ad rotation keeps the label visible, pauses for keyboard and honors reduced motion', async ({ page }) => {
+test('approved ad rotation keeps the label visible, pauses for keyboard and honors reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const state = await fixture(page);
   await loaded(page);
-  await expect(page.locator('#advertising-secondary')).toBeHidden();
-  await page.evaluate(() => CTHome.mountAdvertisements(document.querySelector('#advertising-primary'), [{ src: '/__fixture/music.svg', href: '/__blocked', alt: 'Publicidade sintética de teste', width: 1882, height: 836 }]));
+  await expect(page.locator('#advertising-secondary')).toBeVisible();
   const ad = page.locator('#advertising-primary');
   await ad.scrollIntoViewIfNeeded();
   await expect(ad.getByRole('button', { name: 'Reproduzir', exact: true })).toBeVisible();
@@ -463,14 +471,14 @@ test('prepared ad rotation keeps the label visible, pauses for keyboard and hono
   const before = await ad.boundingBox();
   await ad.getByRole('button', { name: 'Próxima publicidade' }).focus();
   await page.keyboard.press('Enter');
-  await expect(ad.locator('.ad-campaign')).toBeVisible();
-  await expect(ad.locator('.ad-house')).toBeHidden();
+  await expect(ad.locator('.ad-campaign')).toBeHidden();
+  await expect(ad.locator('.ad-house')).toBeVisible();
   await expect(ad.locator('.eyebrow')).toBeVisible();
   const after = await ad.boundingBox();
   expect(after.height).toBeCloseTo(before.height, 0);
   await expect(ad.getByRole('button', { name: 'Próxima publicidade' })).toBeFocused();
   await ad.getByRole('button', { name: 'Publicidade anterior' }).click();
-  await expect(ad.locator('.ad-house')).toBeVisible();
+  await expect(ad.locator('.ad-campaign')).toBeVisible();
   expect(state.errors).toEqual([]);
 });
 
@@ -614,7 +622,6 @@ for (const locale of Object.keys(dictionaries)) {
     await loaded(page);
     await page.locator('footer').scrollIntoViewIfNeeded();
     await screenshot(page, `language-${locale}-footer-320`);
-    await page.evaluate(() => CTHome.mountAdvertisements(document.querySelector('#advertising-secondary'), [{ src: '/__fixture/music.svg', href: '/__blocked', alt: 'Fixture', width: 1882, height: 836 }]));
     const ad = page.locator('#advertising-secondary');
     await expect(ad).toHaveAttribute('aria-label', dictionary.adLabel);
     await expect(ad.locator('[data-i18n="adCta"]')).toHaveText(dictionary.adCta);
@@ -660,5 +667,79 @@ test('missing translation falls back to Portuguese with the correct language; in
   await page.evaluate(() => CTHome.setLocale('__proto__'));
   await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
   expect(await page.evaluate(() => CTHome.t('unknown-key'))).toBe('unknown-key');
+  expect(state.errors).toEqual([]);
+});
+
+test('approved local artwork bytes remain unchanged', () => {
+  const { createHash } = require('node:crypto');
+  for (const ad of approvedAds) {
+    const bytes = fs.readFileSync(path.join(ROOT, `assets/home-ad-${ad.name}.png`));
+    expect(createHash('sha256').update(bytes).digest('hex')).toBe(ad.sha256);
+  }
+});
+
+for (const theme of ['light', 'dark']) {
+  for (const width of [320, 412, 768, 1440]) {
+    test(`approved artwork, readable copy and destinations / ${theme} / ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 1050 });
+      await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
+      const state = await fixture(page);
+      await loaded(page);
+      for (const ad of approvedAds) {
+        const slot = page.locator(`#advertising-${ad.slot}`), link = slot.locator('.ad-campaign');
+        await slot.scrollIntoViewIfNeeded();
+        await expect(link).toBeVisible();
+        await expect(link).toHaveAttribute('href', ad.href);
+        await expect(link).toHaveAttribute('target', '_blank');
+        await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+        await expect(link).toHaveAttribute('lang', 'pt-BR');
+        await expect(link).toHaveAttribute('translate', 'no');
+        await expect(link).toHaveAccessibleName(new RegExp(ad.title + '.*' + ad.cta));
+        await expect(link.locator('.ad-campaign-cta')).toHaveText(ad.cta);
+        await expect.poll(() => link.locator('img').evaluate(img => img.complete && img.naturalWidth)).toBe(ad.width);
+        const geometry = await slot.evaluate(el => {
+          const image = el.querySelector('.ad-campaign img'), caption = el.querySelector('.ad-caption'), label = el.querySelector('.eyebrow'), controls = el.querySelector('.ad-controls');
+          const box = el.getBoundingClientRect(), pixels = image.getBoundingClientRect(), badge = label.getBoundingClientRect(), buttons = controls.getBoundingClientRect();
+          return { ratio: pixels.width / pixels.height, naturalHeight: image.naturalHeight, fit: getComputedStyle(image).objectFit,
+            filter: getComputedStyle(image).filter, font: parseFloat(getComputedStyle(caption).fontSize),
+            labelLeft: badge.left - box.left, labelBottom: box.bottom - badge.bottom,
+            labelClear: badge.right <= buttons.left || badge.top >= buttons.bottom,
+            color: getComputedStyle(caption).color, ctaColor: getComputedStyle(el.querySelector('.ad-campaign-cta')).color, background: getComputedStyle(el).backgroundColor };
+        });
+        expect(geometry.ratio).toBeCloseTo(ad.width / ad.height, 2);
+        expect(geometry.naturalHeight).toBe(ad.height);
+        expect(geometry.fit).toBe('contain'); expect(geometry.filter).toBe('none');
+        expect(geometry.font).toBeGreaterThanOrEqual(16);
+        expect(geometry.labelLeft).toBeLessThan(30); expect(geometry.labelBottom).toBeLessThan(25); expect(geometry.labelClear).toBe(true);
+        const luminance = color => {
+          const rgb = color.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
+          return .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
+        };
+        for (const foreground of [geometry.color, geometry.ctaColor]) {
+          const levels = [luminance(foreground), luminance(geometry.background)].sort((a, b) => b - a);
+          expect((levels[0] + .05) / (levels[1] + .05)).toBeGreaterThanOrEqual(4.5);
+        }
+        await link.focus(); await expect(link).toBeFocused();
+        expect(await link.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid');
+        await noOverflow(page);
+        await slot.screenshot({ path: path.join(EVIDENCE, `advertising-${ad.name}-${theme}-${width}.png`), animations: 'disabled' });
+      }
+      expect(state.errors).toEqual([]); expect(state.blocked).toEqual([]);
+    });
+  }
+}
+
+test('missing approved artwork recovers to the actionable house advertisement', async ({ page }) => {
+  const state = await fixture(page, { missingAds: true });
+  await loaded(page);
+  for (const ad of approvedAds) {
+    const slot = page.locator(`#advertising-${ad.slot}`);
+    await slot.scrollIntoViewIfNeeded();
+    await expect(slot.locator('.ad-house')).toBeVisible();
+    await expect(slot.locator('.ad-campaign')).toBeHidden();
+    await expect(slot.locator('.ad-controls')).toBeHidden();
+    await expect(slot.locator('.eyebrow')).toBeVisible();
+    await expect(slot.locator('.ad-house a')).toHaveAttribute('href', 'https://wa.me/5581999311509?text=Ol%C3%A1%21%20Quero%20anunciar%20na%20Carioca%20Ticket.');
+  }
   expect(state.errors).toEqual([]);
 });
