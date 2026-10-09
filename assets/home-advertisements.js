@@ -35,7 +35,7 @@
       caption.append(title, description, cta); slide.append(image, caption); stage.appendChild(slide);
       image.addEventListener('error', function () {
         failed = true; clearTimeout(timer); show(slides.indexOf(own), false);
-        controls.hidden = true; playback.hidden = true; status.textContent = '';
+        controls.hidden = true; playback.hidden = true; motionNote.hidden = true; status.textContent = '';
       });
     });
     stage.appendChild(own);
@@ -45,14 +45,19 @@
     previous.textContent = '←'; next.textContent = '→';
     var status = document.createElement('span'); status.className = 'sr-only'; status.setAttribute('role', 'status');
     var playback = document.createElement('span'); playback.className = 'ad-playback-state';
+    var motionNote = document.createElement('p'); motionNote.className = 'ad-motion-note';
+    motionNote.id = slot.id + '-motion-note'; motionNote.dataset.i18n = 'motionChoice'; motionNote.hidden = true;
     // Controls precede rotating links in keyboard order while remaining below the artwork visually.
-    slot.replaceChildren(controls, stage, label, playback, status); slot.classList.add('ad-rotation'); slot.hidden = false;
+    slot.replaceChildren(controls, stage, motionNote, label, playback, status); slot.classList.add('ad-rotation'); slot.hidden = false;
     slot.removeAttribute('aria-labelledby'); slot.dataset.i18nAriaLabel = 'adLabel';
     var slides = Array.from(stage.children), index = 0, paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     // Pick once for this page visit; no identifier, storage, impression beacon or reshuffle.
     var initial = Math.floor(Math.random() * slides.length);
     var pointer = false, contact = null, timer, visible = false, toggleIntent = null;
     function labels() {
+      motionNote.hidden = failed || !reduced.matches;
+      if (reduced.matches) pause.setAttribute('aria-describedby', motionNote.id);
+      else pause.removeAttribute('aria-describedby');
       H.applyTranslations(slot);
       slot.setAttribute('aria-label', H.t('adLabel'));
       if (status.textContent) status.textContent = H.t('adPosition', { n: index + 1, total: slides.length });
@@ -69,16 +74,16 @@
     }
     function schedule() {
       clearTimeout(timer);
-      pause.disabled = reduced.matches;
       playbackLabel();
-      if (failed || paused || reduced.matches || pointer || contact !== null || !visible || document.hidden || (slot.contains(document.activeElement) && document.activeElement !== pause)) return;
+      if (failed || paused || pointer || contact !== null || !visible || document.hidden || (slot.contains(document.activeElement) && document.activeElement !== pause)) return;
       timer = setTimeout(function () { show(index + 1, false); schedule(); }, 5000);
     }
     previous.addEventListener('click', function () { show(index - 1, true); schedule(); });
     next.addEventListener('click', function () { show(index + 1, true); schedule(); });
+    // Reduced motion starts paused, but Play opts into this slot for this visit.
     pause.addEventListener('pointerdown', function () { toggleIntent = !paused; });
     pause.addEventListener('keydown', function () { toggleIntent = null; });
-    pause.addEventListener('click', function () { paused = toggleIntent === null ? !paused : toggleIntent; toggleIntent = null; if (reduced.matches) paused = true; labels(); schedule(); });
+    pause.addEventListener('click', function () { paused = toggleIntent === null ? !paused : toggleIntent; toggleIntent = null; labels(); schedule(); });
     slot.addEventListener('pointerenter', function (event) { if (event.pointerType === 'mouse') { pointer = true; schedule(); } });
     slot.addEventListener('pointerleave', function (event) { if (event.pointerType === 'mouse') { pointer = false; schedule(); } });
     // A touch may become ordinary page scrolling. Hold the timer only until
