@@ -48,6 +48,98 @@ for(const width of [320,412,1440]) for(const theme of ['light','dark']) for(cons
     if(count===15) { await page.locator('#event-feature').scrollIntoViewIfNeeded(); await capture(page,path.join(EVIDENCE,`${theme}-${width}-15.png`)); }
   });
 }
+// A pointer activation focuses Next before click. The resulting automatic
+// focus pause must not widen the playback label and move Next under that pointer.
+async function heldNext(page, options = {}) {
+  await page.setViewportSize({width:320,height:1000});
+  await page.emulateMedia({colorScheme:'light',reducedMotion:'reduce'});
+  await page.clock.install({time:new Date('2026-10-09T12:00:00Z')});
+  const state=await open(page,15);
+  await page.clock.pauseAt(new Date(await page.evaluate(()=>Date.now()+1000)));
+  if(options.locale || options.scale===150) {
+    await page.locator('#accessibility-toggle').click();
+    if(options.locale) await page.locator('#home-language').selectOption(options.locale);
+    if(options.scale===150) for(let step=0;step<5;step++) await page.locator('#font-up').click();
+    await expect(page.locator('#font-reset')).toHaveText((options.scale || 100)+'%');
+    await page.locator('#accessibility-toggle').click();
+  }
+  if(options.legacy) {
+    // Counterfactual only: restore the published intrinsic-width behavior.
+    // No other layout, runtime, focus or autoplay behavior is changed.
+    await page.addStyleTag({content:'.ct-home #event-rail-pause { min-inline-size:44px; }'});
+  }
+  await expect(page.locator('#event-rail-pause')).toHaveAttribute('data-i18n','railPause');
+  await active(page,0);
+  const next=page.locator('#event-rail-next');
+  await next.evaluate(node=>node.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
+  const bounds=await next.boundingBox();
+  expect(bounds).not.toBeNull();
+  const point={x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2};
+  await page.mouse.move(point.x,point.y);
+  await page.evaluate(()=>{
+    window.firstNextClicks=0;
+    document.getElementById('event-rail-next').addEventListener('click',()=>window.firstNextClicks++);
+  });
+  async function snapshot() {
+    return page.evaluate(point=>{
+      const next=document.getElementById('event-rail-next');
+      const box=node=>{const r=node.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};};
+      return {
+        next:box(next), controls:box(document.getElementById('event-rail-controls')),
+        pause:box(document.getElementById('event-rail-pause')),
+        pointerHitsNext:next.contains(document.elementFromPoint(point.x,point.y)),
+        focus:document.activeElement.id, scrollY, index:Number(document.getElementById('events-grid').dataset.activeIndex),
+        clicks:window.firstNextClicks
+      };
+    },point);
+  }
+  const before=await snapshot();
+  expect(before.pointerHitsNext).toBe(true);
+  expect(before.focus).not.toBe('event-rail-next');
+  let held;
+  await page.mouse.down();
+  try {
+    await expect(page.locator('#event-rail-pause')).toHaveAttribute('data-i18n','railPlay');
+    await expect(next).toBeFocused();
+    held=await snapshot();
+  } finally { await page.mouse.up(); }
+  const after=await snapshot();
+  return {state,point,before,held,after};
+}
+
+for(const locale of ['pt-BR','en-US','es','zh-Hans']) for(const scale of [100,150]) {
+  test(`first Next hit target stays fixed during focus pause / 320px / 15 events / ${locale} / ${scale}% text`,async({page},testInfo)=>{
+    const result=await heldNext(page,{locale,scale});
+    await testInfo.attach('held-next-geometry',{body:JSON.stringify(result,null,2),contentType:'application/json'});
+    expect(result.held.next).toEqual(result.before.next);
+    expect(result.held.controls).toEqual(result.before.controls);
+    expect(result.held.pause).toEqual(result.before.pause);
+    expect(result.held.scrollY).toBe(result.before.scrollY);
+    expect(result.held.pointerHitsNext).toBe(true);
+    expect(result.held.index).toBe(0);
+    expect(result.held.clicks).toBe(0);
+    expect(result.after.clicks).toBe(1);
+    await active(page,1);
+    await expect(page.locator('#event-rail-pause')).toHaveAttribute('data-i18n','railPlay');
+    await overflow(page);
+    expect(result.state.errors).toEqual([]); expect(result.state.blocked).toEqual([]);
+    expect(result.state.methods).toEqual(['ctEventosPublicosListarPROD']);
+  });
+}
+
+test('legacy intrinsic Pause width reproduces the first Next target shift at 320px with 15 events',async({page},testInfo)=>{
+  const result=await heldNext(page,{legacy:true});
+  await testInfo.attach('legacy-held-next-geometry',{body:JSON.stringify(result,null,2),contentType:'application/json'});
+  expect(result.held.next).not.toEqual(result.before.next);
+  expect(result.held.pause.width).toBeGreaterThan(result.before.pause.width);
+  expect(result.held.pointerHitsNext).toBe(false);
+  expect(result.held.clicks).toBe(0);
+  expect(result.after.clicks).toBe(0);
+  await active(page,0);
+  expect(result.state.errors).toEqual([]); expect(result.state.blocked).toEqual([]);
+  expect(result.state.methods).toEqual(['ctEventosPublicosListarPROD']);
+});
+
 test('automatic advances every five seconds, moves left and loops without moving page or focus',async({page})=>{
   await page.clock.install();
   await open(page,2);
