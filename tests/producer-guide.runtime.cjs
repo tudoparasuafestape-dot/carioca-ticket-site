@@ -9,3 +9,6 @@ for(const s of ['fetch(','XMLHttpRequest','portalRpc','ctPoliticaComercial','sup
 assert(!/\b(?:10%|D\+3|3,5%|R\$|80%)\b/.test(html));
 assert(html.includes('rel="noopener noreferrer"'));
 console.log('Producer guide static contract: passed');
+
+const home=fs.readFileSync('index.html','utf8');assert(home.includes('<a href="/como-funciona/" class="text-link"><span data-i18n="howWorks">'));assert(home.includes('id="perguntas"'));
+for(const route of ['produtor/index.html','produtor/solicitar/index.html','ajuda/index.html','termos/index.html','privacidade/index.html','cancelamento-reembolso/index.html'])assert(fs.existsSync(route),'Missing destination '+route);

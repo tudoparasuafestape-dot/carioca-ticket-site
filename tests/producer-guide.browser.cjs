@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),http=require('node:http'),fs=require(
 const {chromium}=require(process.env.CT_PLAYWRIGHT_MODULE||'playwright');
 (async()=>{
  const root=process.cwd();
- const server=http.createServer((req,res)=>{let pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);let file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':''));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}fs.readFile(file,(e,b)=>{if(e){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript':'image/png');res.end(b);});});
+ const server=http.createServer((req,res)=>{let pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);let file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':''));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}fs.readFile(file,(e,b)=>{if(e){res.writeHead(404).end();return;}res.setHeader('Content-Type',file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript':'image/png');if(pathname==='/'){b=b.toString().replace(/<script\b[^>]*src="([^"]+)"[^>]*><\/script>/g,(tag,src)=> /\/assets\/(home-theme|home-i18n|home-controls|home-navigation|public-i18n)\.js/.test(src)?tag:'').replace(/<link\b[^>]*rel="(?:prefetch|preconnect)"[^>]*>/g,'');}res.end(b);});});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const origin='http://127.0.0.1:'+server.address().port;
  const browser=await chromium.launch({headless:true,...(process.env.CT_CHROMIUM_PATH?{executablePath:process.env.CT_CHROMIUM_PATH}:{})});
@@ -31,9 +31,27 @@ const {chromium}=require(process.env.CT_PLAYWRIGHT_MODULE||'playwright');
  fs.mkdirSync('test-results/producer-guide',{recursive:true});
  for(const [width,locale,theme] of [[320,'pt-BR','light'],[1440,'pt-BR','light'],[375,'zh-Hans','dark'],[1440,'en-US','dark']]){await page.setViewportSize({width,height:900});await page.selectOption('#guide-language',locale);await page.selectOption('#home-theme',theme);await page.screenshot({path:`test-results/producer-guide/${width}-${locale}-${theme}.png`,fullPage:true});}
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+ // Exercise the real home CTA and browser history in all languages. Home catalog,
+ // analytics and PWA scripts are omitted by this test server; no backend is used.
+ for(const locale of ['pt-BR','en-US','es','zh-Hans']){
+  await page.evaluate(l=>localStorage.setItem('ct-home-locale',l),locale);
+  await page.goto(origin+'/');
+  assert.equal(await page.locator('html').getAttribute('lang'),locale);
+  const cta=page.locator('a:has([data-i18n="howWorks"])');
+  assert.equal(await cta.getAttribute('href'),'/como-funciona/');
+  await cta.click();await page.waitForURL(origin+'/como-funciona/');
+  assert.equal(await page.locator('html').getAttribute('lang'),locale);
+  await page.goBack();assert.equal(new URL(page.url()).pathname,'/');
+  assert.equal(await page.locator('html').getAttribute('lang'),locale);
+  assert.equal(await page.locator('#perguntas').count(),1);
+  await cta.click();await page.waitForURL(origin+'/como-funciona/');
+  await page.locator('header .brand').click();await page.waitForURL(origin+'/');
+  assert.equal(await page.locator('html').getAttribute('lang'),locale);
+ }
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
  await context.close();
  const nojs=await browser.newContext({javaScriptEnabled:false,viewport:{width:320,height:900}});const fallback=await nojs.newPage();await fallback.goto(origin+'/como-funciona/');assert.equal(await fallback.locator('h1').textContent(),'Seu evento, passo a passo.');assert(await fallback.locator('.preferences').isHidden());assert(await fallback.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await fallback.locator('summary').first().click();assert(await fallback.locator('details').first().getAttribute('open')!==null);assert.equal(await fallback.locator('a[href="/produtor/solicitar/"]').count(),1);await nojs.close();
  const blocked=await browser.newContext();await blocked.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new Error('Storage unavailable')}})});const bp=await blocked.newPage();await bp.goto(origin+'/como-funciona/');await bp.selectOption('#guide-language','es');assert.equal(await bp.locator('html').getAttribute('lang'),'es');await blocked.close();
- console.log(JSON.stringify({status:'passed',responsiveLocaleCases:count,extraChecks:['150% font at 320 in all languages','persistent preferences','keyboard skip and FAQ','no JavaScript','storage denied','safe WhatsApp links','no external requests'],screenshots:4},null,2));
+ console.log(JSON.stringify({status:'passed',responsiveLocaleCases:count,extraChecks:['150% font at 320 in all languages','persistent preferences','keyboard skip and FAQ','no JavaScript','storage denied','safe WhatsApp links','no external requests','home CTA, Back and logo in four languages'],screenshots:4},null,2));
  }finally{await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -2,6 +2,11 @@ name: Producer guide (isolated)
 on:
   pull_request:
     paths:
+      - 'index.html'
+      - 'assets/home-i18n.js'
+      - 'assets/home-controls.js'
+      - 'assets/home-navigation.js'
+      - 'assets/public-i18n.js'
       - 'como-funciona/**'
       - 'assets/producer-guide.*'
       - 'assets/home-theme.js'
