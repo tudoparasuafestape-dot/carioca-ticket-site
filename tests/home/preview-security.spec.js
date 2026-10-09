@@ -7,6 +7,7 @@ const { capture, settlePaint } = require('./capture.cjs');
 const ORIGIN = 'http://127.0.0.1:4175';
 const EVIDENCE = path.resolve(__dirname, '../../docs/reviews/home-v1/screenshots');
 let server;
+test.beforeEach(async ({ page }) => { await page.addInitScript(() => { Math.random = () => 0; }); });
 test.beforeAll(async () => {
   server = spawn(process.execPath, [path.resolve(__dirname, '../home-preview-server.cjs')], { env: { ...process.env, CT_PREVIEW_PORT: '4175' }, windowsHide: true, stdio: 'pipe' });
   await new Promise((resolve, reject) => {

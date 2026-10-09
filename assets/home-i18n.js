@@ -145,7 +145,24 @@
     "adPosition": "Publicidade {n} de {total}",
     "pageTitle": "Carioca Ticket | Ingressos e tecnologia para eventos",
     "mainNavigation": "Navegação principal",
-    "mobileNavigation": "Menu de navegação"
+    "mobileNavigation": "Menu de navegação",
+    "eventFeature": "Destaque de eventos",
+    "railPause": "Pausar rotação",
+    "railPlay": "Retomar rotação",
+    "railPrevious": "Evento anterior",
+    "railNext": "Próximo evento",
+    "railPosition": "{n} de {total}",
+    "railHelp": "Deslize para os lados ou use as setas para explorar.",
+    "railSlide": "evento",
+    "railCarousel": "carrossel",
+    "adPausedState": "Rotação pausada",
+    "adPlayingState": "Troca a cada 5 s",
+    "shareSite": "Compartilhar site",
+    "shareEvent": "Compartilhar evento:",
+    "shareProgram": "Compartilhar apresentação",
+    "shareCopied": "Link copiado.",
+    "shareFailed": "Não foi possível copiar. Selecione o link abaixo para copiar.",
+    "shareLink": "Link público para compartilhar"
   },
   "en-US": {
     "menuLabel": "Menu",
@@ -290,7 +307,24 @@
     "adPosition": "Advertisement {n} of {total}",
     "pageTitle": "Carioca Ticket | Tickets and event technology",
     "mainNavigation": "Main navigation",
-    "mobileNavigation": "Navigation menu"
+    "mobileNavigation": "Navigation menu",
+    "eventFeature": "Featured events",
+    "railPause": "Pause rotation",
+    "railPlay": "Resume rotation",
+    "railPrevious": "Previous event",
+    "railNext": "Next event",
+    "railPosition": "{n} of {total}",
+    "railHelp": "Swipe sideways or use the arrows to explore.",
+    "railSlide": "event",
+    "railCarousel": "carousel",
+    "adPausedState": "Rotation paused",
+    "adPlayingState": "Changes every 5 s",
+    "shareSite": "Share website",
+    "shareEvent": "Share event:",
+    "shareProgram": "Share presentation",
+    "shareCopied": "Link copied.",
+    "shareFailed": "Could not copy. Select the link below to copy it.",
+    "shareLink": "Public link to share"
   },
   "es": {
     "menuLabel": "Menú",
@@ -435,7 +469,24 @@
     "adPosition": "Publicidad {n} de {total}",
     "pageTitle": "Carioca Ticket | Entradas y tecnología para eventos",
     "mainNavigation": "Navegación principal",
-    "mobileNavigation": "Menú de navegación"
+    "mobileNavigation": "Menú de navegación",
+    "eventFeature": "Eventos destacados",
+    "railPause": "Pausar avance",
+    "railPlay": "Reanudar avance",
+    "railPrevious": "Evento previo",
+    "railNext": "Evento siguiente",
+    "railPosition": "{n} entre {total}",
+    "railHelp": "Desliza a los lados o usa las flechas para explorar.",
+    "railSlide": "diapositiva de evento",
+    "railCarousel": "carrusel",
+    "adPausedState": "Rotación pausada",
+    "adPlayingState": "Cambia cada 5 s",
+    "shareSite": "Compartir sitio",
+    "shareEvent": "Compartir evento:",
+    "shareProgram": "Compartir presentación",
+    "shareCopied": "Enlace copiado.",
+    "shareFailed": "No se pudo copiar. Selecciona el enlace de abajo para copiarlo.",
+    "shareLink": "Enlace público para compartir"
   },
   "zh-Hans": {
     "menuLabel": "菜单",
@@ -460,7 +511,7 @@
     "security": "安全",
     "help": "帮助",
     "about": "关于 Carioca Ticket",
-    "accessibility": "无障碍功能",
+    "accessibility": "语言与无障碍",
     "language": "语言",
     "smaller": "缩小文字",
     "larger": "放大文字",
@@ -580,7 +631,24 @@
     "adPosition": "广告 {n}/{total}",
     "pageTitle": "Carioca Ticket | 门票与活动技术",
     "mainNavigation": "主导航",
-    "mobileNavigation": "导航菜单"
+    "mobileNavigation": "导航菜单",
+    "eventFeature": "精选活动",
+    "railPause": "暂停轮播",
+    "railPlay": "继续轮播",
+    "railPrevious": "上一个活动",
+    "railNext": "下一个活动",
+    "railPosition": "第 {n} 项，共 {total} 项",
+    "railHelp": "左右滑动或使用箭头浏览。",
+    "railSlide": "活动",
+    "railCarousel": "轮播",
+    "adPausedState": "轮播已暂停",
+    "adPlayingState": "每 5 秒切换",
+    "shareSite": "分享网站",
+    "shareEvent": "分享活动:",
+    "shareProgram": "分享介绍",
+    "shareCopied": "链接已复制。",
+    "shareFailed": "无法复制。请选择下方链接进行复制。",
+    "shareLink": "用于分享的公开链接"
   }
 };
 
@@ -632,3 +700,4 @@
   document.getElementById('home-language').addEventListener('change', function (event) { api.setLocale(event.target.value); });
   api.setLocale(locale);
 }());
+
