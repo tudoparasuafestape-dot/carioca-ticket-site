@@ -39,8 +39,8 @@ with sync_playwright() as pw:
  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'150% text'
  page.locator('.skip-link').focus();page.keyboard.press('Enter');assert page.locator('#conteudo').evaluate('(e)=>e===document.activeElement')
  page.locator('.ad-brand').first.focus();assert page.locator('.ad-brand').first.evaluate("e=>getComputedStyle(e).outlineStyle")=='solid'
- page.keyboard.press('Enter');page.wait_for_url(ORIGIN+'/');page.go_back();page.wait_for_url(ORIGIN+'/anuncie/')
- page.locator('a[href="#planos"]').click();page.go_back();assert page.url==ORIGIN+'/anuncie/'
+ previous=page.url;page.keyboard.press('Enter');page.wait_for_url(ORIGIN+'/');page.go_back();page.wait_for_url(previous)
+ previous=page.url;page.locator('a[href="#planos"]').click();page.go_back();assert page.url==previous
  context.close()
  context=browser.new_context(java_script_enabled=False);context.route('**/*',route);page=context.new_page();page.goto(ORIGIN+'/anuncie/');assert page.locator('[data-proposal]').count()==5;assert page.locator('.ad-preferences').is_hidden();context.close()
  context=browser.new_context();context.route('**/*',route);context.add_init_script("Object.defineProperty(window,'localStorage',{get(){throw new Error('disabled')}})");page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.goto(ORIGIN+'/anuncie/');page.select_option('#advertise-language','es');assert page.locator('html').get_attribute('lang')=='es';context.close();browser.close()
