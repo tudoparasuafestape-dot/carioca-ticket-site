@@ -1,4 +1,16 @@
-import { test, expect } from './helpers/branch-isolated.cjs';
+import { test, expect, mockRoute, mockFailure } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctBackofficeMasterCarregarPROD",
+      "ctProdutorOnboardingAdminContarPendentesPROD",
+      "ctContaCariocaPayMasterContarPendentesPROD",
+      "ctEventoGovernancaMasterListarPROD"
+    ]
+  }
+};
 
 const BRANCH_MODE = String(process.env.CT_BRANCH_MODE || '') === '1';
 const STORAGE = 'CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
@@ -55,7 +67,7 @@ async function seed(page) {
 }
 
 async function mock(page,state){
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const params=new URLSearchParams(route.request().postData()||'');
     const id=String(params.get('ctMinhaCariocaRequestId')||'');
     const action=String(params.get('ctMinhaCariocaAction')||'');
@@ -64,12 +76,18 @@ async function mock(page,state){
     let ok=true,resultado=null,erro='';
     try{
       expect(action).toBe('portalRpc');
-      expect(method).toBe('ctBackofficeMasterCarregarPROD');
       expect(String(args[0]||'')).toBe('CT-MASTER-E2E-TOKEN');
+      if(method==='ctProdutorOnboardingAdminContarPendentesPROD'||method==='ctContaCariocaPayMasterContarPendentesPROD'){
+        expect(args).toHaveLength(1);resultado=method==='ctProdutorOnboardingAdminContarPendentesPROD'?{sucesso:true,total:0}:{sucesso:true,contagem:{abertas:0}};
+      }else if(method==='ctEventoGovernancaMasterListarPROD'){
+        expect(args[1]).toEqual({});resultado={sucesso:true,eventos:[],contagem:{pendentes:0}};
+      }else{
+      expect(method).toBe('ctBackofficeMasterCarregarPROD');
       state.calls++;
       state.lastFilters=args[1]||{};
       resultado=fixture(state.lastFilters);
-    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+      }
+    }catch(e){ mockFailure(route, e);ok=false;erro=e&&e.message?e.message:String(e)}
     const payload=JSON.stringify({ctMinhaCariocaPost:true,id,ok,resultado:ok?resultado:null,erro:ok?'':erro}).replace(/</g,'\\u003c');
     await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");<\/script></body></html>'});
   });

@@ -1,4 +1,19 @@
-import { test, expect } from './helpers/branch-isolated.cjs';
+import { test, expect, mockRoute, mockFailure, fixtureError } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctConsultaIngressosOperacionalPROD",
+      "ctCortesiasCancelarPROD",
+      "ctCortesiasCarregarPROD",
+      "ctCortesiasEmitirPROD",
+      "ctCortesiasSalvarConfigPROD",
+      "ctPortalProdutorCarregarCatalogoEventosPROD",
+      "ctPortalProdutorRestaurarSessaoIsoladaPROD"
+    ]
+  }
+};
 
 test.use({serviceWorkers:'block'});
 
@@ -147,8 +162,7 @@ function baseData(state){
 async function installMock(page,state){
   state.calls=[];
   // Only the local candidate and the mocked RPC transport may load. No real mutation can escape.
-  await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.fallback():route.abort());
-  await page.route('https://script.google.com/**',async route=>{
+  await mockRoute(page, MOCK_CONTRACT,async route=>{
     const p=new URLSearchParams(route.request().postData()||'');
     const id=String(p.get('ctMinhaCariocaRequestId')||'');
     const method=String(p.get('metodo')||'');
@@ -224,7 +238,7 @@ async function installMock(page,state){
       }else{
         throw new Error('Método inesperado: '+method);
       }
-    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    }catch(e){ mockFailure(route, e);ok=false;erro=e&&e.message?e.message:String(e)}
     await route.fulfill({
       status:200,
       contentType:'text/html; charset=utf-8',
@@ -402,7 +416,7 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
     ['sem identidade',()=>({...catalog(),produtorId:undefined})],
     ['eventos malformados',()=>({...catalog(),eventos:{id:'A'}})],
     ['evento inválido',()=>catalog('PROD-E2E',[{id:'A'},{}])],
-    ['erro de transporte',()=>{throw new Error('Falha simulada do catálogo')}]
+    ['erro de transporte',()=>{throw fixtureError('Falha simulada do catálogo')}]
   ];
   for(const [label,response] of badCatalogs){
     test(`catálogo ${label} falha fechado e permite tentar novamente`,async({page})=>{
@@ -485,7 +499,7 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
     test(`carregamento de cortesias ${denied?'negado':'com erro'} permite retry sem dados anteriores`,async({page})=>{
       let failing=true;
       const state=fixture({onRequest:({method})=>{
-        if(method===LOAD&&failing){if(denied)return {...baseData(fixture()),autorizado:false};throw new Error('Falha simulada de carregamento')}
+        if(method===LOAD&&failing){if(denied)return {...baseData(fixture()),autorizado:false};throw fixtureError('Falha simulada de carregamento')}
       }});
       await openCourtesy(page,state);
       await expect(page.locator('#message')).toHaveClass(/error/);
@@ -558,7 +572,7 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
   test('retry de emissão preserva payload e chave de idempotência após erro e atualização',async({page})=>{
     let attempts=0;
     const state=fixture({onRequest:({method})=>{
-      if(method===ISSUE){if(++attempts===1)throw new Error('Resposta de emissão indisponível');return {sucesso:true}}
+      if(method===ISSUE){if(++attempts===1)throw fixtureError('Resposta de emissão indisponível');return {sucesso:true}}
     }});
     await openCourtesy(page,state);
     await ready(page);
@@ -584,10 +598,10 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
       let failCatalog=retryButton==='refreshButton';
       const retry=deferred();
       const state=fixture({catalogs:{'PROD-E2E':catalog('PROD-E2E',[{id:'EVT-CORT-E2E'},{id:'OUTRO'}])},onRequest:({method,args})=>{
-        if(method===CATALOG&&state.issued&&failCatalog)throw new Error('Falha transitória do catálogo após emissão');
+        if(method===CATALOG&&state.issued&&failCatalog)throw fixtureError('Falha transitória do catálogo após emissão');
         if(method===LOAD&&args[1]==='OUTRO')return eventData('OUTRO');
         if(method===LOAD&&state.issued){
-          if(failReload)throw new Error('Falha transitória após emissão confirmada');
+          if(failReload)throw fixtureError('Falha transitória após emissão confirmada');
           return retry.promise;
         }
       }});
@@ -741,7 +755,7 @@ test.describe('Links das cortesias já emitidas no histórico',()=>{
     expect(shareUrl.searchParams.get('text')).toContain(ticketUrl('CT-E2E-2'));
     expect(shareUrl.searchParams.get('text')).not.toContain('CT-E2E-1');
     expect(context.pages()).toHaveLength(1);
-    await context.route('**/*',route=>route.fulfill({status:200,body:'<!doctype html><title>Destino simulado</title>'}));
+    await mockRoute(context, { resources: [ticketUrl('CT-E2E-1'), shareUrl.href] },route=>route.fulfill({status:200,body:'<!doctype html><title>Destino simulado</title>'}));
     for(const link of [first.getByRole('link',{name:'Abrir ingresso'}),share]){
       const popupEvent=page.waitForEvent('popup');await link.click();const popup=await popupEvent;
       await popup.waitForLoadState();expect(popup.url()).toBe(await link.getAttribute('href'));await popup.close();
@@ -866,7 +880,7 @@ test.describe('Links das cortesias já emitidas no histórico',()=>{
   });
 
   test('falha de transporte permite nova tentativa sem reemitir',async({page})=>{
-    let failed=false;const state=fixture({issued:true,onRequest:({method})=>{if(method===CONSULT&&!failed){failed=true;throw new Error('Falha de consulta simulada')}}});
+    let failed=false;const state=fixture({issued:true,onRequest:({method})=>{if(method===CONSULT&&!failed){failed=true;throw fixtureError('Falha de consulta simulada')}}});
     await openCourtesy(page,state);await ready(page);
     const row=historyTicket(page);await row.getByRole('button',{name:'Abrir ingresso',exact:true}).click();
     await expect(row).toContainText('Falha de consulta simulada');

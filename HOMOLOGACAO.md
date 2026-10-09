@@ -26,6 +26,7 @@ Controles de segurança independentes:
 node tests/safety/public-request-policy.test.cjs
 node tests/safety/published-static.test.cjs
 node tests/safety/network-isolation.browser.cjs
+node tests/safety/branch-guard-regression.cjs
 node tests/safety/telemetry-isolated.browser.cjs
 node tests/safety/pwa-isolated.cjs
 ```

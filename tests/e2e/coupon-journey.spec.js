@@ -1,4 +1,29 @@
-const { test, expect } = require('./helpers/branch-isolated.cjs');
+const { test, expect, mockRoute, mockFailure, fixtureError } = require('./helpers/branch-isolated.cjs');
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctCuponsCampanhasAdminListarPROD",
+      "ctCuponsCampanhasAlterarStatusPROD",
+      "ctCuponsCampanhasListarPROD",
+      "ctCuponsCampanhasRegistrarCompartilhamentoPROD",
+      "ctCuponsCampanhasSalvarPROD"
+    ],
+    "publicRpc": [
+      "ctCheckoutPixPublicoIniciarPROD",
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCuponsPublicoRegistrarAcessoSeguroPROD",
+      "ctCuponsPublicoValidarSeguroPROD",
+      "ctEventoPublicoCarregarPROD"
+    ]
+  },
+  "actions": {
+    "centralRestaurarSessao": [
+      "token"
+    ]
+  }
+};
 
 const BRANCH_MODE=process.env.CT_BRANCH_MODE==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
@@ -54,7 +79,7 @@ async function seed(page,token='CT-CUPOM-E2E-TOKEN'){
 }
 
 async function mock(page,state){
-  await page.route('https://script.google.com/**', async route=>{
+  await mockRoute(page, MOCK_CONTRACT, async route=>{
     const req=route.request(),params=new URLSearchParams(req.postData()||'');
     const id=String(params.get('ctMinhaCariocaRequestId')||''),action=String(params.get('ctMinhaCariocaAction')||''),method=String(params.get('metodo')||'');
     let args=[];try{args=JSON.parse(params.get('argsJson')||'[]')}catch(_){}
@@ -101,11 +126,11 @@ async function mock(page,state){
           expect(Object.prototype.hasOwnProperty.call(p,'precoPromocional')).toBe(false);
           expect(Object.prototype.hasOwnProperty.call(p,'desconto')).toBe(false);
           expect(Object.prototype.hasOwnProperty.call(p,'valorTotal')).toBe(false);
-          if(state.pauseBeforePay)throw new Error('CT_CUPONS_PAUSADO');
+          if(state.pauseBeforePay)throw fixtureError('CT_CUPONS_PAUSADO');
           result={sucesso:true,consultaToken:'TOKEN-E2E',pedido:{pedidoId:'PED-E2E',status:'AGUARDANDO_PAGAMENTO',expiraEm:'2099-01-01T00:00:00.000Z'},promocao:{campanhaId:'CMP-E2E-30ANOS',codigo:CODE,precoOriginalUnitario:25,precoFinalUnitario:15,descontoTotal:10,valorFinalTotal:15},pagamento:{forma:'PIX',pix:{copiaECola:'PIX-E2E-15'}}};
         }else throw new Error('publicRpc não previsto: '+method);
       }else throw new Error('ação não prevista: '+action);
-    }catch(e){ok=false;error=e&&e.message?e.message:String(e)}
+    }catch(e){ mockFailure(route, e);ok=false;error=e&&e.message?e.message:String(e)}
     const payload=JSON.stringify({ctMinhaCariocaPost:true,id,ok,resultado:ok?result:null,erro:ok?'':error}).replace(/</g,'\\u003c');
     await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+payload+', "*");</script></body></html>'});
   });

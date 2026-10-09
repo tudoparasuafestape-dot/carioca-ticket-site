@@ -1,4 +1,23 @@
-import { test, expect } from './helpers/branch-isolated.cjs';
+import { test, expect, mockRoute, mockFailure } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctContaCariocaPayMasterContarPendentesPROD",
+      "ctContaCariocaPayMasterDecidirPROD",
+      "ctContaCariocaPayMasterDetalharPROD",
+      "ctContaCariocaPayMasterListarPROD",
+      "ctContaCariocaPayPortalResumoPROD",
+      "ctContaCariocaPayPortalSolicitarAntecipacaoPROD",
+      "ctContaCariocaPayPortalSolicitarSaquePROD",
+      "ctPortalProdutorRestaurarSessaoIsoladaPROD"
+    ],
+    "publicRpc": [
+      "ctEventosPublicosListarPROD"
+    ]
+  }
+};
 
 const BRANCH_MODE=String(process.env.CT_BRANCH_MODE||'')==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
@@ -16,7 +35,7 @@ function envelope(id,ok,resultado,erro=''){
 }
 
 async function installMock(page,state){
-  await page.route('https://script.google.com/**',async route=>{
+  await mockRoute(page, MOCK_CONTRACT,async route=>{
     const p=new URLSearchParams(route.request().postData()||'');
     const id=String(p.get('ctMinhaCariocaRequestId')||'');
     const action=String(p.get('ctMinhaCariocaAction')||'');
@@ -57,7 +76,7 @@ async function installMock(page,state){
       }else{
         throw new Error('Método não previsto: '+method);
       }
-    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    }catch(e){ mockFailure(route, e);ok=false;erro=e&&e.message?e.message:String(e)}
     await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,ok,resultado,erro)+', "*");<\/script></body></html>'});
   });
 }
@@ -89,7 +108,7 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
 
   test('financeiro pendente bloqueia antecipacao e saque antes de qualquer mutacao',async({page})=>{
     const state={advanceCalls:0,withdrawCalls:0};
-    await page.route('https://script.google.com/**',async route=>{
+    await mockRoute(page, MOCK_CONTRACT,async route=>{
       const p=new URLSearchParams(route.request().postData()||'');
       const id=String(p.get('ctMinhaCariocaRequestId')||'');
       const method=String(p.get('metodo')||'');

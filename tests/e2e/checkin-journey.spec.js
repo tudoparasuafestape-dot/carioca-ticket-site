@@ -1,11 +1,11 @@
-const { test, expect } = require('./helpers/branch-isolated.cjs');
+const { test, expect, mockRoute } = require('./helpers/branch-isolated.cjs');
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
 const CRED = 'CREDENCIAL_CHECKIN_E2E_ABCDEFGHIJKLMNOPQRSTUVWXYZ123456';
 
 async function stubQrLibrary(page) {
-  await page.route('https://cdn.jsdelivr.net/**', route => route.fulfill({
+  await mockRoute(page, { resources: ['https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'] }, route => route.fulfill({
     status: 200,
     contentType: 'application/javascript; charset=utf-8',
     body: 'window.Html5Qrcode=class{static async getCameras(){return []} async start(){} async stop(){} clear(){}};'

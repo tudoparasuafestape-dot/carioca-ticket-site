@@ -1,5 +1,5 @@
 // Local-only: all pages, assets and RPC responses are intercepted. No production writes.
-const { test, expect } = require('./helpers/branch-isolated.cjs');
+const { test, expect, mockRoute } = require('./helpers/branch-isolated.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const ROOT = path.resolve(__dirname, '../..');
@@ -18,7 +18,7 @@ const rows = [
 async function fixture(page, options = {}) {
   const state = { calls: [], errors: [], attempts: 0, release: null };
   page.on('pageerror', error => state.errors.push(error.message));
-  await page.context().route('**/*', async route => {
+  await mockRoute(page.context(), { staticRoot: { root: ROOT, origin: ORIGIN }, resources: [ORIGIN + '/test-wide-cover.svg', ORIGIN + '/missing-cover.jpg'], rpc: { publicRpc: ['ctEventosPublicosListarPROD'] } }, async route => {
     const request = route.request(), url = new URL(request.url());
     if (url.origin === ORIGIN) {
       if (url.pathname === '/test-wide-cover.svg') return route.fulfill({ contentType: 'image/svg+xml', body:

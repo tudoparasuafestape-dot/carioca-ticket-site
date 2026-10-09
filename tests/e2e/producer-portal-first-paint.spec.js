@@ -1,4 +1,15 @@
-import { test, expect } from './helpers/branch-isolated.cjs';
+import { test, expect, mockRoute } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctCentralAcessoBootstrapPROD",
+      "ctCentralAcessoObterCapacidadesPROD",
+      "ctCentralAcessoObterFirebaseConfigPROD"
+    ]
+  }
+};
 
 const BRANCH_MODE = String(process.env.CT_BRANCH_MODE || '') === '1';
 
@@ -12,7 +23,7 @@ test.describe('Portal do Produtor — primeira pintura profissional', () => {
     });
 
     // Simula Apps Script lento/indisponível. A interface básica não pode sumir.
-    await page.route('https://script.google.com/**', route => route.abort());
+    await mockRoute(page, MOCK_CONTRACT, route => route.abort());
   });
 
   test('exibe login e Criar conta sem esperar backend ou Firebase', async ({ page }) => {

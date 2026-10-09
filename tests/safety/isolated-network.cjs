@@ -2,20 +2,25 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const { installMockAudit } = require('./declared-mocks.cjs');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json', '.webp': 'image/webp' };
 const RPC_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
 const CHECKOUT_V2_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec';
 
-async function installIsolatedNetwork(context, { root, origin, handlers = {}, resources = {} }) {
+async function installIsolatedNetwork(context, { root, origin, handlers = {}, resources = {}, auditMocks = false }) {
   const base = new URL(origin);
   assert(['127.0.0.1', 'localhost'].includes(base.hostname), 'Fixtures require explicit loopback origin');
   root = fs.realpathSync(root);
   const state = { mode: 'isolated-fixtures', forwarded: 0, static: 0, rpc: [], telemetry: [], unexpected: [] };
+  let audit;
   const deny = (kind, request) => {
     // No query, payload, request id, session or full URL is logged.
     let host = ''; try { host = new URL(request.url()).hostname; } catch (_) {}
-    state.unexpected.push({ kind, host, verb: request.method() });
+    const entry = { kind, host, verb: request.method() };
+    const method = new URLSearchParams(request.postData() || '').get('metodo') || '';
+    if (/^(ct[A-Za-z0-9_]+PROD|logoutUsuarioCT2)$/.test(method) && method.length <= 100) entry.rpcMethod = method;
+    state.unexpected.push(entry);
   };
   await context.route('**/*', async route => {
     const request = route.request();
@@ -29,10 +34,12 @@ async function installIsolatedNetwork(context, { root, origin, handlers = {}, re
         if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) throw new Error('unknown-static-resource');
         if (!fs.realpathSync(file).startsWith(root + path.sep)) throw new Error('static-path-escape');
         state.static++;
+        audit?.mark(request, { kind: 'checkout-static-file' });
         return route.fulfill({ status: 200, contentType: MIME[path.extname(file)] || 'application/octet-stream',
           body: request.method() === 'HEAD' ? '' : fs.readFileSync(file) });
       }
       if (request.method() === 'GET' && Object.hasOwn(resources, request.url())) {
+        audit?.mark(request, { kind: 'shared-fixture-resource' });
         return route.fulfill({ status: 200, ...resources[request.url()] });
       }
       if (![RPC_ENDPOINT, CHECKOUT_V2_ENDPOINT].includes(request.url()) || request.method() !== 'POST') throw new Error('unexpected-destination');
@@ -47,10 +54,12 @@ async function installIsolatedNetwork(context, { root, origin, handlers = {}, re
       if (!Object.hasOwn(handlers, key)) throw new Error('unexpected-rpc');
       const result = await handlers[key](args, state);
       state.rpc.push({ action, method, fixtureEndpoint: request.url() === RPC_ENDPOINT ? 'main' : 'checkout-v2' });
+      audit?.mark(request, { kind: 'shared-fixture-rpc', action, method });
       const payload = JSON.stringify({ ctMinhaCariocaPost: true, id: fields.get('ctMinhaCariocaRequestId'), ok: true, resultado: result }).replace(/</g, '\\u003c');
       return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
         body: '<!doctype html><script>window.top.postMessage(' + payload + ',"*")</script>' });
     } catch (error) {
+      audit?.mark(request, { kind: 'rejected' });
       deny(error.message && /^[a-z-]+$/.test(error.message) ? error.message : 'fixture-contract-failed', request);
       await route.abort('blockedbyclient');
     }
@@ -60,9 +69,11 @@ async function installIsolatedNetwork(context, { root, origin, handlers = {}, re
     state.unexpected.push({ kind: 'unexpected-websocket' });
     socket.close(); // Never connectToServer().
   });
-  return { state, assertClean() {
+  if (auditMocks) audit = installMockAudit(context, state, deny);
+  return { state, beginClose() { audit?.beginClose(); }, assertClean() {
     assert.deepEqual(state.unexpected, [], 'Unexpected network/RPC attempt; test must fail');
     assert.equal(state.forwarded, 0);
+    audit?.assertAccounted();
   } };
 }
 module.exports = { installIsolatedNetwork, RPC_ENDPOINT };

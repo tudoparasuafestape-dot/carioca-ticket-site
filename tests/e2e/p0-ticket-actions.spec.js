@@ -1,4 +1,14 @@
-const { test, expect } = require('./helpers/branch-isolated.cjs');
+const { test, expect, mockRoute } = require('./helpers/branch-isolated.cjs');
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "actions": {
+    "consultarIngressoSeguro": [
+      "codigo",
+      "sig"
+    ]
+  }
+};
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const CODE = 'CT-P0-ACOES-001';
@@ -56,7 +66,7 @@ function secureTicket() {
 }
 
 async function installBackend(page) {
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const req = route.request();
     const params = new URLSearchParams(req.postData() || '');
     const id = String(params.get('ctMinhaCariocaRequestId') || '');
@@ -148,18 +158,18 @@ test.describe('P0 ações do ingresso digital', () => {
   });
 
   test('WhatsApp monta link seguro e abre destino', async ({ page, context }) => {
-    await context.route('https://wa.me/**', async route => {
+    await openTicket(page);
+
+    const whatsapp = page.locator('#share-whatsapp');
+    const href = String(await whatsapp.getAttribute('href') || '');
+
+    await mockRoute(context, { resources: [href] }, async route => {
       await route.fulfill({
         status: 200,
         contentType: 'text/html; charset=utf-8',
         body: '<!doctype html><html><body>WhatsApp OK</body></html>'
       });
     });
-
-    await openTicket(page);
-
-    const whatsapp = page.locator('#share-whatsapp');
-    const href = String(await whatsapp.getAttribute('href') || '');
 
     expect(href).toMatch(/^https:\/\/wa\.me\/\?text=/);
     const wa = new URL(href);
@@ -268,7 +278,7 @@ test.describe('P0 ações do ingresso digital', () => {
   });
 
   test('Ver eventos volta para a home no bloco de eventos', async ({ page, context }) => {
-    await context.route('https://cariocaticket.com.br/**', async route => {
+    await mockRoute(context, { resources: ['https://cariocaticket.com.br/?v=20260920-0035'] }, async route => {
       const url = new URL(route.request().url());
       if (url.pathname === '/') {
         await route.fulfill({

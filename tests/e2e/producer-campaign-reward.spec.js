@@ -1,4 +1,24 @@
-import { test, expect } from './helpers/branch-isolated.cjs';
+import { test, expect, mockRoute, mockFailure } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctCampanhasRecompensasAlterarStatusPROD",
+      "ctCampanhasRecompensasListarPROD",
+      "ctCampanhasRecompensasParticipacoesPROD",
+      "ctCampanhasRecompensasReprocessarPROD",
+      "ctCampanhasRecompensasSalvarPROD",
+      "ctCampanhasRecompensasValidarPROD",
+      "ctCuponsCampanhasRegistrarCompartilhamentoPROD",
+      "ctPortalProdutorRestaurarSessaoIsoladaPROD"
+    ],
+    "publicRpc": [
+      "ctCampanhasRecompensasPublicoCarregarPROD",
+      "ctCampanhasRecompensasPublicoParticiparPROD"
+    ]
+  }
+};
 
 const BRANCH_MODE=String(process.env.CT_BRANCH_MODE||'')==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
@@ -113,7 +133,7 @@ function participation(state,status){
 }
 
 async function installMock(page,state){
-  await page.route('https://script.google.com/**',async route=>{
+  await mockRoute(page, MOCK_CONTRACT,async route=>{
     const p=new URLSearchParams(route.request().postData()||'');
     const id=String(p.get('ctMinhaCariocaRequestId')||'');
     const method=String(p.get('metodo')||'');
@@ -224,7 +244,7 @@ async function installMock(page,state){
       }else{
         throw new Error('Método inesperado: '+method);
       }
-    }catch(e){
+    }catch(e){ mockFailure(route, e);
       ok=false;
       erro=e&&e.message?e.message:String(e);
     }

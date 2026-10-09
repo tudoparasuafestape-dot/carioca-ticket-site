@@ -199,6 +199,7 @@ jobs:
           node tests/safety/public-request-policy.test.cjs
           node tests/safety/published-static.test.cjs
           node tests/safety/network-isolation.browser.cjs
+          node tests/safety/branch-guard-regression.cjs
           node tests/safety/telemetry-isolated.browser.cjs
           node tests/safety/pwa-isolated.cjs
       - name: Guardar captura local de telemetria
@@ -206,7 +207,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: telemetria-isolada
-          path: test-results/telemetry-isolated.json
+          path: |
+            test-results/telemetry-isolated.json
+            test-results/branch-guard-negative-child.json
           retention-days: 14
 
   publicado-estatico:

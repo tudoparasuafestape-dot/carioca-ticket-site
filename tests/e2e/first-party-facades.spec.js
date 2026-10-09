@@ -1,4 +1,30 @@
-const { test, expect } = require('./helpers/branch-isolated.cjs');
+const { test, expect, mockRoute, mockFailure } = require('./helpers/branch-isolated.cjs');
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctCentralAcessoObterCapacidadesPROD",
+      "ctCentralAcessoObterFirebaseConfigPROD",
+      "ctMarcaOficialObterDataUriPROD",
+      "ctReembolsosCarregarPROD",
+      "ctReembolsosDiagnosticarPROD",
+      "ctSaudeVendasCarregarPROD"
+    ],
+    "publicRpc": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctEventoPublicoCarregarPROD"
+    ]
+  },
+  "actions": {
+    "consultarSessao": [
+      "token"
+    ],
+    "logout": [
+      "token"
+    ]
+  }
+};
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
@@ -215,7 +241,7 @@ function rpcResult(method, args) {
 }
 
 async function mockAppsScriptRpc(page) {
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const request = route.request();
     const params = new URLSearchParams(request.postData() || '');
     const requestId = String(params.get('ctMinhaCariocaRequestId') || '');
@@ -245,7 +271,7 @@ async function mockAppsScriptRpc(page) {
 
     try {
       resultado = rpcResult(method, args);
-    } catch (e) {
+    } catch (e) { mockFailure(route, e);
       ok = false;
       erro = e && e.message ? e.message : String(e);
       resultado = null;
@@ -291,7 +317,7 @@ function minhaCariocaEnvelope(result) {
 }
 
 async function mockMinhaCariocaSession(page, sessionResult) {
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const request = route.request();
     const params = new URLSearchParams(request.postData() || '');
     const action = String(params.get('ctMinhaCariocaAction') || '');
