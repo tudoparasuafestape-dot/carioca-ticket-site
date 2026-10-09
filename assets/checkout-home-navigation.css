@@ -1,0 +1,12 @@
+.checkout-home-link{display:inline-flex;align-items:center;min-height:44px;border-radius:8px}
+.checkout-home-link:focus-visible{outline:3px solid #f5d887;outline-offset:5px}
+#checkoutLeaveDialog{box-sizing:border-box;width:min(460px,calc(100% - 32px));max-height:calc(100% - 32px);overflow:auto;border:1px solid #d8ad52;border-radius:20px;padding:24px;background:#111821;color:#f7f4ed;box-shadow:0 20px 70px #0009}
+#checkoutLeaveDialog::backdrop{background:#000b}
+#checkoutLeaveDialog h2{margin:0 0 12px;font-size:22px;line-height:1.3}
+#checkoutLeaveMessage{font-size:15px;line-height:1.6;margin:0 0 20px;color:#e2e6ec}
+.checkout-leave-actions{display:flex;flex-wrap:wrap;gap:10px}
+.checkout-leave-actions button{flex:1 1 160px;min-height:48px;border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer}
+#checkoutStay{background:#ebc46a;color:#16120b;border:1px solid #ebc46a}
+#checkoutLeave{background:#17212c;color:#fff;border:1px solid #8390a0}
+#checkoutLeave:disabled{opacity:.55;cursor:wait}
+.checkout-leave-actions button:focus-visible{outline:3px solid #fff;outline-offset:3px}
