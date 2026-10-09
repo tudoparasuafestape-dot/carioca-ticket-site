@@ -2,13 +2,18 @@
 from playwright.sync_api import sync_playwright
 from pathlib import Path
 from urllib.parse import urlsplit,parse_qs
-import json,os
+import json,os,re
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'test-results/advertise';OUT.mkdir(parents=True,exist_ok=True)
 ORIGIN='http://127.0.0.1:4197';checks=[];blocked=[];errors=[]
 def route(r):
  u=r.request.url;p=urlsplit(u).path
  if u.startswith(ORIGIN) and r.request.method=='GET':
-  if p=='/':return r.fulfill(content_type='text/html',body='<h1>Home fixture</h1>')
+  if p=='/':
+   content=(ROOT/'index.html').read_text()
+   content=re.sub(r'<script\b[^>]*>[\s\S]*?</script>','',content,flags=re.I)
+   content=re.sub(r'<link[^>]+rel="(?:manifest|prefetch)"[^>]*>','',content)
+   content=content.replace('</body>','<script src="/assets/home-i18n.js"></script></body>')
+   return r.fulfill(content_type='text/html',body=content)
   f=ROOT/(p.lstrip('/')+('index.html' if p.endswith('/') else ''))
   if f.is_file():return r.fulfill(content_type={'.html':'text/html','.css':'text/css','.js':'text/javascript','.png':'image/png'}.get(f.suffix,'text/plain'),body=f.read_bytes())
  blocked.append(u);r.abort()
@@ -41,6 +46,14 @@ with sync_playwright() as pw:
  page.locator('.ad-brand').first.focus();assert page.locator('.ad-brand').first.evaluate("e=>getComputedStyle(e).outlineStyle")=='solid'
  previous=page.url;page.keyboard.press('Enter');page.wait_for_url(ORIGIN+'/');page.go_back();page.wait_for_url(previous)
  previous=page.url;page.locator('a[href="#planos"]').click();page.go_back();assert page.url==previous
+ page.goto(ORIGIN+'/')
+ for locale in ['pt-BR','en-US','es','zh-Hans']:
+  page.evaluate('locale=>CTHome.setLocale(locale)',locale)
+  link=page.locator('footer a[href="/anuncie/"]');assert link.count()==1
+  assert link.inner_text()==page.evaluate("CTHome.t('adLabel')")
+  link.click();page.wait_for_url(ORIGIN+'/anuncie/');assert page.locator('html').get_attribute('lang')==locale
+  page.go_back();page.wait_for_url(ORIGIN+'/')
+ assert page.locator('#advertising-contact').get_attribute('href').startswith('https://wa.me/5581999311509?text=')
  context.close()
  context=browser.new_context(java_script_enabled=False);context.route('**/*',route);page=context.new_page();page.goto(ORIGIN+'/anuncie/');assert page.locator('[data-proposal]').count()==5;assert page.locator('.ad-preferences').is_hidden();context.close()
  context=browser.new_context();context.route('**/*',route);context.add_init_script("Object.defineProperty(window,'localStorage',{get(){throw new Error('disabled')}})");page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.goto(ORIGIN+'/anuncie/');page.select_option('#advertise-language','es');assert page.locator('html').get_attribute('lang')=='es';context.close();browser.close()
