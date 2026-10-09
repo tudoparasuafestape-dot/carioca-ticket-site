@@ -16,7 +16,7 @@ for (const name of pages) for (const width of [320, 390, 1440]) {
       if (url.origin === ORIGIN && route.request().method() === 'GET') {
         if (url.pathname === `/${name}/`) return route.fulfill({ contentType: 'text/html', body: html });
         if (url.pathname === '/') return route.fulfill({ contentType: 'text/html', body: '<title>Home fixture</title><h1>Home fixture</h1>' });
-        if (['/styles.css', '/assets/carioca-ticket-logo.png', '/assets/carioca-ticket-icon-192.png', '/assets/carioca-ticket-simbolo.png'].includes(url.pathname)) {
+        if (['/styles.css', '/assets/public-logo-links.css', '/assets/carioca-ticket-logo.png', '/assets/carioca-ticket-icon-192.png', '/assets/carioca-ticket-simbolo.png'].includes(url.pathname)) {
           return route.fulfill({ body: fs.readFileSync(path.join(ROOT, url.pathname)), contentType: url.pathname.endsWith('.css') ? 'text/css' : 'image/png' });
         }
       }

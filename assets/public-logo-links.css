@@ -1,0 +1,2 @@
+.footer-brand .footer-home-logo{display:inline-flex;align-items:center;justify-self:start;min-width:44px;min-height:44px}
+.footer-brand .footer-home-logo:focus-visible{outline:3px solid var(--gold2);outline-offset:4px;border-radius:6px}
