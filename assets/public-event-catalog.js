@@ -47,6 +47,9 @@
       var detail = '/evento/?evento=' + encodeURIComponent(event.id);
       var article = node('article', 'catalog-card');
       article.dataset.eventId = event.id;
+      // Only public catalog facts, never attribution, invitation or session data.
+      article.dataset.shareDate = [text(event.data), text(event.horario)].filter(Boolean).join(' · ');
+      article.dataset.shareVenue = [text(event.local), text(event.cidade), text(event.uf)].filter(Boolean).join(' · ');
       var cover = node('a', 'catalog-photo');
       cover.href = detail;
       var coverLabel = node('span', 'sr-only', tr('viewEvent', 'Ver evento') + ':');
@@ -230,3 +233,4 @@
   }
   mount(loadPublicEvents);
 }());
+
