@@ -26,7 +26,7 @@ async function fixture(browser, routePath, mobile, options = {}) {
   if(options.clock) await page.clock.install();
   if(options.noStorage) await context.addInitScript(() => { Storage.prototype.setItem = () => { throw new DOMException('Fixture storage blocked', 'SecurityError'); }; });
   page.on('pageerror', e => state.errors.push(e.message));
-  if (options.recover) await context.addInitScript(({ key, value }) => { if (!localStorage.getItem(key)) localStorage.setItem(key, value); },
+  if (options.recover) await context.addInitScript(({ key, value }) => { if (window === window.top && !localStorage.getItem(key)) localStorage.setItem(key, value); },
     { key: RECOVERY, value: JSON.stringify({ pedidoId: ORDER, token: TOKEN }) });
   if (options.noDialog) await context.addInitScript(() => { HTMLDialogElement.prototype.showModal = undefined; });
   await context.routeWebSocket('**/*', socket => { state.unexpected.push('websocket'); socket.close(); });
