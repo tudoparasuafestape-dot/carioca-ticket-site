@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - 'assets/checkout-commercial-policy.js'
+      - 'assets/fee-*'
+      - 'evento/**'
+      - 'evento-v2/**'
+      - 'tests/fee-transparency.*'
       - 'checkout/**'
       - 'produtor/financeiro/index.html'
       - 'tests/era-finance-summary.runtime.js'
@@ -30,6 +34,8 @@ jobs:
           node-version: '20'
       - name: Commercial policy presentation runtime
         run: node tests/checkout-commercial-policy.runtime.js
+      - name: Price and snapshot display contract
+        run: node tests/fee-transparency.runtime.js
       - name: ERA checkout DOM and RPC regression (local mocks only)
         run: node tests/checkout-era-beauty.dom.js
       - name: ERA producer financial summary (local mocks only)
@@ -40,6 +46,16 @@ jobs:
           npx playwright install --with-deps chromium
       - name: ERA desktop and mobile browser regression (all network mocked)
         run: node tests/checkout-era-beauty.browser.js
+      - name: Fee disclosure at 320, 360, 390 and desktop (all network mocked)
+        env:
+          CT_EVIDENCE_DIR: fee-evidence
+        run: node tests/fee-transparency.browser.js
+      - name: Save local preview screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fee-transparency-screenshots
+          path: fee-evidence
       - name: Assert helper stays presentation-only
         shell: bash
         run: |

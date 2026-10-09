@@ -86,7 +86,7 @@ for(const s of [
   'campanhaId:',
   'feeAdditionalRow',
   'Encargos comerciais adicionais',
-  "el.feePlatform.textContent=money(taxaComprador)"
+  "el.feePlatform.textContent=f.money(s.taxaComprador)"
 ]){
   if(!checkout.includes(s))throw new Error('Checkout sem gate de transparencia comercial: '+s);
 }

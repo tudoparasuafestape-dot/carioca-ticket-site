@@ -48,8 +48,8 @@
     return {
       label:label,
       note:note,
-      infoTitle:'Sobre a taxa Carioca Ticket',
-      infoText:'Esta taxa remunera a tecnologia e a operação da plataforma para processar a venda, emitir e validar ingressos. O percentual e quem absorve a taxa seguem a condição comercial vigente deste evento.',
+      infoTitle:'Sobre a taxa de serviço',
+      infoText:'Quando cobrada do comprador, a taxa de serviço é acrescentada ao valor do ingresso. A cobrança segue as condições desta oferta. Confira o valor do ingresso, a taxa e o total antes de concluir sua compra.',
       pagador:pagador,
       percentual:taxaPct
     };

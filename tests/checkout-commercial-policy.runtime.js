@@ -32,7 +32,7 @@ assert(checkout.includes('ctPoliticaComercialPreviewPublicoPROD'),'backend fee p
 assert(checkout.includes('payload.politicaRevisaoVista=state.feeRevision'),'quote revision sent to backend');
 assert(checkout.includes("state.feeReady!==true"),'payment blocks without confirmed quote');
 assert(checkout.includes("(Date.now()-state.feeQuotedAt)>30000"),'stale quote guard');
-assert(checkout.includes("if(state.politicaComercialAtiva)updateSummary();\n            else renderPromotion();"),'ERA coupon requotes; non-ERA retains existing behavior');
+assert(checkout.includes("if(state.politicaComercialAtiva)updateSummary();\n            else {renderPromotion();displayLegacyFee(res.calculo&&res.calculo.valorFinalTotal);}"),'ERA coupon requotes; non-ERA retains existing behavior');
 
 const payloadStart=checkout.indexOf('var payload={');
 const payloadEnd=checkout.indexOf('};',payloadStart);

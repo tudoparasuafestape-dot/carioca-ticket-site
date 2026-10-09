@@ -105,6 +105,8 @@
     @media(max-width:640px){.payment-methods{grid-template-columns:1fr}}
 
   </style>
+  <link rel="stylesheet" href="/assets/fee-transparency.css">
+  <script src="/assets/fee-transparency.js"></script>
   <script src="/pwa-register.js" defer></script>
   <script src="/assets/checkout-commercial-policy.js"></script>
 </head>
@@ -265,14 +267,15 @@
       </div>
       <div id="summary" class="ticket-summary hidden">
         <div><small>SEU PEDIDO</small><b id="summaryTitle">—</b><div id="summaryAccess" class="help"></div></div>
-        <div style="text-align:right"><small>TOTAL</small><b id="summaryPrice">R$ 0,00</b></div>
+        <div style="text-align:right"><small>TOTAL</small><b id="summaryPrice">A confirmar</b></div>
       </div>
       <div id="feeStatus" class="help hidden" role="status" aria-live="polite"><span id="feeStatusText"></span> <button id="feeRetry" type="button" class="hidden">Atualizar total</button></div>
       <div id="feeSummary" class="promo-summary hidden" data-ct-p0="CT_P0_COMMERCIAL_POLICY_OFFICIAL_CHECKOUT_V1">
         <div class="promo-line"><span>Ingressos</span><span id="feeBase">R$ 0,00</span></div>
-        <div class="promo-line"><span><span id="feeLabel">Taxa Carioca Ticket</span> <button id="feeInfo" type="button" aria-label="Saiba mais sobre a taxa Carioca Ticket" style="min-height:auto;border:0;background:transparent;padding:0 2px;color:#7A5A0C;font-weight:900;cursor:pointer">ⓘ</button></span><span id="feePlatform">R$ 0,00</span></div>
+        <div class="promo-line"><span><span id="feeLabel">Taxa Carioca Ticket</span></span><span id="feePlatform">R$ 0,00</span></div>
         <div id="feeAdditionalRow" class="promo-line hidden"><span>Encargos comerciais adicionais</span><span id="feeAdditional">R$ 0,00</span></div>
         <div class="promo-line total"><span>Total a pagar</span><span id="feeTotal">R$ 0,00</span></div>
+        <button id="feeInfo" type="button" class="ct-fee-link" aria-haspopup="dialog">Entenda a taxa de serviço</button>
         <div id="feeNote" class="help" style="margin-top:8px"></div>
       </div>
       <div id="couponBox" class="coupon-box">
@@ -290,7 +293,7 @@
           <div id="promoSummary" class="promo-summary hidden">
             <div class="promo-line"><span>Valor original</span><span id="promoOriginal">R$ 0,00</span></div>
             <div class="promo-line discount"><span id="promoLabel">Cupom</span><span id="promoDiscount">- R$ 0,00</span></div>
-            <div class="promo-line total"><span>Total com promoção</span><span id="promoTotal">R$ 0,00</span></div>
+            <div class="promo-line total"><span>Ingressos após desconto (antes da taxa)</span><span id="promoTotal">R$ 0,00</span></div>
             <button id="couponRemove" class="coupon-remove" type="button">REMOVER CUPOM</button>
           </div>
         </div>
@@ -341,6 +344,8 @@
       <button id="payButton" class="primary" type="button">Gerar PIX e reservar ingresso</button>
       <p id="payHelp" class="help" style="text-align:center">A venda e o ingresso só são criados depois que o Asaas confirma o recebimento do PIX.</p>
     </section>
+
+    <section id="orderComposition" class="panel hidden" aria-label="Resumo do pedido"></section>
 
     <section id="pixPanel" class="panel hidden pix-box">
       <div class="step"><span class="step-num">3</span><strong>Pagamento PIX</strong></div>
@@ -459,13 +464,7 @@
       el.modalBg.onclick=function(e){if(e.target===el.modalBg)closeModal();};
       if(el.feeInfo){
         el.feeInfo.onclick=function(){
-          var p=window.CTCheckoutCommercialPolicy&&state.feePreview&&state.feePreview.resumo
-            ?window.CTCheckoutCommercialPolicy.present(state.feePreview.resumo)
-            :null;
-          modal(
-            p&&p.infoTitle?p.infoTitle:'Sobre a taxa Carioca Ticket',
-            p&&p.infoText?p.infoText:'Esta taxa remunera os serviços de tecnologia e intermediação da Carioca Ticket, incluindo infraestrutura da plataforma, processamento da venda, emissão e validação do ingresso digital e suporte à operação de compra.'
-          );
+          window.CTFeeTransparency.explain(window.CTFeeTransparency.quote(state.feePreview),el.feeInfo);
         };
       }
 
@@ -651,7 +650,7 @@
           (state.type.lotes||[]).forEach(function(l){
             var o=document.createElement('option');
             o.value=l.id;
-            o.textContent=l.nome+' — '+l.preco+(l.quantidadeLimitada?' · '+l.disponiveis+' acesso(s) disponível(is)':'');
+            o.textContent=l.nome+(l.quantidadeLimitada?' · '+l.disponiveis+' acesso(s) disponível(is)':'');
             el.lotSelect.appendChild(o);
           });
           el.lotSelect.disabled=false;
@@ -691,7 +690,7 @@
         el.promoDiscount.textContent='- '+money(c.descontoTotal||0);
         el.promoTotal.textContent=money(c.valorFinalTotal||0);
         el.promoLabel.textContent='Cupom '+String(p.cupom&&p.cupom.codigo||el.couponCode.value||'');
-        el.summaryPrice.textContent=money(c.valorFinalTotal||0);
+        el.summaryPrice.textContent='Confirmando…';
         el.promoSummary.classList.remove('hidden');
       }
 
@@ -727,7 +726,7 @@
             var avisoPromo=res.cupom&&res.cupom.observacaoPublica?String(res.cupom.observacaoPublica):res.cupom&&res.cupom.somenteAcesso?'Ingresso promocional: somente acesso. Não inclui o copo oficial do evento.':'';
             el.couponMessage.textContent='Cupom aplicado! Você ganhou '+money(res.calculo&&res.calculo.descontoTotal||0)+' de desconto.'+(avisoPromo?' '+avisoPromo:'');
             if(state.politicaComercialAtiva)updateSummary();
-            else renderPromotion();
+            else {renderPromotion();displayLegacyFee(res.calculo&&res.calculo.valorFinalTotal);}
           })
           .withFailureHandler(function(){
             if(state.politicaComercialAtiva&&(couponSeq!==state.couponSeq||couponSelection!==selectionKey()))return;
@@ -765,12 +764,10 @@
           el.summaryPrice.textContent='—';
         }else{
           el.summaryTitle.textContent=q+' × '+state.type.nome+' · '+state.lot.nome;
-          el.summaryPrice.textContent=state.promotion&&state.promotion.calculo
-            ?money(state.promotion.calculo.valorFinalTotal||0)
-            :money(total);
+          el.summaryPrice.textContent='Confirmando…';
         }
 
-        el.summaryAccess.textContent=accesses+(accesses===1?' acesso':' acessos');
+        el.summaryAccess.textContent=window.CTFeeTransparency?window.CTFeeTransparency.unit(accessPer,q)+' · '+accesses+' acesso(s) no total':accesses+' acessos';
         el.summary.classList.remove('hidden');
         renderPromotion();
         renderParticipants(Math.max(0,accesses-1));
@@ -779,6 +776,7 @@
           ?Number(state.promotion.calculo.valorFinalTotal||0)
           :total;
         if(state.politicaComercialAtiva)atualizarTaxa(baseFinanceira,q>0?baseFinanceira/q:baseFinanceira,q);
+        else displayLegacyFee(baseFinanceira);
       }
 
       function officialPriceValid(){
@@ -808,7 +806,7 @@
         state.feeSelection='';
         state.feeQuotedAt=0;
         state.feePreview=null;
-        el.feeSummary.classList.add('hidden');
+        displayFeePending();
         el.feeStatus.classList.toggle('hidden',!message);
         el.feeStatusText.textContent=message||'';
         el.feeRetry.classList.add('hidden');
@@ -822,7 +820,7 @@
         state.feeSelection='';
         state.feeQuotedAt=0;
         state.feePreview=null;
-        el.feeSummary.classList.add('hidden');
+        displayFeePending();
         el.feeStatus.classList.remove('hidden');
         el.feeStatusText.textContent='Não foi possível confirmar o total com a taxa. Atualize o total para continuar.';
         el.feeRetry.classList.remove('hidden');
@@ -837,7 +835,7 @@
         }
         if(!state.politicaComercialAtiva||officiallyFree()){
           state.feeReady=true;
-          el.summaryPrice.textContent=money(valorIngressos||0);
+          displayLegacyFee(valorIngressos);
           return;
         }
         if(state.couponBusy){
@@ -864,34 +862,69 @@
             .withSuccessHandler(function(res){
               if(seq!==state.feeSeq||selection!==quoteSelectionKey())return;
               var helper=window.CTCheckoutCommercialPolicy;
-              if(!helper||!helper.validQuote(res,valorIngressos)){
+              if(!helper||!helper.validQuote(res,valorIngressos)||res.cacheStale===true){
                 feeUnavailable();
                 return;
               }
               var resumo=res.resumo;
-              var apresentacao=helper.present(resumo);
               state.feeBusy=false;
               state.feeReady=true;
               state.feePreview=res;
               state.feeRevision=String(res.revisao).trim();
               state.feeSelection=selection;
               state.feeQuotedAt=Date.now();
-              el.feeBase.textContent=money(resumo.subtotalIngressos);
-              el.feePlatform.textContent=money(resumo.taxaComprador);
-              el.feeAdditional.textContent=money(resumo.adicionaisComprador);
-              el.feeAdditionalRow.classList.toggle('hidden',Number(resumo.adicionaisComprador)<=0);
-              el.feeTotal.textContent=money(resumo.totalComprador);
-              el.summaryPrice.textContent=money(resumo.totalComprador);
-              el.feeLabel.textContent=apresentacao.label;
-              el.feeNote.textContent=apresentacao.note;
               el.feeStatus.classList.add('hidden');
-              el.feeSummary.classList.remove('hidden');
+              displayFee(resumo);
             })
             .withFailureHandler(function(){
               if(seq!==state.feeSeq||selection!==quoteSelectionKey())return;
               feeUnavailable();
             })
             .ctPoliticaComercialPreviewPublicoPROD(request);
+        },180);
+      }
+
+      var displaySeq=0,displayTimer=null,displayedOrderId='',displayedOrderSummary=null;
+      function displayFeePending(){
+        var f=window.CTFeeTransparency;
+        el.feeBase.textContent=el.feePlatform.textContent=el.feeTotal.textContent='A confirmar';
+        el.feeAdditionalRow.classList.add('hidden');
+        el.feeNote.textContent='O ingresso, a taxa e o total ainda não foram confirmados.';
+        el.feeSummary.classList.remove('hidden');
+        document.getElementById('feeInfo').onclick=function(){f.explain(null,this);};
+      }
+      function displayFee(summary){
+        var f=window.CTFeeTransparency,s=f.summary(summary);if(!s)return;
+        el.feeBase.textContent=f.money(s.subtotalIngressos);
+        el.feePlatform.textContent=f.money(s.taxaComprador);
+        el.feeAdditional.textContent=f.money(s.adicionaisComprador);
+        el.feeAdditionalRow.classList.toggle('hidden',s.adicionaisComprador===0);
+        el.feeTotal.textContent=el.summaryPrice.textContent=f.money(s.totalComprador);
+        el.feeLabel.textContent='Taxa de serviço';el.feeNote.textContent=f.note(s);
+        el.feeSummary.classList.remove('hidden');
+        document.getElementById('feeInfo').onclick=function(){f.explain(s,this);};
+      }
+      function displayLegacyFee(base){
+        var seq=++displaySeq;
+        displayFeePending();el.summaryPrice.textContent='Confirmando…';
+        var type=state.type,lot=state.lot,q=quantity(),coupon=state.promotion;
+        if(displayTimer){clearTimeout(displayTimer);displayTimer=null;}
+        if(!type||!lot)return;
+        if(lot.quantidadeLimitada&&q*Math.max(1,Number(type.capacidadePorVenda||1))>Number(lot.disponiveis||0)){el.summaryPrice.textContent='—';return;}
+        displayTimer=setTimeout(function(){
+        displayTimer=null;
+        google.script.run.withSuccessHandler(function(res){
+          if(seq!==displaySeq||state.type!==type||state.lot!==lot||quantity()!==q||state.promotion!==coupon)return;
+          var o=res&&res.sucesso===true&&res.cacheStale!==true&&res.degradado!==true&&res.eventoId===state.eventId&&res.canal==='OFFICIAL'&&res.ofertas&&res.ofertas.find(function(o){return o.tipoId===type.id&&o.loteId===lot.id&&o.quantidade===q;});
+          var s=o&&o.status==='CONFIRMADO'?window.CTFeeTransparency.summary(o.resumo):null;
+          if(coupon){
+            var discounted=coupon.calculo&&coupon.calculo.valorFinalTotal;
+            s=o&&o.semTaxaConfirmada===true&&coupon.calculo.valorOriginalTotal===lot.precoNumero*q&&typeof discounted==='number'&&isFinite(discounted)&&discounted>=0
+              ?window.CTFeeTransparency.summary({subtotalIngressos:discounted,taxaComprador:0,adicionaisComprador:0,totalComprador:discounted}):null;
+          }
+          if(s)displayFee(s);else el.summaryPrice.textContent='A confirmar';
+        }).withFailureHandler(function(){if(seq===displaySeq&&state.type===type&&state.lot===lot&&quantity()===q&&state.promotion===coupon)el.summaryPrice.textContent='A confirmar';})
+          .ctPrecoPublicoLeituraPROD({eventoId:state.eventId,canal:'OFFICIAL',tipoId:type.id,loteId:lot.id,quantidade:q,accessGrant:state.accessGrant||''});
         },180);
       }
 
@@ -1114,6 +1147,14 @@
 
       function renderOrder(res){
         state.order=res.pedido||state.order;
+        if(window.CTFeeTransparency){
+          if(displayedOrderId!==state.order.pedidoId){displayedOrderId=state.order.pedidoId;displayedOrderSummary=null;}
+          if(res.financeiro)displayedOrderSummary=window.CTFeeTransparency.snapshot(res.financeiro);
+          var orderSummary=displayedOrderSummary;
+          var orderBox=document.getElementById('orderComposition');
+          window.CTFeeTransparency.render(orderBox,orderSummary,{label:'Total do pedido'});
+          orderBox.classList.remove('hidden');
+        }
         var status=String(state.order.status||'').toUpperCase();
         var forma=String(res&&res.pagamento&&res.pagamento.forma||state.paymentMethod||'PIX').toUpperCase();
         state.paymentMethod=forma==='CREDIT_CARD'?'CREDIT_CARD':'PIX';
@@ -1153,6 +1194,7 @@
         }
 
         if(['EXPIRADO','CANCELADO','FALHA'].indexOf(status)>=0){
+          document.getElementById('orderComposition').classList.add('hidden');
           stopPolling();stopExpiry();stopTicketReadyRefresh();clearRecovery();clearIdempotency();
           el.pixPanel.classList.add('hidden');el.cardPanel.classList.add('hidden');
           el.salePanel.classList.remove('hidden');el.buyerPanel.classList.remove('hidden');el.payActionPanel.classList.remove('hidden');

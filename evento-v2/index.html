@@ -244,6 +244,9 @@
       .closing .cta{width:100%}
     }
   </style>
+  <link rel="stylesheet" href="/assets/fee-transparency.css">
+  <script src="/assets/fee-transparency.js"></script>
+  <script src="/assets/fee-event-prices.js"></script>
 </head>
 <body>
 <script>
@@ -417,8 +420,7 @@
 
           <div class="price-line">
             <div>
-              <small>Ingressos a partir de</small>
-              <strong id="startingPrice">Consulte</strong>
+              <div id="startingPrice">Total a confirmar</div>
             </div>
             <div class="hero-actions">
               <a id="buyHero" class="cta" href="#">Comprar ingresso →</a>
@@ -739,7 +741,7 @@
         $('highlight').textContent=v.destaque||'Uma experiência para viver.';
         $('longDescription').textContent=v.descricaoCompleta||v.descricaoCurta||'Confira as informações do evento e garanta seu ingresso.';
         $('notes').textContent=v.observacoes||'Apresente o QR Code do ingresso digital na entrada.';
-        $('startingPrice').textContent=res.menorPreco||'Consulte';
+
 
         configurarMidiaPrincipal(v);
         configurarCompartilhamento();
@@ -753,27 +755,7 @@
           $('campaignNotice').classList.add('hidden');
         }
 
-        var tickets=[];
-        (res.tipos||[]).forEach(function(t){
-          var menor=null;
-          (t.lotes||[]).forEach(function(l){
-            var p=Number(l.precoNumero||0);
-            if(menor===null||p<menor)menor=p;
-          });
-          var lots=(t.lotes||[]).map(function(l){
-            return '<span class="lot">'+esc(l.nome)+' · '+esc(l.preco)+'</span>';
-          }).join('');
-          tickets.push(
-            '<div class="ticket">'+
-              '<div class="ticket-top">'+
-                '<div><h3>'+esc(t.nome)+'</h3><p>'+esc(t.descricao||'Ingresso para este evento.')+'</p></div>'+
-                '<div class="ticket-price"><small>a partir de</small><strong>'+(menor===null?'Consulte':money(menor))+'</strong></div>'+
-              '</div>'+
-              '<div class="lots">'+lots+'</div>'+
-            '</div>'
-          );
-        });
-        $('tickets').innerHTML=tickets.join('')||'<p>Nenhum ingresso disponível neste momento.</p>';
+        window.CTFeeEventPrices.mount(res,state.eventoId,'V2');
 
         document.title=(e.nome?e.nome+' · ':'')+'Carioca Ticket';
         $('loading').classList.add('hidden');

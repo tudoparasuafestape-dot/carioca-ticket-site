@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { feeReadFixture } = require('./fee-read-fixture');
 
 const BRANCH_MODE=process.env.CT_BRANCH_MODE==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
@@ -87,7 +88,8 @@ async function mock(page,state){
           result={sucesso:true,autorizado:true,admin:{nome:'Admin',perfil:'ADMINISTRADOR'},itens:state.saved?[{...campaign(state.paused?'PAUSADA':'ATIVA'),produtorId:'PROD-E2E',eventoId:EVENT}]:[],total:state.saved?1:0};
         }else throw new Error('portalRpc não previsto: '+method);
       }else if(action==='publicRpc'){
-        if(method==='ctCheckoutPublicoCarregarEventoPROD')result=catalog();
+        if(method==='ctPrecoPublicoLeituraPROD')result=feeReadFixture(catalog(),args[0]);
+        else if(method==='ctCheckoutPublicoCarregarEventoPROD')result=catalog();
         else if(method==='ctEventoPublicoCarregarPROD')result={...catalog(),menorPreco:'R$ 25,00',visual:{...catalog().visual,realizacao:'Tudo Para Sua Festa',categoria:'Samba',destaque:'30 anos da Banda Sem Razão',descricaoCompleta:'Evento especial de 30 anos.'}};
         else if(method==='ctCuponsPublicoRegistrarAcessoSeguroPROD'){
           state.trafficCalls=Number(state.trafficCalls||0)+1;state.lastTraffic=args[0]||{};result={sucesso:true,registrado:true};
