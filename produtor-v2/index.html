@@ -97,6 +97,12 @@ align-items:center;
 justify-content:center;
 overflow:visible
 }
+.brand-logo-box:focus-visible,.top-logo-box:focus-visible{
+outline:3px solid var(--gold2);
+outline-offset:4px;
+border-radius:6px
+}
+.top-logo-box{min-width:44px;min-height:44px}
 .brand-logo-desktop{
 display:block;
 width:250px;
@@ -917,16 +923,18 @@ class="login-shell"
 >
 <div class="login-card">
 <div class="brand">
-<div
+<a
 id="brandLogoBox"
 class="brand-logo-box"
+href="/"
+aria-label="Carioca Ticket — página inicial"
 >
 <img
 id="brandLogoDesktop"
 class="brand-logo-desktop hidden"
 alt="Carioca Ticket"
 >
-</div>
+</a>
 <div
 id="brandLogoError"
 class="brand-logo-error hidden"
@@ -1201,13 +1209,13 @@ class="portal hidden"
 <header class="topbar">
 <div class="topbar-inner">
 <div class="top-brand">
-<div class="top-logo-box">
+<a class="top-logo-box" href="/" aria-label="Carioca Ticket — página inicial">
 <img
 id="topLogoMobile"
 class="top-logo-image hidden"
 alt="Carioca Ticket"
 >
-</div>
+</a>
 <div>
 <div class="top-title">
 Carioca Ticket
