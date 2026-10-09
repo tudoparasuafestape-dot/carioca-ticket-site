@@ -1,0 +1,236 @@
+{
+  "source": "IBGE - API de Malhas Geográficas v4",
+  "referenceYear": 2025,
+  "releaseDate": "2026-04-27",
+  "retrievedDate": "2026-10-09",
+  "documentation": "https://servicodados.ibge.gov.br/api/docs/malhas?versao=4",
+  "quality": "maxima (simplified, not cadastral)",
+  "format": "TopoJSON",
+  "officialListCount": 5571,
+  "files": {
+    "UF": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/paises/BR?formato=application/json&intrarregiao=UF&qualidade=maxima",
+      "sha256": "1ec7fd7945c735882dfe9be47bf5183a9d7ea9c92a8f5c5f66d149571c9c870d",
+      "bytes": 354865,
+      "gzipBytes": 113549,
+      "geometries": 27,
+      "unlistedIds": []
+    },
+    "AC": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/AC?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "ba08bab62577a4d0f9a6165b092f12e9c3c56db8721fd78709062c0838283786",
+      "bytes": 164878,
+      "gzipBytes": 48541,
+      "geometries": 22,
+      "unlistedIds": []
+    },
+    "AL": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/AL?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "1f40d7bb9c572ff31cefe70e5d9bcc52fb857ad158d950f0e89810678a03c55e",
+      "bytes": 95746,
+      "gzipBytes": 29933,
+      "geometries": 102,
+      "unlistedIds": []
+    },
+    "AP": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/AP?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "f04fe35a081418694d1e49b2813b288764ab51fc0383d3103a1d545db6d38c0c",
+      "bytes": 168797,
+      "gzipBytes": 51905,
+      "geometries": 16,
+      "unlistedIds": []
+    },
+    "AM": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/AM?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "c8d105f207a4b3f4b7491b84410f08c08311468b927e2c68e81ff4d210be250e",
+      "bytes": 970022,
+      "gzipBytes": 288072,
+      "geometries": 62,
+      "unlistedIds": []
+    },
+    "BA": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/BA?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "cb3f3d6e438d5e550dcd3882eaa76b696c63b4b81264c524ee10e46969863eef",
+      "bytes": 1018054,
+      "gzipBytes": 304453,
+      "geometries": 417,
+      "unlistedIds": []
+    },
+    "CE": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/CE?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "5f86cf266210bae5ee25996e6f214771a57085536dd7d9b011a2a157b5b051e4",
+      "bytes": 357222,
+      "gzipBytes": 108481,
+      "geometries": 184,
+      "unlistedIds": []
+    },
+    "DF": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/DF?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "c8bc637feed995bb743342088e2e27da34239c645bd18987063e18be1f542af8",
+      "bytes": 7558,
+      "gzipBytes": 2623,
+      "geometries": 1,
+      "unlistedIds": []
+    },
+    "ES": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/ES?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "3d7d1752767e0cb030662610972881ed9d04f9f11846f77fad0eafb108694778",
+      "bytes": 212685,
+      "gzipBytes": 63745,
+      "geometries": 78,
+      "unlistedIds": []
+    },
+    "GO": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/GO?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "768568dfe21c96b7504ba364191aa26caabaefee3595724f6c0815d8755110bf",
+      "bytes": 1050619,
+      "gzipBytes": 306656,
+      "geometries": 246,
+      "unlistedIds": []
+    },
+    "MA": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/MA?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "9c447711f613bbcd4541dafcf1bc932b920ade02836816f008d9118ae632b5bc",
+      "bytes": 556122,
+      "gzipBytes": 170172,
+      "geometries": 217,
+      "unlistedIds": []
+    },
+    "MT": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/MT?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "75f4abaa1f87054db21846e5c78d57ec185b7c287556d58bf4cff20d4f7f068e",
+      "bytes": 1118445,
+      "gzipBytes": 329825,
+      "geometries": 142,
+      "unlistedIds": []
+    },
+    "MS": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/MS?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "2b4b07417206a8d4b6d192f6f7eaf4d85d615d7fcb85ae8776d37d970506f59c",
+      "bytes": 533411,
+      "gzipBytes": 157832,
+      "geometries": 79,
+      "unlistedIds": []
+    },
+    "MG": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/MG?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "793e1e540f307e11a8917ec49449aae53b0344253e29cee89ae4d777ccde176b",
+      "bytes": 2249004,
+      "gzipBytes": 654341,
+      "geometries": 853,
+      "unlistedIds": []
+    },
+    "PA": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/PA?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "218cae4b87bd91086a151269e0edee93dbf671476a5e6878b623c2c06905a946",
+      "bytes": 630177,
+      "gzipBytes": 196949,
+      "geometries": 144,
+      "unlistedIds": []
+    },
+    "PB": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/PB?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "f869ae911be43ca950dadc3fad5ecf3948a379970f6954d33bac79bb7cda019d",
+      "bytes": 240854,
+      "gzipBytes": 71621,
+      "geometries": 223,
+      "unlistedIds": []
+    },
+    "PR": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/PR?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "5a86117677e104f8d332c3200a349c42bd7764f16fa3372a06fa1fa9fc015e27",
+      "bytes": 973395,
+      "gzipBytes": 284670,
+      "geometries": 399,
+      "unlistedIds": []
+    },
+    "PE": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/PE?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "ff11dd2600b63fff4581fc4ca2892e3f2ba5d475e46b67ae975cab131ff42c6a",
+      "bytes": 236400,
+      "gzipBytes": 73671,
+      "geometries": 185,
+      "unlistedIds": []
+    },
+    "PI": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/PI?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "d1b1ace004b00435414b1e52ab0e5d52939ac80d1aa97b8c9ea99edcaa54065e",
+      "bytes": 263453,
+      "gzipBytes": 82083,
+      "geometries": 224,
+      "unlistedIds": []
+    },
+    "RJ": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/RJ?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "e932d8defe19f608479e42d575703da7c85290067951ec20651cbfee9ac3931f",
+      "bytes": 256897,
+      "gzipBytes": 76944,
+      "geometries": 92,
+      "unlistedIds": []
+    },
+    "RN": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/RN?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "00f4a04098a08e9527e2e73b8b6ef6c551fe0f1d5b035559f5e99fcc17972d83",
+      "bytes": 113158,
+      "gzipBytes": 35514,
+      "geometries": 167,
+      "unlistedIds": []
+    },
+    "RS": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/RS?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "cf26b944e3cdc97de251ca810b80c8be59c472ae942dab5d4f3257c7144cf4cd",
+      "bytes": 993305,
+      "gzipBytes": 302268,
+      "geometries": 497,
+      "unlistedIds": []
+    },
+    "RO": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/RO?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "f5582faf5f89fb13170657bfc1b783cd0bbf1cc05b1838bab0a28b6a57f76131",
+      "bytes": 241571,
+      "gzipBytes": 74886,
+      "geometries": 52,
+      "unlistedIds": []
+    },
+    "RR": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/RR?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "71a24c07981e74c5991955d641cd862c575cfddae6ad3474234dfe722652ca7d",
+      "bytes": 188046,
+      "gzipBytes": 57522,
+      "geometries": 15,
+      "unlistedIds": []
+    },
+    "SC": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/SC?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "d29a1c8b2cb2936af8d138f96951a47501846ef16ad4a7c00020a794e26cec82",
+      "bytes": 625377,
+      "gzipBytes": 184903,
+      "geometries": 295,
+      "unlistedIds": []
+    },
+    "SP": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/SP?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "99830b43287786d22c1b0948206754c68bf7ed913267b8d3b27c4b07f461b750",
+      "bytes": 1292682,
+      "gzipBytes": 381574,
+      "geometries": 645,
+      "unlistedIds": []
+    },
+    "SE": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/SE?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "0008f75775cf554ee69d021a3fd60285aefa90cc2bed07029c3b9806b0ea11fd",
+      "bytes": 109515,
+      "gzipBytes": 33224,
+      "geometries": 75,
+      "unlistedIds": []
+    },
+    "TO": {
+      "url": "https://servicodados.ibge.gov.br/api/v4/malhas/estados/TO?formato=application/json&intrarregiao=municipio&qualidade=maxima",
+      "sha256": "20b3cce611c5a63614cfa4ced6a75bd709341d1f5c749e312611de3b2b1b3738",
+      "bytes": 675113,
+      "gzipBytes": 197834,
+      "geometries": 139,
+      "unlistedIds": []
+    }
+  }
+}

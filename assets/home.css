@@ -13,6 +13,7 @@
   --home-shadow: 0 8px 26px rgb(24 24 24 / 5%);
   background: var(--home-bg);
 }
+.ct-home-root:not([data-home-theme]),
 .ct-home-root[data-home-theme="dark"] {
   color-scheme: dark;
   --home-bg: #171717;
@@ -23,18 +24,6 @@
   --home-line: #4a4a4a;
   --home-focus: #d5bb82;
   --home-shadow: 0 8px 26px rgb(0 0 0 / 12%);
-}
-@media (prefers-color-scheme: dark) {
-  .ct-home-root:not([data-home-theme]) {
-    color-scheme: dark;
-    --home-bg: #171717;
-    --home-surface: #222222;
-    --home-soft: #2d2d2d;
-    --home-text: #f5f5f5;
-    --home-muted: #c2c2c2;
-    --home-line: #4a4a4a;
-    --home-focus: #d5bb82;
-  }
 }
 .ct-home { margin: 0; color: var(--home-text); background: var(--home-bg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
 .ct-home *, .ct-home *::before, .ct-home *::after { box-sizing: border-box; }
@@ -177,8 +166,9 @@
 }
 /* V1 home composition. All selectors remain scoped to the home. */
 .ct-home-root { --home-accent:#f3b62f; --home-gold-text:#805400; --home-focus:#805400; --home-header-height:90px; font-size:calc(16px * var(--home-font-scale, 1)); scroll-padding-top:calc(var(--home-header-height) + 12px); }
+.ct-home-root:not([data-home-theme]),
 .ct-home-root[data-home-theme="dark"] { --home-gold-text:#f3b62f; --home-focus:#f3b62f; }
-@media (prefers-color-scheme:dark) { .ct-home-root:not([data-home-theme]) { --home-gold-text:#f3b62f; --home-focus:#f3b62f; } }
+
 .ct-home { font-size:1rem; }
 .ct-home :is(main,section,[id],a,button,input,select,summary) { scroll-margin-top:8px; }
 .ct-home .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
@@ -437,3 +427,6 @@
 
 .ct-home .footer-grid .footer-social-link span { padding-block:0; }
 .ct-home .facebook-icon { fill:currentColor; stroke:none; }
+
+
+.ct-home .ad-house-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }

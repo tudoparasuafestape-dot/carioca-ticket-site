@@ -1,0 +1,33 @@
+name: Home location isolated
+on:
+  pull_request:
+    paths:
+      - 'assets/home-location*'
+      - 'assets/home-controls.js'
+      - 'assets/geo-ibge-2025/**'
+      - 'assets/home-municipalities.json'
+      - 'tests/home-location*'
+      - '.github/workflows/home-location-isolated.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-location:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check assets/home-location.js && node --check assets/home-location-worker.js && node --test tests/home-location.test.js
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - run: python tests/home-location-browser.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: home-location-isolated-results
+          path: test-results/location/
