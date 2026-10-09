@@ -18,6 +18,7 @@
       function reason() {
         var state = readState();
         if (state.busy) return 'busy';
+        if (state.recovering) return 'recovery';
         if (state.orderPending) return 'order';
         if (state.complete) return '';
         // Also catch browser autofill without saving or retaining personal values.
@@ -27,7 +28,8 @@
       }
       function text(kind) {
         if (kind === 'busy') return 'Estamos aguardando a resposta da criação do pedido. Continue nesta tela por enquanto para não interromper a recuperação do pagamento. A saída será liberada após a resposta.';
-        if (kind === 'order') return 'Voltar à página inicial não cancela o pedido nem uma cobrança existente. A atualização do pagamento nesta tela será interrompida. Para consultar o pedido, volte a este checkout no mesmo navegador ou acesse Meus ingressos. Deseja sair?';
+        if (kind === 'recovery') return 'Estamos consultando um pedido anterior. Aguarde a resposta para conferir o andamento antes de sair ou iniciar outra compra.';
+        if (kind === 'order') return 'Voltar à página inicial não cancela o pedido nem uma cobrança existente. A atualização do pagamento nesta tela será interrompida. A recuperação ao retornar depende dos dados disponíveis neste navegador. Se já pagou, confira o pagamento antes de tentar outra compra. Deseja sair?';
         return 'Os dados preenchidos e as escolhas que ainda não foram concluídas podem ser perdidos ao sair. Deseja voltar à página inicial?';
       }
       function stopTimer() { if (timer !== null) { clearInterval(timer); timer = null; } }
@@ -35,7 +37,7 @@
         var kind = reason();
         var value = text(kind);
         if (message.textContent !== value) message.textContent = value;
-        leave.disabled = kind === 'busy';
+        leave.disabled = kind === 'busy' || kind === 'recovery';
       }
       function goHome() {
         if (navigating) return;
@@ -47,10 +49,20 @@
       }
       function dismiss() { dialog.close(); }
       dialog.addEventListener('close', function () { stopTimer(); if (!navigating) link.focus(); });
+      dialog.addEventListener('keydown', function (event) {
+        if (event.key !== 'Tab') return;
+        var last = leave.disabled ? stay : leave;
+        if (event.shiftKey && document.activeElement === stay) {
+          event.preventDefault(); last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault(); stay.focus();
+        }
+      });
       stay.addEventListener('click', dismiss);
       leave.addEventListener('click', function () {
         // Recheck at the decision point: payment may have started/finished meanwhile.
-        if (reason() === 'busy') { refresh(); stay.focus(); return; }
+        var current = reason();
+        if (current === 'busy' || current === 'recovery') { refresh(); stay.focus(); return; }
         goHome();
       });
       link.addEventListener('click', function (event) {
@@ -61,8 +73,11 @@
         var kind = reason();
         if (!kind) { goHome(); return; }
         if (typeof dialog.showModal !== 'function') {
-          if (kind === 'busy') { root.alert(text(kind)); return; }
-          if (root.confirm(text(kind)) && reason() !== 'busy') goHome();
+          if (kind === 'busy' || kind === 'recovery') { root.alert(text(kind)); return; }
+          if (root.confirm(text(kind))) {
+            var current = reason();
+            if (current !== 'busy' && current !== 'recovery') goHome();
+          }
           return;
         }
         refresh();

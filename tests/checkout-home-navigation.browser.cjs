@@ -23,6 +23,8 @@ async function fixture(browser, routePath, mobile, options = {}) {
   const context = await browser.newContext({ viewport: mobile ? { width: 320, height: 740 } : { width: 1365, height: 900 }, serviceWorkers: 'block' });
   const state = { payments: [], consults: 0, polls: 0, unexpected: [], errors: [], release: null, home: 0 };
   const page = await context.newPage();
+  if(options.clock) await page.clock.install();
+  if(options.noStorage) await context.addInitScript(() => { Storage.prototype.setItem = () => { throw new DOMException('Fixture storage blocked', 'SecurityError'); }; });
   page.on('pageerror', e => state.errors.push(e.message));
   if (options.recover) await context.addInitScript(({ key, value }) => { if (!localStorage.getItem(key)) localStorage.setItem(key, value); },
     { key: RECOVERY, value: JSON.stringify({ pedidoId: ORDER, token: TOKEN }) });
@@ -55,10 +57,11 @@ async function fixture(browser, routePath, mobile, options = {}) {
       if (method === 'ctCheckoutPublicoCarregarEventoPROD') { assert.equal(args[0], EVENT); result = catalog(); }
       else if (method === 'ctCheckoutPixPublicoIniciarPROD') {
         state.payments.push(args[0]);
+        if(options.timeoutPayment) return route.fulfill({ contentType: 'text/html', body: '<!doctype html><!-- Simulated missing response: real bridge timeout must release the UI. -->' });
         if (options.holdPayment) await new Promise(resolve => { state.release = resolve; });
         result = options.failPayment ? { sucesso: false } : order(options.method, options.complete);
-      } else if (method === 'ctCheckoutPixPublicoConsultarPROD') { state.consults++; assert.deepEqual(args, [ORDER, TOKEN]); result = order(options.method, options.complete); }
-      else if (['ctCheckoutPixPublicoStatusLocalPROD', 'ctCheckoutPixPublicoReconciliarPROD'].includes(method)) { state.polls++; assert.deepEqual(args, [ORDER, TOKEN]); result = order(options.method, options.complete); }
+      } else if (method === 'ctCheckoutPixPublicoConsultarPROD') { state.consults++; assert.deepEqual(args, [ORDER, TOKEN]); if(options.holdConsult) await new Promise(resolve => { state.releaseConsult = resolve; }); result = order(options.method, options.complete); if(options.recoveredStatus) result.pedido.status = options.recoveredStatus; }
+      else if (['ctCheckoutPixPublicoStatusLocalPROD', 'ctCheckoutPixPublicoReconciliarPROD'].includes(method)) { state.polls++; assert.deepEqual(args, [ORDER, TOKEN]); if(method === 'ctCheckoutPixPublicoReconciliarPROD' && state.holdReconcile) await new Promise(resolve => { state.releaseReconcile = resolve; }); result = order(options.method, options.complete); }
       else throw Error('undeclared-rpc');
       const payload = JSON.stringify({ ctMinhaCariocaPost: true, id: fields.get('ctMinhaCariocaRequestId'), ok: true, resultado: result }).replace(/</g, '\\u003c');
       return route.fulfill({ contentType: 'text/html', body: '<!doctype html><script>window.top.postMessage(' + payload + ',"*")</script>' });
@@ -66,7 +69,7 @@ async function fixture(browser, routePath, mobile, options = {}) {
   });
   await page.goto(ORIGIN + routePath + '?evento=' + EVENT);
   await page.locator('#typeSelect option[value="LOCAL-TYPE"]').waitFor({ state: 'attached' });
-  await page.locator('#loading').waitFor({ state: 'hidden' });
+  if(!options.holdConsult) await page.locator('#loading').waitFor({ state: 'hidden' });
   return { page, state, context,
     async fill() {
       await page.locator('#typeSelect').selectOption('LOCAL-TYPE'); await page.locator('#lotSelect').selectOption('LOCAL-LOT');
@@ -128,10 +131,58 @@ async function fixture(browser, routePath, mobile, options = {}) {
     await until(() => f.state.consults > 0, 'existing recovery invoked after back');
     assert.equal(f.state.payments.length, 1, 'no duplicate charge from returning');
     assert.equal(await f.page.evaluate(key => localStorage.getItem(key), 'CT_CHECKOUT_IDEMPOTENCY_' + EVENT + '_' + (mobile ? 'CREDIT_CARD' : 'PIX')), idempotency);
+    await f.open(); await f.page.locator('#checkoutStay').click();
     await f.finish();
    });
   }
   for (const routePath of ['/checkout/', '/checkout-v2/']) {
+   await test(routePath + ' initial saved-order recovery blocks logo until consultation completes', async () => {
+    const f = await fixture(browser, routePath, false, { recover: true, holdConsult: true });
+    await until(() => !!f.state.releaseConsult, 'held saved-order consultation');
+    await f.page.evaluate(() => document.querySelector('#checkoutHome').click()); assert(await f.page.locator('#checkoutLeave').isDisabled());
+    assert.match(await f.page.locator('#checkoutLeaveMessage').textContent(), /consultando um pedido anterior/);
+    f.state.releaseConsult(); await until(async () => !(await f.page.locator('#checkoutLeave').isDisabled()), 'saved order rendered');
+    assert.match(await f.page.locator('#checkoutLeaveMessage').textContent(), /não cancela o pedido/);
+    await f.page.locator('#checkoutStay').click(); assert.equal(f.state.payments.length, 0); await f.finish();
+   });
+   await test(routePath + ' failed creation releases guard without changing retry idempotency', async () => {
+    const f = await fixture(browser, routePath, false, { holdPayment: true, failPayment: true }); await f.fill();
+    await f.page.locator('#payButton').click(); await until(() => !!f.state.release, 'held failed creation');
+    await f.page.evaluate(() => document.querySelector('#checkoutHome').click()); assert(await f.page.locator('#checkoutLeave').isDisabled());
+    f.state.release(); await until(async () => !(await f.page.locator('#checkoutLeave').isDisabled()), 'failed creation releases exit');
+    await f.page.locator('#checkoutStay').click(); await f.page.locator('#modalOk').click();
+    const key = f.state.payments[0].idempotenciaChave; f.state.release = null;
+    await f.page.locator('#payButton').click(); await until(() => !!f.state.release, 'explicit retry');
+    assert.equal(f.state.payments[1].idempotenciaChave, key); f.state.release(); await f.page.locator('#loading').waitFor({ state: 'hidden' }); await f.finish();
+   });
+   await test(routePath + ' bridge timeout releases creation guard without new payment', async () => {
+    const f = await fixture(browser, routePath, false, { clock: true, timeoutPayment: true }); await f.fill();
+    await f.page.locator('#payButton').click(); await until(() => f.state.payments.length === 1, 'silent local response');
+    await f.page.evaluate(() => document.querySelector('#checkoutHome').click()); assert(await f.page.locator('#checkoutLeave').isDisabled());
+    await f.page.clock.fastForward(45001); await until(async () => !(await f.page.locator('#checkoutLeave').isDisabled()), 'real bridge timeout');
+    assert.equal(f.state.payments.length, 1); await f.page.locator('#checkoutStay').click(); await f.finish();
+   });
+   await test(routePath + ' unavailable storage does not promise recovery or create another payment', async () => {
+    const f = await fixture(browser, routePath, false, { noStorage: true }); await f.fill(); await f.page.locator('#payButton').click();
+    await f.page.locator('#pixPanel').waitFor({ state: 'visible' }); await f.open();
+    assert.match(await f.page.locator('#checkoutLeaveMessage').textContent(), /depende dos dados disponíveis/);
+    assert.equal(await f.page.evaluate(key => localStorage.getItem(key), RECOVERY), null);
+    await f.page.locator('#checkoutStay').click(); assert.equal(f.state.payments.length, 1); await f.finish();
+   });
+   await test(routePath + ' reconciliation does not block an existing-order exit', async () => {
+    const f = await fixture(browser, routePath, false, { recover: true }); f.state.holdReconcile = true;
+    await f.page.locator('#refreshButton').click(); await until(() => !!f.state.releaseReconcile, 'held reconciliation');
+    await f.open(); assert(!(await f.page.locator('#checkoutLeave').isDisabled())); assert.match(await f.page.locator('#checkoutLeaveMessage').textContent(), /não cancela o pedido/);
+    await f.page.locator('#checkoutStay').click(); f.state.releaseReconcile(); await f.finish();
+   });
+   await test(routePath + ' terminal previous order does not bypass new-creation guard', async () => {
+    const f = await fixture(browser, routePath, false, { recover: true, recoveredStatus: 'EXPIRADO', holdPayment: true });
+    await f.page.locator('#modalBg.open').waitFor({ state: 'visible' }); await f.page.locator('#modalOk').click(); await f.fill();
+    await f.page.locator('#payButton').click(); await until(() => !!f.state.release, 'new creation after expired order');
+    await f.page.evaluate(() => document.querySelector('#checkoutHome').click()); assert(await f.page.locator('#checkoutLeave').isDisabled());
+    f.state.release(); await until(async () => !(await f.page.locator('#checkoutLeave').isDisabled()), 'new recovery saved');
+    await f.page.locator('#checkoutStay').click(); assert.equal(f.state.payments.length, 1); await f.finish();
+   });
    await test(routePath + ' recovered completed order leaves without dirty warning', async () => {
     const f = await fixture(browser, routePath, false, { recover: true, complete: true }); await f.page.locator('#successPanel').waitFor({ state: 'visible' });
     await f.page.locator('#checkoutHome').click(); await f.page.waitForURL(ORIGIN + '/'); assert.equal(f.state.payments.length, 0); await f.finish();

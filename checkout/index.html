@@ -1534,9 +1534,11 @@
       // The guard reads only navigation state; payment/recovery logic stays untouched.
       var homeGuardReady=window.CTCheckoutHome&&window.CTCheckoutHome.init(function(){
         var status=String(state.order&&state.order.status||'').toUpperCase();
+        var hasRecovery=!!readRecovery();
         return {
           busy:state.busy&&(!state.order||['EXPIRADO','CANCELADO','FALHA'].indexOf(status)>=0),
-          orderPending:!!state.order&&!state.successRendered&&['EXPIRADO','CANCELADO','FALHA'].indexOf(status)<0,
+          recovering:!state.order&&hasRecovery&&!el.loading.classList.contains('hidden'),
+          orderPending:!state.successRendered&&(hasRecovery||!!state.order&&['EXPIRADO','CANCELADO','FALHA'].indexOf(status)<0),
           complete:state.successRendered
         };
       });

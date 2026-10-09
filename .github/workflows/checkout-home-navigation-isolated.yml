@@ -20,6 +20,8 @@ jobs:
           node-version: '20'
       - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
+      - name: Navigation lifecycle and no-side-effect contracts
+        run: node tests/checkout-home-navigation.runtime.cjs
       - name: Existing checkout DOM and payment-contract regression (mock RPC only)
         run: node tests/checkout-era-beauty.dom.js
       - name: Checkout home navigation, focus and recovery (all requests mocked)
