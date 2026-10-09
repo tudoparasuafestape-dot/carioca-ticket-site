@@ -467,7 +467,7 @@ test('approved ad rotation keeps the label visible, pauses for keyboard and hono
   await expect(page.locator('#advertising-secondary')).toBeVisible();
   const ad = page.locator('#advertising-primary');
   await ad.scrollIntoViewIfNeeded();
-  await expect(ad.getByRole('button', { name: 'Reproduzir', exact: true })).toBeVisible();
+  await expect(ad.getByRole('button', { name: 'Pausar', exact: true })).toBeVisible();
   await expect(ad.locator('.eyebrow')).toBeVisible();
   const before = await ad.boundingBox();
   await ad.getByRole('button', { name: 'Próxima publicidade' }).focus();
@@ -478,6 +478,7 @@ test('approved ad rotation keeps the label visible, pauses for keyboard and hono
   const after = await ad.boundingBox();
   expect(after.height).toBeCloseTo(before.height, 0);
   await expect(ad.getByRole('button', { name: 'Próxima publicidade' })).toBeFocused();
+  await expect(ad.getByRole('button', { name: 'Reproduzir', exact: true })).toBeVisible();
   await ad.getByRole('button', { name: 'Publicidade anterior' }).click();
   await expect(ad.locator('.ad-campaign')).toBeVisible();
   expect(state.errors).toEqual([]);

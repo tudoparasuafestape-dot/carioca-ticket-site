@@ -366,7 +366,7 @@
 .ct-home .home-intro-top .ct-public-share.has-feedback { flex-basis:100%; min-width:0; }
 .ct-home .event-rail-controls { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
 .ct-home .event-rail-controls button { min-height:44px; min-width:44px; padding:8px 12px; border:1px solid var(--home-line); border-radius:10px; color:var(--home-text); background:var(--home-surface); font-size:.8125rem; }
-.ct-home #event-rail-pause { margin-right:auto; }
+.ct-home #event-rail-pause { margin-right:auto; min-inline-size:min(12em,100%); }
 .ct-home #event-rail-position { font-size:.8125rem; color:var(--home-muted); }
 .ct-home .events-grid.is-event-rail { display:grid; grid-template-columns:minmax(0,1fr); gap:0; overflow:hidden; padding:6px; margin:-6px; touch-action:pan-y pinch-zoom; isolation:isolate; }
 .ct-home .is-event-rail > .catalog-card { grid-area:1 / 1; width:calc(100% - 32px); min-width:0; box-shadow:none; will-change:transform; }

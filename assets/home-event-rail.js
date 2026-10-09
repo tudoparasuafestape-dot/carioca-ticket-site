@@ -10,7 +10,7 @@
   var motionNote = document.getElementById('event-rail-motion-note');
   var announcement = document.getElementById('event-rail-announcement');
   var reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  var cards = [], index = 0, paused = reduced.matches, visible = false, hovered = false;
+  var cards = [], index = 0, paused = false, visible = false, hovered = false;
   var timer, animationTimer, frame, moving = false, drag = null, clickBlockedUntil = 0, toggleIntent = null;
   var INTERVAL = 5000, DURATION = 320;
   var sharing = new Set();
@@ -92,8 +92,8 @@
   pause.addEventListener('click', function () {
     if (sharing.size) return;
     paused = toggleIntent === null ? !paused : toggleIntent; toggleIntent = null;
-    // Starting is a per-carousel, per-visit choice. Reduced motion still
-    // starts paused and keeps every subsequent swap free of animation.
+    // Resume is a per-carousel choice. Reduced motion changes the transition
+    // to an instant swap, without changing the browser preference.
     labels(); schedule();
   });
   host.addEventListener('focusin', function () { stop(); if (moving) finish(false); });

@@ -50,7 +50,7 @@
     // Controls precede rotating links in keyboard order while remaining below the artwork visually.
     slot.replaceChildren(controls, stage, motionNote, label, playback, status); slot.classList.add('ad-rotation'); slot.hidden = false;
     slot.removeAttribute('aria-labelledby'); slot.dataset.i18nAriaLabel = 'adLabel';
-    var slides = Array.from(stage.children), index = 0, paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var slides = Array.from(stage.children), index = 0, paused = false;
     // Pick once for this page visit; no identifier, storage, impression beacon or reshuffle.
     var initial = Math.floor(Math.random() * slides.length);
     var pointer = false, contact = null, timer, visible = false, toggleIntent = null;
@@ -80,7 +80,7 @@
     }
     previous.addEventListener('click', function () { show(index - 1, true); schedule(); });
     next.addEventListener('click', function () { show(index + 1, true); schedule(); });
-    // Reduced motion starts paused, but Play opts into this slot for this visit.
+    // Each slot starts automatically; an intentional pause lasts until Play.
     pause.addEventListener('pointerdown', function () { toggleIntent = !paused; });
     pause.addEventListener('keydown', function () { toggleIntent = null; });
     pause.addEventListener('click', function () { paused = toggleIntent === null ? !paused : toggleIntent; toggleIntent = null; labels(); schedule(); });
