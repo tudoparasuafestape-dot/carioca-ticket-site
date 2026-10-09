@@ -1,0 +1,29 @@
+name: Producer guide (isolated)
+on:
+  pull_request:
+    paths:
+      - 'como-funciona/**'
+      - 'assets/producer-guide.*'
+      - 'assets/home-theme.js'
+      - 'tests/producer-guide.*'
+      - '.github/workflows/producer-guide-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  guide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/producer-guide.runtime.cjs
+      - run: node tests/producer-guide.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: producer-guide-review
+          path: test-results/producer-guide/
