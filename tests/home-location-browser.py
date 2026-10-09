@@ -57,10 +57,10 @@ with sync_playwright() as pw:
   page.evaluate('__geoOK()');page.wait_for_timeout(50);assert not any('/geo-ibge-' in p for p in requests);assert page.locator('#location-device-confirm').is_hidden()
   if action=='apply':assert page.evaluate('CTHome.filters.location.uf')=='SP'
  # A canceled in-flight worker cannot install a suggestion afterwards.
- fresh();page.evaluate("window.Worker=class{constructor(){window.__fakeWorker=this}postMessage(){}terminate(){this.terminated=true}}")
+ fresh();page.evaluate("() => { window.Worker=class{constructor(){window.__fakeWorker=this}postMessage(){}terminate(){this.terminated=true}}; }")
  begin();page.evaluate('__geoOK()');page.wait_for_function('!!window.__fakeWorker');page.locator('#location-device-cancel').click();page.evaluate('__fakeWorker.onmessage({data:{status:"found",id:"2611606",uf:"PE"}})');assert page.locator('#location-device-confirm').is_hidden();assert page.evaluate('__fakeWorker.terminated')
  # Overall deadline, including an unanswered browser permission prompt.
- fresh();page.evaluate('window.__realTimeout=setTimeout;window.setTimeout=(f,ms,...args)=>__realTimeout(f,ms===25000?30:ms,...args)');begin();page.wait_for_function('!document.querySelector("#location-use-device").disabled');assert 'demorou' in page.locator('#location-device-status').inner_text();page.evaluate('__geoOK()');assert page.locator('#location-device-confirm').is_hidden()
+ fresh();page.evaluate('() => { window.__realTimeout=setTimeout;window.setTimeout=(f,ms,...args)=>__realTimeout(f,ms===25000?30:ms,...args); }');begin();page.wait_for_function('!document.querySelector("#location-use-device").disabled');assert 'demorou' in page.locator('#location-device-status').inner_text();page.evaluate('__geoOK()');assert page.locator('#location-device-confirm').is_hidden()
  assert not errors,errors
  context.close();browser.close()
 (OUT/'results.json').write_text(json.dumps({'matrix':results,'errorCallbacks':True,'manualRace':True,'cancelRace':True,'workerRace':True,'keyboard':True,'permissionDeadline':True,'realGeolocationCalls':0,'externalRequests':0,'errors':errors},indent=2))
