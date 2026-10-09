@@ -6,10 +6,10 @@
   var campaigns = {
     primary: [{ src: '/assets/home-ad-tpssf.png', width: 2172, height: 724,
       href: 'https://www.instagram.com/tudoparasuafestape/', title: 'Tudo Para Sua Festa',
-      description: 'Locação de materiais para eventos', cta: 'Conheça a Tudo Para Sua Festa' }],
+      descriptionKey: 'adTpssfDescription', ctaKey: 'adTpssfCta' }],
     secondary: [{ src: '/assets/home-ad-priscila.png', width: 2170, height: 725,
       href: 'https://wa.me/5581996200696', title: 'Priscila Ferreira',
-      description: 'Nail Designer', cta: 'Clique aqui e faça seu agendamento' }]
+      descriptionKey: 'adPriscilaDescription', ctaKey: 'adPriscilaCta' }]
   };
   var house = document.querySelector('#advertising-primary');
   var houseCopy = house.cloneNode(true);
@@ -25,13 +25,13 @@
     var failed = false;
     items.forEach(function (item) {
       var slide = document.createElement('a'); slide.className = 'ad-slide ad-campaign'; slide.href = item.href;
-      slide.target = '_blank'; slide.rel = 'noopener noreferrer'; slide.lang = 'pt-BR'; slide.setAttribute('translate', 'no');
+      slide.target = '_blank'; slide.rel = 'noopener noreferrer';
       var image = document.createElement('img'); image.src = item.src; image.alt = ''; image.width = item.width; image.height = item.height; image.loading = 'lazy';
-      // A readable transcription preserves the approved artwork's words on narrow screens.
+      // Keep advertiser names and artwork original; localize readable descriptions and actions.
       var caption = document.createElement('span'); caption.className = 'ad-caption';
-      var title = document.createElement('strong'); title.textContent = item.title;
-      var description = document.createElement('span'); description.textContent = item.description;
-      var cta = document.createElement('span'); cta.className = 'ad-campaign-cta'; cta.textContent = item.cta;
+      var title = document.createElement('strong'); title.className = 'ad-campaign-title'; title.textContent = item.title; title.lang = 'pt-BR'; title.setAttribute('translate', 'no');
+      var description = document.createElement('span'); description.dataset.i18n = item.descriptionKey; description.textContent = H.t(item.descriptionKey);
+      var cta = document.createElement('span'); cta.className = 'ad-campaign-cta'; cta.dataset.i18n = item.ctaKey; cta.textContent = H.t(item.ctaKey);
       caption.append(title, description, cta); slide.append(image, caption); stage.appendChild(slide);
       image.addEventListener('error', function () {
         failed = true; clearTimeout(timer); show(slides.indexOf(own), false);

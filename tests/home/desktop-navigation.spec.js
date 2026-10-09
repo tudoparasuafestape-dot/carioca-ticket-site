@@ -41,7 +41,7 @@ function assertClean(state) {
   expect(state.methods).toEqual(['ctEventosPublicosListarPROD']);
 }
 async function headerFits(page) {
-  const problems = await page.locator('.brand, .brand-location .location-trigger, .links a, .nav-tools select, .nav-tools button, .producer-top-link').evaluateAll(nodes => {
+  const problems = await page.locator('.brand, .brand-location .location-trigger, .nav-tools select, .nav-tools button, .producer-top-link').evaluateAll(nodes => {
     const visible = nodes.filter(node => node.getClientRects().length && !node.closest('[hidden]')).map(node => ({ name: node.id || node.className || node.textContent.trim(), box: node.getBoundingClientRect() }));
     const problems = [];
     for (let i = 0; i < visible.length; i++) {
@@ -79,7 +79,7 @@ async function headerFits(page) {
   }));
   expect(layout.scrollWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.width);
 }
-const destinations = ['#todos-eventos', '/minha-carioca/conta/?v=20260919-2158', '#produtores', '/produtor/', '/parceiro/programa/', '#seguranca', '/ajuda/', '/sobre/'];
+const destinations = ['#todos-eventos', '/minha-carioca/conta/?v=20260919-2158', '/minha-carioca/conta/?v=20260919-2158', '#produtores', '/produtor/', '/parceiro/programa/', '#seguranca', '/ajuda/', '/sobre/'];
 
 for (const width of [320, 412, 1200, 1201, 1440, 1920]) for (const theme of ['light', 'dark']) {
   test('organized navigation / ' + width + 'px / ' + theme, async ({ page }) => {
@@ -95,13 +95,15 @@ for (const width of [320, 412, 1200, 1201, 1440, 1920]) for (const theme of ['li
       await expect(button.locator('.menu-label')).toBeVisible();
       await expect(page.locator('#accessibility-toggle .accessibility-label')).toHaveText('Idioma');
       await expect(page.locator('#accessibility-toggle .accessibility-label')).toBeVisible();
-      await expect(page.locator('.links a')).toHaveText(['Explorar eventos', 'Meus ingressos', 'Entrar']);
+      await expect(page.locator('header > .nav .links')).toHaveCount(0);
       expect(await page.locator('.nav').evaluate(node => node.offsetHeight)).toBeLessThanOrEqual(100);
-    } else await expect(page.locator('.links')).toBeHidden();
+    }
+    await expect(page.locator('header > .nav a')).toHaveCount(2);
     await button.click(); await expect(menu).toBeVisible();
     await expect(button).toHaveAttribute('aria-expanded', 'true');
     await expect(menu).toHaveAccessibleName('Menu de navegação');
     await expect(menu.locator('h2')).toHaveText(['Sua experiência', 'Para quem realiza', 'Conte com a gente']);
+    await expect(menu.locator('.menu-group').first().locator('a')).toHaveText(['Eventos›', 'Meus ingressos›', 'Entrar›']);
     expect(await menu.locator('a').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual(destinations);
     const geometry = await menu.evaluate(node => {
       const box = node.getBoundingClientRect(), groups = Array.from(node.querySelectorAll('.menu-group'), group => group.getBoundingClientRect().toJSON());
