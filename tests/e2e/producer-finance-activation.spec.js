@@ -38,7 +38,11 @@ async function installMock(page,state){
     let args=[];try{args=JSON.parse(p.get('argsJson')||'[]')}catch(_){}
     let ok=true,resultado=null,erro='';
     try{
-      if(method==='ctFinanceiroProdutorMasterListarPROD'){
+      if(method==='ctEventosPublicosListarPROD'){
+        expect(p.get('ctMinhaCariocaAction')).toBe('publicRpc');
+        expect(args).toEqual([]);
+        resultado={sucesso:true,eventos:[]};
+      }else if(method==='ctFinanceiroProdutorMasterListarPROD'){
         resultado={sucesso:true,autorizado:true,ambienteProvider:'PRODUCAO',itens:[{
           financeiroId:'FIN-E2E',organizacaoId:'ORG-E2E',produtorId:'PROD-E2E',produtorNome:'Produtor E2E',
           provedor:'ASAAS',provedorAmbiente:'PRODUCAO',modoConta:'SUBCONTA_PLATAFORMA',

@@ -51,8 +51,9 @@ function matches(request, declaration) {
   return null;
 }
 
-function installMockAudit(context, state, deny) {
+function installMockAudit(context, state, deny, sharedDeclaration) {
   const observed = new WeakMap(), natives = new WeakMap(), declarations = [], recordedErrors = new WeakSet();
+  if (sharedDeclaration) declarations.push({target: context, declaration: sharedDeclaration});
   state.observed = []; state.simulatedErrors = 0;
   let closing = false;
   function entry(request) {

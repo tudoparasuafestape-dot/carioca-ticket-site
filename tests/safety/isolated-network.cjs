@@ -69,7 +69,18 @@ async function installIsolatedNetwork(context, { root, origin, handlers = {}, re
     state.unexpected.push({ kind: 'unexpected-websocket' });
     socket.close(); // Never connectToServer().
   });
-  if (auditMocks) audit = installMockAudit(context, state, deny);
+  if (auditMocks) {
+    const rpc = {};
+    for (const key of Object.keys(handlers)) {
+      const [action, method] = key.split(':');
+      (rpc[action] ||= []).push(method);
+    }
+    // Classify only these same fixed fixtures if teardown cancels a request
+    // before its route callback. Unknown destinations still remain unaccounted.
+    audit = installMockAudit(context, state, deny, {
+      staticRoot: {origin: base.origin, root}, resources: Object.keys(resources), rpc
+    });
+  }
   return { state, beginClose() { audit?.beginClose(); }, assertClean() {
     assert.deepEqual(state.unexpected, [], 'Unexpected network/RPC attempt; test must fail');
     assert.equal(state.forwarded, 0);

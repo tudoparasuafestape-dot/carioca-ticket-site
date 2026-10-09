@@ -451,7 +451,7 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
       await expect.poll(()=>calls(state,CATALOG).length).toBe(2);
       await page.locator('#producerSelect').selectOption('PROD-E2E');
       await expect.poll(()=>calls(state,CATALOG).length).toBe(3);
-      if(staleError)oldA.reject(new Error('Erro antigo A'));else oldA.resolve(catalog('PROD-E2E',[{id:'ANTIGO'}]));
+      if(staleError)oldA.reject(fixtureError('Erro antigo A'));else oldA.resolve(catalog('PROD-E2E',[{id:'ANTIGO'}]));
       await expect(page.locator(`input[name="metodo"][value="${CATALOG}"]`)).toHaveCount(2);
       await expect(page.locator('#loadButton')).toHaveText('Carregando eventos...');
       await expect(page.locator('#loadButton')).toBeDisabled();
@@ -460,7 +460,7 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
       expect(calls(state,LOAD)).toHaveLength(0);
       newA.resolve(catalog('PROD-E2E',[{id:'ATUAL'}]));
       await ready(page);
-      if(staleError)oldB.resolve(catalog('PROD-B',[{id:'ERRADO'}]));else oldB.reject(new Error('Erro antigo B'));
+      if(staleError)oldB.resolve(catalog('PROD-B',[{id:'ERRADO'}]));else oldB.reject(fixtureError('Erro antigo B'));
       await expect(page.locator(`input[name="metodo"][value="${CATALOG}"]`)).toHaveCount(0);
       await expect(page.locator('#eventSelect')).toHaveValue('ATUAL');
       await expect(page.locator('#typeSelect')).toHaveValue('TIPO-ATUAL');
@@ -479,14 +479,14 @@ test.describe('Catálogo progressivo e isolamento de Cortesias',()=>{
       await expect.poll(()=>calls(state,LOAD).length).toBe(2);
       await page.locator('#eventSelect').selectOption('A');
       await expect.poll(()=>calls(state,LOAD).length).toBe(3);
-      if(staleError)oldA.reject(new Error('Erro antigo A'));else oldA.resolve(eventData('ANTIGO'));
+      if(staleError)oldA.reject(fixtureError('Erro antigo A'));else oldA.resolve(eventData('ANTIGO'));
       await expect(page.locator(`input[name="metodo"][value="${LOAD}"]`)).toHaveCount(2);
       await cleared(page);
       await expect(page.locator('#loadButton')).toHaveText('Carregando evento...');
       await expect(page.locator('#refreshButton')).toBeDisabled();
       newA.resolve(eventData('A'));
       await ready(page);
-      if(staleError)oldB.resolve(eventData('B'));else oldB.reject(new Error('Erro antigo B'));
+      if(staleError)oldB.resolve(eventData('B'));else oldB.reject(fixtureError('Erro antigo B'));
       await expect(page.locator(`input[name="metodo"][value="${LOAD}"]`)).toHaveCount(0);
       await expect(page.locator('#eventSelect')).toHaveValue('A');
       await expect(page.locator('#typeSelect')).toHaveValue('TIPO-A');
@@ -856,7 +856,7 @@ test.describe('Links das cortesias já emitidas no histórico',()=>{
     await historyTicket(page).getByRole('button',{name:'Abrir ingresso',exact:true}).click();
     const link=historyTicket(page).getByRole('link',{name:'Abrir ingresso'});
     await expect(link).toHaveAttribute('href',ticketUrl('CT-E2E-1','NOVA_E2E_1234567890'));
-    if(staleError)delayed.reject(new Error('ERRO ANTIGO'));else delayed.resolve(consultation('CT-E2E-1','A'));
+    if(staleError)delayed.reject(fixtureError('ERRO ANTIGO'));else delayed.resolve(consultation('CT-E2E-1','A'));
     await page.waitForTimeout(150);
     await expect(link).toHaveAttribute('href',ticketUrl('CT-E2E-1','NOVA_E2E_1234567890'));await expect(page.locator('body')).not.toContainText('ERRO ANTIGO');
     await expect(historyTicket(page).getByRole('button',{name:'Copiar link',exact:true})).toBeEnabled();

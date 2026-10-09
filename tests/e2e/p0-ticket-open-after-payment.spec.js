@@ -95,7 +95,7 @@ function respostaPedido(status, comLink) {
 async function instalarBackendFake(page, contadores) {
   let consultasLocais = 0;
 
-  await mockRoute(page, { resources: ['https://cariocaticket.com.br/ingresso/?codigo=' + encodeURIComponent(CODIGO) + '&sig=' + encodeURIComponent(SIG) + '&v=P0'] }, async route => {
+  await mockRoute(page, { resources: ['https://cariocaticket.com.br/ingresso/?codigo=' + encodeURIComponent(CODIGO) + '&sig=' + encodeURIComponent(SIG) + '&v=20260923-2258'] }, async route => {
     await route.fulfill({
       status: 200,
       contentType: 'text/html; charset=utf-8',
