@@ -35,20 +35,31 @@
         return url.protocol === 'https:' || (url.origin === location.origin && url.protocol === 'http:') ? url.href : '';
       } catch (_) { return ''; }
     }
+    function original(element) {
+      element.lang = I ? I.sourceLanguage : (document.documentElement.lang || 'pt-BR');
+      element.setAttribute('translate', 'no');
+      element.classList.add('catalog-original');
+      return element;
+    }
     function card(event, index) {
       var visual = event.visual || {};
+      var token = 'catalog-event-' + index;
       var detail = '/evento/?evento=' + encodeURIComponent(event.id);
       var article = node('article', 'catalog-card');
       article.dataset.eventId = event.id;
       var cover = node('a', 'catalog-photo');
       cover.href = detail;
-      cover.setAttribute('aria-label', tr('viewEvent', 'Ver evento') + ': ' + event.nome);
+      var coverLabel = node('span', 'sr-only', tr('viewEvent', 'Ver evento') + ':');
+      coverLabel.id = token + '-view';
+      cover.appendChild(coverLabel);
+      cover.setAttribute('aria-labelledby', coverLabel.id + ' ' + token + '-title');
       var fallback = node('span', 'catalog-image-fallback', tr('coverMissing', 'Capa indisponível'));
       cover.appendChild(fallback);
       var src = imageUrl(visual.capaUrl || visual.posterUrl);
       if (src) {
         var image = node('img', '');
-        image.alt = tr('coverOf', 'Capa de ' + event.nome, { name: event.nome });
+        // The enclosing link names the event using separately marked language nodes.
+        image.alt = '';
         image.loading = index < 2 ? 'eager' : 'lazy';
         image.decoding = 'async';
         // Keep lazy images measurable so the browser can start loading near the viewport.
@@ -60,22 +71,31 @@
         cover.appendChild(image);
       }
       var body = node('div', 'catalog-body');
-      if (text(visual.categoria)) body.appendChild(node('span', 'event-kicker', visual.categoria));
+      if (text(visual.categoria)) body.appendChild(original(node('span', 'event-kicker', visual.categoria)));
       var heading = node('h3', 'catalog-title');
-      var titleLink = node('a', '', event.nome);
+      var titleLink = original(node('a', '', event.nome));
+      titleLink.id = token + '-title';
       titleLink.href = detail;
       heading.appendChild(titleLink);
       body.appendChild(heading);
       var date = [text(event.data), text(event.horario)].filter(Boolean).join(' · ');
       var venue = [text(event.local), [text(event.cidade), text(event.uf)].filter(Boolean).join(' / ')].filter(Boolean).join(' · ');
-      body.appendChild(node('p', 'catalog-meta', date || tr('dateMissing', 'Data e horário não informados')));
-      body.appendChild(node('p', 'catalog-venue', venue || tr('venueMissing', 'Local não informado')));
-      if (text(visual.descricaoCurta)) body.appendChild(node('p', 'catalog-description', visual.descricaoCurta));
+      body.appendChild(date ? original(node('p', 'catalog-meta', date)) : node('p', 'catalog-meta', tr('dateMissing', 'Data e horário não informados')));
+      body.appendChild(venue ? original(node('p', 'catalog-venue', venue)) : node('p', 'catalog-venue', tr('venueMissing', 'Local não informado')));
+      if (text(visual.descricaoCurta)) body.appendChild(original(node('p', 'catalog-description', visual.descricaoCurta)));
       var actions = node('div', 'catalog-actions');
-      var buy = node('a', 'btn btn-primary', tr('buy', 'Comprar ingresso'));
+      var buy = node('a', 'btn btn-primary');
       buy.href = '/checkout/?evento=' + encodeURIComponent(event.id);
-      buy.setAttribute('aria-label', tr('buy', 'Comprar ingresso') + ': ' + event.nome);
+      var buyLabel = node('span', 'sr-only', tr('buy', 'Comprar ingresso') + ':');
+      var buyText = node('span', '', tr('buy', 'Comprar ingresso'));
+      buyText.dataset.i18n = 'buy';
+      buyText.setAttribute('aria-hidden', 'true');
+      buy.appendChild(buyText);
+      buyLabel.id = token + '-buy';
+      buy.appendChild(buyLabel);
+      buy.setAttribute('aria-labelledby', buyLabel.id + ' ' + token + '-title');
       var more = node('a', 'event-secondary', tr('viewEvent', 'Ver evento'));
+      more.dataset.i18n = 'viewEvent';
       more.href = detail;
       actions.append(buy, more);
       body.appendChild(actions);

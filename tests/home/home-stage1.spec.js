@@ -7,6 +7,8 @@ const { capture } = require('./capture.cjs');
 const ROOT = path.resolve(__dirname, '../..');
 const ORIGIN = 'http://127.0.0.1:4174';
 const EVIDENCE = path.join(ROOT, 'docs/reviews/home-v1/screenshots');
+const i18nSource = fs.readFileSync(path.join(ROOT, 'assets/home-i18n.js'), 'utf8');
+const dictionaries = JSON.parse(i18nSource.match(/var dictionaries = (\{[\s\S]*?\n\});/)[1]);
 
 async function fixture(page, options = {}) {
   const state = { methods: [], errors: [], blocked: [], attempts: 0, cities: 0 };
@@ -18,6 +20,11 @@ async function fixture(page, options = {}) {
       if (url.pathname.endsWith('home-municipalities.json')) { state.cities++; if (options.cityFailure && state.cities === 1) return route.fulfill({ status: 503, body: 'Unavailable fixture' }); }
       if (url.pathname.startsWith('/__fixture/')) return route.fulfill({ contentType: 'image/svg+xml', body: cover(url.pathname.includes('music') ? 'music' : 'creative') });
       if (url.pathname === '/pwa-register.js' || url.pathname.includes('ct-analytics')) return route.fulfill({ contentType: 'text/javascript', body: '' });
+      if (options.missingTranslation && url.pathname === '/assets/home-i18n.js') {
+        const reduced = JSON.parse(JSON.stringify(dictionaries));
+        delete reduced['en-US'].mainNavigation;
+        return route.fulfill({ contentType: 'text/javascript', body: i18nSource.replace(/var dictionaries = (\{[\s\S]*?\n\});/, 'var dictionaries = ' + JSON.stringify(reduced) + ';') });
+      }
       const file = path.resolve(ROOT, url.pathname === '/' ? 'index.html' : url.pathname.slice(1));
       if (!file.startsWith(ROOT + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return route.fulfill({ status: 404, body: 'Fixture missing' });
       const type = file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';
@@ -498,4 +505,160 @@ test('home controls have unique IDs after composition', async ({ page }) => {
     return ids.filter((id, index) => ids.indexOf(id) !== index);
   });
   expect(duplicates).toEqual([]);
+});
+
+test('all dictionaries have complete keys and interpolation tokens; shared words are intentional', () => {
+  const sameWords = {
+    'en-US': ['pix', 'checkin', 'legal'],
+    es: ['theme', 'mode', 'light', 'explore', 'login', 'language', 'larger', 'agenda', 'filters', 'thisWeek', 'pix', 'events', 'legal', 'foundOne', 'foundMany', 'viewEvent', 'adPause'],
+    'zh-Hans': ['pix']
+  };
+  const base = dictionaries['pt-BR'];
+  const tokens = value => (value.match(/\{\w+\}/g) || []).sort();
+  for (const [locale, dictionary] of Object.entries(dictionaries)) {
+    expect(Object.keys(dictionary).sort()).toEqual(Object.keys(base).sort());
+    for (const [key, value] of Object.entries(dictionary)) {
+      expect(typeof value, `${locale}.${key}`).toBe('string');
+      expect(value.trim().length, `${locale}.${key}`).toBeGreaterThan(0);
+      expect(value, `${locale}.${key}`).not.toContain('\uFFFD');
+      expect(tokens(value), `${locale}.${key}`).toEqual(tokens(base[key]));
+    }
+    if (locale !== 'pt-BR') expect(Object.keys(dictionary).filter(key => dictionary[key] === base[key]).sort()).toEqual(sameWords[locale].sort());
+  }
+});
+
+async function checkAnnotatedCopy(page, locale) {
+  const mismatch = await page.locator('[data-i18n], [data-i18n-placeholder], [data-i18n-aria-label]').evaluateAll((nodes, dictionary) => nodes.flatMap(node => {
+    return [['i18n', null], ['i18nPlaceholder', 'placeholder'], ['i18nAriaLabel', 'aria-label']].flatMap(([key, attr]) => {
+      if (!node.dataset[key]) return [];
+      const actual = attr ? node.getAttribute(attr) : node.textContent;
+      return dictionary[node.dataset[key]] === actual ? [] : [{ key: node.dataset[key], actual, expected: dictionary[node.dataset[key]] }];
+    });
+  }), dictionaries[locale]);
+  expect(mismatch).toEqual([]);
+}
+
+for (const locale of Object.keys(dictionaries)) {
+  test(`complete visible and accessible interface, source language and dynamic states / ${locale}`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 915 });
+    const state = await fixture(page);
+    await loaded(page);
+    const dictionary = dictionaries[locale];
+    await page.locator('#accessibility-toggle').click();
+    await page.locator('#home-language').selectOption(locale);
+    await checkAnnotatedCopy(page, locale);
+    await expect(page).toHaveTitle(dictionary.pageTitle);
+    await expect(page.locator('.links')).toHaveAttribute('aria-label', dictionary.mainNavigation);
+    await expect(page.locator('#mobile-menu')).toHaveAttribute('aria-label', dictionary.mobileNavigation);
+    await expect(page.locator('footer [data-i18n="myAccount"]')).toHaveText(dictionary.myAccount);
+    await expect(page.locator('#event-search-input')).toHaveAttribute('placeholder', dictionary.searchPlaceholder);
+    await expect(page.locator('#event-count')).toHaveText(dictionary.availableMany.replace('{n}', '2'));
+    const uncovered = await page.evaluate(() => {
+      const allowedText = new Set(['Carioca', 'Ticket', 'CARIOCA TICKET', 'contato@cariocaticket.com.br', '@cariocaticketbr', 'cariocaticket.com.br', 'A−', 'A-', 'A+']);
+      const dynamic = '#active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const result = [];
+      while (walker.nextNode()) {
+        const node = walker.currentNode, text = node.textContent.trim(), parent = node.parentElement;
+        if (!/\p{L}/u.test(text) || !parent || parent.closest('script,style,noscript,[aria-hidden="true"],[data-i18n],[translate="no"],#home-language option,#location-uf option') || parent.closest(dynamic) || allowedText.has(text)) continue;
+        if (parent.getClientRects().length && getComputedStyle(parent).visibility !== 'hidden') result.push({ text, tag: parent.tagName, id: parent.id });
+      }
+      return result;
+    });
+    expect(uncovered).toEqual([]);
+    const unlabeledAttributes = await page.locator('[aria-label], [placeholder]').evaluateAll(nodes => nodes.filter(node => {
+      const aria = node.getAttribute('aria-label'), placeholder = node.getAttribute('placeholder');
+      return (aria && !node.dataset.i18nAriaLabel && aria !== 'Carioca Ticket') || (placeholder && !node.dataset.i18nPlaceholder);
+    }).map(node => ({ id: node.id, aria: node.getAttribute('aria-label'), placeholder: node.getAttribute('placeholder') })));
+    expect(unlabeledAttributes).toEqual([]);
+
+    await expect(page.locator('.brand-location .location-trigger')).toHaveAccessibleName(dictionary.choosePlace + ' ' + dictionary.allPlaces);
+    for (const event of events) {
+      const card = page.locator(`[data-event-id="${event.id}"]`);
+      const title = card.locator('.catalog-title a');
+      await expect(title).toHaveText(event.nome);
+      const original = await card.locator('.catalog-original').evaluateAll(nodes => nodes.map(node => ({ lang: node.lang, translate: node.getAttribute('translate') })));
+      expect(original).toHaveLength(5);
+      expect(original.every(item => item.lang === 'pt-BR' && item.translate === 'no')).toBe(true);
+      await expect(card.locator('.catalog-description')).toHaveText(event.visual.descricaoCurta);
+      await expect(card.locator('.btn-primary')).toHaveAccessibleName(dictionary.buy + ': ' + event.nome);
+      await expect(card.locator('.catalog-photo')).toHaveAccessibleName(dictionary.viewEvent + ': ' + event.nome);
+      const labelLanguages = await card.locator('.btn-primary').evaluate(node => node.getAttribute('aria-labelledby').split(' ').map(id => document.getElementById(id).closest('[lang]').lang));
+      expect(labelLanguages).toEqual([locale, 'pt-BR']);
+      await expect(card.locator('img')).toHaveAttribute('alt', '');
+    }
+    await page.locator('#accessibility-toggle').click();
+    await page.locator('.menu-toggle').click();
+    await expect(page.locator('.menu-toggle')).toHaveAttribute('aria-label', dictionary.closeMenu);
+    await checkAnnotatedCopy(page, locale);
+    await screenshot(page, `language-${locale}-menu-320`);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.menu-toggle')).toHaveAttribute('aria-label', dictionary.openMenu);
+    await page.locator('#event-location-input').click();
+    await expect(page.locator('#location-status')).toHaveText(dictionary.chooseState);
+    await page.locator('#location-uf').selectOption('PE');
+    await page.locator('#city-search').fill('Caruaru');
+    await page.locator('#city-options button').click();
+    await page.locator('#location-apply').click();
+    await expect(page.locator('.active-place')).toHaveText('Caruaru / PE');
+    await expect(page.locator('.active-place')).toHaveAttribute('lang', 'pt-BR');
+    await expect(page.locator('.brand-location .location-trigger')).toHaveAccessibleName(dictionary.choosePlace + ' Caruaru / PE');
+    await expect(page.locator('#category-choices button').last()).toHaveText(events[1].visual.categoria);
+    await expect(page.locator('#category-choices button').last()).toHaveAttribute('lang', 'pt-BR');
+    await page.locator('#event-search-input').fill('sem-resultado-fixture');
+    await page.locator('#event-search-form button').click();
+    await expect(page.locator('#event-search-feedback')).toHaveText(dictionary.noMatch);
+    await expect(page.locator('#no-events')).toBeVisible();
+    await checkAnnotatedCopy(page, locale);
+    await page.locator('#clear-event-search').click();
+    await loaded(page);
+    await page.locator('footer').scrollIntoViewIfNeeded();
+    await screenshot(page, `language-${locale}-footer-320`);
+    await page.evaluate(() => CTHome.mountAdvertisements(document.querySelector('#advertising-secondary'), [{ src: '/__fixture/music.svg', href: '/__blocked', alt: 'Fixture', width: 1882, height: 836 }]));
+    const ad = page.locator('#advertising-secondary');
+    await expect(ad).toHaveAttribute('aria-label', dictionary.adLabel);
+    await expect(ad.locator('[data-i18n="adCta"]')).toHaveText(dictionary.adCta);
+    await ad.getByRole('button', { name: dictionary.adNext }).click();
+    await expect(ad.locator('[role="status"]')).toHaveText(dictionary.adPosition.replace('{n}', '2').replace('{total}', '2'));
+    await expect(ad.getByRole('button', { name: dictionary.adPlay, exact: true })).toBeVisible();
+    await page.evaluate(() => CTHome.setLocale('pt-BR'));
+    await expect(ad).toHaveAttribute('aria-label', dictionaries['pt-BR'].adLabel);
+    await expect(ad.locator('[role="status"]')).toHaveText('Publicidade 2 de 2');
+    expect(state.methods).toHaveLength(1);
+    expect(state.errors).toEqual([]);
+    expect(state.blocked).toEqual([]);
+  });
+
+  test(`translated catalog error, retry, empty and missing-data messages / ${locale}`, async ({ page }) => {
+    await page.addInitScript(value => localStorage.setItem('ct-home-locale', value), locale);
+    const dictionary = dictionaries[locale];
+    const state = await fixture(page, { result: attempt => attempt === 1 ? { sucesso: false } : attempt === 2 ? { sucesso: true, eventos: [] } : { sucesso: true, eventos: [{ id: 'INCOMPLETE', nome: 'Nome original — fixture' }] } });
+    await expect(page.locator('#catalog-status-message')).toHaveText(dictionary.loadError);
+    await expect(page.locator('#catalog-retry')).toHaveText(dictionary.retry);
+    await page.locator('#catalog-retry').click();
+    await expect(page.locator('#catalog-status-message')).toHaveText(dictionary.emptyCatalog);
+    await page.reload();
+    await expect(page.locator('.catalog-card')).toHaveCount(1);
+    await expect(page.locator('.catalog-title a')).toHaveAttribute('lang', 'pt-BR');
+    await expect(page.locator('.catalog-meta')).toHaveText(dictionary.dateMissing);
+    await expect(page.locator('.catalog-meta')).not.toHaveClass(/catalog-original/);
+    await expect(page.locator('.catalog-venue')).toHaveText(dictionary.venueMissing);
+    await expect(page.locator('.catalog-image-fallback')).toHaveText(dictionary.coverMissing);
+    expect(state.errors).toEqual([]);
+  });
+}
+
+test('missing translation falls back to Portuguese with the correct language; invalid locale remains harmless', async ({ page }) => {
+  const state = await fixture(page, { missingTranslation: true });
+  await loaded(page);
+  await page.locator('#accessibility-toggle').click();
+  await page.locator('#home-language').selectOption('en-US');
+  await expect(page.locator('.links')).toHaveAttribute('aria-label', dictionaries['pt-BR'].mainNavigation);
+  await expect(page.locator('.links')).toHaveAttribute('lang', 'pt-BR');
+  await expect(page.locator('.links [data-i18n="explore"]')).toHaveText(dictionaries['en-US'].explore);
+  await expect(page.locator('.links [data-i18n="explore"]')).toHaveAttribute('lang', 'en-US');
+  await page.evaluate(() => CTHome.setLocale('__proto__'));
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
+  expect(await page.evaluate(() => CTHome.t('unknown-key'))).toBe('unknown-key');
+  expect(state.errors).toEqual([]);
 });

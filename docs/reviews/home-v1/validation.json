@@ -1,20 +1,20 @@
 {
-  "validatedAt": "2026-10-09T01:59:01.834949+00:00",
+  "validatedAt": "2026-10-09T02:24:05.551940+00:00",
   "branch": "fix/home-mode-menu-20261009",
   "base": "bb9f00564d11389aba069604f9fffe56f7f98de4",
   "environment": "Chromium; intercepted fixtures and localhost only; service workers blocked",
   "preview": "http://127.0.0.1:4176",
   "home": {
-    "startTime": "2026-10-09T01:52:08.652Z",
-    "duration": 173015.423,
-    "expected": 40,
+    "startTime": "2026-10-09T02:19:45.051Z",
+    "duration": 132375.277,
+    "expected": 50,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
   },
   "catalog": {
-    "startTime": "2026-10-09T01:55:06.069Z",
-    "duration": 38218.92,
+    "startTime": "2026-10-09T02:22:02.536Z",
+    "duration": 32838.166999999994,
     "expected": 20,
     "skipped": 0,
     "unexpected": 0,
@@ -50,15 +50,15 @@
     "minha-carioca/"
   ],
   "sourceSha256": {
-    "index.html": "d78b33362b5994cf532c8b0e88f98142d0ce8ff9da716568fb92a94b291fc9a5",
+    "index.html": "25d57a87cb09ffe8f2338c4347755bea872d7881fff653fb4ef147761f8846b7",
     "assets/home.css": "ab70590b28556967c62ae3da587bbf7fb40c00ed34161cd6372d30d519ca9be8",
     "assets/home-theme.js": "4401bd40c5dca021c12db79e5d92ab78bd410851f77fba0fb67ed05279ec2e38",
-    "assets/home-i18n.js": "6410f41cef0f99f25adb35f7db28ecdcc0e9e11754245954a52751b7762452a9",
-    "assets/home-controls.js": "df1f4ec7db0f24b2702fca05554bc5cbf6521c82fd8f74a5f506d6dd845669fc",
-    "assets/home-navigation.js": "bc4d9f7698039731ead84e9a78e728b41829ebd8c856e8f63e9f54a24da0e628",
-    "assets/home-advertisements.js": "f6f12c4128f0df9da89a96ef553146806c9842b4aefa87bb4b17a1b0a73ebd11",
+    "assets/home-i18n.js": "a79648a28d1f43cf60463ed21b0c3be1878a1c949d62a30aa4abe35740935ec4",
+    "assets/home-controls.js": "cdf9f41e4269ac824311a0e3b6f8ecb776eb197c3353e63306ad190d5f36b1d6",
+    "assets/home-navigation.js": "ea69775e749501fe6c6a25472b3c739c4cd05b81999bb50996f5d0e3b24a73e1",
+    "assets/home-advertisements.js": "264542d806d97bf058f6cf7b603a9284cc0bb0eacbecaae4e064518d341ee385",
     "assets/home-municipalities.json": "8784d41a8c48a6518bc035bdb28c29a46388887ca2da6a4744f90ab3c14804eb",
-    "assets/public-event-catalog.js": "e017855d964ea26687624eeb210e7462e42b62cb0051b3f691bcb0433c95b351"
+    "assets/public-event-catalog.js": "46cc4f57f1671f0d2894bceed41a65d434503b107ea9c4b119b2ed4d6629bf38"
   },
   "notRun": [
     "Real mobile devices",
@@ -79,5 +79,26 @@
     "passed": 3,
     "purpose": "Sticky anchor offset after removing duplicate scroll-padding + scroll-margin compensation; 200% reflow and 150% fonts in both themes"
   },
-  "sourceSha256Basis": "Git blob bytes after line-ending normalization"
+  "sourceSha256Basis": "Git blob bytes after line-ending normalization",
+  "languageReview": {
+    "previousHead": "30ea0804adfd94a759dfbd1351107f45318ebc38",
+    "locales": [
+      "pt-BR",
+      "en-US",
+      "es",
+      "zh-Hans"
+    ],
+    "addedTests": 10,
+    "covers": [
+      "Dictionary key/token parity",
+      "Complete visible interface and accessible labels",
+      "Dynamic navigation and advertising states",
+      "Original producer text unchanged with separate language markup",
+      "Missing translation fallback and invalid locale",
+      "Error/retry/empty/missing-data messages in every locale"
+    ],
+    "sourceLanguageFallback": "pt-BR is the original document editorial declaration; no per-event language metadata or automatic detection is introduced",
+    "libraryRetried": false,
+    "geolocationAdded": false
+  }
 }

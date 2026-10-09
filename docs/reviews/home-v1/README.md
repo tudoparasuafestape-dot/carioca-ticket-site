@@ -66,6 +66,14 @@ O primeiro conjunto cobre temas, teclado/foco, largura 320/412/768/1440, reflow 
 
 O segundo exercita os 20 testes existentes do catálogo público em desktop e mobile com interceptação integral. Os scripts de contratos protegem 41 superfícies, 67 páginas e as jornadas comerciais/operacionais. Não há comando de lint configurado no projeto; os scripts alterados passam por `node --check` e `git diff --check`.
 
+### Revisão de idiomas do PR167
+
+A revisão acrescenta tradução do título da página, nomes acessíveis da navegação e rótulo de conta no rodapé, além de atualizar nomes e estados dos espaços publicitários mesmo quando são montados depois da escolha do idioma. As opções de idioma mantêm seus nomes nativos; marca, endereços, contatos e dados dos produtores permanecem intactos.
+
+O catálogo legado não declara idioma por evento. O frontend preserva a declaração editorial da página de origem (`pt-BR`) como fallback explícito nos títulos, categorias, descrições, datas/horários e locais originais, usando `lang` e `translate="no"`. **Isso não é detecção de idioma:** textos futuros em outros idiomas exigem metadado editorial próprio, fora desta alteração. Os nomes acessíveis de compra/capa referenciam separadamente a ação traduzida e o título original; mensagens sobre dados ausentes continuam no idioma da interface. Essa marcação segue a [semântica de idioma e tradução do HTML](https://html.spec.whatwg.org/multipage/dom.html#the-lang-and-xml:lang-attributes); a pronúncia final ainda depende da combinação navegador/leitor de tela.
+
+Dez novos testes verificam paridade dos dicionários e dos marcadores de interpolação, textos visíveis sem tradução declarada, atributos ARIA/placeholder, menus abertos/fechados, estados dinâmicos e mensagens de erro/vazio/dados ausentes nos quatro idiomas. Um teste remove intencionalmente uma tradução e confirma fallback em português com `lang="pt-BR"`. Capturas do rodapé por idioma complementam as do menu.
+
 Resultados finais e contagens em `validation.json`. Capturas reais do Chromium em `screenshots/`; arquivos `before-*` documentam a base e `after-*` a composição final. Outras capturas registram idiomas, erro, dados ausentes, reflow, fontes e menu. As imagens contêm somente eventos sintéticos.
 
 Limites da validação: Chromium automatizado. Não executado em aparelhos Android/iPhone reais, Safari físico ou leitor de tela humano. Nenhuma compra, cobrança, pedido, ingresso, código de login ou check-in real foi criado.

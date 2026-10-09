@@ -42,16 +42,20 @@
   };
   function updateLabels() {
     var label = placeLabel(H.filters.location);
-    document.querySelectorAll('.active-place').forEach(function (el) { el.textContent = label; el.title = label; });
+    document.querySelectorAll('.active-place').forEach(function (el) { el.textContent = label; el.title = label; el.lang = H.filters.location ? 'pt-BR' : H.locale; el.setAttribute('translate', H.filters.location ? 'no' : 'yes'); });
     $('event-location-input').value = label;
-    document.querySelector('.brand-location .location-trigger').setAttribute('aria-label', H.t('choosePlace') + ': ' + label);
+    $('event-location-input').lang = H.filters.location ? 'pt-BR' : H.locale;
     document.querySelectorAll('[data-period]').forEach(function (button) { button.setAttribute('aria-pressed', String(button.dataset.period === H.filters.period)); });
     var range = H.dateRange(), dates = range ? new Intl.DateTimeFormat(H.locale, { day: 'numeric', month: 'short', year: 'numeric' }) : null;
     var rangeLabel = range ? dates.format(range.start) + ' – ' + dates.format(range.end) : '';
     $('period-dates').textContent = rangeLabel;
     var active = [H.filters.location && label, rangeLabel, H.filters.category].filter(Boolean);
     $('active-filters').hidden = !active.length;
-    $('active-filters').textContent = active.join(' · ');
+    $('active-filters').replaceChildren();
+    [[H.filters.location && label, 'pt-BR'], [rangeLabel, H.locale], [H.filters.category, H.sourceLanguage]].filter(function (part) { return part[0]; }).forEach(function (part, index) {
+      if (index) $('active-filters').appendChild(document.createTextNode(' · '));
+      var span = document.createElement('span'); span.textContent = part[0]; span.lang = part[1]; span.setAttribute('translate', 'no'); $('active-filters').appendChild(span);
+    });
   }
   H.changed = function () { updateLabels(); document.dispatchEvent(new CustomEvent('ct:filters')); };
   H.resetFilters = function () { locationRevision++; H.filters = { location: null, period: 'all', category: '' }; save('ct-home-location', null); H.changed(); };
@@ -65,6 +69,7 @@
     if (H.filters.category && !names.includes(H.filters.category)) names.unshift(H.filters.category);
     [''].concat(names).forEach(function (name) {
       var button = document.createElement('button'); button.type = 'button'; button.textContent = name || H.t('allCategories');
+      if (name) { button.lang = H.sourceLanguage; button.setAttribute('translate', 'no'); } else { button.dataset.i18n = 'allCategories'; }
       button.setAttribute('aria-pressed', String(H.filters.category === name));
       button.addEventListener('click', function () { H.filters.category = name; H.changed(); }); host.appendChild(button);
       if (hadFocus && H.filters.category === name) button.focus({ preventScroll: true });
@@ -97,7 +102,7 @@
     if (!uf.value) return;
     var query = H.normalize(search.value), rows = cities.filter(function (row) { return row[1] === uf.value && (!query || H.normalize(row[2]).includes(query)); });
     rows.slice(0, 40).forEach(function (row) {
-      var button = document.createElement('button'); button.type = 'button'; button.textContent = row[2]; button.dataset.cityId = row[0];
+      var button = document.createElement('button'); button.type = 'button'; button.textContent = row[2]; button.lang = 'pt-BR'; button.setAttribute('translate', 'no'); button.dataset.cityId = row[0];
       button.setAttribute('aria-pressed', String(!!pending && pending.id === row[0]));
       button.addEventListener('click', function () { pending = { id: row[0], uf: row[1], name: row[2] }; search.value = row[2]; renderCities(); $('location-apply').focus(); });
       host.appendChild(button);

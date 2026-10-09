@@ -141,7 +141,10 @@
     "adNext": "Próxima publicidade",
     "adPause": "Pausar",
     "adPlay": "Reproduzir",
-    "adPosition": "Publicidade {n} de {total}"
+    "adPosition": "Publicidade {n} de {total}",
+    "pageTitle": "Carioca Ticket | Ingressos e tecnologia para eventos",
+    "mainNavigation": "Navegação principal",
+    "mobileNavigation": "Navegação mobile"
   },
   "en-US": {
     "theme": "Theme",
@@ -243,7 +246,7 @@
     "footerCopy": "Tickets, technology and event experiences.",
     "quick": "Quick links",
     "events": "Events",
-    "myAccount": "Minha Carioca",
+    "myAccount": "My account",
     "buyerHelp": "Buyer support",
     "partners": "Organizers & Partners",
     "partnerPortal": "CT partner portal",
@@ -282,7 +285,10 @@
     "adNext": "Next advertisement",
     "adPause": "Pause",
     "adPlay": "Play",
-    "adPosition": "Advertisement {n} of {total}"
+    "adPosition": "Advertisement {n} of {total}",
+    "pageTitle": "Carioca Ticket | Tickets and event technology",
+    "mainNavigation": "Main navigation",
+    "mobileNavigation": "Mobile navigation"
   },
   "es": {
     "theme": "Tema",
@@ -384,7 +390,7 @@
     "footerCopy": "Entradas, tecnología y experiencias para eventos.",
     "quick": "Acceso rápido",
     "events": "Eventos",
-    "myAccount": "Minha Carioca",
+    "myAccount": "Mi cuenta",
     "buyerHelp": "Ayuda al comprador",
     "partners": "Organizadores y socios",
     "partnerPortal": "Portal de socios CT",
@@ -423,7 +429,10 @@
     "adNext": "Siguiente publicidad",
     "adPause": "Pausar",
     "adPlay": "Reproducir",
-    "adPosition": "Publicidad {n} de {total}"
+    "adPosition": "Publicidad {n} de {total}",
+    "pageTitle": "Carioca Ticket | Entradas y tecnología para eventos",
+    "mainNavigation": "Navegación principal",
+    "mobileNavigation": "Navegación móvil"
   },
   "zh-Hans": {
     "theme": "主题",
@@ -525,7 +534,7 @@
     "footerCopy": "门票、技术与活动体验。",
     "quick": "快捷入口",
     "events": "活动",
-    "myAccount": "Minha Carioca",
+    "myAccount": "我的账户",
     "buyerHelp": "购票用户支持",
     "partners": "主办方与合作伙伴",
     "partnerPortal": "CT 合作伙伴平台",
@@ -564,28 +573,54 @@
     "adNext": "下一则广告",
     "adPause": "暂停",
     "adPlay": "播放",
-    "adPosition": "广告 {n}/{total}"
+    "adPosition": "广告 {n}/{total}",
+    "pageTitle": "Carioca Ticket | 门票与活动技术",
+    "mainNavigation": "主导航",
+    "mobileNavigation": "移动导航"
   }
 };
 
   var locale = 'pt-BR';
-  try { var saved = localStorage.getItem('ct-home-locale'); if (Object.prototype.hasOwnProperty.call(dictionaries, saved)) locale = saved; } catch (_) {}
+  var sourceLanguage = document.documentElement.lang || 'pt-BR';
+  function has(object, key) { return Object.prototype.hasOwnProperty.call(object, key); }
+  try { var saved = localStorage.getItem('ct-home-locale'); if (has(dictionaries, saved)) locale = saved; } catch (_) {}
+  function message(key, values) {
+    var language = api.locale;
+    var dictionary = dictionaries[language];
+    if (!has(dictionary, key) || typeof dictionary[key] !== 'string' || !dictionary[key].trim()) language = 'pt-BR';
+    var value = has(dictionaries[language], key) ? dictionaries[language][key] : String(key);
+    Object.keys(values || {}).forEach(function (name) { value = value.replaceAll('{' + name + '}', String(values[name])); });
+    return { text: value, language: language };
+  }
+  function apply(scope) {
+    var selector = '[data-i18n], [data-i18n-placeholder], [data-i18n-aria-label]';
+    var nodes = Array.from(scope.querySelectorAll(selector));
+    if (scope.matches && scope.matches(selector)) nodes.unshift(scope);
+    nodes.forEach(function (node) {
+      [['i18n', null], ['i18nPlaceholder', 'placeholder'], ['i18nAriaLabel', 'aria-label']].forEach(function (entry) {
+        if (!node.dataset[entry[0]]) return;
+        var translated = message(node.dataset[entry[0]]);
+        if (entry[1]) node.setAttribute(entry[1], translated.text);
+        else node.textContent = translated.text;
+        // A Portuguese fallback must retain its own pronunciation.
+        node.lang = translated.language;
+      });
+    });
+  }
   var api = window.CTHome = {
     locale: locale,
-    t: function (key, values) {
-      var value = dictionaries[api.locale][key] || dictionaries['pt-BR'][key] || key;
-      Object.keys(values || {}).forEach(function (name) { value = value.replaceAll('{' + name + '}', String(values[name])); });
-      return value;
-    },
+    // Preserve the source document's declared language, not the selected UI.
+    // The legacy public catalog has no per-event language metadata.
+    sourceLanguage: sourceLanguage,
+    t: function (key, values) { return message(key, values).text; },
+    applyTranslations: apply,
     setLocale: function (value) {
-      if (!Object.prototype.hasOwnProperty.call(dictionaries, value)) return;
+      if (!has(dictionaries, value)) return;
       api.locale = value;
       document.documentElement.lang = value;
-      document.querySelectorAll('[data-i18n]').forEach(function (node) { node.textContent = api.t(node.dataset.i18n); });
-      document.querySelectorAll('[data-i18n-placeholder]').forEach(function (node) { node.placeholder = api.t(node.dataset.i18nPlaceholder); });
-      document.querySelectorAll('[data-i18n-aria-label]').forEach(function (node) { node.setAttribute('aria-label', api.t(node.dataset.i18nAriaLabel)); });
+      apply(document);
       document.getElementById('home-language').value = value;
-      document.getElementById('producer-language-note').hidden = value === 'pt-BR';
+      document.getElementById('producer-language-note').hidden = value === sourceLanguage;
       try { localStorage.setItem('ct-home-locale', value); } catch (_) {}
       document.dispatchEvent(new CustomEvent('ct:language'));
     }

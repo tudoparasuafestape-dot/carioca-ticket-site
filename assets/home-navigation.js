@@ -5,7 +5,7 @@
   if (!button || !menu) return;
   button.hidden = false;
   function label(open) { return window.CTHome ? CTHome.t(open ? 'closeMenu' : 'openMenu') : (open ? 'Fechar menu' : 'Abrir menu'); }
-  function setMenu(open) { button.setAttribute('aria-expanded', String(open)); button.setAttribute('aria-label', label(open)); menu.hidden = !open; }
+  function setMenu(open) { button.dataset.i18nAriaLabel = open ? 'closeMenu' : 'openMenu'; button.setAttribute('aria-expanded', String(open)); button.setAttribute('aria-label', label(open)); menu.hidden = !open; }
   button.addEventListener('click', function () { var open = menu.hidden; setMenu(open); if (open) document.dispatchEvent(new CustomEvent('ct:close-accessibility')); });
   button.addEventListener('keydown', function (event) { if (event.key === 'Tab' && !event.shiftKey && !menu.hidden) { event.preventDefault(); menu.querySelector('a').focus(); } });
   menu.addEventListener('click', function (event) {

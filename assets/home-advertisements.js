@@ -34,7 +34,11 @@
     slot.removeAttribute('aria-labelledby'); slot.setAttribute('aria-label', H.t('adLabel'));
     var slides = Array.from(stage.children), index = 0, paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var pointer = false, timer, visible = false;
-    function labels() { previous.setAttribute('aria-label', H.t('adPrevious')); next.setAttribute('aria-label', H.t('adNext')); pause.textContent = H.t(paused ? 'adPlay' : 'adPause'); }
+    function labels() {
+      H.applyTranslations(slot);
+      slot.setAttribute('aria-label', H.t('adLabel'));
+      if (status.textContent) status.textContent = H.t('adPosition', { n: index + 1, total: slides.length });
+      previous.setAttribute('aria-label', H.t('adPrevious')); next.setAttribute('aria-label', H.t('adNext')); pause.textContent = H.t(paused ? 'adPlay' : 'adPause'); }
     function show(value, manual) {
       index = (value + slides.length) % slides.length;
       slides.forEach(function (slide, number) { slide.hidden = number !== index; slide.inert = number !== index; });
