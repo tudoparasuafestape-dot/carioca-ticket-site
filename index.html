@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="ct-home-root">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -26,41 +26,41 @@
   <meta name="twitter:image" content="https://cariocaticket.com.br/assets/carioca-ticket-preview-oficial-v9.jpg">
   <title>Carioca Ticket | Ingressos e tecnologia para eventos</title>
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=20261008-catalog">
+  <script src="/assets/home-theme.js?v=20261008-stage1"></script>
+  <link rel="stylesheet" href="/assets/home.css?v=20261008-stage1">
+  <noscript><style>.ct-home .event-search-form,.ct-home #catalog-status,.ct-home #event-count{display:none}</style></noscript>
   <link rel="prefetch" href="/produtor/" as="document">
   <script src="/pwa-register.js" defer></script>
 </head>
-<body>
+<body class="ct-home">
+  <a class="skip-link" href="#conteudo">Pular para os eventos</a>
   <header class="topbar">
     <div class="shell nav">
       <a class="brand" href="/" aria-label="Carioca Ticket">
-        <picture class="brand-logo">
-          <source media="(max-width:600px)" srcset="/assets/carioca-ticket-simbolo.png">
-          <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
-        </picture>
+        <img src="/assets/carioca-ticket-simbolo.png" alt="" width="42" height="42">
+        <span>Carioca <b>Ticket</b></span>
       </a>
       <nav class="links" aria-label="Principal">
         <a href="#todos-eventos">Eventos</a>
         <a href="/minha-carioca/conta/?v=20260919-2158">Minha Carioca</a>
         <a href="#produtores">Para produtores</a>
-        <a href="/produtor/">Portal do Produtor</a>
-        <a href="/parceiro/programa/">Programa Parceiro CT</a>
-        <a href="#seguranca">Segurança</a>
         <a href="/ajuda/">Ajuda</a>
       </nav>
-      <a class="nav-cta" href="#todos-eventos">Comprar ingresso</a>
-      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-controls="mobile-menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+      <div class="nav-tools">
+        <div class="theme-control" hidden>
+          <label for="home-theme">Tema</label>
+          <select id="home-theme"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select>
+        </div>
+        <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-controls="mobile-menu" aria-expanded="false" hidden>Menu <span aria-hidden="true">☰</span></button>
+      </div>
     </div>
     <nav id="mobile-menu" class="mobile-menu" aria-label="Menu mobile" hidden>
       <div class="shell mobile-menu-inner">
         <a href="#todos-eventos">Eventos</a>
         <a href="/minha-carioca/conta/?v=20260919-2158">Minha Carioca · meus ingressos</a>
         <a href="#produtores">Para produtores</a>
+        <a href="/produtor/">Portal do Produtor</a>
+        <a href="/parceiro/programa/">Programa Parceiro CT</a>
         <a href="#seguranca">Segurança</a>
         <a href="/ajuda/">Ajuda</a>
         <a href="/sobre/">Sobre a Carioca Ticket</a>
@@ -68,20 +68,26 @@
     </nav>
   </header>
 
-  <main>
+  <main id="conteudo" tabindex="-1">
     <section id="eventos" class="public-events shell" aria-labelledby="public-events-title">
       <div id="todos-eventos" class="public-events-heading">
         <div>
           <span class="eyebrow">Agenda Carioca Ticket</span>
-          <h1 id="public-events-title">Eventos em destaque</h1>
-          <p id="event-count" aria-live="polite">Confira os eventos disponíveis para compra.</p>
+          <h1 id="public-events-title">Seu próximo encontro está aqui.</h1>
         </div>
         <form id="event-search-form" class="event-search-form" role="search">
-          <label class="sr-only" for="event-search-input">Pesquisar eventos</label>
-          <input id="event-search-input" type="search" autocomplete="off" placeholder="Evento, categoria, cidade ou local">
+          <div class="search-field">
+            <label for="event-search-input">Pesquisar eventos</label>
+            <input id="event-search-input" type="search" autocomplete="off" placeholder="Nome ou categoria">
+          </div>
+          <div class="search-field">
+            <label for="event-location-input">Cidade ou local</label>
+            <input id="event-location-input" type="text" autocomplete="off" placeholder="Onde você quer ir?">
+          </div>
           <button type="submit">Pesquisar</button>
         </form>
       </div>
+      <div class="catalog-heading"><h2>Explore a agenda</h2><p id="event-count" aria-live="polite">Confira os eventos disponíveis para compra.</p></div>
       <p id="event-search-feedback" class="catalog-feedback" aria-live="polite"></p>
       <div id="catalog-status" class="catalog-state" role="status">
         <p id="catalog-status-message">Carregando eventos…</p>
@@ -96,59 +102,18 @@
       <noscript><p>Ative o JavaScript para consultar os eventos disponíveis. <a href="/ajuda/">Acesse a Central de Ajuda</a>.</p></noscript>
     </section>
 
-    <section class="hero">
-      <div class="shell hero-grid">
-        <div class="hero-copy">
-          <span class="eyebrow">Carioca Ticket</span>
-          <h2 class="brand-headline">Seu evento começa com uma compra simples, segura e confiável.</h2>
-          <p>Ingressos digitais, pagamento por PIX ou cartão, confirmação automática e tecnologia para acompanhar a experiência do público do início ao fim.</p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="#todos-eventos">Ver eventos</a>
-            <a class="btn btn-secondary" href="#produtores">Sou produtor</a>
-          </div>
-          <div class="trust-row" aria-label="Diferenciais">
-            <span>✓ Pagamento seguro</span>
-            <span>✓ Ingresso digital</span>
-            <span>✓ Check-in rápido</span>
-          </div>
-        </div>
-        <div class="hero-card" aria-label="Experiência Carioca Ticket">
-          <div class="ticket-visual">
-            <div class="ticket-top">
-              <span class="mini">CARIOCA TICKET</span>
-              <span class="status">● ATIVO</span>
-            </div>
-            <div class="ticket-body">
-              <p>Uma plataforma pensada para quem compra e para quem produz.</p>
-              <div class="metric"><strong>PIX + CARTÃO</strong><span>pagamentos integrados</span></div>
-              <div class="metric"><strong>QR CODE</strong><span>ingresso e acesso digital</span></div>
-              <div class="metric"><strong>TEMPO REAL</strong><span>operação e acompanhamento</span></div>
-            </div>
-            <div class="ticket-cut"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="produtores" class="section section-dark">
-      <div class="shell">
-        <div class="section-head">
-          <div>
-            <span class="eyebrow">Para produtores</span>
-            <h2>Mais controle para produzir. Menos atrito para vender.</h2>
-          </div>
-        </div>
-        <div class="cards">
-          <article class="feature"><span>01</span><h3>Venda de ingressos</h3><p>Lotes, tipos de ingresso, PIX, cartão e acompanhamento da operação em uma jornada integrada.</p></article>
-          <article class="feature"><span>02</span><h3>Check-in digital</h3><p>Validação por QR Code com foco em velocidade, rastreabilidade e segurança na portaria.</p></article>
-          <article class="feature"><span>03</span><h3>Gestão do evento</h3><p>Dados de vendas, participantes, operação e relacionamento organizados para decisões melhores.</p></article>
-        </div>
+    <section id="produtores" class="producer-section shell" aria-labelledby="producer-title">
+      <div class="producer-copy">
+        <span class="eyebrow">Para quem faz acontecer</span>
+        <h2 id="producer-title">Seu evento. Nossa tecnologia.</h2>
+        <p>Venda de ingressos, gestão e check-in digital em uma jornada integrada.</p>
         <div class="hero-actions">
           <a id="producerPortalCta" class="btn btn-primary" href="/produtor/">Acessar Portal do Produtor</a>
           <a id="partnerProgramCta" class="btn btn-secondary" href="/parceiro/programa/">Programa Parceiro CT</a>
         </div>
-        <a id="partnerPortalCta" class="text-link" href="/parceiro/">Já sou parceiro? Acessar Portal Parceiro CT →</a>
+        <a id="partnerPortalCta" class="text-link" href="/parceiro/">Já sou parceiro: Acessar Portal Parceiro CT <span aria-hidden="true">→</span></a>
       </div>
+      <div class="producer-note" aria-hidden="true"><span>DA IDEIA</span><strong>ao último<br>aplauso.</strong><span>CARIOCA TICKET</span></div>
     </section>
 
     <section id="seguranca" class="section shell">
@@ -193,33 +158,8 @@
     <div class="shell footer-bottom">© 2026 Carioca Ticket. Todos os direitos reservados.</div>
   </footer>
 
-  <script>
-    (function () {
-      'use strict';
-
-      var menuButton = document.querySelector('.menu-toggle');
-      var mobileMenu = document.getElementById('mobile-menu');
-
-      function setMenu(open) {
-        if (!menuButton || !mobileMenu) return;
-        menuButton.setAttribute('aria-expanded', open ? 'true' : 'false');
-        mobileMenu.hidden = !open;
-        document.body.classList.toggle('menu-open', open);
-      }
-
-      if (menuButton && mobileMenu) {
-        menuButton.addEventListener('click', function () {
-          setMenu(menuButton.getAttribute('aria-expanded') !== 'true');
-        });
-
-        mobileMenu.querySelectorAll('a').forEach(function (link) {
-          link.addEventListener('click', function () { setMenu(false); });
-        });
-      }
-
-    }());
-  </script>
-  <script src="/assets/public-event-catalog.js?v=20261008" defer></script>
+  <script src="/assets/home-navigation.js?v=20261008-stage1" defer></script>
+  <script src="/assets/public-event-catalog.js?v=20261008-stage1" defer></script>
   <script src="/assets/ct-analytics.js?v=20260923a" defer></script>
 </body>
 </html>

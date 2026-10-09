@@ -2,7 +2,7 @@ import fs from 'node:fs';
 
 function read(path){
   if(!fs.existsSync(path)) throw new Error('arquivo ausente: '+path);
-  return fs.readFileSync(path,'utf8');
+  return fs.readFileSync(path,'utf8').replace(/\r\n/g,'\n');
 }
 function ok(cond,msg){if(!cond)throw new Error(msg)}
 
