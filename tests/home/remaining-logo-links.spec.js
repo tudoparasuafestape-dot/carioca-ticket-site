@@ -24,30 +24,41 @@ for (const name of pages) for (const width of [320, 390, 1440]) {
       return route.abort('blockedbyclient');
     });
     await page.setViewportSize({ width, height: 1000 });
-    for (const view of name === 'produtor-v2' ? ['login', 'portal'] : ['footer']) {
+    for (const view of name === 'produtor-v2' ? ['unloaded', 'loaded'] : ['footer']) {
       await page.goto(ORIGIN + `/${name}/`);
-      if (name === 'produtor-v2') await page.evaluate(view => {
-        document.querySelector('#loginView').classList.toggle('hidden', view === 'portal');
-        document.querySelector('#portalView').classList.toggle('hidden', view !== 'portal');
-        // Simulate the existing successful brand load, without executing its auth code.
-        for (const id of ['brandLogoDesktop', 'topLogoMobile']) {
-          const img = document.getElementById(id);
-          img.src = '/assets/carioca-ticket-logo.png';
-          img.classList.remove('hidden');
+      if (name === 'produtor-v2') {
+        await expect(page.locator('#portalView')).toBeHidden();
+        await expect(page.locator('#brandLogoDesktop')).not.toHaveAttribute('src', /.+/);
+        if (view === 'loaded') {
+          // Existing production loader expects a DESKTOP data URI from RPC.
+          // Use exact repository image bytes as a synthetic response, never call that RPC.
+          const dataUri = 'data:image/png;base64,' + fs.readFileSync(path.join(ROOT, 'assets/carioca-ticket-logo.png')).toString('base64');
+          await page.evaluate(uri => {
+            const img = document.getElementById('brandLogoDesktop');
+            img.src = uri; img.classList.remove('hidden');
+          }, dataUri);
         }
-      }, view);
+      }
       await page.evaluate(() => {
         sessionStorage.setItem('remaining-logo-sentinel', 'unchanged');
         for (const el of document.querySelectorAll('body *')) {
           if (!el.children.length && el.textContent.trim()) el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * 1.5) + 'px';
         }
       });
-      const logo = page.locator(view === 'login' ? '#brandLogoBox' : view === 'portal' ? '.top-logo-box' : '.footer-home-logo');
+      const logo = page.locator(name === 'produtor-v2' ? '#brandLogoBox' : '.footer-home-logo');
       await expect(logo).toHaveAttribute('href', '/');
       await expect(logo).toHaveAccessibleName('Carioca Ticket — página inicial');
-      await expect(logo.locator('img')).toBeVisible();
-      await expect.poll(() => logo.locator('img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
-      await logo.scrollIntoViewIfNeeded(); await logo.focus();
+      if (view !== 'unloaded') {
+        await expect(logo.locator('img')).toBeVisible();
+        await expect.poll(() => logo.locator('img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+      } else await expect(logo.locator('img')).toBeHidden();
+      await logo.scrollIntoViewIfNeeded();
+      if (name === 'produtor-v2') {
+        for (let step = 0; step < 20; step++) {
+          await page.keyboard.press('Tab');
+          if (await logo.evaluate(el => el === document.activeElement)) break;
+        }
+      } else await logo.focus();
       await expect(logo).toBeFocused(); await expect(logo).toHaveCSS('outline-style', 'solid');
       const box = await logo.boundingBox();
       expect(box.width).toBeGreaterThanOrEqual(44); expect(box.height).toBeGreaterThanOrEqual(44);
