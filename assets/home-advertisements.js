@@ -51,7 +51,7 @@
     var slides = Array.from(stage.children), index = 0, paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     // Pick once for this page visit; no identifier, storage, impression beacon or reshuffle.
     var initial = Math.floor(Math.random() * slides.length);
-    var pointer = false, timer, visible = false, toggleIntent = null;
+    var pointer = false, contact = null, timer, visible = false, toggleIntent = null;
     function labels() {
       H.applyTranslations(slot);
       slot.setAttribute('aria-label', H.t('adLabel'));
@@ -59,7 +59,7 @@
       previous.dataset.i18nAriaLabel = 'adPrevious'; next.dataset.i18nAriaLabel = 'adNext'; pause.dataset.i18n = paused ? 'adPlay' : 'adPause';
       H.applyTranslations(controls); }
     function playbackLabel() {
-      playback.dataset.i18n = paused || pointer || !visible || document.hidden || (slot.contains(document.activeElement) && document.activeElement !== pause) ? 'adPausedState' : 'adPlayingState';
+      playback.dataset.i18n = paused || pointer || contact !== null || !visible || document.hidden || (slot.contains(document.activeElement) && document.activeElement !== pause) ? 'adPausedState' : 'adPlayingState';
       H.applyTranslations(playback);
     }
     function show(value, manual) {
@@ -71,7 +71,7 @@
       clearTimeout(timer);
       pause.disabled = reduced.matches;
       playbackLabel();
-      if (failed || paused || reduced.matches || pointer || !visible || document.hidden || (slot.contains(document.activeElement) && document.activeElement !== pause)) return;
+      if (failed || paused || reduced.matches || pointer || contact !== null || !visible || document.hidden || (slot.contains(document.activeElement) && document.activeElement !== pause)) return;
       timer = setTimeout(function () { show(index + 1, false); schedule(); }, 5000);
     }
     previous.addEventListener('click', function () { show(index - 1, true); schedule(); });
@@ -81,17 +81,24 @@
     pause.addEventListener('click', function () { paused = toggleIntent === null ? !paused : toggleIntent; toggleIntent = null; if (reduced.matches) paused = true; labels(); schedule(); });
     slot.addEventListener('pointerenter', function (event) { if (event.pointerType === 'mouse') { pointer = true; schedule(); } });
     slot.addEventListener('pointerleave', function (event) { if (event.pointerType === 'mouse') { pointer = false; schedule(); } });
-    stage.addEventListener('pointerdown', function () { paused = true; labels(); schedule(); });
+    // A touch may become ordinary page scrolling. Hold the timer only until
+    // release/cancel; an actual activation still pauses deliberately.
+    stage.addEventListener('pointerdown', function (event) { if (event.isPrimary && event.button === 0) { contact = event.pointerId; schedule(); } });
+    function releaseContact(event) { if (contact === event.pointerId) { contact = null; schedule(); } }
+    window.addEventListener('pointerup', releaseContact);
+    window.addEventListener('pointercancel', releaseContact);
+    stage.addEventListener('click', function () { paused = true; labels(); schedule(); });
     slot.addEventListener('focusin', function () { paused = true; labels(); schedule(); });
     slot.addEventListener('focusout', function () { setTimeout(schedule, 0); });
-    document.addEventListener('visibilitychange', schedule);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) contact = null; schedule(); });
     document.addEventListener('ct:language', function () { labels(); playbackLabel(); });
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     reduced.addEventListener('change', function () { if (reduced.matches) paused = true; labels(); schedule(); });
-    new IntersectionObserver(function (entries) { visible = entries[0].intersectionRatio >= .25; schedule(); }, { threshold: .25 }).observe(slot);
+    new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; schedule(); }, { threshold: 0 }).observe(slot);
     show(initial, false); labels();
   }
   H.mountAdvertisements = mount;
   mount(house, campaigns.primary);
   mount(document.getElementById('advertising-secondary'), campaigns.secondary);
 }());
+
