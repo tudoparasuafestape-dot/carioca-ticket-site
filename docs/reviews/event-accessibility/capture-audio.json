@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-09T09:41:00.848Z",
+  "head": "bccd69b57ffc0888609e1a4e742583321917cda9",
+  "browser": "140.0.7339.16",
+  "speechMocked": false,
+  "audioHeardByHuman": false,
+  "captures": [
+    {
+      "theme": "light",
+      "state": "idle",
+      "file": "light-audio-idle-390.png",
+      "status": "Leitura com voz local em português. Use Ouvir descrição para começar."
+    },
+    {
+      "theme": "light",
+      "state": "playing",
+      "file": "light-audio-playing-390.png",
+      "status": "Lendo a descrição."
+    },
+    {
+      "theme": "light",
+      "state": "paused",
+      "file": "light-audio-paused-390.png",
+      "status": "Leitura pausada. Use Continuar descrição para retomar."
+    },
+    {
+      "theme": "light",
+      "state": "stopped",
+      "file": "light-audio-stopped-viewport-390.png",
+      "status": "Leitura parada."
+    },
+    {
+      "theme": "dark",
+      "state": "idle",
+      "file": "dark-audio-idle-390.png",
+      "status": "Leitura parada."
+    },
+    {
+      "theme": "dark",
+      "state": "playing",
+      "file": "dark-audio-playing-390.png",
+      "status": "Lendo a descrição."
+    },
+    {
+      "theme": "dark",
+      "state": "paused",
+      "file": "dark-audio-paused-390.png",
+      "status": "Leitura pausada. Use Continuar descrição para retomar."
+    },
+    {
+      "theme": "dark",
+      "state": "stopped",
+      "file": "dark-audio-stopped-viewport-390.png",
+      "status": "Leitura parada."
+    }
+  ],
+  "voices": [
+    {
+      "name": "Microsoft Daniel - Portuguese (Brazil)",
+      "lang": "pt-BR",
+      "local": true
+    },
+    {
+      "name": "Microsoft Maria - Portuguese (Brazil)",
+      "lang": "pt-BR",
+      "local": true
+    }
+  ]
+}

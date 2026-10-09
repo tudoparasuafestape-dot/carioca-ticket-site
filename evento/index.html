@@ -30,6 +30,7 @@
   <meta name="twitter:title" content="Evento | Carioca Ticket">
   <meta name="twitter:description" content="Descubra eventos e garanta seu ingresso com segurança pela Carioca Ticket.">
   <meta name="twitter:image" content="https://cariocaticket.com.br/assets/carioca-ticket-preview-oficial-v9.jpg">
+  <script src="/assets/home-theme.js?v=20261009" ></script>
   <style>
     :root{
       --ink:#07090c;
@@ -267,9 +268,11 @@
       .closing .cta{width:100%}
     }
   </style>
+  <link rel="stylesheet" href="/assets/event-accessibility.css?v=20261009">
+  <script src="/assets/event-description-speech.js?v=20261009" defer></script>
   <script src="/pwa-register.js" defer></script>
 </head>
-<body>
+<body class="ct-event">
 <script>
 (function(){
   'use strict';
@@ -404,6 +407,13 @@
         </div>
       </div>
       <div class="top-actions">
+        <label class="theme-control" hidden for="home-theme">Tema
+          <select id="home-theme" aria-label="Tema da página">
+            <option value="system">Automático</option>
+            <option value="light">Claro</option>
+            <option value="dark">Escuro</option>
+          </select>
+        </label>
         <div class="top-security"><span class="dot"></span> Compra protegida e ingresso digital</div>
         <a class="customer-link" href="https://cariocaticket.com.br/minha-carioca/conta/?v=20260920-0035">Minha Carioca</a>
       </div>
@@ -467,6 +477,14 @@
           <article class="section">
             <div class="section-label">Sobre o evento</div>
             <h2 id="highlight">Uma experiência para viver.</h2>
+            <div id="description-audio" class="description-audio" role="group" aria-label="Leitura da descrição">
+              <div class="description-audio-buttons">
+                <button id="description-listen" type="button" aria-controls="longDescription" aria-describedby="description-audio-status" disabled>Ouvir descrição</button>
+                <button id="description-pause" type="button" aria-controls="longDescription" disabled>Pausar</button>
+                <button id="description-stop" type="button" aria-controls="longDescription" disabled>Parar</button>
+              </div>
+              <p id="description-audio-status" class="description-audio-status" role="status" aria-live="polite" aria-atomic="true">A leitura depende de uma voz em português disponível no navegador. A descrição está em texto abaixo.</p>
+            </div>
             <p id="longDescription"></p>
           </article>
 

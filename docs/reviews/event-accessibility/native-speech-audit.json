@@ -1,0 +1,141 @@
+{
+  "date": "2026-10-09T09:29:19.211Z",
+  "headless": true,
+  "audioHeardByHuman": false,
+  "results": [
+    {
+      "browser": "bundled Chromium",
+      "platform": "win32",
+      "states": [
+        {
+          "action": "initial",
+          "state": "idle",
+          "message": "Leitura com voz local em português. Use Ouvir descrição para começar.",
+          "speaking": false,
+          "paused": false,
+          "pending": false
+        },
+        {
+          "action": "listen",
+          "state": "playing",
+          "message": "Lendo a descrição.",
+          "speaking": true,
+          "paused": false,
+          "pending": false
+        },
+        {
+          "action": "pause",
+          "state": "paused",
+          "message": "Leitura pausada. Use Continuar descrição para retomar.",
+          "speaking": true,
+          "paused": true,
+          "pending": false
+        },
+        {
+          "action": "resume",
+          "state": "playing",
+          "message": "Lendo a descrição.",
+          "speaking": true,
+          "paused": false,
+          "pending": false
+        },
+        {
+          "action": "stop",
+          "state": "idle",
+          "message": "Leitura parada.",
+          "speaking": false,
+          "paused": false,
+          "pending": false
+        }
+      ],
+      "version": "140.0.7339.16",
+      "available": true,
+      "voices": [
+        {
+          "name": "Microsoft Daniel - Portuguese (Brazil)",
+          "lang": "pt-BR",
+          "local": true,
+          "default": true
+        },
+        {
+          "name": "Microsoft Maria - Portuguese (Brazil)",
+          "lang": "pt-BR",
+          "local": true,
+          "default": false
+        }
+      ],
+      "afterNavigation": {
+        "speaking": false,
+        "paused": false,
+        "pending": false
+      }
+    },
+    {
+      "browser": "msedge",
+      "platform": "win32",
+      "states": [
+        {
+          "action": "initial",
+          "state": "idle",
+          "message": "Leitura com voz local em português. Use Ouvir descrição para começar.",
+          "speaking": false,
+          "paused": false,
+          "pending": false
+        },
+        {
+          "action": "listen",
+          "state": "playing",
+          "message": "Lendo a descrição.",
+          "speaking": true,
+          "paused": false,
+          "pending": false
+        },
+        {
+          "action": "pause",
+          "state": "paused",
+          "message": "Leitura pausada. Use Continuar descrição para retomar.",
+          "speaking": true,
+          "paused": true,
+          "pending": false
+        },
+        {
+          "action": "resume",
+          "state": "playing",
+          "message": "Lendo a descrição.",
+          "speaking": true,
+          "paused": false,
+          "pending": false
+        },
+        {
+          "action": "stop",
+          "state": "idle",
+          "message": "Leitura parada.",
+          "speaking": false,
+          "paused": false,
+          "pending": false
+        }
+      ],
+      "version": "154.0.4258.62",
+      "available": true,
+      "voices": [
+        {
+          "name": "Microsoft Daniel - Portuguese (Brazil)",
+          "lang": "pt-BR",
+          "local": true,
+          "default": true
+        },
+        {
+          "name": "Microsoft Maria - Portuguese (Brazil)",
+          "lang": "pt-BR",
+          "local": true,
+          "default": false
+        }
+      ],
+      "afterNavigation": {
+        "speaking": false,
+        "paused": false,
+        "pending": false
+      }
+    }
+  ]
+}

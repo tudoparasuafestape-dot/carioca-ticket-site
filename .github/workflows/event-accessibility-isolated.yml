@@ -1,0 +1,46 @@
+name: Event accessibility (isolated fixtures)
+on:
+  pull_request:
+    paths:
+      - 'evento/index.html'
+      - 'evento-v2/index.html'
+      - 'assets/event-accessibility.css'
+      - 'assets/event-description-speech.js'
+      - 'assets/home-theme.js'
+      - 'tests/event-accessibility/**'
+      - 'tests/event-accessibility-preview.cjs'
+      - 'playwright.event-accessibility.config.cjs'
+      - '.github/workflows/event-accessibility-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  accessibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --config=playwright.event-accessibility.config.cjs
+      - name: Current home against synthetic fixtures only
+        env:
+          CT_BASE_URL: http://127.0.0.1:4174
+          CT_EXPECTED_HOST: 127.0.0.1
+          CT_BRANCH_MODE: '1'
+        run: npx playwright test --config=playwright.home.config.cjs
+      - name: Current public catalog against intercepted fixtures only
+        run: npx playwright test --config=playwright.catalog-isolated.config.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: event-accessibility-review
+          path: |
+            test-results/event-accessibility*
+            docs/reviews/event-accessibility/screenshots/
+            test-results/home-stage1*
+            test-results/catalog-isolated*
