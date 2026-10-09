@@ -22,7 +22,9 @@ http.createServer((req, res) => {
       if (params.get('metodo') !== 'ctEventosPublicosListarPROD' || params.get('argsJson') !== '[]' || params.get('ctMinhaCariocaAction') !== 'publicRpc')
         return send(res, 403, 'text/plain', 'Transactional calls are blocked');
       const scenario = new URL(req.headers.referer || origin).searchParams.get('scenario');
-      const rows = scenario === 'missing' ? events.map(row => ({ ...row, visual: {} })) : events;
+      const amount = Math.min(15, Math.max(1, Number(new URL(req.headers.referer || origin).searchParams.get('count')) || 2));
+      const demo = Array.from({ length: amount }, (_, i) => ({ ...events[i % events.length], id: 'PREVIEW-RAIL-' + (i + 1), nome: events[i % events.length].nome + ' ' + (i + 1) }));
+      const rows = scenario === 'missing' ? demo.map(row => ({ ...row, visual: {} })) : demo;
       const result = scenario === 'error' ? { sucesso: false } : { sucesso: true, eventos: scenario === 'empty' ? [] : rows };
       const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: true, resultado: result };
       return send(res, 200, 'text/html; charset=utf-8', `<script>parent.postMessage(${JSON.stringify(payload).replace(/</g, '\\u003c')}, ${JSON.stringify(origin)})</script>`);
@@ -40,7 +42,7 @@ http.createServer((req, res) => {
     html = html.replace(/<link rel="prefetch"[^>]+>/, '');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(home\.css|home-theme\.js|home-navigation\.js|home-i18n\.js|home-controls\.js|home-advertisements\.js|home-ad-(tpssf|priscila)\.png|home-municipalities\.json|public-event-catalog\.js|carioca-ticket-(simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(home\.css|home-theme\.js|home-navigation\.js|home-i18n\.js|home-controls\.js|home-advertisements\.js|home-event-rail\.js|public-share\.(js|css)|home-ad-(tpssf|priscila)\.png|home-municipalities\.json|public-event-catalog\.js|carioca-ticket-(simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/html; charset=utf-8', '<h1>Destino bloqueado no preview</h1><p>Este ambiente permite revisar somente a home com dados sintéticos.</p><a href="/">Voltar à home</a>');
   const file = path.join(ROOT, url.pathname.slice(1));
   let body = fs.readFileSync(file);

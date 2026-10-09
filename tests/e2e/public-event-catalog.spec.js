@@ -58,16 +58,20 @@ test('a single public catalog appears early, with complete covers and validated 
   await expect(page.locator('#catalog-status')).toBeHidden();
   for (const event of rows) {
     const card = page.locator(`[data-event-id="${event.id}"]`);
+    // Navigate the horizontal feature to inspect each original, accessible card.
+    if (event !== rows[0]) await page.locator('#event-rail-next').click();
+    await expect(card).not.toHaveAttribute('inert', '');
     await expect(card.getByRole('heading')).toHaveText(event.nome);
     await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
     await expect(card.getByRole('link', { name: 'Ver evento', exact: true })).toHaveAttribute('href', '/evento/?evento=' + event.id);
   }
+  await page.locator('#event-rail-previous').click();
+  await expect(page.locator('#events-grid')).toHaveAttribute('data-active-index', '0');
   await expect(page.locator('.catalog-card').first().locator('img')).toBeVisible();
   expect(await page.locator('.catalog-card').first().locator('img').evaluate(img => getComputedStyle(img).objectFit)).toBe('contain');
   const cover = await page.locator('.catalog-photo').first().boundingBox();
-  // Mobile now exposes a labeled location field and a full-width search action.
-  // The first cover must still start in the first viewport, before 480 CSS px.
-  expect(cover.y).toBeLessThan(testInfo.project.name === 'mobile-chromium' ? 480 : 320);
+  // Search, share and explicit rotation controls remain above a cover visible in the first viewport.
+  expect(cover.y).toBeLessThan(page.viewportSize().height - 160);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(page.locator('.catalog-card')).not.toContainText(['R$']);
   await expect(page.locator('#producerPortalCta')).toHaveAttribute('href', '/produtor/');
@@ -87,13 +91,15 @@ test('a single public catalog appears early, with complete covers and validated 
 const threeEvents = [...rows, { id: 'EVT-LOCAL-THIRD', nome: 'Evento fictício — teste local 3',
   visual: { capaUrl: '/test-wide-cover.svg', categoria: 'Somente teste', descricaoCurta: 'Fixture local para conferir carregamento e bordas da capa.' } }];
 
-test('third event lazy cover loads after scrolling without hiding the image from layout', async ({ page }, testInfo) => {
+test('third event lazy cover loads after horizontal navigation without hiding the image from layout', async ({ page }, testInfo) => {
   await fixture(page, { result: { sucesso: true, eventos: threeEvents } });
   await expect(page.locator('.catalog-card')).toHaveCount(3);
   const card = page.locator('[data-event-id="EVT-LOCAL-THIRD"]');
   const image = card.locator('img');
   await expect(image).toHaveAttribute('loading', 'lazy');
-  await card.scrollIntoViewIfNeeded();
+  await page.locator('#events-grid').focus();
+  await page.keyboard.press('End');
+  await expect(page.locator('#events-grid')).toHaveAttribute('data-active-index', '2');
   await expect.poll(() => image.evaluate(img => img.complete && img.naturalWidth === 1882), { timeout: 4000 }).toBe(true);
   await expect(image).toBeVisible();
   await expect(card.locator('.catalog-image-fallback')).toBeHidden();
@@ -143,7 +149,9 @@ test('missing and broken images preserve titles and purchase links', async ({ pa
   await fixture(page, { result: { sucesso: true, eventos: [rows[1], { ...rows[0], visual: { capaUrl: '/missing-cover.jpg' } }] } });
   await expect(page.locator('.catalog-card')).toHaveCount(2);
   await expect(page.locator('.catalog-image-fallback')).toHaveText(['Capa indisponível', 'Capa indisponível']);
-  await expect(page.getByRole('link', { name: /^Comprar ingresso:/ })).toHaveCount(2);
+  await expect(page.locator('.catalog-actions .btn-primary')).toHaveCount(2);
+  await page.locator('#event-rail-next').click();
+  await expect(page.locator('.catalog-card').nth(1).getByRole('link', { name: /^Comprar ingresso:/ })).toBeVisible();
   await expect(page.locator('#catalog-retry')).toBeHidden();
 });
 

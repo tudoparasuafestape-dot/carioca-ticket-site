@@ -35,25 +35,33 @@
       caption.append(title, description, cta); slide.append(image, caption); stage.appendChild(slide);
       image.addEventListener('error', function () {
         failed = true; clearTimeout(timer); show(slides.indexOf(own), false);
-        controls.hidden = true; status.textContent = '';
+        controls.hidden = true; playback.hidden = true; status.textContent = '';
       });
     });
     stage.appendChild(own);
     var controls = document.createElement('div'); controls.className = 'ad-controls';
     var previous = document.createElement('button'), pause = document.createElement('button'), next = document.createElement('button');
-    [previous, pause, next].forEach(function (button) { button.type = 'button'; controls.appendChild(button); });
+    [pause, previous, next].forEach(function (button) { button.type = 'button'; controls.appendChild(button); });
     previous.textContent = '←'; next.textContent = '→';
     var status = document.createElement('span'); status.className = 'sr-only'; status.setAttribute('role', 'status');
-    slot.replaceChildren(stage, label, controls, status); slot.classList.add('ad-rotation'); slot.hidden = false;
+    var playback = document.createElement('span'); playback.className = 'ad-playback-state';
+    // Controls precede rotating links in keyboard order while remaining below the artwork visually.
+    slot.replaceChildren(controls, stage, label, playback, status); slot.classList.add('ad-rotation'); slot.hidden = false;
     slot.removeAttribute('aria-labelledby'); slot.dataset.i18nAriaLabel = 'adLabel';
     var slides = Array.from(stage.children), index = 0, paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var pointer = false, timer, visible = false;
+    // Pick once for this page visit; no identifier, storage, impression beacon or reshuffle.
+    var initial = Math.floor(Math.random() * slides.length);
+    var pointer = false, timer, visible = false, toggleIntent = null;
     function labels() {
       H.applyTranslations(slot);
       slot.setAttribute('aria-label', H.t('adLabel'));
       if (status.textContent) status.textContent = H.t('adPosition', { n: index + 1, total: slides.length });
       previous.dataset.i18nAriaLabel = 'adPrevious'; next.dataset.i18nAriaLabel = 'adNext'; pause.dataset.i18n = paused ? 'adPlay' : 'adPause';
       H.applyTranslations(controls); }
+    function playbackLabel() {
+      playback.dataset.i18n = paused || pointer || !visible || document.hidden || (slot.contains(document.activeElement) && document.activeElement !== pause) ? 'adPausedState' : 'adPlayingState';
+      H.applyTranslations(playback);
+    }
     function show(value, manual) {
       index = (value + slides.length) % slides.length;
       slides.forEach(function (slide, number) { slide.hidden = number !== index; slide.inert = number !== index; });
@@ -61,22 +69,27 @@
     }
     function schedule() {
       clearTimeout(timer);
-      if (failed || paused || pointer || !visible || document.hidden || slot.contains(document.activeElement)) return;
+      pause.disabled = reduced.matches;
+      playbackLabel();
+      if (failed || paused || reduced.matches || pointer || !visible || document.hidden || (slot.contains(document.activeElement) && document.activeElement !== pause)) return;
       timer = setTimeout(function () { show(index + 1, false); schedule(); }, 5000);
     }
     previous.addEventListener('click', function () { show(index - 1, true); schedule(); });
     next.addEventListener('click', function () { show(index + 1, true); schedule(); });
-    pause.addEventListener('click', function () { paused = !paused; labels(); schedule(); });
-    slot.addEventListener('mouseenter', function () { pointer = true; schedule(); });
-    slot.addEventListener('mouseleave', function () { pointer = false; schedule(); });
-    slot.addEventListener('focusin', schedule);
+    pause.addEventListener('pointerdown', function () { toggleIntent = !paused; });
+    pause.addEventListener('keydown', function () { toggleIntent = null; });
+    pause.addEventListener('click', function () { paused = toggleIntent === null ? !paused : toggleIntent; toggleIntent = null; if (reduced.matches) paused = true; labels(); schedule(); });
+    slot.addEventListener('pointerenter', function (event) { if (event.pointerType === 'mouse') { pointer = true; schedule(); } });
+    slot.addEventListener('pointerleave', function (event) { if (event.pointerType === 'mouse') { pointer = false; schedule(); } });
+    stage.addEventListener('pointerdown', function () { paused = true; labels(); schedule(); });
+    slot.addEventListener('focusin', function () { paused = true; labels(); schedule(); });
     slot.addEventListener('focusout', function () { setTimeout(schedule, 0); });
     document.addEventListener('visibilitychange', schedule);
-    document.addEventListener('ct:language', labels);
+    document.addEventListener('ct:language', function () { labels(); playbackLabel(); });
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-    reduced.addEventListener('change', function () { if (reduced.matches) { paused = true; labels(); schedule(); } });
-    new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; schedule(); }).observe(slot);
-    show(0, false); labels();
+    reduced.addEventListener('change', function () { if (reduced.matches) paused = true; labels(); schedule(); });
+    new IntersectionObserver(function (entries) { visible = entries[0].intersectionRatio >= .25; schedule(); }, { threshold: .25 }).observe(slot);
+    show(initial, false); labels();
   }
   H.mountAdvertisements = mount;
   mount(house, campaigns.primary);

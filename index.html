@@ -27,10 +27,11 @@
   <title data-i18n="pageTitle">Carioca Ticket | Ingressos e tecnologia para eventos</title>
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
   <script src="/assets/home-theme.js?v=20261008-stage1"></script>
-  <link rel="stylesheet" href="/assets/home.css?v=20261009-ads1">
+  <link rel="stylesheet" href="/assets/home.css?v=20261009-card-share1">
   <noscript><style>.ct-home .event-search-form,.ct-home #catalog-status,.ct-home #event-count,.ct-home .js-control{display:none}</style></noscript>
   <link rel="prefetch" href="/produtor/" as="document">
   <script src="/pwa-register.js" defer></script>
+  <link rel="stylesheet" href="/assets/public-share.css?v=20261009-share1">
 </head>
 <body class="ct-home">
   <a class="skip-link" href="#conteudo" data-i18n="skip">Pular para os eventos</a>
@@ -70,7 +71,7 @@
   </dialog>
   <main id="conteudo" tabindex="-1">
     <section id="eventos" class="public-events shell" aria-labelledby="public-events-title">
-      <div id="todos-eventos" class="public-events-heading"><div><span data-i18n="agenda" class="eyebrow">Agenda Carioca Ticket</span><h1 data-i18n="headline" id="public-events-title">Seu próximo encontro está aqui.</h1></div>
+      <div id="todos-eventos" class="public-events-heading"><div><div class="home-intro-top"><span data-i18n="agenda" class="eyebrow">Agenda Carioca Ticket</span><div class="ct-public-share" data-public-share="home" hidden><button type="button"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16V3m-5 5 5-5 5 5M5 13v7h14v-7"/></svg><span class="sr-only" data-share-label data-i18n="shareSite">Compartilhar site</span></button><p role="status"></p><input type="text" readonly hidden aria-label="Link público para compartilhar" data-i18n-aria-label="shareLink"></div></div><h1 data-i18n="headline" id="public-events-title">Seu próximo encontro está aqui.</h1></div>
         <form id="event-search-form" class="event-search-form" role="search">
           <div class="search-field"><label for="event-search-input" data-i18n="searchLabel">Pesquisar eventos</label><input id="event-search-input" type="search" autocomplete="off" data-i18n-placeholder="searchPlaceholder" placeholder="Nome, categoria ou local"></div>
           <div class="search-field"><label for="event-location-input" data-i18n="locationLabel">Cidade ou local</label><input id="event-location-input" disabled class="location-trigger" type="text" readonly value="Todos os lugares" aria-haspopup="dialog"></div>
@@ -81,7 +82,17 @@
       <div id="catalog-filters" hidden><div class="period-filters"><button type="button" data-period="all" aria-pressed="true" data-i18n="allDates">Todos</button><button type="button" data-period="week" aria-pressed="false" data-i18n="thisWeek">Esta semana</button><button type="button" data-period="weekend" aria-pressed="false" data-i18n="weekend">Fim de semana</button></div><p id="period-dates"></p><button class="text-button" type="button" id="reset-filters" data-i18n="clearFilters">Limpar filtros</button></div>
       <p id="active-filters" class="active-filters" hidden></p><p id="event-search-feedback" class="catalog-feedback" aria-live="polite"></p>
       <div id="catalog-status" class="catalog-state" role="status"><p id="catalog-status-message">Carregando eventos.</p><button id="catalog-retry" class="btn btn-secondary" type="button" hidden data-i18n="retry">Tentar novamente</button></div>
-      <div id="events-grid" class="events-grid public-events-grid" aria-busy="true"></div>
+      <div id="event-feature" class="event-feature" role="region" data-i18n-aria-label="eventFeature" aria-label="Destaque de eventos">
+        <div id="event-rail-controls" class="event-rail-controls" hidden>
+          <button id="event-rail-pause" type="button" data-i18n="railPause">Pausar rotação</button>
+          <span id="event-rail-position"></span>
+          <button id="event-rail-previous" type="button" data-i18n-aria-label="railPrevious" aria-label="Evento anterior" aria-controls="events-grid"><span aria-hidden="true">←</span></button>
+          <button id="event-rail-next" type="button" data-i18n-aria-label="railNext" aria-label="Próximo evento" aria-controls="events-grid"><span aria-hidden="true">→</span></button>
+        </div>
+        <div id="events-grid" class="events-grid public-events-grid" aria-busy="true"></div>
+        <p id="event-rail-help" class="event-rail-help" data-i18n="railHelp" hidden>Deslize para os lados ou use as setas para explorar.</p>
+        <span id="event-rail-announcement" class="sr-only" role="status"></span>
+      </div>
       <div id="no-events" class="no-events" hidden><strong data-i18n="noResults">Nenhum evento encontrado.</strong><p data-i18n="noResultsHelp">Mantenha sua escolha ou limpe os filtros para ver outros eventos.</p><button id="clear-event-search" type="button" data-i18n="clearSearch">Limpar pesquisa</button></div>
       <p data-i18n="producerOriginal" id="producer-language-note" class="source-note" hidden>Nomes e descrições dos eventos são apresentados no idioma original do organizador.</p>
       <div id="collections" class="collections" hidden><h2 data-i18n="collections">Explore por categoria</h2><div id="category-choices" class="category-choices"></div></div>
@@ -102,11 +113,14 @@
     <div><h2 data-i18n="legal" class="footer-title">Legal</h2><a href="/termos/" ><span data-i18n="terms">Termos de Uso</span></a><a href="/privacidade/" ><span data-i18n="privacy">Política de Privacidade</span></a><a href="/cancelamento-reembolso/" ><span data-i18n="refunds">Cancelamento e reembolso</span></a><a href="/ajuda/" ><span data-i18n="helpCta">Abrir Central de Ajuda</span></a></div>
     <div><h2 data-i18n="contact" class="footer-title">Contato</h2><a href="mailto:contato@cariocaticket.com.br">contato@cariocaticket.com.br</a><a href="https://instagram.com/cariocaticketbr" target="_blank" rel="noopener">@cariocaticketbr</a><a href="/sobre/" ><span data-i18n="about">Sobre a Carioca Ticket</span></a><span>cariocaticket.com.br</span></div>
     </div><div class="shell footer-bottom" data-i18n="copyright">© 2026 Carioca Ticket. Todos os direitos reservados.</div></footer>
-  <script src="/assets/home-i18n.js?v=20261009-i18n2" defer></script>
+  <script src="/assets/home-i18n.js?v=20261009-card-share1" defer></script>
   <script src="/assets/home-controls.js?v=20261009-i18n2" defer></script>
-  <script src="/assets/home-advertisements.js?v=20261009-ads1" defer></script>
+  <script src="/assets/home-advertisements.js?v=20261009-rail1" defer></script>
   <script src="/assets/home-navigation.js?v=20261009-i18n2" defer></script>
   <script src="/assets/public-event-catalog.js?v=20261009-i18n2" defer></script>
+  <script src="/assets/home-event-rail.js?v=20261009-card-share1" defer></script>
+  <script src="/assets/public-share.js?v=20261009-card-share1" defer></script>
   <script src="/assets/ct-analytics.js?v=20260923a" defer></script>
 </body>
 </html>
+

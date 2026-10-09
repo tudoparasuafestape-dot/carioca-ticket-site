@@ -1,0 +1,38 @@
+[
+  {
+    "width": 320,
+    "colorScheme": "light",
+    "blocked": [],
+    "errors": []
+  },
+  {
+    "width": 320,
+    "colorScheme": "dark",
+    "blocked": [],
+    "errors": []
+  },
+  {
+    "width": 412,
+    "colorScheme": "light",
+    "blocked": [],
+    "errors": []
+  },
+  {
+    "width": 412,
+    "colorScheme": "dark",
+    "blocked": [],
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "colorScheme": "light",
+    "blocked": [],
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "colorScheme": "dark",
+    "blocked": [],
+    "errors": []
+  }
+]
