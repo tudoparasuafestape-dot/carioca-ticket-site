@@ -2,6 +2,13 @@ const { test, expect } = require('@playwright/test');
 const { fixture, events } = require('./rail-fixture.cjs');
 const ORIGIN = 'http://127.0.0.1:4174';
 const PUBLIC = 'https://cariocaticket.com.br/evento/?evento=';
+function expected(event, cta='Confira este evento na Carioca Ticket.') {
+  const clean = value => typeof value === 'string' ? value.trim() : '';
+  const date = [clean(event.data), clean(event.horario)].filter(Boolean).join(' · ');
+  const venue = [clean(event.local), clean(event.cidade), clean(event.uf)].filter(Boolean).join(' · ');
+  return { title:event.nome, text:[event.nome, date, venue, cta].filter(Boolean).join(' · '), url:PUBLIC + encodeURIComponent(event.id) };
+}
+function copied(event) { const payload = expected(event); return payload.text + ' ' + payload.url; }
 function rows(count) {
   return Array.from({ length:count }, (_, i) => ({ ...events[i % 2], id:'SHARE-EVENT-' + (i + 1), nome:events[i % 2].nome + ' ' + (i + 1) }));
 }
@@ -49,14 +56,14 @@ for (const count of [1, 2, 15]) for (const width of [320, 412, 1440]) {
       expect(size.width).toBeGreaterThanOrEqual(44); expect(size.height).toBeGreaterThanOrEqual(44);
       expect(await button.evaluate(node => !!node.closest('a'))).toBe(false);
       await button.click();
-      expect(await page.evaluate(() => shareCalls.at(-1))).toEqual({ title:data[i].nome, url:PUBLIC + data[i].id });
+      expect(await page.evaluate(() => shareCalls.at(-1))).toEqual(expected(data[i]));
       expect(page.url()).toBe(before);
       await expect(page.locator('.catalog-card:not([inert]) .btn-primary')).toHaveAttribute('href', '/checkout/?evento=' + data[i].id);
       if (count > 1) { await page.locator('#event-rail-next').click(); await settled(page, (i+1) % count); }
     }
     if (count > 1) {
       await current(page).locator('button').click();
-      expect(await page.evaluate(() => shareCalls.at(-1))).toEqual({ title:data[0].nome, url:PUBLIC + data[0].id });
+      expect(await page.evaluate(() => shareCalls.at(-1))).toEqual(expected(data[0]));
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await page.evaluate(() => sessionStorage.getItem('share-session-fixture'))).toBe('unchanged');
@@ -80,14 +87,14 @@ for (const mode of ['absent', 'unsupported', 'can-share-throws', 'share-fails', 
       await expect(host.locator('input')).toBeHidden();
       expect(await page.evaluate(() => copies)).toEqual([]);
     } else if (mode === 'copy-fails') {
-      await expect(host.locator('input')).toHaveValue(PUBLIC + data[0].id);
+      await expect(host.locator('input')).toHaveValue(copied(data[0]));
       await expect(host.locator('input')).toBeVisible();
       await host.locator('input').click();
       expect(await host.locator('input').evaluate(node => node.selectionStart === 0 && node.selectionEnd === node.value.length)).toBe(true);
       await expect(host.locator('[role="status"]')).toContainText('Não foi possível copiar.');
     } else {
-      expect(await page.evaluate(() => copies)).toEqual([PUBLIC + data[0].id]);
-      await expect(host.locator('[role="status"]')).toHaveText('Link copiado.');
+      expect(await page.evaluate(() => copies)).toEqual([copied(data[0])]);
+      await expect(host.locator('[role="status"]')).toHaveText('Mensagem copiada.');
     }
     if (['absent', 'unsupported', 'can-share-throws', 'copy-fails'].includes(mode)) expect(await page.evaluate(() => shareCalls)).toEqual([]);
     await expect(page.locator('#event-rail-pause')).toHaveText('Retomar rotação');
@@ -151,7 +158,7 @@ test('automatic last-to-first loop shares the first original, inactive cards can
   await page.locator('.catalog-card[inert] [data-public-share="event"] button').dispatchEvent('click');
   expect(await page.evaluate(() => shareCalls)).toEqual([]);
   await current(page).locator('button').click();
-  expect(await page.evaluate(() => shareCalls)).toEqual([{ title:data[0].nome, url:PUBLIC + data[0].id }]);
+  expect(await page.evaluate(() => shareCalls)).toEqual([expected(data[0])]);
 });
 
 test('touch share is separate from swiping and buy, with original title and safely encoded ID', async ({ browser }) => {
@@ -160,7 +167,7 @@ test('touch share is separate from swiping and buy, with original title and safe
   const data = [{ ...events[0], id:'PUBLIC /?&=# evento', nome:'Festa <especial> & amigos' }, ...rows(1)];
   const { state } = await prepare(page, 2, 'native', data);
   await current(page).locator('button').tap();
-  expect(await page.evaluate(() => shareCalls)).toEqual([{ title:data[0].nome, url:PUBLIC + encodeURIComponent(data[0].id) }]);
+  expect(await page.evaluate(() => shareCalls)).toEqual([expected(data[0])]);
   await settled(page, 0); expect(page.url()).toBe(ORIGIN + '/?ref=PRIVATE-FIXTURE&token=DO-NOT-SHARE#filters');
   await page.locator('.catalog-card:not([inert]) .catalog-photo').scrollIntoViewIfNeeded();
   const target = await page.locator('.catalog-card:not([inert]) .catalog-photo').boundingBox();
@@ -182,5 +189,42 @@ test('language changes retain the event source name and no duplicate controls af
   await expect(current(page).locator('[data-share-event-title]')).toHaveAttribute('lang', 'pt-BR');
   await expect(page.locator('[data-public-share="event"]')).toHaveCount(2);
   await current(page).locator('button').click();
-  expect(await page.evaluate(() => shareCalls)).toEqual([{ title:data[0].nome, url:PUBLIC + data[0].id }]);
+  expect(await page.evaluate(() => shareCalls)).toEqual([expected(data[0], 'Check out this event on Carioca Ticket.')]);
+});
+
+for (const [locale, cta, label, feedback] of [
+  ['pt-BR', 'Confira este evento na Carioca Ticket.', 'Mensagem do evento para compartilhar', 'Mensagem copiada.'],
+  ['en-US', 'Check out this event on Carioca Ticket.', 'Event message to share', 'Message copied.'],
+  ['es', 'Descubre este evento en Carioca Ticket.', 'Mensaje del evento para compartir', 'Mensaje copiado.'],
+  ['zh-Hans', '在 Carioca Ticket 查看此活动。', '用于分享的活动消息', '消息已复制。']
+]) {
+  test(`rich event message is localized and copied intact / ${locale}`, async ({ page }) => {
+    const { data, state } = await prepare(page, 1, 'absent');
+    await page.locator('#home-language').selectOption(locale, { force:true });
+    const host = current(page);
+    await host.locator('button').click();
+    const payload = expected(data[0], cta);
+    expect(await page.evaluate(() => copies)).toEqual([payload.text + ' ' + payload.url]);
+    await expect(host.locator('input')).toHaveAttribute('aria-label', label);
+    await expect(host.locator('[role="status"]')).toHaveText(feedback);
+    expect(state.errors).toEqual([]); expect(state.blocked).toEqual([]);
+  });
+}
+
+test('missing facts stay absent and unrelated private fields never enter the message', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width:320, height:915 });
+  const data = [{ id:'PUBLIC-safe', nome:'Festa <img src=x onerror=alert(1)> & amigos', data:'', horario:null, local:undefined, cidade:'', uf:'', token:'SECRET', convite:'PRIVATE-INVITE', links:{ evento:'https://invalid.example/?token=SECRET' } }];
+  const { state } = await prepare(page, 1, 'copy-fails', data);
+  const host = current(page);
+  await host.locator('button').click();
+  await expect(host.locator('input')).toHaveValue(copied(data[0]));
+  await expect(host.locator('input')).toBeVisible();
+  expect(await host.locator('input').inputValue()).not.toMatch(/SECRET|PRIVATE|não informado|undefined|null/);
+  expect(await page.locator('.catalog-title img').count()).toBe(0);
+  await host.locator('input').click();
+  expect(await host.locator('input').evaluate(node => node.selectionStart === 0 && node.selectionEnd === node.value.length)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(state.errors).toEqual([]); expect(state.blocked).toEqual([]);
+  await page.locator('#event-feature').scrollIntoViewIfNeeded();
+  await page.screenshot({ path:testInfo.outputPath('rich-share-fallback-320.png') });
 });
