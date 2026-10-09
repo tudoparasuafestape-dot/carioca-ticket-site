@@ -1,6 +1,6 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/public-isolated.cjs');
 
-const EXPECTED_HOST = process.env.CT_EXPECTED_HOST || 'cariocaticket.com.br';
+const EXPECTED_HOST = '127.0.0.1';
 const FORBIDDEN_HOSTS = ['script.google.com', 'googleusercontent.com', 'github.io'];
 
 async function assertOfficial(page) {
@@ -17,9 +17,9 @@ async function assertNoForbiddenVisibleLinks(page) {
   expect(bad, `Links visiveis apontando para hosts tecnicos: ${bad.join(', ')}`).toEqual([]);
 }
 
-test.describe('Entradas operacionais sem sessao', () => {
+test.describe('Entradas operacionais com fixtures sem sessao', () => {
   for (const route of ['/central/', '/produtor/', '/produtor/solicitar/', '/produtor/solicitacoes/', '/parceiro/', '/parceiro/admin/', '/fornecedor/', '/acessos/', '/cupons/', '/cupons/admin/', '/checkin/', '/consulta/', '/vendas/', '/bar/', '/eventos-v2/', '/fornecedores/', '/crm/', '/financeiro/', '/reembolsos/', '/saude-vendas/', '/relatorios/', '/comissionado/', '/comissoes/']) {
-    test(`${route} permanece no dominio oficial e nao quebra sem sessao`, async ({ page }) => {
+    test(`${route} permanece no dominio local e nao quebra sem sessao`, async ({ page }) => {
       const errors = [];
       page.on('response', response => {
         if (response.status() >= 500) errors.push(`${response.status()} ${response.url()}`);

@@ -1,4 +1,23 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, mockRoute, mockFailure } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctContaCariocaPayMasterContarPendentesPROD",
+      "ctContaCariocaPayMasterDecidirPROD",
+      "ctContaCariocaPayMasterDetalharPROD",
+      "ctContaCariocaPayMasterListarPROD",
+      "ctContaCariocaPayPortalResumoPROD",
+      "ctContaCariocaPayPortalSolicitarAntecipacaoPROD",
+      "ctContaCariocaPayPortalSolicitarSaquePROD",
+      "ctPortalProdutorRestaurarSessaoIsoladaPROD"
+    ],
+    "publicRpc": [
+      "ctEventosPublicosListarPROD"
+    ]
+  }
+};
 
 const BRANCH_MODE=String(process.env.CT_BRANCH_MODE||'')==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
@@ -16,7 +35,7 @@ function envelope(id,ok,resultado,erro=''){
 }
 
 async function installMock(page,state){
-  await page.route('https://script.google.com/**',async route=>{
+  await mockRoute(page, MOCK_CONTRACT,async route=>{
     const p=new URLSearchParams(route.request().postData()||'');
     const id=String(p.get('ctMinhaCariocaRequestId')||'');
     const action=String(p.get('ctMinhaCariocaAction')||'');
@@ -24,8 +43,11 @@ async function installMock(page,state){
     let args=[];try{args=JSON.parse(p.get('argsJson')||'[]')}catch(_){}
     let ok=true,resultado=null,erro='';
     try{
-      expect(action).toBe('portalRpc');
-      if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
+      expect(action).toBe(method==='ctEventosPublicosListarPROD'?'publicRpc':'portalRpc');
+      if(method==='ctEventosPublicosListarPROD'){
+        expect(args).toEqual([]);
+        resultado={sucesso:true,eventos:[]};
+      }else if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
         resultado={sucesso:true,autenticado:true,autorizado:true,usuario:{id:'USR-PROD'},produtores:[{id:'PROD-E2E',nomeFantasia:'Produtor E2E',eventos:[{id:'EVT-E2E',nome:'Evento E2E'}]}]};
       }else if(method==='ctContaCariocaPayPortalResumoPROD'){
         resultado={sucesso:true,autorizado:true,produtorId:'PROD-E2E',eventoId:'EVT-E2E',perfil:'PRODUTOR_TITULAR',financeiro:{configurado:true,status:'ATIVO',prontoParaOperar:true,movimentacaoRealHabilitada:false,aportePixHabilitado:false},vendas:{confirmado:1800},ledger:{saldoOperacional:1200,porOrigem:{}},solicitacoes:{antecipacoesAbertas:0,saquesAbertos:0,pagamentosPlanejados:0,pagamentosAguardandoAprovacao:0},antecipacao:{percentualMaximo:80,reservaPercentual:20,taxaCtPercentual:3.5,disponivelSolicitar:960,providerHabilitado:false},saque:{minimoSolicitacao:500,saldoAutoritativoDisponivel:true,saldoConta:1200,saldoDisponivel:1200,jaSolicitadoAberto:0,saldoFonte:'ASAAS',saldoEscopo:'CONTA_ASAAS_PRODUTOR',saldoErro:'',exigeAprovacaoMaster:true,movimentacaoAutomatica:false},atualizadoEm:'24/09/2026 20:00:00'};
@@ -57,7 +79,7 @@ async function installMock(page,state){
       }else{
         throw new Error('Método não previsto: '+method);
       }
-    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    }catch(e){ mockFailure(route, e);ok=false;erro=e&&e.message?e.message:String(e)}
     await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,ok,resultado,erro)+', "*");<\/script></body></html>'});
   });
 }
@@ -89,7 +111,7 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
 
   test('financeiro pendente bloqueia antecipacao e saque antes de qualquer mutacao',async({page})=>{
     const state={advanceCalls:0,withdrawCalls:0};
-    await page.route('https://script.google.com/**',async route=>{
+    await mockRoute(page, MOCK_CONTRACT,async route=>{
       const p=new URLSearchParams(route.request().postData()||'');
       const id=String(p.get('ctMinhaCariocaRequestId')||'');
       const method=String(p.get('metodo')||'');

@@ -1,6 +1,6 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/public-isolated.cjs');
 
-const EXPECTED_HOST = process.env.CT_EXPECTED_HOST || 'cariocaticket.com.br';
+const EXPECTED_HOST = '127.0.0.1';
 
 async function expectOfficial(page, path) {
   await expect.poll(() => {
@@ -13,8 +13,8 @@ async function expectOfficial(page, path) {
   }
 }
 
-test.describe('Parceiro CT publicado', () => {
-  test('programa publico consulta politica real sem criar cadastro', async ({ page }) => {
+test.describe('Parceiro CT com fixtures', () => {
+  test('programa publico consulta politica de fixture sem criar cadastro', async ({ page }) => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message || String(error)));
 
@@ -35,7 +35,7 @@ test.describe('Parceiro CT publicado', () => {
     const terms = page.locator('a[href="/parceiro/regulamento/"]').first();
     await expect(terms).toBeVisible();
 
-    expect(errors, 'Erros JavaScript no programa Parceiro CT publicado').toEqual([]);
+    expect(errors, 'Erros JavaScript no programa Parceiro CT com fixtures').toEqual([]);
   });
 
   test('Portal Parceiro existente continua disponível', async ({ page }) => {

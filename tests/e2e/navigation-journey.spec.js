@@ -1,11 +1,28 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, mockRoute, mockFailure } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctCentralAcessoObterCapacidadesPROD",
+      "ctCentralAcessoObterFirebaseConfigPROD",
+      "ctCentralOperacionalCriarHandoffPROD",
+      "ctMarcaOficialObterDataUriPROD",
+      "ctParceiroOnboardingAdminListarPROD",
+      "ctPortalProdutorRestaurarSessaoIsoladaPROD",
+      "ctProdutorOnboardingAdminContarPendentesPROD",
+      "ctProdutorOnboardingAdminListarPROD",
+      "logoutUsuarioCT2"
+    ]
+  }
+};
 
 const BRANCH_MODE=String(process.env.CT_BRANCH_MODE||'')==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 const ONE_PIXEL_PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zs3sAAAAASUVORK5CYII=';
 
 async function installMock(page,state){
-  await page.route('https://script.google.com/**', async route=>{
+  await mockRoute(page, MOCK_CONTRACT, async route=>{
     const request=route.request();
     const params=new URLSearchParams(request.postData()||'');
     const id=String(params.get('ctMinhaCariocaRequestId')||'');
@@ -57,7 +74,7 @@ async function installMock(page,state){
         default:
           throw new Error('Método não previsto no gate de jornada: '+method);
       }
-    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    }catch(e){ mockFailure(route, e);ok=false;erro=e&&e.message?e.message:String(e)}
     const payload=JSON.stringify({ctMinhaCariocaPost:true,id,ok,resultado:ok?resultado:null,erro:ok?'':erro}).replace(/</g,'\\u003c');
     await route.fulfill({
       status:200,
