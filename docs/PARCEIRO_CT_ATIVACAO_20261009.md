@@ -76,3 +76,23 @@ compartilhados com o produtor; recuperação ou absorção de valores já pagos
 depende de decisão financeira. Nenhum desses estados representa transferência,
 compensação automática ou autorização de pagamento. Nenhum schema ou calendário
 foi aplicado em produção.
+
+## Atualização da branch para revisão
+
+Foi incorporado, sem conflitos, o main `bb9f00564d11389aba069604f9fffe56f7f98de4`
+à branch própria, no commit `08db9cf002628c703b025972ae1c7c2089ef6b24`.
+Isso preserva integralmente as alterações concorrentes já publicadas no main,
+incluindo a home; elas não foram retrabalhadas no escopo Parceiro CT. O diff
+do PR contra o main permanece restrito ao parceiro e seus testes/documentação.
+Nenhum draft foi integrado ao main e nenhum site foi implantado por esta tarefa.
+
+No head integrado, os 14 cenários de ativação e 10 de painel passaram novamente
+com URL local explícita e todas as requisições mockadas. Os 41 contratos e
+`eventos-privados-v1.mjs` também passaram diretamente no Windows: o main
+incorporado já contém a correção de normalização LF/CRLF daquele teste.
+
+O artefato de migração preparado no backend #282 define a sequência futura:
+backup/schema autorizados na preparação do backend, backend validado e só
+depois site. O novo site mantém fallback neutro com backend anterior. Migração,
+publicação, calendário/data-base e recuperação de valores pagos continuam
+dependendo das autorizações/decisões registradas no plano do backend.
