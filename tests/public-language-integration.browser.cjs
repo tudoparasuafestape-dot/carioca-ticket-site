@@ -53,6 +53,8 @@ const catalog=[{id:'FIXTURE-LANGUAGE-1',nome:'Evento original',data:'10/10/2026'
     assert.equal(originalCard.text,catalog[0].visual.descricaoCurta);assert.equal(originalCard.lang,'pt-BR');
     assert.equal(await page.locator('footer a[href="/anuncie/"]').count(),1);
     const wa=await page.locator('#advertising-contact').getAttribute('href');assert.ok(wa.startsWith('https://wa.me/5581999311509'));
+    await page.evaluate(()=>scrollTo(0,0));
+    await page.screenshot({path:path.join(screenshots,'home-'+width+'-'+locale+'.png'),fullPage:true});
     await page.locator('footer a[href="/ajuda/"]').first().click();await page.waitForURL(origin+'/ajuda/');
     assert.equal(await page.locator('#public-language').inputValue(),locale);
     for(const name of pages){
@@ -77,9 +79,10 @@ const catalog=[{id:'FIXTURE-LANGUAGE-1',nome:'Evento original',data:'10/10/2026'
        // Compare exact meaningful PT source text nodes to the approved source set.
        const textNodes=await original.locator('.ct-legal-original-content').evaluate(e=>{const out=[],w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);while(w.nextNode()){const t=w.currentNode.textContent.trim();if(t)out.push(t);}return out;});
        for(const text of textNodes)assert.ok(sourceText.includes(text),'Unexpected changed legal original: '+text);
-       await page.screenshot({path:path.join(screenshots,name+'-'+width+'-'+locale+'.png'),fullPage:true});
       }
      }
+     await page.evaluate(()=>{scrollTo(0,0);return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
+     await page.screenshot({path:path.join(screenshots,name+'-'+width+'-'+locale+'.png'),fullPage:true});
      await page.reload();assert.equal(await page.locator('#public-language').inputValue(),locale);
      cases++;
     }
