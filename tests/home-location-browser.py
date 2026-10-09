@@ -14,6 +14,7 @@ def route(r):
   s=re.sub(r'<link[^>]+rel="(?:manifest|prefetch)"[^>]*>','',s)
   s=s.replace('</body>',''.join('<script src="/assets/'+n+'.js"></script>' for n in ['home-i18n','home-controls','home-location'])+'</body>')
   return r.fulfill(content_type='text/html',body=s)
+ if p=='/navigation-fixture':return r.fulfill(content_type='text/html',body='<!doctype html><title>Navigation fixture</title><p>Local fixture</p>')
  f=ROOT/p.lstrip('/')
  if f.is_file():return r.fulfill(content_type={'.json':'application/json','.css':'text/css','.js':'text/javascript'}.get(f.suffix,'text/plain'),body=f.read_bytes())
  return r.fulfill(status=200,content_type='image/svg+xml',body='<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>')
@@ -61,7 +62,20 @@ with sync_playwright() as pw:
  begin();page.evaluate('__geoOK()');page.wait_for_function('!!window.__fakeWorker');page.locator('#location-device-cancel').click();page.evaluate('__fakeWorker.onmessage({data:{status:"found",id:"2611606",uf:"PE"}})');assert page.locator('#location-device-confirm').is_hidden();assert page.evaluate('__fakeWorker.terminated')
  # Overall deadline, including an unanswered browser permission prompt.
  fresh();page.evaluate('() => { window.__realTimeout=setTimeout;window.setTimeout=(f,ms,...args)=>__realTimeout(f,ms===25000?30:ms,...args); }');begin();page.wait_for_function('!document.querySelector("#location-use-device").disabled');assert 'demorou' in page.locator('#location-device-status').inner_text();page.evaluate('__geoOK()');assert page.locator('#location-device-confirm').is_hidden()
+ # Real navigation: stale location work must not survive leaving or Back/Forward.
+ fresh();begin();page.goto(ORIGIN+'/navigation-fixture');requests.clear();page.go_back();page.wait_for_function('!!window.CTHome');page.wait_for_timeout(50)
+ assert not any('/geo-ibge-' in p for p in requests)
+ page.evaluate('if (__calls.length) __geoOK()');page.wait_for_timeout(50);assert page.locator('#location-device-confirm').is_hidden()
+ page.go_forward();requests.clear();page.go_back();page.wait_for_function('!!window.CTHome');page.wait_for_timeout(50)
+ assert not any('/geo-ibge-' in p for p in requests);assert page.locator('#location-device-confirm').is_hidden()
+ # Storage can be denied by privacy mode; confirm and manual selection still work.
+ context.close();context=browser.new_context(service_workers='block');context.route('**/*',route);context.add_init_script(INIT)
+ context.add_init_script("Object.defineProperty(window,'localStorage',{get(){throw new Error('storage denied')}})")
+ page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));fresh();begin();page.evaluate('__geoOK()');page.wait_for_function('!document.querySelector("#location-device-confirm").parentElement.hidden');page.locator('#location-device-confirm').click()
+ assert page.evaluate('CTHome.filters.location.id')=='2611606'
+ page.locator('.location-trigger').first.click();page.select_option('#location-uf','SP');page.locator('#city-search').fill('São Paulo');page.locator('[data-city-id="3550308"]').click();page.locator('#location-apply').click()
+ assert page.evaluate('CTHome.filters.location.id')=='3550308';assert not context.cookies()
  assert not errors,errors
  context.close();browser.close()
-(OUT/'results.json').write_text(json.dumps({'matrix':results,'errorCallbacks':True,'manualRace':True,'cancelRace':True,'workerRace':True,'keyboard':True,'permissionDeadline':True,'realGeolocationCalls':0,'externalRequests':0,'errors':errors},indent=2))
+(OUT/'results.json').write_text(json.dumps({'matrix':results,'errorCallbacks':True,'manualRace':True,'cancelRace':True,'workerRace':True,'keyboard':True,'permissionDeadline':True,'backForward':True,'storageDenied':True,'noCookies':True,'realGeolocationCalls':0,'externalRequests':0,'errors':errors},indent=2))
 print(json.dumps(results));print('All isolated browser checks passed.')
