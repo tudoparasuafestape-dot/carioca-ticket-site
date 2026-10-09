@@ -130,6 +130,12 @@
   $('location-close').addEventListener('click', function () { dialog.close(); });
   dialog.addEventListener('close', function () { if (opener) opener.focus(); });
   function applyPlace(place) { locationRevision++; H.filters.location = place; save('ct-home-location', place ? JSON.stringify(place) : null); H.changed(); dialog.close(); }
+  // Narrow bridge: geolocation still resolves against the shipped official city list.
+  H.location = { getCities: getCities, applySuggestion: function (id) {
+    var row = cities && cities.find(function (value) { return value[0] === id; });
+    if (!row || !dialog.open) return false;
+    applyPlace({ id: row[0], uf: row[1], name: row[2] }); return true;
+  } };
   $('location-reset').addEventListener('click', function () { applyPlace(null); });
   $('location-form').addEventListener('submit', function (event) { event.preventDefault(); if (!$('location-apply').disabled) applyPlace(pending || (uf.value ? { uf: uf.value } : null)); });
   // Saved municipality IDs are revalidated against the shipped official list.
@@ -165,4 +171,5 @@
   $('event-location-input').disabled = false;
   measureHeader(); updateLabels();
 }());
+
 
