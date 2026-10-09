@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/branch-isolated.cjs');
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const CODE = 'CT-P0-ACOES-001';
@@ -278,7 +278,7 @@ test.describe('P0 ações do ingresso digital', () => {
         });
         return;
       }
-      await route.continue();
+      await route.fallback();
     });
 
     await openTicket(page);

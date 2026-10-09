@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/branch-isolated.cjs');
 
 const STORAGE = 'CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 const EVENT_ACTIVE = 'EVT-E2E-ATIVO-20261011';

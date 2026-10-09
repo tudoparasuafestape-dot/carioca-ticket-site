@@ -1,4 +1,4 @@
-import {test,expect} from '@playwright/test';
+import {test,expect} from './helpers/branch-isolated.cjs';
 
 const BRANCH_MODE=String(process.env.CT_BRANCH_MODE||'')==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';

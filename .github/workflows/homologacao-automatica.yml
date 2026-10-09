@@ -38,11 +38,10 @@ jobs:
           node tests/producer-portal-performance.contract.mjs
           python3 tests/checkout_gratuito_contract.py
   publico-producao:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    name: Publico homologado ${{ matrix.viewport }}
+    name: Jornada publica com fixtures ${{ matrix.viewport }}
     needs: contratos
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -56,54 +55,21 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Aguardar publicacao da jornada publica candidata
-        shell: bash
-        run: |
-          for i in {1..72}; do
-            STAMP="$(date +%s)-$i"
-            HOME_BODY="$(curl -fsS --max-time 10 "https://cariocaticket.com.br/?deploy-check=$STAMP" || true)"
-            PARTNER_BODY="$(curl -fsS --max-time 10 "https://cariocaticket.com.br/parceiro/programa/?deploy-check=$STAMP" || true)"
-            HOME_OK=0
-            PARTNER_OK=0
-            if printf '%s' "$HOME_BODY" | grep -q 'id="producerPortalCta"'; then HOME_OK=1; fi
-            if printf '%s' "$PARTNER_BODY" | grep -q 'ctParceiroOnboardingConfigPublicaPROD'; then PARTNER_OK=1; fi
-            if [ "$HOME_OK" = "1" ] && [ "$PARTNER_OK" = "1" ]; then
-              echo "Jornada publica candidata propagada no dominio oficial."
-              exit 0
-            fi
-            echo "Aguardando propagacao da versao candidata... tentativa $i/72 (home=$HOME_OK parceiro=$PARTNER_OK)"
-            sleep 5
-          done
-          echo "::error::A versao candidata da jornada publica nao propagou no dominio oficial."
-          exit 1
-
-      - name: Testar jornada publica publicada
-        env:
-          CT_BASE_URL: https://cariocaticket.com.br
-          CT_EXPECTED_HOST: cariocaticket.com.br
-          CT_BRANCH_MODE: '0'
-        run: |
-          if [ "${{ matrix.viewport }}" = "desktop" ]; then
-            npx playwright test tests/e2e/public-journey.spec.js tests/e2e/partner-public-production.spec.js --project=desktop-chromium
-          else
-            npx playwright test tests/e2e/public-journey.spec.js tests/e2e/partner-public-production.spec.js --project=mobile-chromium
-          fi
-      - name: Guardar evidencias
-        if: failure()
+      - name: Executar cenarios preservados com rede bloqueada
+        run: npx playwright test tests/e2e/public-journey.spec.js tests/e2e/partner-public-production.spec.js --config=playwright.canary.config.cjs --project=${{ matrix.viewport }}-chromium
+      - name: Guardar resultados e decisoes de rede
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: publico-producao-${{ matrix.viewport }}
-          path: |
-            playwright-report/
-            test-results/
+          name: publico-producao-fixtures-${{ matrix.viewport }}
+          path: test-results/
           retention-days: 14
 
   operacional-producao:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    name: Operacional publicado ${{ matrix.viewport }}
+    name: Entradas operacionais com fixtures ${{ matrix.viewport }}
     needs: contratos
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -117,24 +83,14 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Auditar entradas operacionais publicadas
-        env:
-          CT_BASE_URL: https://cariocaticket.com.br
-          CT_EXPECTED_HOST: cariocaticket.com.br
-        run: |
-          if [ "${{ matrix.viewport }}" = "desktop" ]; then
-            npx playwright test tests/e2e/operational-entry.spec.js --project=desktop-chromium
-          else
-            npx playwright test tests/e2e/operational-entry.spec.js --project=mobile-chromium
-          fi
-      - name: Guardar evidencias
-        if: failure()
+      - name: Executar cenarios preservados com rede bloqueada
+        run: npx playwright test tests/e2e/operational-entry.spec.js --config=playwright.canary.config.cjs --project=${{ matrix.viewport }}-chromium
+      - name: Guardar resultados e decisoes de rede
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: operacional-producao-${{ matrix.viewport }}
-          path: |
-            playwright-report/
-            test-results/
+          name: operacional-producao-fixtures-${{ matrix.viewport }}
+          path: test-results/
           retention-days: 14
 
   facadas-branch:
@@ -176,7 +132,7 @@ jobs:
             npx playwright test tests/e2e/first-party-facades.spec.js tests/e2e/authenticated-operational.spec.js tests/e2e/critical-matrix.spec.js tests/e2e/partner-onboarding.spec.js tests/e2e/producer-onboarding.spec.js tests/e2e/producer-portal-first-paint.spec.js tests/e2e/navigation-journey.spec.js tests/e2e/checkin-journey.spec.js tests/e2e/supplier-journey.spec.js tests/e2e/buyer-journey.spec.js tests/e2e/coupon-journey.spec.js tests/e2e/backoffice-master.spec.js tests/e2e/producer-finance-master.spec.js tests/e2e/producer-finance-activation.spec.js tests/e2e/producer-event-governance.spec.js tests/e2e/producer-courtesy.spec.js tests/e2e/producer-campaign-reward.spec.js tests/e2e/producer-commissions.spec.js tests/e2e/politica-comercial.spec.js tests/e2e/p0-polling-checkout.spec.js tests/e2e/p0-ticket-open-after-payment.spec.js tests/e2e/p0-ticket-actions.spec.js tests/e2e/public-event-catalog.spec.js tests/e2e/era-approved-visual.spec.js --project=mobile-chromium
           fi
       - name: Guardar evidencias
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: facadas-branch-${{ matrix.viewport }}
@@ -197,11 +153,10 @@ jobs:
           retention-days: 14
 
   canario-real:
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    name: Canario real first-party ${{ matrix.viewport }}
+    name: Canarios funcionais com fixtures ${{ matrix.viewport }}
     needs: contratos
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -215,42 +170,62 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
-      - name: Aguardar publicacao dos canarios no dominio
-        shell: bash
-        run: |
-          for i in {1..48}; do
-            BODY_V2="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/evento-v2/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
-            BODY_LEGADO="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/evento/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
-            CHECKOUT_LEGADO="$(curl -fsS --max-time 10 'https://cariocaticket.com.br/checkout/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD' || true)"
-            if [[ "$BODY_V2" == *"checkout-v2"* ]] && \
-               [[ "$BODY_LEGADO" == *"/checkout/"* ]] && \
-               [[ "$CHECKOUT_LEGADO" == *"ctCheckoutPixPublico"* ]]; then
-              echo "Canarios v2 e legado publicados."
-              exit 0
-            fi
-            echo "Aguardando GitHub Pages propagar os canarios... tentativa $i/48"
-            sleep 5
-          done
-          echo "::error::O canario ainda nao foi publicado no dominio oficial."
-          exit 1
-
-      - name: Validar canario real sem criar cobranca
-        env:
-          CT_BASE_URL: https://cariocaticket.com.br
-          CT_EXPECTED_HOST: cariocaticket.com.br
-          CT_BRANCH_MODE: '0'
-        run: |
-          if [ "${{ matrix.viewport }}" = "desktop" ]; then
-            npx playwright test tests/e2e/canary-real.spec.js --project=desktop-chromium
-          else
-            npx playwright test tests/e2e/canary-real.spec.js --project=mobile-chromium
-          fi
-      - name: Guardar evidencias
-        if: failure()
+      - name: Oito canarios funcionais sem backend real
+        run: npx playwright test tests/e2e/canary-real.spec.js --config=playwright.canary.config.cjs --project=${{ matrix.viewport }}-chromium
+      - name: Guardar resultados e decisoes de rede
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: canario-real-${{ matrix.viewport }}
-          path: |
-            playwright-report/
-            test-results/
+          name: canarios-fixtures-${{ matrix.viewport }}
+          path: test-results/
+          retention-days: 14
+
+  seguranca-rede:
+    name: Isolamento de rede e contratos PWA
+    needs: contratos
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Controles negativos e PWA em loopback
+        run: |
+          node tests/safety/public-request-policy.test.cjs
+          node tests/safety/published-static.test.cjs
+          node tests/safety/network-isolation.browser.cjs
+          node tests/safety/telemetry-isolated.browser.cjs
+          node tests/safety/pwa-isolated.cjs
+      - name: Guardar captura local de telemetria
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: telemetria-isolada
+          path: test-results/telemetry-isolated.json
+          retention-days: 14
+
+  publicado-estatico:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    name: Publicado - somente arquivos estaticos sem RPC
+    needs: [contratos, publico-producao, operacional-producao, facadas-branch, canario-real, seguranca-rede]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Comparar arquivos publicados ao checkout sem executar JavaScript
+        run: node tests/safety/published-static.cjs --base-url https://cariocaticket.com.br
+      - name: Guardar hashes e metodos consultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publicado-estatico
+          path: test-results/published-static.json
           retention-days: 14

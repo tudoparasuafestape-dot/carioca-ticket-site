@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/branch-isolated.cjs');
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';

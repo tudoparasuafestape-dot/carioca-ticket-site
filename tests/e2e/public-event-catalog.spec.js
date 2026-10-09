@@ -1,5 +1,5 @@
 // Local-only: all pages, assets and RPC responses are intercepted. No production writes.
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/branch-isolated.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const ROOT = path.resolve(__dirname, '../..');

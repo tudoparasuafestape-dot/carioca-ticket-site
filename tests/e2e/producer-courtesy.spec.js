@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/branch-isolated.cjs';
 
 test.use({serviceWorkers:'block'});
 
@@ -147,7 +147,7 @@ function baseData(state){
 async function installMock(page,state){
   state.calls=[];
   // Only the local candidate and the mocked RPC transport may load. No real mutation can escape.
-  await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
+  await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.fallback():route.abort());
   await page.route('https://script.google.com/**',async route=>{
     const p=new URLSearchParams(route.request().postData()||'');
     const id=String(p.get('ctMinhaCariocaRequestId')||'');

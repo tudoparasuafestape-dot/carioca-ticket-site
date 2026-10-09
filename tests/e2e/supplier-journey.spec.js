@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/branch-isolated.cjs');
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const STORAGE = 'CT_PORTAL_FORNECEDOR_SESSION_V1';

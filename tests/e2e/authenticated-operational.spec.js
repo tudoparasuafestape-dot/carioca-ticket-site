@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/branch-isolated.cjs');
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
@@ -1474,7 +1474,7 @@ test.describe('Jornada operacional autenticada', () => {
   });
 
   test('Portal concede janela maior ao catalogo de eventos sem alterar timeout do painel', async ({ page }) => {
-    const html = await (await page.request.get('/produtor/')).text();
+    const html = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../produtor/index.html'), 'utf8').replace(/\r\n/g, '\n');
     expect(html).toContain("String(method||'').indexOf('CatalogoEventos')>=0\n      ) ? 45000 : 30000");
     expect(html).toContain("String(method||'').indexOf('CarregarPainel')>=0\n      ) ? 15000 : (");
   });
@@ -1484,7 +1484,7 @@ test.describe('Jornada operacional autenticada', () => {
     await page.addInitScript(({ key, value }) => { localStorage.setItem(key, JSON.stringify(value)); sessionStorage.setItem(key, JSON.stringify(value)); }, { key: STORAGE, value: { token, expiraEm: '2099-12-31T23:59:59.000Z' } });
     await page.route('**/*', async route => {
       if (route.request().method() === 'POST' && (route.request().postData() || '').includes('ctPortalProdutorRestaurarSessaoIsoladaPROD')) { await route.abort('failed'); return; }
-      await route.continue();
+      await route.fallback();
     });
     await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...', { timeout: 3000 });

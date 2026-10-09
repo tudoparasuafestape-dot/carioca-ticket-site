@@ -1,6 +1,6 @@
 # Proposta separada: fronteira de segurança dos canários
 
-Estado: proposta para revisão, sem integração ao workflow ou implantação. Base do site: `bb9f00564d11389aba069604f9fffe56f7f98de4`. O PR165 permanece em `b7b4b12c50161c28b64dfafb4b6a025b2858f502`, sem mudanças novas. Os arquivos JS do backend foram inspecionados na main `02eefbed5b168c390291b91744e1bfbbde8c4f98`; isso não atesta qual versão Apps Script estava implantada durante o run histórico.
+Estado: diagnóstico histórico e plano de referência. A integração de testes/workflow foi preparada posteriormente nesta mesma branch, sem ativação em main ou implantação; ver [implementação e limites](canary-safety-implementation.md). Base do site: `bb9f00564d11389aba069604f9fffe56f7f98de4`. O PR165 permanece em `b7b4b12c50161c28b64dfafb4b6a025b2858f502`, sem mudanças novas. Os arquivos JS do backend foram inspecionados na main `02eefbed5b168c390291b91744e1bfbbde8c4f98`; isso não atesta qual versão Apps Script estava implantada durante o run histórico.
 
 ## O que o run pós-home164 executou
 
@@ -54,7 +54,7 @@ Uma apuração adicional de efeitos reais exigiria logs existentes do backend/Cl
 
 ## Ordem de execução e arquivos para revisão
 
-**A. Preparado nesta branch, sem tocar produto/workflow**
+**A. Protótipo inicial, antes da integração descrita no documento de implementação**
 
 - `tests/safety/public-request-policy.cjs`: protótipo de classificação e bloqueio anterior ao transporte; lista inicial de RPCs permitidos vazia, caminhos estáticos explícitos, validação de envelope e coletor local opcional para telemetria.
 - `tests/safety/public-request-policy.test.cjs`: testes offline de bloqueio de bootstrap/pagamento/métodos desconhecidos, argumentos, origem, envelope ambíguo e garantia de que captura/bloqueio não chamam o transporte.
@@ -78,7 +78,7 @@ Manter nomes/requisitos de checks, viewports e todas as asserções existentes; 
 
 Salvar relatório de rede sanitizado em sucesso e falha (sem tokens, PII ou corpos completos de requisição), com versão de teste/backend e identificação de fixtures. O coletor de telemetria deve atestar tentativas/formatos e que houve zero encaminhamento. Falta de ambiente isolado deve bloquear o estágio correspondente, não produzir verde artificial.
 
-O workflow atual também agenda os jobs públicos/operacionais, que incluem o caminho de parceiro. Parar a publicação do PR165 não altera esse agendamento. Nenhum agendamento/check foi alterado nesta fatia.
+O workflow atual também agenda os jobs públicos/operacionais, que incluem o caminho de parceiro. Parar a publicação do PR165 não altera esse agendamento. O código candidato de workflow foi posteriormente alterado nesta branch; configuração real de Actions, agendamento ativo e main não foram alterados.
 
 ## Critério para liberar a fronteira
 

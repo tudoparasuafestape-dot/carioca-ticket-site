@@ -1,19 +1,19 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/public-isolated.cjs');
 
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
 
 async function expectFirstParty(page, pathname) {
   await expect.poll(() => {
     try { return new URL(page.url()).hostname; } catch (_) { return ''; }
-  }, { timeout: 30000 }).toBe('cariocaticket.com.br');
+  }, { timeout: 30000 }).toBe('127.0.0.1');
 
   await expect.poll(() => {
     try { return new URL(page.url()).pathname; } catch (_) { return ''; }
   }, { timeout: 30000 }).toBe(pathname);
 }
 
-test.describe('Canario real first-party', () => {
-  test('Portal v2 conversa com o backend real sem sair do dominio', async ({ page }) => {
+test.describe('Canario funcional com fixtures isoladas', () => {
+  test('Portal v2 conversa com o backend simulado sem sair do dominio', async ({ page }) => {
     const iniciou = Date.now();
     await page.goto('/produtor-v2/', { waitUntil: 'domcontentloaded' });
     await expectFirstParty(page, '/produtor-v2/');
@@ -25,7 +25,7 @@ test.describe('Canario real first-party', () => {
     expect(Date.now() - iniciou).toBeLessThan(25000);
   });
 
-  test('Portal oficial carrega a marca estatica sem RPC de branding', async ({ page }) => {
+  test('Portal legado carrega a marca estatica sem RPC de branding', async ({ page }) => {
     const iniciou = Date.now();
     await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
     await expectFirstParty(page, '/produtor/');
@@ -53,7 +53,7 @@ test.describe('Canario real first-party', () => {
   });
 
 
-  test('Evento v2 carrega o evento real, permite compartilhar e aponta para Checkout v2', async ({ page }) => {
+  test('Evento v2 carrega o evento da fixture, permite compartilhar e aponta para Checkout v2', async ({ page }) => {
     const iniciou = Date.now();
     await page.goto('/evento-v2/?evento=' + encodeURIComponent(EVENT_ID), {
       waitUntil: 'domcontentloaded'
@@ -78,11 +78,11 @@ test.describe('Canario real first-party', () => {
     await expect(compartilharHero).toBeVisible();
     await expect(compartilharHero).toHaveAttribute(
       'data-share-url',
-      'https://cariocaticket.com.br/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
+      'http://127.0.0.1:4173/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
     );
     await expect(compartilharMobile).toHaveAttribute(
       'data-share-url',
-      'https://cariocaticket.com.br/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
+      'http://127.0.0.1:4173/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
     );
 
     await compartilharHero.click();
@@ -92,13 +92,13 @@ test.describe('Canario real first-party', () => {
     await expect(copiarLink).toBeVisible();
     await expect(copiarLink).toHaveAttribute(
       'data-share-url',
-      'https://cariocaticket.com.br/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
+      'http://127.0.0.1:4173/evento-v2/?evento=' + encodeURIComponent(EVENT_ID)
     );
 
     await expect(page.locator('#shareNativeAction')).toBeVisible();
   });
 
-  test('Cupom canario consulta o motor real sem criar pedido ou cobranca', async ({ page }) => {
+  test('Cupom canario consulta o motor simulado sem criar pedido ou cobranca', async ({ page }) => {
     await page.goto('/checkout-v2/?evento=' + encodeURIComponent(EVENT_ID), {
       waitUntil: 'domcontentloaded'
     });
@@ -138,7 +138,7 @@ test.describe('Canario real first-party', () => {
     await expect(page.locator('#payButton')).toBeVisible();
   });
 
-  test('Link real da campanha chega ao checkout e tenta aplicar o cupom sem cobranca', async ({ page }) => {
+  test('Link da campanha de fixture chega ao checkout e tenta aplicar o cupom sem cobranca', async ({ page }) => {
     await page.goto('/evento-v2/?evento=' + encodeURIComponent(EVENT_ID) + '&cupom=30ANOSSEMRAZAO&src=canario', {
       waitUntil: 'domcontentloaded'
     });
@@ -184,7 +184,7 @@ test.describe('Canario real first-party', () => {
     await expect(page.locator('#payButton')).toBeVisible();
   });
 
-  test('Checkout v2 carrega catalogo real sem criar cobranca', async ({ page }) => {
+  test('Checkout v2 carrega catalogo simulado sem criar cobranca', async ({ page }) => {
     const iniciou = Date.now();
     await page.goto('/checkout-v2/?evento=' + encodeURIComponent(EVENT_ID), {
       waitUntil: 'domcontentloaded'
@@ -211,7 +211,7 @@ test.describe('Canario real first-party', () => {
     await expect(page.locator('#eventBack')).toHaveAttribute('href', /\/evento-v2\/\?evento=/);
   });
 
-  test('Evento legado real aponta para o Checkout legado', async ({ page }) => {
+  test('Evento legado com fixture aponta para o Checkout legado', async ({ page }) => {
     await page.goto('/evento/?evento=' + encodeURIComponent(EVENT_ID), {
       waitUntil: 'domcontentloaded'
     });
@@ -229,7 +229,7 @@ test.describe('Canario real first-party', () => {
     await expect(comprar).toHaveAttribute('href', /\/checkout\/\?evento=/);
   });
 
-  test('Checkout legado real carrega catálogo sem criar cobrança', async ({ page }) => {
+  test('Checkout legado com fixture carrega catálogo sem criar cobrança', async ({ page }) => {
     const iniciou = Date.now();
 
     await page.goto('/checkout/?evento=' + encodeURIComponent(EVENT_ID), {

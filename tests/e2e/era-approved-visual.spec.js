@@ -1,4 +1,4 @@
-import {test,expect} from '@playwright/test';
+import {test,expect} from './helpers/branch-isolated.cjs';
 import fs from 'node:fs';
 const EVENT='EVT-23112026-ERA-BEAUTY-EAC4B673';
 const URL='https://cariocaticket.com.br/assets/eventos/era-beauty-capa-oficial-20261008.jpg';
@@ -13,7 +13,7 @@ test.describe('Operacao visual especifica do ERA',()=>{
     Object.assign(state,{calls:[],saves:0,applied:false});
     await page.route('**/*',route=>{
       const url=new globalThis.URL(route.request().url());
-      if(['127.0.0.1','localhost'].includes(url.hostname))return route.continue();
+      if(['127.0.0.1','localhost'].includes(url.hostname))return route.fallback();
       if(route.request().url()===URL)return state.imageError?route.abort():route.fulfill({contentType:'image/jpeg',body:PHOTO});
       return route.abort();
     });
