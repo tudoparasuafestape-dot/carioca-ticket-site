@@ -171,3 +171,27 @@ for (const width of [412, 1201, 1351, 1440, 1920]) for (const locale of ['pt-BR'
     assertClean(state);
   });
 }
+
+test.describe('navigation at equivalent 200 percent browser zoom', () => {
+  test.use({ viewport: { width: 720, height: 500 }, deviceScaleFactor: 2 });
+  for (const theme of ['light', 'dark']) test('menu and language remain reachable / ' + theme, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
+    const state = await fixture(page), button = page.locator('.menu-toggle'), menu = page.locator('#mobile-menu');
+    await headerFits(page);
+    await page.locator('#accessibility-toggle').click();
+    await expect(page.locator('#home-language')).toBeInViewport();
+    await page.locator('#home-language').selectOption('en-US');
+    await expect(button).toHaveAccessibleName(dictionaries['en-US'].openMenu);
+    await page.keyboard.press('Escape'); await expect(page.locator('#accessibility-toggle')).toBeFocused();
+    await button.focus(); await button.press('Enter'); await page.keyboard.press('Tab');
+    for (let i = 0; i < destinations.length; i++) {
+      await expect(menu.locator('a').nth(i)).toBeFocused();
+      await expect(menu.locator('a').nth(i)).toBeInViewport();
+      if (i < destinations.length - 1) await page.keyboard.press('Tab');
+    }
+    await capture(page, path.join(EVIDENCE, 'navigation-zoom200-' + theme + '.png'));
+    await page.keyboard.press('Tab'); await expect(menu).toBeHidden(); await expect(page.locator('.producer-top-link')).toBeFocused();
+    await headerFits(page);
+    assertClean(state);
+  });
+});
