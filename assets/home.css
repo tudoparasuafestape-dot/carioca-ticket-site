@@ -393,3 +393,15 @@
   .ct-home .ad-rotation .eyebrow { order:4; position:static; margin:0 12px; align-self:flex-start; }
   .ct-home .ad-playback-state { order:3; position:static; margin:0 12px; text-align:left; }
 }
+
+
+/* Native language choices: dependable vector flags on every platform. */
+.ct-home fieldset.language-field { margin:0; padding:0; border:0; min-width:0; }
+.ct-home .language-field legend { padding:0; margin-bottom:6px; }
+.ct-home .language-choice { display:flex; align-items:center; gap:10px; min-height:44px; padding:8px; border:1px solid var(--home-line); border-radius:8px; cursor:pointer; }
+.ct-home .language-choice:has(input:checked) { background:var(--home-bg); border-color:var(--home-text); }
+.ct-home .language-choice:focus-within { outline:2px solid var(--home-text); outline-offset:2px; }
+.ct-home .language-choice input { flex:0 0 auto; margin:0; accent-color:var(--home-text); }
+.ct-home .language-flag { flex:0 0 28px; width:28px; height:20px; border-radius:2px; box-shadow:0 0 0 1px rgb(127 127 127 / 35%); }
+.ct-home .language-choice span { overflow-wrap:anywhere; }
+.ct-home .accessibility-panel { max-height:calc(100dvh - var(--home-header-height, 100px) - 28px); overflow-y:auto; }

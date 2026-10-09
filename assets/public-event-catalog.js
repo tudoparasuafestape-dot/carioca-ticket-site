@@ -71,7 +71,12 @@
         cover.appendChild(image);
       }
       var body = node('div', 'catalog-body');
-      if (text(visual.categoria)) body.appendChild(original(node('span', 'event-kicker', visual.categoria)));
+      if (text(visual.categoria)) {
+        var category = I && I.categoryLabel ? I.categoryLabel(visual.categoria) : { text: visual.categoria, language: I ? I.sourceLanguage : 'pt-BR' };
+        var kicker = node('span', 'event-kicker' + (category.known ? '' : ' catalog-original'), category.text);
+        kicker.lang = category.language; kicker.setAttribute('translate', 'no');
+        body.appendChild(kicker);
+      }
       var heading = node('h3', 'catalog-title');
       var titleLink = original(node('a', '', event.nome));
       titleLink.id = token + '-title';
@@ -106,7 +111,7 @@
       if (!ready) return;
       var filtered = events.filter(function (event) {
         var visual = event.visual || {};
-        var matchesQuery = !query || normalize([event.nome, event.data, event.horario, event.local, event.cidade, event.uf, visual.categoria, visual.descricaoCurta].filter(Boolean).join(' ')).includes(query);
+        var matchesQuery = !query || normalize([event.nome, event.data, event.horario, event.local, event.cidade, event.uf, visual.categoria, I && I.categoryLabel ? I.categoryLabel(visual.categoria).text : '', visual.descricaoCurta].filter(Boolean).join(' ')).includes(query);
         var matchesLocation = !locationQuery || normalize([event.local, event.cidade, event.uf].filter(Boolean).join(' ')).includes(locationQuery);
         return matchesQuery && matchesLocation && (!H || H.matches(event, true));
       });
@@ -225,3 +230,4 @@
   }
   mount(loadPublicEvents);
 }());
+
