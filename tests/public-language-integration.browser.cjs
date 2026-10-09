@@ -49,6 +49,16 @@ const catalog=[{id:'FIXTURE-LANGUAGE-1',nome:'Evento original',data:'10/10/2026'
     await page.waitForFunction(()=>document.querySelectorAll('.catalog-card').length>0);
     assert.equal(await page.evaluate(()=>CTHome.locale),locale);
     assert.equal(await page.evaluate(()=>CTPublicI18n.getLocale()),locale);
+    // Consolidated main features must survive the shared-language bridge.
+    assert.equal(await page.locator('html').getAttribute('data-home-theme'),'dark');
+    assert.equal(await page.locator('.producer-section a[href="/como-funciona/"]').count(),1);
+    const learn=page.locator('a[data-i18n="adLearnMore"][href="/anuncie/"]');
+    assert.ok(await learn.count()>0);assert.equal(await learn.first().textContent(),await page.evaluate(()=>CTHome.t('adLearnMore')));
+    const geoLabels={'pt-BR':'Usar minha localização','en-US':'Use my location',es:'Usar mi ubicación','zh-Hans':'使用我的位置'};
+    assert.equal(await page.locator('#location-use-device').textContent(),geoLabels[locale]);
+    const shared=await page.locator('.catalog-card').first().evaluate(e=>({date:e.dataset.shareDate,venue:e.dataset.shareVenue}));
+    assert.equal(shared.date,'10/10/2026 · 18:00');assert.equal(shared.venue,'Local original · Recife · PE');
+
     const originalCard=await page.locator('.catalog-description').first().evaluate(e=>({text:e.textContent,lang:e.lang}));
     assert.equal(originalCard.text,catalog[0].visual.descricaoCurta);assert.equal(originalCard.lang,'pt-BR');
     assert.equal(await page.locator('footer a[href="/anuncie/"]').count(),1);
