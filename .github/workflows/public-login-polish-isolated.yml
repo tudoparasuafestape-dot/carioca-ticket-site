@@ -1,0 +1,31 @@
+name: Public login polish (isolated)
+on:
+  pull_request:
+    paths:
+      - 'produtor-v2/index.html'
+      - 'ajuda/index.html'
+      - 'styles.css'
+      - 'assets/institutional-language.css'
+      - 'tests/public-login-polish.browser.cjs'
+      - '.github/workflows/public-login-polish-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  public-layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: node --check tests/public-login-polish.browser.cjs
+      - run: node tests/public-login-polish.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-login-polish-screenshots
+          path: test-results/public-login-polish
+          if-no-files-found: ignore
