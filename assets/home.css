@@ -417,3 +417,23 @@
   .ct-home .ad-caption { min-width:0; overflow-wrap:anywhere; }
 }
 .ct-home .footer-brand .footer-home-link { padding:0; line-height:0; border-radius:8px; }
+
+
+/* Optional install invitation stays in document flow; it never covers controls. */
+.ct-home .home-install { display:flex; align-items:center; gap:20px; padding:20px; margin-block:20px; background:var(--home-surface); border:1px solid var(--home-line); border-radius:16px; }
+.ct-home .home-install-copy { flex:1; min-width:0; }
+.ct-home .home-install h2 { font-size:1.15em; line-height:1.3; margin-bottom:6px; }
+.ct-home #home-install-help { margin-top:12px; }
+.ct-home .home-install-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.ct-home .home-install button { min-height:44px; padding:10px 16px; border:1px solid var(--home-line); border-radius:10px; color:var(--home-text); background:var(--home-surface); }
+.ct-home #home-install-action { color:var(--home-ink); background:var(--home-accent); border-color:var(--home-accent); }
+.ct-home .home-install button:disabled { opacity:.65; cursor:wait; }
+.ct-home .footer-grid .footer-social-link { display:inline-flex; align-items:center; gap:8px; min-height:44px; }
+.ct-home .footer-social-icon { width:22px; height:22px; flex:none; fill:none; stroke:currentColor; stroke-width:1.8; }
+.ct-home .instagram-flash { fill:currentColor; stroke:none; }
+@media (max-width:700px) { .ct-home .home-install { flex-direction:column; align-items:stretch; padding:16px; } .ct-home .home-install-actions button { flex:1; } }
+
+.ct-home .footer-grid .footer-social-link > span { padding-block:0; }
+
+.ct-home .footer-grid .footer-social-link span { padding-block:0; }
+.ct-home .facebook-icon { fill:currentColor; stroke:none; }

@@ -167,7 +167,13 @@
     "shareProgram": "Compartilhar apresentação",
     "shareCopied": "Link copiado.",
     "shareFailed": "Não foi possível copiar. Selecione o link abaixo para copiar.",
-    "shareLink": "Link público para compartilhar"
+    "shareLink": "Link público para compartilhar",
+    "installTitle": "Carioca Ticket na sua tela inicial",
+    "installCopy": "Acesse o site com mais facilidade pelo ícone do aplicativo.",
+    "installHelp": "No Safari, toque em Compartilhar e escolha “Adicionar à Tela de Início”. Se aparecer a opção “Abrir como App”, mantenha-a ativada e toque em Adicionar. A instalação é feita pelo navegador.",
+    "installAction": "Instalar",
+    "installManual": "Como instalar",
+    "installDismiss": "Agora não"
   },
   "en-US": {
     "menuLabel": "Menu",
@@ -334,7 +340,13 @@
     "shareProgram": "Share presentation",
     "shareCopied": "Link copied.",
     "shareFailed": "Could not copy. Select the link below to copy it.",
-    "shareLink": "Public link to share"
+    "shareLink": "Public link to share",
+    "installTitle": "Carioca Ticket on your Home Screen",
+    "installCopy": "Open the site more easily using its app icon.",
+    "installHelp": "In Safari, tap Share and choose “Add to Home Screen”. If “Open as Web App” appears, leave it enabled and tap Add. Installation is handled by the browser.",
+    "installAction": "Install",
+    "installManual": "How to install",
+    "installDismiss": "Not now"
   },
   "es": {
     "menuLabel": "Menú",
@@ -501,7 +513,13 @@
     "shareProgram": "Compartir presentación",
     "shareCopied": "Enlace copiado.",
     "shareFailed": "No se pudo copiar. Selecciona el enlace de abajo para copiarlo.",
-    "shareLink": "Enlace público para compartir"
+    "shareLink": "Enlace público para compartir",
+    "installTitle": "Carioca Ticket en tu pantalla de inicio",
+    "installCopy": "Abre el sitio más fácilmente desde el icono de la aplicación.",
+    "installHelp": "En Safari, toca Compartir y elige “Añadir a la pantalla de inicio”. Si aparece “Abrir como app web”, déjalo activado y toca Añadir. La instalación se realiza desde el navegador.",
+    "installAction": "Instalar aplicación",
+    "installManual": "Cómo instalar",
+    "installDismiss": "Ahora no"
   },
   "zh-Hans": {
     "menuLabel": "菜单",
@@ -668,7 +686,13 @@
     "shareProgram": "分享介绍",
     "shareCopied": "链接已复制。",
     "shareFailed": "无法复制。请选择下方链接进行复制。",
-    "shareLink": "用于分享的公开链接"
+    "shareLink": "用于分享的公开链接",
+    "installTitle": "将 Carioca Ticket 添加到主屏幕",
+    "installCopy": "通过应用图标更方便地打开网站。",
+    "installHelp": "在 Safari 中，轻点“共享”，然后选择“添加到主屏幕”。如果出现“作为网页 App 打开”，请保持开启并轻点“添加”。安装由浏览器完成。",
+    "installAction": "安装",
+    "installManual": "安装方法",
+    "installDismiss": "暂时不要"
   }
 };
 
@@ -748,6 +772,7 @@
   });
   api.setLocale(locale);
 }());
+
 
 
 
