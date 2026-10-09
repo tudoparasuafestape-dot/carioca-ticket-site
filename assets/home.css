@@ -1,0 +1,182 @@
+/* Home only. Other routes continue using styles.css without these tokens or rules. */
+.ct-home-root {
+  color-scheme: light;
+  --home-bg: #f7f7f7;
+  --home-surface: #fff;
+  --home-soft: #eeeeee;
+  --home-text: #242424;
+  --home-muted: #606060;
+  --home-line: #d6d6d6;
+  --home-accent: #d5bb82;
+  --home-ink: #242424;
+  --home-focus: #80632a;
+  --home-shadow: 0 8px 26px rgb(24 24 24 / 5%);
+  background: var(--home-bg);
+}
+.ct-home-root[data-home-theme="dark"] {
+  color-scheme: dark;
+  --home-bg: #171717;
+  --home-surface: #222222;
+  --home-soft: #2d2d2d;
+  --home-text: #f5f5f5;
+  --home-muted: #c2c2c2;
+  --home-line: #4a4a4a;
+  --home-focus: #d5bb82;
+  --home-shadow: 0 8px 26px rgb(0 0 0 / 12%);
+}
+@media (prefers-color-scheme: dark) {
+  .ct-home-root:not([data-home-theme]) {
+    color-scheme: dark;
+    --home-bg: #171717;
+    --home-surface: #222222;
+    --home-soft: #2d2d2d;
+    --home-text: #f5f5f5;
+    --home-muted: #c2c2c2;
+    --home-line: #4a4a4a;
+    --home-focus: #d5bb82;
+  }
+}
+.ct-home { margin: 0; color: var(--home-text); background: var(--home-bg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.ct-home *, .ct-home *::before, .ct-home *::after { box-sizing: border-box; }
+.ct-home [hidden] { display: none !important; }
+.ct-home a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.ct-home a:hover { text-decoration: underline; }
+.ct-home button, .ct-home input, .ct-home select { font: inherit; }
+.ct-home button, .ct-home select { cursor: pointer; }
+.ct-home :focus-visible { outline: 3px solid var(--home-focus); outline-offset: 4px; }
+.ct-home h1, .ct-home h2, .ct-home h3, .ct-home p { margin: 0; }
+.ct-home h1, .ct-home h2, .ct-home h3 { line-height: 1.15; letter-spacing: -.035em; text-wrap: balance; }
+.ct-home h2 { font-size: clamp(26px, 3vw, 36px); }
+.ct-home p { color: var(--home-muted); }
+.ct-home .shell { width: min(1200px, calc(100% - 64px)); margin-inline: auto; }
+.ct-home .skip-link { position: absolute; top: 8px; left: 16px; z-index: 5; padding: 12px 18px; background: var(--home-accent); color: var(--home-ink); transform: translateY(-200%); }
+.ct-home .skip-link:focus { transform: none; }
+.ct-home .topbar { border-bottom: 1px solid var(--home-line); background: var(--home-surface); }
+.ct-home .nav { min-height: 84px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding-block: 14px; }
+.ct-home .brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; white-space: nowrap; font-size: 20px; font-weight: 750; letter-spacing: -.04em; }
+.ct-home .brand img { object-fit: contain; flex-shrink: 0; }
+.ct-home .brand b { font-weight: 450; }
+.ct-home .links { display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: center; font-size: 14px; font-weight: 600; }
+.ct-home .links a { padding-block: 14px; text-decoration: none; }
+.ct-home .links a:hover { text-decoration: underline; }
+.ct-home .nav-tools { display: flex; align-items: center; gap: 12px; }
+.ct-home .theme-control { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--home-muted); }
+.ct-home .theme-control select { min-height: 44px; max-width: 120px; padding: 8px; color: var(--home-text); background: var(--home-bg); border: 1px solid var(--home-line); border-radius: 8px; }
+.ct-home .menu-toggle { display: none; align-items: center; gap: 8px; min-height: 44px; border: 1px solid var(--home-line); border-radius: 8px; background: var(--home-surface); color: var(--home-text); padding: 8px 12px; font-size: 14px; }
+.ct-home .mobile-menu { border-top: 1px solid var(--home-line); }
+.ct-home .mobile-menu-inner { padding-block: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 20px; }
+.ct-home .mobile-menu a { display: flex; align-items: center; min-height: 44px; font-size: 15px; padding: 8px; text-decoration: none; }
+.ct-home .mobile-menu a:hover { background: var(--home-soft); }
+.ct-home .public-events { padding-block: 34px 64px; }
+.ct-home .eyebrow { display: block; font-size: 11px; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; color: var(--home-muted); }
+.ct-home .public-events-heading { display: grid; grid-template-columns: 1fr 1.2fr; gap: 38px; align-items: center; }
+.ct-home h1 { margin-top: 10px; font-size: clamp(30px, 3.3vw, 42px); max-width: 13em; }
+.ct-home .event-search-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 10px; }
+.ct-home .search-field { min-width: 0; }
+.ct-home .search-field label { display: block; font-size: 12px; font-weight: 650; margin-bottom: 6px; }
+.ct-home .search-field input { width: 100%; min-width: 0; height: 48px; border: 1px solid var(--home-line); border-radius: 8px; padding: 10px 12px; background: var(--home-surface); color: var(--home-text); font-size: 15px; }
+.ct-home .search-field input::placeholder { color: var(--home-muted); opacity: 1; }
+.ct-home .event-search-form button, .ct-home .no-events button { min-height: 48px; padding: 10px 18px; border: 1px solid var(--home-accent); border-radius: 8px; color: var(--home-ink); background: var(--home-accent); font-size: 14px; font-weight: 700; }
+.ct-home .catalog-heading { margin-block: 30px 18px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.ct-home .catalog-heading h2 { font-size: 20px; letter-spacing: -.02em; }
+.ct-home #event-count { font-size: 13px; }
+.ct-home .catalog-feedback { font-size: 14px; margin-bottom: 18px; }
+.ct-home .catalog-feedback:empty { display: none; }
+.ct-home .events-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.ct-home .catalog-card { min-width: 0; display: flex; flex-direction: column; border: 1px solid var(--home-line); border-radius: 16px; background: var(--home-surface); box-shadow: var(--home-shadow); }
+.ct-home .catalog-photo { position: relative; display: block; aspect-ratio: 1882/836; background: var(--home-soft); border-radius: 15px 15px 0 0; border-bottom: 1px solid var(--home-line); }
+.ct-home .catalog-photo img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
+.ct-home .catalog-image-fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; color: var(--home-muted); font-size: 14px; text-align: center; }
+.ct-home .catalog-body { display: flex; flex: 1; flex-direction: column; align-items: flex-start; padding: 24px; }
+.ct-home .event-kicker { color: var(--home-text); background: var(--home-soft); padding: 4px 9px; border-radius: 5px; font-size: 11px; font-weight: 650; margin-bottom: 12px; overflow-wrap: anywhere; }
+.ct-home .catalog-title { font-size: clamp(23px, 2.3vw, 28px); margin-bottom: 14px; overflow-wrap: anywhere; }
+.ct-home .catalog-title a { text-decoration: none; }
+.ct-home .catalog-title a:hover { text-decoration: underline; }
+.ct-home .catalog-body p { font-size: 14px; margin-bottom: 6px; overflow-wrap: anywhere; }
+.ct-home .catalog-body .catalog-meta { color: var(--home-text); font-weight: 650; }
+.ct-home .catalog-description { margin-top: 6px; }
+.ct-home .catalog-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; margin-top: auto; padding-top: 22px; width: 100%; }
+.ct-home .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; border: 1px solid transparent; border-radius: 8px; padding: 12px 20px; text-decoration: none; text-align: center; font-size: 14px; font-weight: 700; line-height: 1.4; }
+.ct-home .btn:hover { text-decoration: none; box-shadow: inset 0 0 0 1px currentColor; }
+.ct-home .btn-primary { background: var(--home-accent); color: var(--home-ink); }
+.ct-home .btn-secondary { border-color: var(--home-line); color: var(--home-text); background: var(--home-surface); }
+.ct-home .event-secondary { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 600; }
+.ct-home .catalog-state, .ct-home .no-events { background: var(--home-surface); padding: 32px; border: 1px solid var(--home-line); border-radius: 12px; }
+.ct-home .catalog-state button, .ct-home .no-events button { margin-top: 16px; }
+.ct-home .producer-section { display: grid; grid-template-columns: 1.6fr 1fr; border: 1px solid var(--home-line); background: var(--home-soft); border-radius: 18px; overflow: hidden; }
+.ct-home .producer-copy { padding: 44px; }
+.ct-home .producer-copy h2 { margin: 12px 0 16px; max-width: 14em; }
+.ct-home .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 16px; }
+.ct-home .text-link { display: inline-block; padding-block: 12px; font-size: 13px; }
+.ct-home .producer-note { background: var(--home-ink); color: var(--home-accent); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 40px; gap: 26px; }
+.ct-home .producer-note span { font-size: 11px; letter-spacing: .18em; font-weight: 700; }
+.ct-home .producer-note strong { font-size: clamp(36px, 5vw, 62px); font-weight: 500; line-height: 1.05; letter-spacing: -.055em; }
+.ct-home .section { padding-block: 64px; }
+.ct-home .security-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 80px; }
+.ct-home .security-grid h2 { margin: 12px 0 20px; max-width: 18em; }
+.ct-home .security-grid p { font-size: 14px; max-width: 62ch; }
+.ct-home .security-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-content: center; }
+.ct-home .security-list div { padding-top: 16px; border-top: 1px solid var(--home-line); }
+.ct-home .security-list strong, .ct-home .security-list span { display: block; }
+.ct-home .security-list span { font-size: 13px; color: var(--home-muted); margin-top: 4px; }
+.ct-home .cta-section { border-top: 1px solid var(--home-line); padding-block: 32px; }
+.ct-home .cta-box { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.ct-home .cta-box h2 { font-size: 26px; margin: 6px 0 10px; }
+.ct-home .cta-box p { font-size: 14px; }
+.ct-home footer { padding-top: 44px; border-top: 1px solid var(--home-line); background: var(--home-surface); }
+.ct-home .footer-grid { display: grid; grid-template-columns: 1.1fr 1fr 1.3fr 1fr 1.3fr; gap: 24px; }
+.ct-home .footer-grid > div { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.ct-home .footer-grid a, .ct-home .footer-grid span { display: inline-block; font-size: 12px; padding-block: 8px; color: var(--home-muted); overflow-wrap: anywhere; max-width: 100%; text-decoration: none; }
+.ct-home .footer-grid a:hover { text-decoration: underline; }
+.ct-home .footer-grid strong { font-size: 12px; margin-block: 10px 12px; }
+.ct-home .footer-brand img { width: 120px; height: 78px; object-fit: contain; background: #171717; border-radius: 8px; }
+.ct-home .footer-brand p { margin-top: 16px; font-size: 12px; }
+.ct-home .footer-bottom { border-top: 1px solid var(--home-line); margin-top: 36px; padding-block: 24px; font-size: 11px; color: var(--home-muted); }
+@media (max-width: 1100px) {
+  .ct-home .links { gap: 16px; }
+  .ct-home .brand { font-size: 18px; }
+  .ct-home .nav { gap: 16px; }
+  .ct-home .public-events-heading { grid-template-columns: 1fr; gap: 24px; }
+  .ct-home h1 { max-width: none; }
+  .ct-home .footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+}
+@media (max-width: 900px) {
+  .ct-home .links { display: none; }
+  .ct-home .menu-toggle { display: inline-flex; }
+  .ct-home .nav { min-height: 76px; }
+  .ct-home .producer-copy { padding: 28px; }
+  .ct-home .security-grid { grid-template-columns: 1fr; gap: 24px; }
+  .ct-home .producer-note { padding: 28px; }
+}
+@media (max-width: 600px) {
+  .ct-home .shell { width: calc(100% - 32px); }
+  .ct-home .nav { gap: 8px; min-height: 72px; flex-wrap: wrap; padding-block: 10px; }
+  .ct-home .brand { gap: 6px; font-size: 17px; }
+  .ct-home .brand img { width: 32px; height: 32px; }
+  .ct-home .nav-tools { gap: 8px; }
+  .ct-home .theme-control { gap: 4px; }
+  .ct-home .theme-control label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .ct-home .theme-control select { max-width: 92px; font-size: 12px; padding-inline: 4px; }
+  .ct-home .menu-toggle { padding: 8px; font-size: 12px; }
+  .ct-home .public-events { padding-block: 24px 36px; }
+  .ct-home h1 { font-size: 30px; max-width: 15em; }
+  .ct-home .public-events-heading { gap: 20px; }
+  .ct-home .event-search-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ct-home .event-search-form button { grid-column: 1 / -1; }
+  .ct-home .catalog-heading { margin-block: 24px 16px; align-items: flex-start; flex-direction: column; gap: 6px; }
+  .ct-home .events-grid { grid-template-columns: 1fr; gap: 20px; }
+  .ct-home .catalog-body { padding: 20px; }
+  .ct-home .catalog-actions { gap: 12px 18px; }
+  .ct-home .btn { padding-inline: 16px; }
+  .ct-home .producer-section { grid-template-columns: 1fr; }
+  .ct-home .producer-copy { padding: 24px; }
+  .ct-home .producer-note { display: none; }
+  .ct-home .section { padding-block: 36px; }
+  .ct-home .cta-box { align-items: flex-start; flex-direction: column; }
+  .ct-home .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
+  .ct-home .footer-brand { grid-column: 1 / -1; }
+}
+@media (max-width: 360px) {
+  .ct-home .brand span { max-width: 65px; white-space: normal; font-size: 15px; line-height: 1.1; }
+  .ct-home .brand b { display: block; }
+}

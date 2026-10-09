@@ -9,10 +9,11 @@
     var message = document.getElementById('catalog-status-message');
     var retry = document.getElementById('catalog-retry');
     var input = document.getElementById('event-search-input');
+    var locationInput = document.getElementById('event-location-input');
     var feedback = document.getElementById('event-search-feedback');
     var count = document.getElementById('event-count');
     var empty = document.getElementById('no-events');
-    var events = [], query = '', ready = false, requestId = 0;
+    var events = [], query = '', locationQuery = '', ready = false, requestId = 0;
 
     function text(value) { return typeof value === 'string' ? value.trim() : ''; }
     function normalize(value) {
@@ -57,15 +58,15 @@
       }
       var body = node('div', 'catalog-body');
       if (text(visual.categoria)) body.appendChild(node('span', 'event-kicker', visual.categoria));
-      var heading = node('h2', 'catalog-title');
+      var heading = node('h3', 'catalog-title');
       var titleLink = node('a', '', event.nome);
       titleLink.href = detail;
       heading.appendChild(titleLink);
       body.appendChild(heading);
       var date = [text(event.data), text(event.horario)].filter(Boolean).join(' · ');
       var venue = [text(event.local), [text(event.cidade), text(event.uf)].filter(Boolean).join(' / ')].filter(Boolean).join(' · ');
-      if (date) body.appendChild(node('p', 'catalog-meta', date));
-      if (venue) body.appendChild(node('p', 'catalog-venue', venue));
+      body.appendChild(node('p', 'catalog-meta', date || 'Data e horário não informados'));
+      body.appendChild(node('p', 'catalog-venue', venue || 'Local não informado'));
       if (text(visual.descricaoCurta)) body.appendChild(node('p', 'catalog-description', visual.descricaoCurta));
       var actions = node('div', 'catalog-actions');
       var buy = node('a', 'btn btn-primary', 'Comprar ingresso');
@@ -82,13 +83,15 @@
       if (!ready) return;
       var filtered = events.filter(function (event) {
         var visual = event.visual || {};
-        return !query || normalize([event.nome, event.data, event.horario, event.local, event.cidade, event.uf, visual.categoria, visual.descricaoCurta].filter(Boolean).join(' ')).includes(query);
+        var matchesQuery = !query || normalize([event.nome, event.data, event.horario, event.local, event.cidade, event.uf, visual.categoria, visual.descricaoCurta].filter(Boolean).join(' ')).includes(query);
+        var matchesLocation = !locationQuery || normalize([event.local, event.cidade, event.uf].filter(Boolean).join(' ')).includes(locationQuery);
+        return matchesQuery && matchesLocation;
       });
       grid.replaceChildren();
       filtered.forEach(function (event, index) { grid.appendChild(card(event, index)); });
       count.textContent = filtered.length + (filtered.length === 1 ? ' evento disponível para compra.' : ' eventos disponíveis para compra.');
       empty.hidden = !events.length || !!filtered.length;
-      feedback.textContent = query && events.length ? (filtered.length ? filtered.length + (filtered.length === 1 ? ' evento encontrado.' : ' eventos encontrados.') : 'Nenhum evento encontrado para essa pesquisa.') : '';
+      feedback.textContent = (query || locationQuery) && events.length ? (filtered.length ? filtered.length + (filtered.length === 1 ? ' evento encontrado.' : ' eventos encontrados.') : 'Nenhum evento encontrado para essa pesquisa.') : '';
       status.hidden = !!events.length;
       if (!events.length) message.textContent = 'Nenhum evento disponível no momento. Volte em breve para conferir a agenda.';
     }
@@ -135,10 +138,13 @@
     document.getElementById('event-search-form').addEventListener('submit', function (event) {
       event.preventDefault();
       query = normalize(input.value);
+      locationQuery = locationInput ? normalize(locationInput.value) : '';
       render();
     });
     document.getElementById('clear-event-search').addEventListener('click', function () {
       input.value = query = '';
+      locationQuery = '';
+      if (locationInput) locationInput.value = '';
       render();
       input.focus();
     });
