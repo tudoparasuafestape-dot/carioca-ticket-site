@@ -107,3 +107,9 @@ test('legal/informational mode retains original and announces translation', () =
 test('no RPC, fetch, credentials, transaction or HTML rendering dependencies', () => {
   assert.doesNotMatch(code, /fetch\s*\(|XMLHttpRequest|innerHTML\s*=|google\.script|https?:\/\//);
 });
+
+test('mixed attribute fallback uses one truthful language per node', () => {
+  const x = boot('en-US'); x.api.register('pt-BR', {label: 'Buscar', hint: 'Pesquisar eventos'}); x.api.register('en-US', {label: 'Search'});
+  const el = node({'data-public-i18n': 'label', 'data-public-i18n-aria-label': 'hint'});
+  x.api.apply(el); assert.equal(el.textContent, 'Buscar'); assert.equal(el.attrs['aria-label'], 'Pesquisar eventos'); assert.equal(el.lang, 'pt-BR');
+});

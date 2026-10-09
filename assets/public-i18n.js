@@ -35,10 +35,18 @@
     var nodes = Array.prototype.slice.call(scope.querySelectorAll(selector));
     if (scope.matches && scope.matches(selector)) nodes.unshift(scope);
     nodes.forEach(function (node) {
-      [['data-public-i18n', null], ['data-public-i18n-placeholder', 'placeholder'], ['data-public-i18n-aria-label', 'aria-label']].forEach(function (entry) {
+      var entries = [['data-public-i18n', null], ['data-public-i18n-placeholder', 'placeholder'], ['data-public-i18n-aria-label', 'aria-label']];
+      // A node has one language for its text and accessible attributes. If any
+      // known key falls back, use Portuguese consistently for this whole node.
+      var language = entries.some(function (entry) {
+        var key = node.getAttribute(entry[0]);
+        var translated = key && message(key);
+        return translated && !translated.missing && translated.language !== locale;
+      }) ? 'pt-BR' : locale;
+      entries.forEach(function (entry) {
         var key = node.getAttribute(entry[0]);
         if (!key) return;
-        var translated = message(key);
+        var translated = message(key, null, language);
         // Missing keys must not overwrite authored, potentially important text.
         if (translated.missing) return;
         if (entry[1]) node.setAttribute(entry[1], translated.text);
