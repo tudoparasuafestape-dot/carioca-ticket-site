@@ -31,6 +31,8 @@ def route(r):
     if not u.startswith(ORIGIN + '/') or r.request.method != 'GET':
         blocked.append(u); return r.abort()
     p = urlsplit(u).path
+    if p in ['/pwa-register.js', '/assets/ct-analytics.js']:
+        return r.fulfill(content_type='text/javascript', body='// Disabled in isolated fixture')
     f = ROOT / (p.lstrip('/') + ('index.html' if p.endswith('/') else ''))
     if f.is_file():
         mime = 'text/html' if f.suffix == '.html' else 'text/css' if f.suffix == '.css' else 'text/javascript'
@@ -41,7 +43,7 @@ def route(r):
     return r.fulfill(status=204, body='')
 
 with sync_playwright() as pw:
-    browser = pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH') or ('/usr/bin/chromium' if Path('/usr/bin/chromium').exists() else None), headless=True, args=['--no-sandbox'])
+    browser = pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH'), headless=True, args=['--no-sandbox'])
     context = browser.new_context(service_workers='block')
     context.route('**/*', route)
     context.add_init_script(PRELUDE)
