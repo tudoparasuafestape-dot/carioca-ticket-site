@@ -1,4 +1,27 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect, mockRoute, mockFailure } = require('./helpers/branch-isolated.cjs');
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctCentralAcessoObterCapacidadesPROD",
+      "ctCentralAcessoObterFirebaseConfigPROD",
+      "ctCentralOperacionalCriarHandoffPROD",
+      "ctConsultaIngressosOperacionalPROD",
+      "ctMarcaOficialObterDataUriPROD",
+      "ctPortalProdutorCarregarCatalogoEventosPROD",
+      "ctPortalProdutorCarregarPainelIsoladoPROD",
+      "ctPortalProdutorRestaurarSessaoIsoladaPROD",
+      "logoutUsuarioCT2"
+    ]
+  },
+  "actions": {
+    "consultarIngressoSeguro": [
+      "codigo",
+      "sig"
+    ]
+  }
+};
 
 const STORAGE = 'CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 const EVENT_ACTIVE = 'EVT-E2E-ATIVO-20261011';
@@ -193,7 +216,7 @@ async function seedSession(page, token = 'TOKEN-QA-NAO-REAL') {
 async function installGatewayMock(page, options = {}) {
   const token = options.token || 'TOKEN-QA-NAO-REAL';
 
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const request = route.request();
     const params = new URLSearchParams(request.postData() || '');
     const requestId = String(params.get('ctMinhaCariocaRequestId') || '');
@@ -272,7 +295,7 @@ async function installGatewayMock(page, options = {}) {
         ok = false;
         erro = 'Ação não prevista no QA: ' + action;
       }
-    } catch (e) {
+    } catch (e) { mockFailure(route, e);
       ok = false;
       erro = e && e.message ? e.message : String(e);
       resultado = null;

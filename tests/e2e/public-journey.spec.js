@@ -1,6 +1,6 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./helpers/public-isolated.cjs');
 
-const EXPECTED_HOST = process.env.CT_EXPECTED_HOST || 'cariocaticket.com.br';
+const EXPECTED_HOST = '127.0.0.1';
 const FORBIDDEN_HOSTS = ['script.google.com', 'googleusercontent.com', 'github.io'];
 
 function installGuards(page) {
@@ -46,7 +46,7 @@ function assertNoTechnicalFailures(state) {
   expect(state.pageErrors, `Erros JavaScript detectados:\n${state.pageErrors.join('\n')}`).toEqual([]);
 }
 
-test.describe('Jornada publica protegida', () => {
+test.describe('Jornada publica com fixtures', () => {
   test('Home -> Evento -> Checkout -> Voltar ao evento', async ({ page }) => {
     const state = installGuards(page);
 
@@ -57,95 +57,7 @@ test.describe('Jornada publica protegida', () => {
     const manifestHref = await page.locator('link[rel="manifest"]').getAttribute('href');
     expect(manifestHref).toBe('/manifest.webmanifest');
 
-    const pwa = await page.evaluate(async () => {
-      const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-      const deadline = Date.now() + 90000;
-      let status = 0;
-      let manifest = null;
-
-      while (Date.now() < deadline) {
-        try {
-          const response = await fetch('/manifest.webmanifest?e2e=' + Date.now(), {
-            cache: 'no-store'
-          });
-          status = response.status;
-          manifest = await response.json();
-
-          const icons = Array.isArray(manifest.icons) ? manifest.icons : [];
-          const ready =
-            icons.some(icon =>
-              icon.src === '/assets/carioca-ticket-icon-192.png' &&
-              icon.sizes === '192x192'
-            ) &&
-            icons.some(icon =>
-              icon.src === '/assets/carioca-ticket-icon-512.png' &&
-              icon.sizes === '512x512'
-            ) &&
-            icons.some(icon =>
-              icon.src === '/assets/carioca-ticket-icon-maskable-512.png' &&
-              icon.sizes === '512x512' &&
-              String(icon.purpose || '').includes('maskable')
-            );
-
-          if (ready) break;
-        } catch (_) {}
-
-        await sleep(2000);
-      }
-
-      async function measure(src) {
-        return await new Promise(resolve => {
-          const img = new Image();
-          img.onload = () => resolve({ ok: true, width: img.naturalWidth, height: img.naturalHeight });
-          img.onerror = () => resolve({ ok: false, width: 0, height: 0 });
-          img.src = src + '?e2e=' + Date.now();
-        });
-      }
-
-      let swReady = false;
-      if ('serviceWorker' in navigator) {
-        try {
-          await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-          await Promise.race([
-            navigator.serviceWorker.ready,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('SW_TIMEOUT')), 15000))
-          ]);
-          swReady = true;
-        } catch (_) {}
-      }
-
-      return {
-        status,
-        manifest,
-        icon192: await measure('/assets/carioca-ticket-icon-192.png'),
-        icon512: await measure('/assets/carioca-ticket-icon-512.png'),
-        mask512: await measure('/assets/carioca-ticket-icon-maskable-512.png'),
-        swSupported: 'serviceWorker' in navigator,
-        swReady
-      };
-    });
-
-    expect(pwa.status).toBe(200);
-    expect(pwa.manifest.name).toBe('Carioca Ticket');
-    expect(pwa.manifest.display).toBe('standalone');
-    expect(pwa.manifest.icons.some(icon =>
-      icon.src === '/assets/carioca-ticket-icon-192.png' &&
-      icon.sizes === '192x192'
-    )).toBe(true);
-    expect(pwa.manifest.icons.some(icon =>
-      icon.src === '/assets/carioca-ticket-icon-512.png' &&
-      icon.sizes === '512x512'
-    )).toBe(true);
-    expect(pwa.manifest.icons.some(icon =>
-      icon.src === '/assets/carioca-ticket-icon-maskable-512.png' &&
-      icon.sizes === '512x512' &&
-      String(icon.purpose || '').includes('maskable')
-    )).toBe(true);
-    expect(pwa.icon192).toEqual({ ok: true, width: 192, height: 192 });
-    expect(pwa.icon512).toEqual({ ok: true, width: 512, height: 512 });
-    expect(pwa.mask512).toEqual({ ok: true, width: 512, height: 512 });
-    expect(pwa.swSupported).toBe(true);
-    expect(pwa.swReady).toBe(true);
+    // The original PWA assertions run separately in pwa-isolated.cjs, with a loopback-only server.
 
     await expectNoForbiddenVisibleLinks(page);
 
@@ -168,14 +80,14 @@ test.describe('Jornada publica protegida', () => {
     await expect(compartilharEvento).toBeVisible();
     await expect(compartilharEvento).toHaveAttribute(
       'data-share-url',
-      'https://' + EXPECTED_HOST + '/evento/?evento=' + encodeURIComponent(eventoIdAtual)
+      'http://127.0.0.1:4173/evento/?evento=' + encodeURIComponent(eventoIdAtual)
     );
 
     await compartilharEvento.click();
     await expect(page.locator('#shareMenu')).toBeVisible();
     await expect(page.locator('#copyLinkAction')).toHaveAttribute(
       'data-share-url',
-      'https://' + EXPECTED_HOST + '/evento/?evento=' + encodeURIComponent(eventoIdAtual)
+      'http://127.0.0.1:4173/evento/?evento=' + encodeURIComponent(eventoIdAtual)
     );
 
     await page.locator('#shareMenuClose').click();
@@ -243,7 +155,7 @@ test.describe('Jornada publica protegida', () => {
     assertNoTechnicalFailures(state);
   });
 
-  test('Minha Carioca abre no dominio oficial e retorna aos eventos', async ({ page }) => {
+  test('Minha Carioca abre no dominio local e retorna aos eventos', async ({ page }) => {
     const state = installGuards(page);
 
     await page.goto('/minha-carioca/conta/?e2e=1', { waitUntil: 'domcontentloaded' });

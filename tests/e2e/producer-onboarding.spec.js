@@ -1,4 +1,18 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, mockRoute, mockFailure } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctProdutorOnboardingAdminDecidirPROD",
+      "ctProdutorOnboardingAdminDetalharPROD",
+      "ctProdutorOnboardingAdminListarPROD",
+      "ctProdutorOnboardingConsultarPROD",
+      "ctProdutorOnboardingEnviarPROD",
+      "logoutUsuarioCT2"
+    ]
+  }
+};
 
 const BRANCH_MODE = String(process.env.CT_BRANCH_MODE || '') === '1';
 const STORAGE = 'CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
@@ -28,7 +42,7 @@ function requestFixture(status='ENVIADO') {
 }
 
 async function installRpcMock(page, state) {
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const request = route.request();
     const params = new URLSearchParams(request.postData() || '');
     const requestId = String(params.get('ctMinhaCariocaRequestId') || '');
@@ -124,7 +138,7 @@ async function installRpcMock(page, state) {
       } else {
         throw new Error('Método não previsto no E2E: ' + method);
       }
-    } catch (e) {
+    } catch (e) { mockFailure(route, e);
       ok=false; erro=e&&e.message?e.message:String(e);
     }
 

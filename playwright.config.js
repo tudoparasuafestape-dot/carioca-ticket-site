@@ -12,6 +12,9 @@ module.exports = defineConfig({
     ['html', { outputFolder: 'playwright-report', open: 'never' }]
   ],
   use: {
+    ...(process.env.CT_BRANCH_MODE === '1' ? { offline: true, serviceWorkers: 'block',
+      launchOptions: { proxy: { server: 'http://127.0.0.1:9', bypass: '<-loopback>' },
+        args: ['--disable-background-networking', '--disable-quic', '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1'] } } : {}),
     baseURL: process.env.CT_BASE_URL || 'https://cariocaticket.com.br',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',

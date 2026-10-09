@@ -1,4 +1,14 @@
-import {test,expect} from '@playwright/test';
+import { test, expect, mockRoute, mockFailure, fixtureError } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctEventosOperacionalListarSeguraPROD",
+      "ctEventosOperacionalVisualEraSeguraPROD"
+    ]
+  }
+};
 import fs from 'node:fs';
 const EVENT='EVT-23112026-ERA-BEAUTY-EAC4B673';
 const URL='https://cariocaticket.com.br/assets/eventos/era-beauty-capa-oficial-20261008.jpg';
@@ -11,13 +21,13 @@ test.describe('Operacao visual especifica do ERA',()=>{
   test.skip(process.env.CT_BRANCH_MODE!=='1'||!/^http:\/\/(127\.0\.0\.1|localhost):/.test(process.env.CT_BASE_URL||''),'Somente local com mocks.');
   async function setup(page,state={}) {
     Object.assign(state,{calls:[],saves:0,applied:false});
-    await page.route('**/*',route=>{
+    await mockRoute(page, { resources: [URL] },route=>{
       const url=new globalThis.URL(route.request().url());
-      if(['127.0.0.1','localhost'].includes(url.hostname))return route.continue();
+      if(['127.0.0.1','localhost'].includes(url.hostname))return route.fallback();
       if(route.request().url()===URL)return state.imageError?route.abort():route.fulfill({contentType:'image/jpeg',body:PHOTO});
       return route.abort();
     });
-    await page.route('https://script.google.com/**',async route=>{
+    await mockRoute(page, MOCK_CONTRACT,async route=>{
       const p=new URLSearchParams(route.request().postData()||''),id=p.get('ctMinhaCariocaRequestId'),method=p.get('metodo');
       const args=JSON.parse(p.get('argsJson')||'[]');let result,error='';
       try {
@@ -26,7 +36,7 @@ test.describe('Operacao visual especifica do ERA',()=>{
         else if(method==='ctEventosOperacionalVisualEraSeguraPROD') {
           expect(args).toHaveLength(2);state.calls.push(args[1]);
           expect(Object.keys(args[1]).sort()).toEqual(args[1].acao==='PREVIA'?['acao']:['acao','revisao']);
-          if(state.denied)throw Error('ERA VISUAL: Sessão, papel ou vínculo não autorizado. Entre novamente.');
+          if(state.denied)throw fixtureError('ERA VISUAL: Sessão, papel ou vínculo não autorizado. Entre novamente.');
           if(args[1].acao==='PREVIA') {
             if(state.previewHold)await state.previewHold;
             const current=state.applied?(state.corruptCategoryReadback?{...PATCH,categoria:CORRUPT_CATEGORY}:PATCH):(state.categoryOnly?{...PATCH,categoria:CORRUPT_CATEGORY}:{});
@@ -37,15 +47,15 @@ test.describe('Operacao visual especifica do ERA',()=>{
           } else {
             expect(args[1].acao).toBe('CONFIRMAR');expect(args[1].revisao).toBe('a'.repeat(64));state.saves++;
             if(state.hold)await state.hold;
-            if(state.fail)throw Error('ERA VISUAL: A autorização foi revogada.');
+            if(state.fail)throw fixtureError('ERA VISUAL: A autorização foi revogada.');
             state.applied=true;
-            if(state.lost)throw Error('Tempo excedido.');
+            if(state.lost)throw fixtureError('Tempo excedido.');
             result={sucesso:true,eventoId:EVENT,textosExatos:true,visual:{...PATCH}};
             if(state.badReadback)result.visual.destaque='incorreto';
             if(state.corruptCategoryReadback)result.visual.categoria=CORRUPT_CATEGORY;
           }
         } else throw Error('Metodo nao autorizado pelo mock: '+method);
-      } catch(err){error=err.message;}
+      } catch(err){ mockFailure(route, err);error=err.message;}
       const body=JSON.stringify({ctMinhaCariocaPost:true,id,ok:!error,resultado:error?null:result,erro:error}).replace(/</g,'\\u003c');
       await route.fulfill({contentType:'text/html; charset=utf-8',body:`<script>window.top.postMessage(${body},'*');</script>`});
     });

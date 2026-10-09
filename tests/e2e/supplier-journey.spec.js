@@ -1,4 +1,16 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect, mockRoute, mockFailure } = require('./helpers/branch-isolated.cjs');
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctCentralAcessoObterFirebaseConfigPROD",
+      "ctPortalFornecedorCarregarPainelPROD",
+      "ctPortalFornecedorLogoutPROD",
+      "ctPortalFornecedorRestaurarSessaoPROD"
+    ]
+  }
+};
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const STORAGE = 'CT_PORTAL_FORNECEDOR_SESSION_V1';
@@ -40,12 +52,12 @@ function fornecedorPanel() {
 }
 
 async function installFirebaseStub(page) {
-  await page.route('https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js', route => route.fulfill({
+  await mockRoute(page, { resources: ['https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js'] }, route => route.fulfill({
     status: 200,
     contentType: 'application/javascript; charset=utf-8',
     body: 'export function initializeApp(c){return {config:c}};export function getApps(){return []};'
   }));
-  await page.route('https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js', route => route.fulfill({
+  await mockRoute(page, { resources: ['https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js'] }, route => route.fulfill({
     status: 200,
     contentType: 'application/javascript; charset=utf-8',
     body: `
@@ -64,7 +76,7 @@ async function installFirebaseStub(page) {
 }
 
 async function installBackendMock(page, state) {
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const request = route.request();
     const params = new URLSearchParams(request.postData() || '');
     const id = String(params.get('ctMinhaCariocaRequestId') || '');
@@ -111,7 +123,7 @@ async function installBackendMock(page, state) {
         default:
           throw new Error('Metodo fornecedor nao previsto: ' + method);
       }
-    } catch (e) {
+    } catch (e) { mockFailure(route, e);
       ok = false;
       erro = e && e.message ? e.message : String(e);
     }

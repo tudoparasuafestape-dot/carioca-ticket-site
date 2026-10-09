@@ -1,4 +1,19 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, mockRoute, mockFailure } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctFinanceiroProdutorMasterAtivarPROD",
+      "ctFinanceiroProdutorMasterListarPROD",
+      "ctFinanceiroProdutorMasterProntidaoPROD",
+      "ctFinanceiroProdutorMasterSuspenderPROD"
+    ],
+    "publicRpc": [
+      "ctEventosPublicosListarPROD"
+    ]
+  }
+};
 
 const BRANCH_MODE=String(process.env.CT_BRANCH_MODE||'')==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
@@ -16,14 +31,18 @@ function envelope(id,ok,resultado,erro=''){
 }
 
 async function installMock(page,state){
-  await page.route('https://script.google.com/**',async route=>{
+  await mockRoute(page, MOCK_CONTRACT,async route=>{
     const p=new URLSearchParams(route.request().postData()||'');
     const id=String(p.get('ctMinhaCariocaRequestId')||'');
     const method=String(p.get('metodo')||'');
     let args=[];try{args=JSON.parse(p.get('argsJson')||'[]')}catch(_){}
     let ok=true,resultado=null,erro='';
     try{
-      if(method==='ctFinanceiroProdutorMasterListarPROD'){
+      if(method==='ctEventosPublicosListarPROD'){
+        expect(p.get('ctMinhaCariocaAction')).toBe('publicRpc');
+        expect(args).toEqual([]);
+        resultado={sucesso:true,eventos:[]};
+      }else if(method==='ctFinanceiroProdutorMasterListarPROD'){
         resultado={sucesso:true,autorizado:true,ambienteProvider:'PRODUCAO',itens:[{
           financeiroId:'FIN-E2E',organizacaoId:'ORG-E2E',produtorId:'PROD-E2E',produtorNome:'Produtor E2E',
           provedor:'ASAAS',provedorAmbiente:'PRODUCAO',modoConta:'SUBCONTA_PLATAFORMA',
@@ -56,7 +75,7 @@ async function installMock(page,state){
       }else{
         throw new Error('Método não previsto: '+method);
       }
-    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    }catch(e){ mockFailure(route, e);ok=false;erro=e&&e.message?e.message:String(e)}
     await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,ok,resultado,erro)+', "*");<\/script></body></html>'});
   });
 }
@@ -105,7 +124,7 @@ test.describe('Ativação financeira Master do Produtor',()=>{
 
   test('segredo ausente ou provider nao validado nao habilita ativacao',async({page})=>{
     const state={activated:false,validateCalls:0,activateCalls:0,ref:'',activateArgs:null};
-    await page.route('https://script.google.com/**',async route=>{
+    await mockRoute(page, MOCK_CONTRACT,async route=>{
       const p=new URLSearchParams(route.request().postData()||'');
       const id=String(p.get('ctMinhaCariocaRequestId')||'');
       const method=String(p.get('metodo')||'');

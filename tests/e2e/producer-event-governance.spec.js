@@ -1,4 +1,18 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, mockRoute, mockFailure, fixtureError } from './helpers/branch-isolated.cjs';
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctEventoGovernancaMasterAtualizarOrigemPROD",
+      "ctEventoGovernancaMasterDecidirPROD",
+      "ctEventoGovernancaMasterListarPROD",
+      "ctEventosOperacionalListarSeguraPROD",
+      "ctEventosOperacionalPublicarSeguraPROD",
+      "ctEventosOperacionalStatusPublicacaoSeguraPROD"
+    ]
+  }
+};
 
 const BRANCH_MODE=String(process.env.CT_BRANCH_MODE||'')==='1';
 const STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
@@ -16,7 +30,7 @@ function envelope(id,ok,resultado,erro=''){
 }
 
 async function installMock(page,state){
-  await page.route('https://script.google.com/**',async route=>{
+  await mockRoute(page, MOCK_CONTRACT,async route=>{
     const p=new URLSearchParams(route.request().postData()||'');
     const id=String(p.get('ctMinhaCariocaRequestId')||'');
     const method=String(p.get('metodo')||'');
@@ -32,19 +46,19 @@ async function installMock(page,state){
         }],total:1,contagem:{pendentes:state.authorized?0:(state.status==='BLOQUEADO'?0:1),autorizados:state.authorized?1:0,bloqueados:state.status==='BLOQUEADO'?1:0},movimentouDinheiro:false,publicouVendas:false};
       }else if(method==='ctEventoGovernancaMasterAtualizarOrigemPROD'){
         const origin=String(args[2]||'').toUpperCase(),reference=String(args[3]||'');
-        if(!['PRODUTOR','DIRETO_CT','COMISSIONADO'].includes(origin))throw new Error('CT_EVENTO_GOV_MASTER_ORIGEM_INVALIDA');
-        if(origin==='COMISSIONADO'&&!reference)throw new Error('CT_EVENTO_GOV_MASTER_COMISSIONADO_REFERENCIA_OBRIGATORIA');
+        if(!['PRODUTOR','DIRETO_CT','COMISSIONADO'].includes(origin))throw fixtureError('CT_EVENTO_GOV_MASTER_ORIGEM_INVALIDA');
+        if(origin==='COMISSIONADO'&&!reference)throw fixtureError('CT_EVENTO_GOV_MASTER_COMISSIONADO_REFERENCIA_OBRIGATORIA');
         state.origin=origin;state.reference=reference;
         resultado={sucesso:true,autorizado:true,evento:{eventoId:'EVT-GOV-E2E',eventoNome:'Evento Governado E2E',eventoStatus:'RASCUNHO',produtorId:'PROD-E2E',produtorNome:'Produtor E2E',origemComercial:origin,comissionadoReferencia:reference,indicacaoId:'',riscoStatus:state.status,publicacaoAutorizada:state.authorized,financeiroPronto:state.financeReady},movimentouDinheiro:false,publicouVendas:false,mensagem:'Origem comercial atualizada.'};
       }else if(method==='ctEventoGovernancaMasterDecidirPROD'){
         const action=String(args[2]||'');state.actions.push(action);
         if(action==='INICIAR_ANALISE'){state.status='EM_ANALISE';state.authorized=false}
-        else if(action==='APROVAR'){if(!state.financeReady)throw new Error('CT_EVENTO_GOV_MASTER_FINANCEIRO_NAO_PRONTO');state.status='APROVADO';state.authorized=true}
+        else if(action==='APROVAR'){if(!state.financeReady)throw fixtureError('CT_EVENTO_GOV_MASTER_FINANCEIRO_NAO_PRONTO');state.status='APROVADO';state.authorized=true}
         else if(action==='REPROVAR'){state.status='BLOQUEADO';state.authorized=false}
         else throw new Error('acao inesperada');
         resultado={sucesso:true,autorizado:true,evento:{eventoId:'EVT-GOV-E2E',eventoNome:'Evento Governado E2E',eventoStatus:'RASCUNHO',produtorId:'PROD-E2E',produtorNome:'Produtor E2E',origemComercial:'PRODUTOR',riscoStatus:state.status,publicacaoAutorizada:state.authorized,financeiroPronto:state.financeReady},movimentouDinheiro:false,publicouVendas:false,mensagem:'Decisão registrada.'};
       }else throw new Error('Método não previsto: '+method);
-    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    }catch(e){ mockFailure(route, e);ok=false;erro=e&&e.message?e.message:String(e)}
     await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,ok,resultado,erro)+', "*");<\/script></body></html>'});
   });
 }
@@ -105,7 +119,7 @@ test.describe('Governança Master de eventos',()=>{
 
 
 async function installProducerEventMock(page,state){
-  await page.route('https://script.google.com/**',async route=>{
+  await mockRoute(page, MOCK_CONTRACT,async route=>{
     const p=new URLSearchParams(route.request().postData()||'');
     const id=String(p.get('ctMinhaCariocaRequestId')||'');
     const method=String(p.get('metodo')||'');
@@ -153,13 +167,13 @@ async function installProducerEventMock(page,state){
       }else if(method==='ctEventosOperacionalPublicarSeguraPROD'){
         expect(String(args[0]||'')).toBe('CT-ADMIN-E2E');
         expect(String(args[1]||'')).toBe('EVT-PROD-E2E');
-        if(!state.ready)throw new Error('EVENTO_NAO_PRONTO_PARA_PUBLICAR');
+        if(!state.ready)throw fixtureError('EVENTO_NAO_PRONTO_PARA_PUBLICAR');
         state.publishCalls+=1;state.published=true;
         resultado={sucesso:true,mensagem:'Vendas publicadas com sucesso.',publicacao:{publicado:true,prontoPublicar:true,pendencias:[]}};
       }else{
         throw new Error('Método não previsto no produtor: '+method);
       }
-    }catch(e){ok=false;erro=e&&e.message?e.message:String(e)}
+    }catch(e){ mockFailure(route, e);ok=false;erro=e&&e.message?e.message:String(e)}
     await route.fulfill({
       status:200,
       contentType:'text/html; charset=utf-8',

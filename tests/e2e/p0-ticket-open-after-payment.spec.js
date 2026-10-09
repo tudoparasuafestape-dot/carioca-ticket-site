@@ -1,4 +1,16 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect, mockRoute } = require('./helpers/branch-isolated.cjs');
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "publicRpc": [
+      "ctCheckoutPixPublicoIniciarPROD",
+      "ctCheckoutPixPublicoReconciliarPROD",
+      "ctCheckoutPixPublicoStatusLocalPROD",
+      "ctCheckoutPublicoCarregarEventoPROD"
+    ]
+  }
+};
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
@@ -83,7 +95,7 @@ function respostaPedido(status, comLink) {
 async function instalarBackendFake(page, contadores) {
   let consultasLocais = 0;
 
-  await page.route('https://cariocaticket.com.br/ingresso/**', async route => {
+  await mockRoute(page, { resources: ['https://cariocaticket.com.br/ingresso/?codigo=' + encodeURIComponent(CODIGO) + '&sig=' + encodeURIComponent(SIG) + '&v=20260923-2258'] }, async route => {
     await route.fulfill({
       status: 200,
       contentType: 'text/html; charset=utf-8',
@@ -91,7 +103,7 @@ async function instalarBackendFake(page, contadores) {
     });
   });
 
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const request = route.request();
     const params = new URLSearchParams(request.postData() || '');
     const id = String(params.get('ctMinhaCariocaRequestId') || '');

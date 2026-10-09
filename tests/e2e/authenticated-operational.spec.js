@@ -1,4 +1,48 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect, mockRoute, mockFailure } = require('./helpers/branch-isolated.cjs');
+
+// Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
+const MOCK_CONTRACT = {
+  "rpc": {
+    "portalRpc": [
+      "ctCariocaBarCarregarSeguraPROD",
+      "ctCentralAcessoObterCapacidadesPROD",
+      "ctCentralAcessoObterFirebaseConfigPROD",
+      "ctCentralOperacionalCriarHandoffPROD",
+      "ctCentralVendasCarregarSeguraPROD",
+      "ctCheckinOperacionalCriarCredencialPROD",
+      "ctComissionadoCarregarPROD",
+      "ctComissoesEventoCarregarPROD",
+      "ctConsultaIngressosOperacionalPROD",
+      "ctEventosOperacionalContextoCadastroSeguraPROD",
+      "ctEventosOperacionalListarSeguraPROD",
+      "ctFinanceiroEventoCarregarPROD",
+      "ctFinanceiroProdutorPainelPROD",
+      "ctFornecedoresGestaoCarregarPROD",
+      "ctFornecedoresGestaoListarPROD",
+      "ctGestaoAcessosCarregarPROD",
+      "ctMarcaOficialObterDataUriPROD",
+      "ctPortalProdutorCarregarCatalogoEventosPROD",
+      "ctPortalProdutorCarregarPainelIsoladoPROD",
+      "ctPortalProdutorLoginFirebaseHotpathP0PROD",
+      "ctPortalProdutorRestaurarSessaoIsoladaPROD",
+      "ctPublicoClientesBuscarPROD",
+      "ctPublicoClientesCarregarPROD",
+      "ctRelatoriosEventoCarregarPROD",
+      "logoutUsuarioCT2"
+    ]
+  },
+  "actions": {
+    "centralConsumirHandoff": [
+      "handoff"
+    ],
+    "centralRestaurarSessao": [
+      "token"
+    ],
+    "centralLogout": [
+      "token"
+    ]
+  }
+};
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
 const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
@@ -791,7 +835,7 @@ function comissionadoFixture() {
 }
 
 async function installMock(page, state) {
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const request = route.request();
     const params = new URLSearchParams(request.postData() || '');
     const requestId = String(params.get('ctMinhaCariocaRequestId') || '');
@@ -1068,7 +1112,7 @@ async function installMock(page, state) {
         ok = false;
         erro = 'Acao nao prevista no E2E autenticado: ' + action;
       }
-    } catch (e) {
+    } catch (e) { mockFailure(route, e);
       ok = false;
       erro = e && e.message ? e.message : String(e);
       resultado = null;
@@ -1095,7 +1139,7 @@ async function installMock(page, state) {
 
 
 async function installComissionadoMock(page, state) {
-  await page.route('https://script.google.com/**', async route => {
+  await mockRoute(page, MOCK_CONTRACT, async route => {
     const request = route.request();
     const params = new URLSearchParams(request.postData() || '');
     const requestId = String(params.get('ctMinhaCariocaRequestId') || '');
@@ -1140,7 +1184,7 @@ async function installComissionadoMock(page, state) {
         ok = false;
         erro = 'Acao nao prevista no E2E comissionado: ' + action;
       }
-    } catch (e) {
+    } catch (e) { mockFailure(route, e);
       ok = false;
       erro = e && e.message ? e.message : String(e);
       resultado = null;
@@ -1474,7 +1518,7 @@ test.describe('Jornada operacional autenticada', () => {
   });
 
   test('Portal concede janela maior ao catalogo de eventos sem alterar timeout do painel', async ({ page }) => {
-    const html = await (await page.request.get('/produtor/')).text();
+    const html = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../produtor/index.html'), 'utf8').replace(/\r\n/g, '\n');
     expect(html).toContain("String(method||'').indexOf('CatalogoEventos')>=0\n      ) ? 45000 : 30000");
     expect(html).toContain("String(method||'').indexOf('CarregarPainel')>=0\n      ) ? 15000 : (");
   });
@@ -1482,9 +1526,9 @@ test.describe('Jornada operacional autenticada', () => {
   test('Portal preserva sessao local quando restauracao falha transitoriamente', async ({ page }) => {
     const token = 'CT-E2E-TOKEN-RESTORE-TRANSIENT';
     await page.addInitScript(({ key, value }) => { localStorage.setItem(key, JSON.stringify(value)); sessionStorage.setItem(key, JSON.stringify(value)); }, { key: STORAGE, value: { token, expiraEm: '2099-12-31T23:59:59.000Z' } });
-    await page.route('**/*', async route => {
+    await mockRoute(page, { rpc: { portalRpc: ['ctPortalProdutorRestaurarSessaoIsoladaPROD'] } }, async route => {
       if (route.request().method() === 'POST' && (route.request().postData() || '').includes('ctPortalProdutorRestaurarSessaoIsoladaPROD')) { await route.abort('failed'); return; }
-      await route.continue();
+      await route.fallback();
     });
     await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('#portalMessage')).toContainText('Carregando seus eventos...', { timeout: 3000 });
