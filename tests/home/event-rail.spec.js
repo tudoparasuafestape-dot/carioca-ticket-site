@@ -253,7 +253,12 @@ for(const slot of ['primary','secondary']) test(`${slot} advertisement: existing
   expect(timings[1].time-timings[0].time).toBeLessThanOrEqual(5100);
   await expect(ad.locator('.eyebrow')).toHaveText('Publicidade');
   const href=await ad.locator('.ad-campaign').getAttribute('href');
-  expect(href).toBe(slot==='primary'?'https://wa.me/5581995023085?text=Ol%C3%A1%21%20Vim%20pela%20Carioca%20Ticket%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20loca%C3%A7%C3%A3o%20de%20materiais%20para%20festas.':'https://wa.me/5581996200696?text=' + encodeURIComponent('Olá! Vim pela Carioca Ticket e gostaria de mais informações sobre os serviços e horários disponíveis para agendamento.'));
+  const destination = new URL(href);
+  expect(destination.origin + destination.pathname).toBe(slot === 'primary' ? 'https://wa.me/5581995023085' : 'https://wa.me/5581996200696');
+  expect([...destination.searchParams.keys()]).toEqual(['text']);
+  expect(destination.searchParams.get('text')).toBe(slot === 'primary'
+    ? 'Olá! Vim pela Carioca Ticket e gostaria de mais informações sobre locação de materiais para festas.'
+    : 'Olá! Vim pela Carioca Ticket e gostaria de mais informações sobre os serviços e horários disponíveis para agendamento.');
   await expect(ad.locator('.ad-house')).toBeVisible();
   await ad.getByRole('button',{name:'Próxima publicidade'}).click(); await page.mouse.move(0,0);
   await page.locator('#event-search-input').focus(); await ad.scrollIntoViewIfNeeded();
