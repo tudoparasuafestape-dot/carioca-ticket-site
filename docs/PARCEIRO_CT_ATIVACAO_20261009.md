@@ -44,9 +44,11 @@ convite expirado. Captura: `test-results/partner-activation-mobile.png`.
 O contrato geral passou em 41 superfícies. Sem validação real Firebase,
 entrega de e-mail ou Safari/iOS.
 
-A suíte adicional `node tests/eventos-privados-v1.mjs` falha em
-`cadastro comum deve fixar origem PRODUTOR`; investigar no escopo de eventos,
-sem misturar com este patch. O teste e os arquivos envolvidos nessa asserção
-não foram modificados por esta branch.
+A suíte adicional `node tests/eventos-privados-v1.mjs` falha no checkout
+Windows em `cadastro comum deve fixar origem PRODUTOR`: a asserção textual
+espera LF e não tolera CRLF. Com normalização somente em memória, o teste
+passou; o contrato também passou no CI Linux do PR. O teste e os arquivos
+envolvidos na asserção são idênticos ao main da base e não foram alterados.
+Isso não é um bloqueio funcional introduzido por esta correção.
 
 Sem merge/deploy, home PR164, íconeBar, CentralMobile ou V2.
