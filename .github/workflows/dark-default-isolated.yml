@@ -1,0 +1,34 @@
+name: Dark default and advertising CTA isolated
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'anuncie/index.html'
+      - 'evento/index.html'
+      - 'evento-v2/index.html'
+      - 'assets/home*'
+      - 'tests/dark-default-*'
+      - '.github/workflows/dark-default-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  dark-default:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: node tests/dark-default-contract.cjs
+      - run: pip install playwright==1.55.0
+      - run: python -m playwright install --with-deps chromium
+      - run: python tests/dark-default-browser.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dark-default-review
+          path: test-results/dark-default/

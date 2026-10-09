@@ -68,21 +68,24 @@ async function screenshot(page, name, fullPage = false) {
   await capture(page, path.join(EVIDENCE, name + '.png'), fullPage);
 }
 
-test('initial system theme, live system changes, explicit override and persistence', async ({ page }) => {
+test('initial dark theme, explicit system changes and preference persistence', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   const state = await fixture(page);
   await loaded(page);
   await expect(page.locator('html')).toHaveAttribute('data-home-theme', 'dark');
-  await expect(page.getByLabel('Tema', { exact: true })).toHaveValue('system');
+  await expect(page.getByLabel('Tema', { exact: true })).toHaveValue('dark');
   await page.emulateMedia({ colorScheme: 'light' });
-  await expect(page.locator('html')).toHaveAttribute('data-home-theme', 'light');
+  await expect(page.locator('html')).toHaveAttribute('data-home-theme', 'dark');
   await page.getByLabel('Tema', { exact: true }).selectOption('dark');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-home-theme', 'dark');
   await expect(page.getByLabel('Tema', { exact: true })).toHaveValue('dark');
   await page.getByLabel('Tema', { exact: true }).selectOption('system');
   await expect(page.locator('html')).toHaveAttribute('data-home-theme', 'light');
-  expect(await page.evaluate(() => localStorage.getItem('ct-home-theme'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('ct-home-theme'))).toBe('system');
+  await page.reload();
+  await expect(page.getByLabel('Tema', { exact: true })).toHaveValue('system');
+  await expect(page.locator('html')).toHaveAttribute('data-home-theme', 'light');
   expect(state.errors).toEqual([]);
   expect(state.blocked).toEqual([]);
 });
@@ -101,7 +104,7 @@ test('unavailable storage and invalid saved values do not block theme or catalog
   expect(state.errors).toEqual([]);
 });
 
-test('invalid saved theme follows system and storage write failures retain the explicit choice', async ({ page }) => {
+test('invalid saved theme defaults dark and storage write failures retain the explicit choice', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('ct-home-theme', 'invalid');
     Storage.prototype.setItem = () => { throw new DOMException('Full', 'QuotaExceededError'); };
@@ -178,6 +181,7 @@ for (const theme of ['light', 'dark']) {
   for (const width of [320, 412, 768, 1440]) {
     test(`layout ${width}px / ${theme}, complete fields, covers and actions`, async ({ page }) => {
       await page.setViewportSize({ width, height: width === 1440 ? 1050 : 915 });
+      await page.addInitScript(value => localStorage.setItem('ct-home-theme', value), theme);
       await page.emulateMedia({ colorScheme: theme });
       const state = await fixture(page);
       await loaded(page);
@@ -409,7 +413,8 @@ test('periods show concrete dates, categories preserve location and empty result
 for (const theme of ['light', 'dark']) {
   test(`sticky header, 150% text, keyboard menu and reduced motion at 320px / ${theme}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 650 });
-    await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
+    await page.addInitScript(value => localStorage.setItem('ct-home-theme', value), theme);
+      await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
     const state = await fixture(page);
     await loaded(page);
     await page.locator('#accessibility-toggle').click();
@@ -694,6 +699,7 @@ for (const theme of ['light', 'dark']) {
   for (const width of [320, 412, 768, 1440]) {
     test(`approved artwork, readable copy and destinations / ${theme} / ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 1050 });
+      await page.addInitScript(value => localStorage.setItem('ct-home-theme', value), theme);
       await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
       const state = await fixture(page);
       await loaded(page);
@@ -752,7 +758,7 @@ test('missing approved artwork recovers to the actionable house advertisement', 
     await expect(slot.locator('.ad-campaign')).toBeHidden();
     await expect(slot.locator('.ad-controls')).toBeHidden();
     await expect(slot.locator('.eyebrow')).toBeVisible();
-    await expect(slot.locator('.ad-house a')).toHaveAttribute('href', 'https://wa.me/5581999311509?text=Ol%C3%A1%21%20Quero%20anunciar%20na%20Carioca%20Ticket.');
+    await expect(slot.locator('.ad-house a[href^="https://wa.me/"]')).toHaveAttribute('href', 'https://wa.me/5581999311509?text=Ol%C3%A1%21%20Quero%20anunciar%20na%20Carioca%20Ticket.');
   }
   expect(state.errors).toEqual([]);
 });
@@ -873,6 +879,7 @@ for (const width of [320, 375, 390]) for (const enlarged of [false, true]) {
     expect(state.blocked).toEqual([]);
   });
 }
+
 
 
 
