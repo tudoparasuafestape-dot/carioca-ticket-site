@@ -38,8 +38,8 @@ with sync_playwright() as p:
  for choice in ['light','dark','system']:
   page.select_option('#home-theme',choice);page.reload();assert page.locator('#home-theme').input_value()==choice
   other.wait_for_function('(v)=>document.querySelector("#home-theme").value===v',arg=choice)
- page.emulate_media(color_scheme='dark');assert page.locator('html').get_attribute('data-home-theme')=='dark'
- page.emulate_media(color_scheme='light');assert page.locator('html').get_attribute('data-home-theme')=='light'
+ page.emulate_media(color_scheme='dark');page.wait_for_function("document.documentElement.dataset.homeTheme==='dark'")
+ page.emulate_media(color_scheme='light');page.wait_for_function("document.documentElement.dataset.homeTheme==='light'")
  page.select_option('#home-theme','dark');page.emulate_media(color_scheme='light');assert page.locator('html').get_attribute('data-home-theme')=='dark'
  # Test rendered, cloned carousel slides; no link activation from rotation, focus, or touch cancel.
  assert page.locator('.ad-house a[href="/anuncie/"]').count()==2
