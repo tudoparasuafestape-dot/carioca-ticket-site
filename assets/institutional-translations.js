@@ -551,7 +551,7 @@
     "translations": {
       "en-US": "Buyers must provide accurate information and retain access to the email address and phone number provided. Ticket issuance depends on payment confirmation and the availability rules for the selected ticket batch.",
       "es": "El comprador debe facilitar información correcta y mantener el acceso al correo electrónico y al teléfono indicados. La emisión de la entrada depende de la confirmación del pago y de las reglas de disponibilidad del lote seleccionado.",
-      "zh-Hans": "购票用户必须提供准确的信息，并保持所提供电子邮箱和电话号码可用。出票取决于付款确认及所选票档的供应规则。"
+      "zh-Hans": "购票用户必须提供准确的信息，并保持所提供电子邮箱和电话号码可用。出票取决于付款确认及所选售票批次的供应规则。"
     }
   },
   {
