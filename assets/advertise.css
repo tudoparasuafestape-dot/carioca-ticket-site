@@ -57,3 +57,8 @@
  .ct-advertise .ad-actions .btn { width:100%; }
  .ct-advertise .ad-close>div { flex-basis:100%; }
 }
+/* Home navigation uses a two-column mobile grid; this page has its own header. */
+.ct-advertise .nav { display:flex; flex-wrap:wrap; gap:16px 24px; }
+.ct-advertise .theme-control select { width:auto; max-width:100%; font-size:.875rem; }
+.ct-advertise .ad-hero>div { min-width:0; }
+.ct-advertise h1,.ct-advertise h2 { overflow-wrap:anywhere; }
