@@ -21,7 +21,7 @@ const catalog=[{id:'FIXTURE-LANGUAGE-1',nome:'Evento original',data:'10/10/2026'
    const p=new URLSearchParams(req.postData()||'');
    if(p.get('metodo')==='ctEventosPublicosListarPROD'&&p.get('argsJson')==='[]'&&p.get('ctMinhaCariocaAction')==='publicRpc'){
     rpc++;const payload={ctMinhaCariocaPost:true,id:p.get('ctMinhaCariocaRequestId'),ok:true,resultado:{sucesso:true,eventos:catalog}};
-    return route.fulfill({contentType:'text/html',body:'<script>parent.postMessage('+JSON.stringify(payload)+',"*")</script>'});
+    return route.fulfill({contentType:'text/html; charset=utf-8',body:'<script>parent.postMessage('+JSON.stringify(payload)+',"*")</script>'});
    }
   }
   if(u.origin==='https://fonts.googleapis.com')return route.fulfill({contentType:'text/css',body:'/* offline font fallback */'});
@@ -99,5 +99,5 @@ const catalog=[{id:'FIXTURE-LANGUAGE-1',nome:'Evento original',data:'10/10/2026'
   const isolated=await context.newPage();await isolated.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Blocked','SecurityError');}});});await isolated.goto(origin+'/ajuda/');await isolated.locator('#public-language').selectOption('zh-Hans');assert.equal(await isolated.locator('html').getAttribute('lang'),'zh-Hans');
   assert.deepEqual(errors,[]);assert.deepEqual(unexpected,[]);assert.ok(rpc>0);
   console.log(JSON.stringify({passed:true,actualPageCases:cases,widths:[320,1440],locales:['pt-BR','en-US','es','zh-Hans'],interceptedCatalogCalls:rpc,unexpectedRequests:unexpected,legalOriginalsPreserved:true,screenshots:'test-results/public-language'}));
- }finally{await browser.close();}
+ }catch(error){const active=context.pages()[0];if(active)await active.screenshot({path:path.join(screenshots,'failure.png'),fullPage:true}).catch(()=>{});throw error;}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
