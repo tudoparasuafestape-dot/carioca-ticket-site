@@ -341,6 +341,10 @@
 @media(max-width:600px) { .ct-home .public-events::before { left:-8px; } .ct-home .public-events::after { right:-8px; } }
 
 /* The event feature is enhanced locally; failed JS retains the original grid. */
+.ct-home .catalog-actions > .ct-public-share { margin:0 0 0 auto; }
+.ct-home .catalog-actions > .ct-public-share button { min-width:44px; padding:8px; }
+.ct-home .catalog-actions > .ct-public-share.has-feedback { flex-basis:100%; min-width:0; }
+.ct-home .catalog-actions > .ct-public-share input { box-sizing:border-box; }
 .ct-home .event-feature { min-width:0; }
 .ct-home .home-intro-top { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; }
 .ct-home .home-intro-top .ct-public-share { margin:0; }
@@ -367,3 +371,4 @@
   .ct-home .is-event-rail .catalog-actions .btn { width:100%; }
   .ct-home .ad-playback-state { left:auto; right:12px; bottom:18px; font-size:.6875rem; }
 }
+

@@ -25,7 +25,7 @@ async function prepare(page,routeName,mode) {
     });
     await page.goto(ORIGIN+'/parceiro/programa/?ref=PRIVATE-FIXTURE&token=DO-NOT-SHARE#interested');
   }
-  return page.locator('[data-public-share]');
+  return page.locator('[data-public-share="'+routeName+'"]');
 }
 for(const width of [320,1440]) for(const routeName of ['home']) for(const mode of ['native','absent','cancel','copy-fails','pending']) {
  test(`${routeName} share / ${mode} / ${width}px: public canonical only, no automatic send`,async({page})=>{
@@ -58,3 +58,4 @@ for(const width of [320,1440]) for(const routeName of ['home']) for(const mode o
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  });
 }
+

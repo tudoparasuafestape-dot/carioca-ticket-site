@@ -12,10 +12,13 @@
   var cards = [], index = 0, paused = reduced.matches, visible = false, hovered = false;
   var timer, animationTimer, frame, moving = false, drag = null, clickBlockedUntil = 0, toggleIntent = null;
   var INTERVAL = 5000, DURATION = 320;
+  var sharing = new Set();
   function modulo(value) { return (value + cards.length) % cards.length; }
   function step() { return cards.length ? cards[0].getBoundingClientRect().width + 16 : 0; }
   function labels() {
-    pause.disabled = reduced.matches;
+    pause.disabled = reduced.matches || sharing.size > 0;
+    document.getElementById('event-rail-previous').disabled = sharing.size > 0;
+    document.getElementById('event-rail-next').disabled = sharing.size > 0;
     pause.dataset.i18n = paused ? 'railPlay' : 'railPause';
     H.applyTranslations(host);
     position.textContent = cards.length ? H.t('railPosition', { n: index + 1, total: cards.length }) : '';
@@ -47,7 +50,7 @@
   }
   function schedule(delay) {
     clearTimeout(timer);
-    if (cards.length < 2 || paused || reduced.matches || hovered || !visible || document.hidden || moving || drag || (host.contains(document.activeElement) && document.activeElement !== pause)) return;
+    if (cards.length < 2 || sharing.size || paused || reduced.matches || hovered || !visible || document.hidden || moving || drag || (host.contains(document.activeElement) && document.activeElement !== pause)) return;
     timer = setTimeout(function () { go(1, false); }, typeof delay === 'number' ? delay : INTERVAL);
   }
   function stop() { paused = true; clearTimeout(timer); labels(); }
@@ -59,7 +62,7 @@
   // Animate only the outgoing/incoming original nodes. No cloned links, DOM
   // reordering, scrollIntoView, focus calls, storage access or backend requests.
   function go(direction, manual, targetIndex) {
-    if (cards.length < 2) return;
+    if (cards.length < 2 || sharing.size) return;
     if (manual) stop();
     clearAnimation();
     var from = index, target = targetIndex === undefined ? modulo(index + direction) : targetIndex;
@@ -83,12 +86,19 @@
   pause.addEventListener('pointerdown', function () { toggleIntent = !paused; });
   pause.addEventListener('keydown', function () { toggleIntent = null; });
   pause.addEventListener('click', function () {
+    if (sharing.size) return;
     paused = toggleIntent === null ? !paused : toggleIntent; toggleIntent = null;
     // Reduced motion never auto-rotates, including after an explicit click.
     if (reduced.matches) paused = true;
     labels(); schedule();
   });
   host.addEventListener('focusin', function () { stop(); if (moving) finish(false); });
+  host.addEventListener('ct:public-share', function (event) {
+    if (event.detail.phase === 'start') sharing.add(event.detail.host);
+    if (event.detail.phase === 'end') sharing.delete(event.detail.host);
+    stop();
+    if (moving) finish(false);
+  });
   host.addEventListener('focusout', function () { setTimeout(schedule, 0); });
   host.addEventListener('pointerenter', function (event) { if (event.pointerType === 'mouse') { hovered = true; schedule(); } });
   host.addEventListener('pointerleave', function (event) { if (event.pointerType === 'mouse') { hovered = false; schedule(); } });
@@ -101,7 +111,7 @@
   });
   grid.addEventListener('dragstart', function (event) { event.preventDefault(); });
   grid.addEventListener('pointerdown', function (event) {
-    if (!event.isPrimary || event.button !== 0 || cards.length < 2) return;
+    if (!event.isPrimary || event.button !== 0 || cards.length < 2 || sharing.size) return;
     stop();
     if (moving) { clickBlockedUntil = performance.now() + 700; finish(false); }
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY, dx: 0, horizontal: false };
@@ -168,3 +178,4 @@
   document.addEventListener('ct:language', labels);
   reset();
 }());
+

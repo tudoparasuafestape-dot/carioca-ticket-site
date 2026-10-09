@@ -157,6 +157,7 @@
     "adPausedState": "Rotação pausada",
     "adPlayingState": "Troca a cada 5 s",
     "shareSite": "Compartilhar site",
+    "shareEvent": "Compartilhar evento:",
     "shareProgram": "Compartilhar apresentação",
     "shareCopied": "Link copiado.",
     "shareFailed": "Não foi possível copiar. Selecione o link abaixo para copiar.",
@@ -317,6 +318,7 @@
     "adPausedState": "Rotation paused",
     "adPlayingState": "Changes every 5 s",
     "shareSite": "Share website",
+    "shareEvent": "Share event:",
     "shareProgram": "Share presentation",
     "shareCopied": "Link copied.",
     "shareFailed": "Could not copy. Select the link below to copy it.",
@@ -477,6 +479,7 @@
     "adPausedState": "Rotación pausada",
     "adPlayingState": "Cambia cada 5 s",
     "shareSite": "Compartir sitio",
+    "shareEvent": "Compartir evento:",
     "shareProgram": "Compartir presentación",
     "shareCopied": "Enlace copiado.",
     "shareFailed": "No se pudo copiar. Selecciona el enlace de abajo para copiarlo.",
@@ -637,6 +640,7 @@
     "adPausedState": "轮播已暂停",
     "adPlayingState": "每 5 秒切换",
     "shareSite": "分享网站",
+    "shareEvent": "分享活动:",
     "shareProgram": "分享介绍",
     "shareCopied": "链接已复制。",
     "shareFailed": "无法复制。请选择下方链接进行复制。",
@@ -692,3 +696,4 @@
   document.getElementById('home-language').addEventListener('change', function (event) { api.setLocale(event.target.value); });
   api.setLocale(locale);
 }());
+
