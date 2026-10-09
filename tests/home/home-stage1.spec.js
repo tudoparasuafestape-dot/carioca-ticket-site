@@ -552,7 +552,7 @@ async function unlocalizedVisibleCopy(page) {
   return page.evaluate(() => {
       const allowedText = new Set(['Carioca', 'Ticket', 'CARIOCA TICKET', 'contato@cariocaticket.com.br', '@cariocaticketbr', 'cariocaticket.com.br', 'A−', 'A-', 'A+']);
       const dynamic = '#event-rail-position, #event-rail-announcement, #active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
-      const sourceOnly = '.catalog-original[translate="no"], .ad-campaign-title[translate="no"], [data-share-event-title][translate="no"], .active-place[translate="no"], #active-filters > span[translate="no"], #category-choices button[translate="no"], #city-options button[translate="no"]';
+      const sourceOnly = '.language-choice span[translate="no"], .catalog-original[translate="no"], .ad-campaign-title[translate="no"], [data-share-event-title][translate="no"], .active-place[translate="no"], #active-filters > span[translate="no"], #category-choices button[translate="no"], #city-options button[translate="no"]';
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       const result = [];
       while (walker.nextNode()) {
@@ -873,3 +873,4 @@ for (const width of [320, 375, 390]) for (const enlarged of [false, true]) {
     expect(state.blocked).toEqual([]);
   });
 }
+

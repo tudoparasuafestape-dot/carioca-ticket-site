@@ -181,7 +181,8 @@ for (const width of [320, 412, 1201, 1351, 1440, 1920]) for (const locale of ['p
     await expect(page.locator('#home-language')).toHaveCount(1);
     await headerFits(page);
     await page.locator('#accessibility-toggle').click();
-    await expect(page.locator('#home-language')).toBeVisible();
+    await expect(page.getByRole('radio')).toHaveCount(4);
+    await expect(page.getByRole('radio', { name: 'Português', exact: true })).toBeVisible();
     expect(await page.locator('#home-language option').evaluateAll(nodes => nodes.map(node => node.value))).toEqual(['pt-BR', 'en-US', 'es', 'zh-Hans']);
     for (let i = 0; i < 5; i++) await page.locator('#font-up').click();
     await button.click();
@@ -214,8 +215,8 @@ test.describe('navigation at equivalent 200 percent browser zoom', () => {
     const state = await fixture(page), button = page.locator('.menu-toggle'), menu = page.locator('#mobile-menu');
     await headerFits(page);
     await page.locator('#accessibility-toggle').click();
-    await expect(page.locator('#home-language')).toBeInViewport();
-    await page.locator('#home-language').selectOption('en-US');
+    for (const choice of await page.locator('.language-choice').all()) await expect(choice).toBeInViewport();
+    await page.getByRole('radio', { name: 'English (US)', exact: true }).check();
     await expect(button).toHaveAccessibleName(dictionaries['en-US'].openMenu);
     await page.keyboard.press('Escape'); await expect(page.locator('#accessibility-toggle')).toBeFocused();
     await button.focus(); await button.press('Enter'); await page.keyboard.press('Tab');
@@ -230,3 +231,4 @@ test.describe('navigation at equivalent 200 percent browser zoom', () => {
     assertClean(state);
   });
 });
+

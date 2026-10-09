@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  // Interface copy only. Producer-supplied names, places and descriptions are never translated.
+  // Interface copy and curated category labels only. Producer names, places and descriptions stay original.
   var dictionaries = {
   "pt-BR": {
     "menuLabel": "Menu",
@@ -672,6 +672,29 @@
   }
 };
 
+  // Curated interface category labels only. Never translate arbitrary producer copy.
+  // The original category remains the filter key and is never written back.
+  var categoryLabels = {
+    'Beleza': { 'en-US': 'Beauty', es: 'Belleza', 'zh-Hans': '美容' },
+    'Beleza & Negócios': { 'en-US': 'Beauty & Business', es: 'Belleza y negocios', 'zh-Hans': '美容与商业' },
+    'Samba e Pagode': { 'en-US': 'Samba & Pagode', es: 'Samba y Pagode', 'zh-Hans': 'Samba 与 Pagode' }
+  };
+  var categoryAliases = {
+    'Beleza e Negócios': 'Beleza & Negócios',
+    'Samba & Pagode': 'Samba e Pagode',
+    'Samba & pagode': 'Samba e Pagode'
+  };
+  function categoryLabel(value) {
+    var original = String(value || '').trim();
+    var key = has(categoryAliases, original) ? categoryAliases[original] : original;
+    var known = has(categoryLabels, key);
+    return {
+      text: known && api.locale !== 'pt-BR' ? categoryLabels[key][api.locale] : original,
+      language: known ? api.locale : sourceLanguage,
+      known: known
+    };
+  }
+
   var locale = 'pt-BR';
   var sourceLanguage = document.documentElement.lang || 'pt-BR';
   function has(object, key) { return Object.prototype.hasOwnProperty.call(object, key); }
@@ -706,19 +729,25 @@
     sourceLanguage: sourceLanguage,
     t: function (key, values) { return message(key, values).text; },
     applyTranslations: apply,
+    categoryLabel: categoryLabel,
     setLocale: function (value) {
       if (!has(dictionaries, value)) return;
       api.locale = value;
       document.documentElement.lang = value;
       apply(document);
       document.getElementById('home-language').value = value;
+      document.querySelectorAll('input[name="home-language-choice"]').forEach(function (radio) { radio.checked = radio.value === value; });
       document.getElementById('producer-language-note').hidden = value === sourceLanguage;
       try { localStorage.setItem('ct-home-locale', value); } catch (_) {}
       document.dispatchEvent(new CustomEvent('ct:language'));
     }
   };
   document.getElementById('home-language').addEventListener('change', function (event) { api.setLocale(event.target.value); });
+  document.querySelectorAll('input[name="home-language-choice"]').forEach(function (radio) {
+    radio.addEventListener('change', function () { if (radio.checked) api.setLocale(radio.value); });
+  });
   api.setLocale(locale);
 }());
+
 
 
