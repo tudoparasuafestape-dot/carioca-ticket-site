@@ -8,7 +8,7 @@
       href: 'https://www.instagram.com/tudoparasuafestape/', title: 'Tudo Para Sua Festa',
       descriptionKey: 'adTpssfDescription', ctaKey: 'adTpssfCta' }],
     secondary: [{ src: '/assets/home-ad-priscila.png', width: 2170, height: 725,
-      href: 'https://wa.me/5581996200696', title: 'Priscila Ferreira',
+      href: 'https://wa.me/5581996200696?text=Ol%C3%A1%21%20Vim%20pela%20Carioca%20Ticket%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20os%20servi%C3%A7os%20e%20hor%C3%A1rios%20dispon%C3%ADveis%20para%20agendamento.', title: 'Priscila Ferreira',
       descriptionKey: 'adPriscilaDescription', ctaKey: 'adPriscilaCta' }]
   };
   var house = document.querySelector('#advertising-primary');
@@ -106,4 +106,5 @@
   mount(house, campaigns.primary);
   mount(document.getElementById('advertising-secondary'), campaigns.secondary);
 }());
+
 
