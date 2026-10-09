@@ -65,7 +65,14 @@ Isso não é um bloqueio funcional introduzido por esta correção.
 Sem merge/deploy, home PR164, íconeBar, CentralMobile ou V2.
 
 O draft [166](https://github.com/tudoparasuafestape-dot/carioca-ticket-site/pull/166)
-contém os commits iniciais até `2880c7f`. A revisão de capacidade nominal e
-estorno pago permanece local, sem novo push, em respeito à orientação
-posterior de não publicar. Não foi executada no CI remoto. Nenhum schema ou
-calendário foi aplicado em produção; esses são pré-requisitos de rollout.
+recebeu os commits iniciais até `2880c7f`; a revisão de capacidade nominal e
+estorno pago é `edb9308`. O push para a mesma branch isolada foi explicitamente
+autorizado, sem force. Conferir o SHA integral e os checks do head do PR;
+CI aprovado não autoriza merge ou deploy.
+
+Bloqueios de rollout: schema de versão/auditoria depende de migração autorizada
+e homologada; data exata depende do calendário de feriados e da data-base
+compartilhados com o produtor; recuperação ou absorção de valores já pagos
+depende de decisão financeira. Nenhum desses estados representa transferência,
+compensação automática ou autorização de pagamento. Nenhum schema ou calendário
+foi aplicado em produção.
