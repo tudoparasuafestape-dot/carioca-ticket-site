@@ -6,9 +6,12 @@
   }
   function usable(value) {
     var normalized = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    // Conservatively reject links and unresolved/remote-location descriptions.
+    // This is an uncertainty filter, never a claim of physical-location verification.
     return value.length >= 3 && value.length <= 500 &&
-      !/(?:[a-z][a-z0-9+.-]*:\/\/|https?:|www\.|@|<|>|\b[a-z0-9-]+\.(?:com|org|net|app|br)\b)/i.test(value) &&
-      !/^(?:a confirmar|a definir|nao informado|nao se aplica|em breve|online|on-line|virtual|remoto|zoom|google meet|teams|[-–—.]+)$/.test(normalized);
+      !/(?:[a-z][a-z0-9+.-]*:\/\/|https?:|www\.|@|<|>|\b[a-z0-9-]+\.[a-z]{2,63}\b)/i.test(value) &&
+      !/\b(?:confirmar|definir|informar|nao informad[oa]|nao se aplica|em breve|pendente|aguarde|a ser confirmad[oa]|a ser definid[oa]|divulgad[oa]|enviad[oa]|online|on-line|on line|virtual|remot[oa]|zoom|google meet|teams|link|e-?mail)\b/.test(normalized) &&
+      !/^(?:n\/a|[-–—.]+)$/.test(normalized);
   }
   function render(event) {
     event = event || {};

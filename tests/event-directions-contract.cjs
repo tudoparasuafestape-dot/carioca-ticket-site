@@ -28,7 +28,7 @@ const url=new URL(el('map').href);
 assert.equal(url.origin,'https://www.google.com');assert.equal(url.pathname,'/maps/dir/');
 assert.equal(url.searchParams.get('destination'),destination);assert.equal(url.searchParams.get('api'),'1');assert.equal([...url.searchParams].length,2);
 await el('copy').onclick();assert.deepEqual(copied,[destination]);assert.match(el('status').textContent,/Endereço copiado/);checks++;
-for(const patch of [{local:''},{endereco:''},{cidade:''},{uf:''},{uf:'XX'},{local:'Online'},{endereco:'https://meet.google.com/a'},{local:'meet.google.com/abc'},{endereco:'www.zoom.us/a'},{endereco:'<img src=x>'},{endereco:'A definir'},{endereco:'á'.repeat(500)},{endereco:'\ud800'},{endereco:123},{cidade:null}]) invalid({...event,...patch});
+for(const patch of [{local:''},{endereco:''},{cidade:''},{uf:''},{uf:'XX'},{local:'Online'},{endereco:'https://meet.google.com/a'},{local:'meet.google.com/abc'},{endereco:'www.zoom.us/a'},{endereco:'<img src=x>'},{endereco:'A definir'},{endereco:'A confirmar com a organização'},{endereco:'zoom.us/j/123456789'},{local:'Evento online',endereco:'Link enviado por e-mail'},{local:'Encontro virtual'},{endereco:'Local a ser definido'},{endereco:'Endereço será divulgado em breve'},{endereco:'Link enviado por email'},{endereco:'á'.repeat(500)},{endereco:'\ud800'},{endereco:123},{cidade:null}]) invalid({...event,...patch});
 invalid(null);invalid(undefined);
 for(const type of ['PUBLICO','PRIVADO']) valid({...event,tipoEvento:type});
 valid({...event,local:'  Espaço São João & Arte\n',uf:'pe'});

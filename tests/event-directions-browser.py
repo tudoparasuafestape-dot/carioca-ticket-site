@@ -77,7 +77,7 @@ with sync_playwright() as pw:
                 page.locator('#event-directions').screenshot(path=str(OUT / f'{path}-{width}-{theme}.png'))
                 checks.append(f'{path}/{width}/{theme}/150%')
         # Invalid/incomplete destinations never leave stale links or copy handlers.
-        for patch in [dict(local=''),dict(endereco=''),dict(cidade=''),dict(uf='XX'),dict(local='Online'),dict(endereco='https://meet.google.com/a'),dict(local='meet.google.com/abc'),dict(endereco='<img src=x>'),dict(endereco='A definir'),dict(endereco='á'*500),dict(endereco='\ud800')]:
+        for patch in [dict(local=''),dict(endereco=''),dict(cidade=''),dict(uf='XX'),dict(local='Online'),dict(endereco='https://meet.google.com/a'),dict(local='meet.google.com/abc'),dict(endereco='<img src=x>'),dict(endereco='A definir'),dict(endereco='A confirmar com a organização'),dict(endereco='zoom.us/j/123456789'),dict(local='Evento online',endereco='Link enviado por e-mail'),dict(local='Encontro virtual'),dict(endereco='Local a ser definido'),dict(endereco='Endereço será divulgado em breve'),dict(endereco='Link enviado por email'),dict(endereco='á'*500),dict(endereco='\ud800')]:
             page.evaluate('event => CTEventDirections.render(event)', dict(EVENT, **patch))
             assert not page.locator('#directions-details').is_visible(), patch
             assert page.locator('#directions-map').get_attribute('href') is None
