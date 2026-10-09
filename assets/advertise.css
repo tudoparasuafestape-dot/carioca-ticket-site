@@ -62,3 +62,5 @@
 .ct-advertise .theme-control select { width:auto; max-width:100%; font-size:.875rem; }
 .ct-advertise .ad-hero>div { min-width:0; }
 .ct-advertise h1,.ct-advertise h2 { overflow-wrap:anywhere; }
+.ct-advertise .theme-control label { position:static; width:auto; height:auto; overflow:visible; clip-path:none; }
+@media(max-width:420px) { .ct-advertise .theme-control label { width:100%; } }
