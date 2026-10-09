@@ -128,7 +128,7 @@ test('reduced motion, unavailable storage, text enlargement and 200% reflow keep
   await page.clock.install(); await page.emulateMedia({reducedMotion:'reduce'});
   await page.addInitScript(()=>{ Object.defineProperty(window,'localStorage',{get(){throw new Error('blocked');}}); sessionStorage.setItem('existing-session-fixture','unchanged'); });
   await page.setViewportSize({width:320,height:915}); await open(page,15);
-  await page.clock.runFor(15000); await active(page,0); await expect(page.locator('#event-rail-pause')).toBeDisabled();
+  await page.clock.runFor(15000); await active(page,0); await expect(page.locator('#event-rail-pause')).toBeEnabled();
   await page.locator('#accessibility-toggle').click();
   for(let i=0;i<5;i++) await page.locator('#font-up').click();
   await page.locator('#accessibility-toggle').click(); await overflow(page);
@@ -172,7 +172,7 @@ test('ads start on artwork under fixture seed and stay paused with reduced motio
   await page.clock.install(); await page.emulateMedia({reducedMotion:'reduce'}); await open(page,2);
   const ad=page.locator('#advertising-primary'); await ad.scrollIntoViewIfNeeded();
   await page.clock.runFor(16000); await expect(ad.locator('.ad-campaign')).toBeVisible();
-  await expect(ad.getByRole('button',{name:'Reproduzir'})).toBeDisabled();
+  await expect(ad.getByRole('button',{name:'Reproduzir'})).toBeEnabled();
   await ad.getByRole('button',{name:'Próxima publicidade'}).click(); await expect(ad.locator('.ad-house')).toBeVisible();
 });
 test('hidden document freezes event and advertisement timers, image failure keeps the house fallback',async({page})=>{
@@ -185,10 +185,10 @@ test('hidden document freezes event and advertisement timers, image failure keep
   await expect(ad.locator('.ad-house')).toBeVisible(); await expect(ad.locator('.ad-controls')).toBeHidden();
   await expect(ad.locator('.eyebrow')).toHaveText('Publicidade');
 });
-test('turning reduced motion off immediately enables explicit resume without navigating',async({page})=>{
+test('changing reduced motion preserves enabled explicit resume without navigating',async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'}); await open(page,2);
   const pause=page.locator('#event-rail-pause');
-  await expect(pause).toBeDisabled(); await expect(pause).toHaveText('Retomar rotação');
+  await expect(pause).toBeEnabled(); await expect(pause).toHaveText('Retomar rotação');
   await page.emulateMedia({reducedMotion:'no-preference'});
   await expect(pause).toBeEnabled(); await expect(pause).toHaveText('Retomar rotação');
   await active(page,0);
@@ -212,3 +212,4 @@ test('resize during manual transition commits the new card and matching visible 
   await expect(page.locator('.catalog-card:not([inert])')).toContainText(rows(2)[1].nome);
   await expect(page.locator('#event-rail-pause')).toHaveText('Retomar rotação');
 });
+

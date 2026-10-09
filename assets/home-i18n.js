@@ -153,6 +153,7 @@
     "railNext": "Próximo evento",
     "railPosition": "{n} de {total}",
     "railHelp": "Deslize para os lados ou use as setas para explorar.",
+    "motionChoice": "Movimento reduzido: início pausado. Você controla a reprodução deste carrossel; as trocas são sem animação.",
     "railSlide": "evento",
     "railCarousel": "carrossel",
     "adPausedState": "Rotação pausada",
@@ -315,6 +316,7 @@
     "railNext": "Next event",
     "railPosition": "{n} of {total}",
     "railHelp": "Swipe sideways or use the arrows to explore.",
+    "motionChoice": "Reduced motion: starts paused. You control playback for this carousel; slides change without animation.",
     "railSlide": "event",
     "railCarousel": "carousel",
     "adPausedState": "Rotation paused",
@@ -477,6 +479,7 @@
     "railNext": "Evento siguiente",
     "railPosition": "{n} entre {total}",
     "railHelp": "Desliza a los lados o usa las flechas para explorar.",
+    "motionChoice": "Movimiento reducido: inicio en pausa. Tú controlas la reproducción de este carrusel; los cambios son sin animación.",
     "railSlide": "diapositiva de evento",
     "railCarousel": "carrusel",
     "adPausedState": "Rotación pausada",
@@ -639,6 +642,7 @@
     "railNext": "下一个活动",
     "railPosition": "第 {n} 项，共 {total} 项",
     "railHelp": "左右滑动或使用箭头浏览。",
+    "motionChoice": "已减少动态效果：初始状态为暂停。您可以控制此轮播的播放；切换时不显示动画。",
     "railSlide": "活动",
     "railCarousel": "轮播",
     "adPausedState": "轮播已暂停",
@@ -700,4 +704,5 @@
   document.getElementById('home-language').addEventListener('change', function (event) { api.setLocale(event.target.value); });
   api.setLocale(locale);
 }());
+
 

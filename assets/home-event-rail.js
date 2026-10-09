@@ -7,6 +7,7 @@
   var pause = document.getElementById('event-rail-pause');
   var position = document.getElementById('event-rail-position');
   var help = document.getElementById('event-rail-help');
+  var motionNote = document.getElementById('event-rail-motion-note');
   var announcement = document.getElementById('event-rail-announcement');
   var reduced = matchMedia('(prefers-reduced-motion: reduce)');
   var cards = [], index = 0, paused = reduced.matches, visible = false, hovered = false;
@@ -16,7 +17,10 @@
   function modulo(value) { return (value + cards.length) % cards.length; }
   function step() { return cards.length ? cards[0].getBoundingClientRect().width + 16 : 0; }
   function labels() {
-    pause.disabled = reduced.matches || sharing.size > 0;
+    pause.disabled = sharing.size > 0;
+    if (motionNote) motionNote.hidden = !reduced.matches || cards.length < 2;
+    if (reduced.matches && motionNote) pause.setAttribute('aria-describedby', motionNote.id);
+    else pause.removeAttribute('aria-describedby');
     document.getElementById('event-rail-previous').disabled = sharing.size > 0;
     document.getElementById('event-rail-next').disabled = sharing.size > 0;
     pause.dataset.i18n = paused ? 'railPlay' : 'railPause';
@@ -50,14 +54,14 @@
   }
   function schedule(delay) {
     clearTimeout(timer);
-    if (cards.length < 2 || sharing.size || paused || reduced.matches || hovered || !visible || document.hidden || moving || drag || (host.contains(document.activeElement) && document.activeElement !== pause)) return;
+    if (cards.length < 2 || sharing.size || paused || hovered || !visible || document.hidden || moving || drag || (host.contains(document.activeElement) && document.activeElement !== pause)) return;
     timer = setTimeout(function () { go(1, false); }, typeof delay === 'number' ? delay : INTERVAL);
   }
   function stop() { paused = true; clearTimeout(timer); labels(); }
   function finish(manual) {
     clearAnimation(); paint(); labels();
     if (manual) announcement.textContent = H.t('railPosition', { n: index + 1, total: cards.length });
-    schedule(manual ? INTERVAL : INTERVAL - DURATION);
+    schedule(manual || reduced.matches ? INTERVAL : INTERVAL - DURATION);
   }
   // Animate only the outgoing/incoming original nodes. No cloned links, DOM
   // reordering, scrollIntoView, focus calls, storage access or backend requests.
@@ -88,8 +92,8 @@
   pause.addEventListener('click', function () {
     if (sharing.size) return;
     paused = toggleIntent === null ? !paused : toggleIntent; toggleIntent = null;
-    // Reduced motion never auto-rotates, including after an explicit click.
-    if (reduced.matches) paused = true;
+    // Starting is a per-carousel, per-visit choice. Reduced motion still
+    // starts paused and keeps every subsequent swap free of animation.
     labels(); schedule();
   });
   host.addEventListener('focusin', function () { stop(); if (moving) finish(false); });
@@ -164,8 +168,8 @@
   });
   reduced.addEventListener('change', function () {
     if (reduced.matches) { stop(); if (moving) finish(false); }
-    // Re-enable the explicit resume control when the preference changes back.
-    // Keep the user's paused state; never restart motion automatically.
+    // A new reduced-motion preference revokes any explicit start. Changing
+    // it back never resumes this or another carousel automatically.
     labels(); schedule();
   });
   // A short mobile viewport may show the cover but less than 25% of the tallest
@@ -183,7 +187,6 @@
     grid.classList.toggle('has-one-event', cards.length === 1);
     host.hidden = cards.length === 0;
     controls.hidden = help.hidden = cards.length < 2;
-    pause.disabled = reduced.matches;
     grid.tabIndex = cards.length > 1 ? 0 : -1;
     grid.setAttribute('aria-describedby', 'event-rail-help');
     host.setAttribute('aria-roledescription', H.t('railCarousel'));
