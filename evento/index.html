@@ -30,7 +30,7 @@
   <meta name="twitter:title" content="Evento | Carioca Ticket">
   <meta name="twitter:description" content="Descubra eventos e garanta seu ingresso com segurança pela Carioca Ticket.">
   <meta name="twitter:image" content="https://cariocaticket.com.br/assets/carioca-ticket-preview-oficial-v9.jpg">
-  <script src="/assets/home-theme.js?v=20261009" ></script>
+  <script src="/assets/home-theme.js?v=20261009-dark-default" ></script>
   <style>
     :root{
       --ink:#07090c;
@@ -269,6 +269,8 @@
     }
   </style>
   <link rel="stylesheet" href="/assets/event-accessibility.css?v=20261009-visibility">
+  <link rel="stylesheet" href="/assets/event-directions.css?v=20261009-1">
+  <script src="/assets/event-directions.js?v=20261009-1"></script>
   <script src="/assets/event-description-speech.js?v=20261009" defer></script>
   <script src="/pwa-register.js" defer></script>
 </head>
@@ -492,6 +494,22 @@
             <div class="section-label">Ingressos disponíveis</div>
             <h2>Escolha como você quer viver esse evento</h2>
             <div id="tickets" class="tickets"></div>
+          </article>
+
+          <article id="event-directions" class="section event-directions" aria-labelledby="directions-title">
+            <div class="section-label">Planeje sua chegada</div>
+            <h2 id="directions-title">Como chegar</h2>
+            <p id="directions-unavailable">Local ou endereço completo ainda não informado. Confirme os detalhes com a organização.</p>
+            <div id="directions-details" hidden>
+              <label for="directions-address">Local e endereço informados pela organização</label>
+              <textarea id="directions-address" rows="3" readonly aria-describedby="directions-help"></textarea>
+              <div class="directions-actions">
+                <a id="directions-map" target="_blank" rel="noopener noreferrer" aria-label="Abrir no Google Maps (nova aba)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>Abrir no Google Maps</span><span aria-hidden="true">↗</span></a>
+                <button id="directions-copy" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></svg><span>Copiar endereço</span></button>
+              </div>
+              <p id="directions-help">Confira o destino antes de sair. Para usar Uber ou 99, copie o endereço e cole no aplicativo.</p>
+              <p id="directions-status" role="status" aria-live="polite" aria-atomic="true"></p>
+            </div>
           </article>
 
           <article class="section">
@@ -736,6 +754,7 @@
         $('dateTime').textContent=[e.data,e.horario].filter(Boolean).join(' · ')||'A confirmar';
         $('venue').textContent=[e.local,e.endereco].filter(Boolean).join(' · ')||'A confirmar';
         $('city').textContent=[e.cidade,e.uf].filter(Boolean).join(' / ')||'A confirmar';
+        if(window.CTEventDirections)window.CTEventDirections.render(e);
         $('producer').textContent=v.realizacao||'Produção do evento';
         $('category').textContent=v.categoria||'Evento Carioca Ticket';
         $('highlight').textContent=v.destaque||'Uma experiência para viver.';
@@ -853,4 +872,6 @@
   <script src="/assets/ct-analytics.js?v=20261008-recovery" defer></script>
 </body>
 </html>
+
+
 

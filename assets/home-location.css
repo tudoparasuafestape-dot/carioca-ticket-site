@@ -1,0 +1,5 @@
+.ct-home .home-geolocation{padding:0 0 1rem;margin:0 0 1rem;border-bottom:1px solid var(--border,#777);min-width:0}
+.ct-home .home-geolocation p{font-size:.88rem;line-height:1.5;overflow-wrap:anywhere;margin:.6rem 0}
+.ct-home .home-geolocation .btn{white-space:normal;max-width:100%;min-height:44px}
+.ct-home .home-geolocation .dialog-actions{flex-wrap:wrap}
+.ct-home .home-geolocation [hidden]{display:none!important}
