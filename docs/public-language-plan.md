@@ -5,9 +5,9 @@ This change is infrastructure only. No page loads the module yet, no production 
 ## Core contract
 
 - `window.CTPublicI18n`: `getLocale`, `setLocale`, `register`, `message`, `apply`, `content`.
-- Supported locales: pt-BR, en-US, es, zh-Hans. Existing `ct-home-locale` preference is retained. Storage denial falls back to memory. Storage events synchronize same-origin tabs without rewrite loops.
+- Supported locales: pt-BR, en-US, es, zh-Hans. Existing `ct-home-locale` preference is retained. Storage denial falls back to memory. Storage events synchronize same-origin tabs without rewrite loops. Persisted pageshow refreshes the preference after same-tab BFCache restoration.
 - `ct:public-language` announces actual changes. Integration must bridge existing home `ct:language` deliberately; this PR does not mutate CTHome or attach competing handlers.
-- DOM opt-in uses `data-public-i18n`, `data-public-i18n-placeholder`, `data-public-i18n-aria-label`. Apply explicitly after dynamic rendering. Use labels on leaf nodes; applying textContent replaces a node's children. Authored text survives missing dictionary keys.
+- DOM opt-in uses `data-public-i18n`, `data-public-i18n-placeholder`, `data-public-i18n-aria-label`. Apply explicitly after dynamic rendering. Use labels on leaf nodes; applying textContent replaces a node's children. If any requested key is missing, all authored text and attributes on that node remain unchanged, with the original inherited language pinned before the page root changes.
 - Only fully integrated pages should use `data-public-i18n-root` on html. Otherwise the document language remains unchanged, while translated nodes receive their actual language.
 - No network, new dependencies, credentials, backend changes or transaction changes.
 

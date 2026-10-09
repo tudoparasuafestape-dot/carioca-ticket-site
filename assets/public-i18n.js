@@ -43,15 +43,21 @@
         var translated = key && message(key);
         return translated && !translated.missing && translated.language !== locale;
       }) ? 'pt-BR' : locale;
-      entries.forEach(function (entry) {
+      var changes = entries.map(function (entry) {
         var key = node.getAttribute(entry[0]);
-        if (!key) return;
-        var translated = message(key, null, language);
-        // Missing keys must not overwrite authored, potentially important text.
-        if (translated.missing) return;
-        if (entry[1]) node.setAttribute(entry[1], translated.text);
-        else node.textContent = translated.text;
-        node.lang = translated.language;
+        return key ? {attribute: entry[1], message: message(key, null, language)} : null;
+      }).filter(Boolean);
+      if (changes.some(function (change) { return change.message.missing; })) {
+        // Atomic fallback: preserve ALL authored text/attributes when any key is
+        // missing. Pin the existing inherited language before the root changes.
+        var ancestor = node.closest && node.closest('[lang]');
+        node.lang = node.lang || (ancestor && ancestor.lang) || document.documentElement.lang || 'pt-BR';
+        return;
+      }
+      changes.forEach(function (change) {
+        if (change.attribute) node.setAttribute(change.attribute, change.message.text);
+        else node.textContent = change.message.text;
+        node.lang = change.message.language;
       });
     });
     // Do not label an untranslated legacy page as a translated document.
@@ -107,6 +113,15 @@
     getLocale: function () { return locale; },
     locales: Object.freeze(locales.slice()), storageKey: storageKey,
     setLocale: setLocale, register: register, message: message, apply: apply, content: content
+  });
+  window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) return;
+    // Same-tab navigation does not emit storage events in this document.
+    // Reconcile the preference after BFCache restores an older page instance.
+    try {
+      var saved = window.localStorage.getItem(storageKey);
+      if (saved === null || valid(saved)) setLocale(saved === null ? 'pt-BR' : saved, false);
+    } catch (_) { /* Retain the usable in-memory preference when storage is blocked. */ }
   });
   window.addEventListener('storage', function (event) {
     // Ignore sessionStorage and unrelated origins/storage areas.

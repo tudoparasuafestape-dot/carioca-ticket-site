@@ -113,3 +113,36 @@ test('mixed attribute fallback uses one truthful language per node', () => {
   const el = node({'data-public-i18n': 'label', 'data-public-i18n-aria-label': 'hint'});
   x.api.apply(el); assert.equal(el.textContent, 'Buscar'); assert.equal(el.attrs['aria-label'], 'Pesquisar eventos'); assert.equal(el.lang, 'pt-BR');
 });
+
+test('missing text key preserves entire node and truthful inherited language', () => {
+  const x = boot('en-US'); x.api.register('en-US', {hint: 'Continue'});
+  const el = node({'data-public-i18n': 'missingLabel', 'data-public-i18n-aria-label': 'hint', 'aria-label': 'Continuar'}, 'Continuar');
+  el.lang = ''; el.closest = () => ({lang: 'pt-BR'});
+  x.document.nodes = [el]; x.document.documentElement.attrs['data-public-i18n-root'] = '';
+  x.api.apply(x.document);
+  assert.equal(el.textContent, 'Continuar'); assert.equal(el.attrs['aria-label'], 'Continuar'); assert.equal(el.lang, 'pt-BR'); assert.equal(x.document.documentElement.lang, 'en-US');
+});
+test('missing attribute key preserves text and attributes atomically', () => {
+  const x = boot('en-US'); x.api.register('en-US', {label: 'Continue'});
+  const el = node({'data-public-i18n': 'label', 'data-public-i18n-aria-label': 'missingHint', 'aria-label': 'Continuar'}, 'Continuar');
+  x.api.apply(el); assert.equal(el.textContent, 'Continuar'); assert.equal(el.attrs['aria-label'], 'Continuar'); assert.equal(el.lang, 'pt-BR');
+});
+test('mixed fallback missing Portuguese key preserves whole original node', () => {
+  const x = boot('en-US'); x.api.register('en-US', {label: 'Continue'}); x.api.register('pt-BR', {hint: 'Continuar'});
+  const el = node({'data-public-i18n': 'label', 'data-public-i18n-aria-label': 'hint', 'aria-label': 'Continuar'}, 'Continuar');
+  x.api.apply(el); assert.equal(el.textContent, 'Continuar'); assert.equal(el.attrs['aria-label'], 'Continuar'); assert.equal(el.lang, 'pt-BR');
+});
+test('BFCache restores same-tab latest preference and reapplies DOM without storage writes', () => {
+  const x = boot('en-US'); const el = node({'data-public-i18n': 'originalContent'}); x.document.nodes = [el];
+  x.values.set(x.api.storageKey, 'es'); x.handlers.pageshow({persisted: true});
+  assert.equal(x.api.getLocale(), 'es'); assert.equal(el.textContent, 'Ver original'); assert.equal(el.lang, 'es'); assert.equal(x.writes.length, 0); assert.equal(x.events.length, 1);
+  x.handlers.pageshow({persisted: true}); assert.equal(x.events.length, 1);
+});
+test('BFCache handles removed, invalid and blocked preferences safely', () => {
+  const x = boot('es'); x.values.delete(x.api.storageKey); x.handlers.pageshow({persisted: true}); assert.equal(x.api.getLocale(), 'pt-BR');
+  x.api.setLocale('zh-Hans'); x.values.set(x.api.storageKey, '__proto__'); x.handlers.pageshow({persisted: true}); assert.equal(x.api.getLocale(), 'zh-Hans');
+  const blocked = boot(undefined, true); blocked.api.setLocale('es'); blocked.handlers.pageshow({persisted: true}); assert.equal(blocked.api.getLocale(), 'es');
+});
+test('ordinary pageshow does not replace an in-memory choice', () => {
+  const x = boot('es'); x.values.set(x.api.storageKey, 'en-US'); x.handlers.pageshow({persisted: false}); assert.equal(x.api.getLocale(), 'es');
+});
