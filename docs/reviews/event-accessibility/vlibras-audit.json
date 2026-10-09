@@ -1,0 +1,794 @@
+{
+  "date": "2026-10-09T09:26:59.414Z",
+  "browser": "140.0.7339.16",
+  "syntheticText": "Olá. Esta é uma demonstração de acessibilidade.",
+  "requests": [
+    {
+      "url": "https://vlibras.gov.br/app/vlibras-plugin.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/vlibras-plugin.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/images/vlibras-popup.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/images/vlibras-access.svg",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/images/vlibras-popup.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/images/vlibras-access.svg",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/vlibras-plugin-app.js?v=7.12.2",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/vlibras-plugin-app.js?v=7.12.2",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/vlibras-initial-CMx6VRWn.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-500.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-500i.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-600.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-600i.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-700.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-700i.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/menu.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/icaro.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/expand.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/x.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/skip.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/repeat.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/emotions/default.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/subtitle.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/settings.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.html?v=7.12.2",
+      "method": "HEAD",
+      "type": "fetch",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/govbr.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-500i.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-500.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-600.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-600i.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-700.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/expand.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-700i.woff2",
+      "method": "GET",
+      "type": "font",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/icaro.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/menu.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/skip.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/x.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/repeat.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/emotions/default.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/settings.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/subtitle.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.html?v=7.12.2",
+      "method": "GET",
+      "type": "document",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/govbr.webp",
+      "method": "GET",
+      "type": "image",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/unity-loader.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/index.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/unity-loader.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.json?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.json?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.wasm.code.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.wasm.framework.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.data.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.data.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.wasm.framework.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.wasm.code.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.html?v=7.12.2&retry=1",
+      "method": "HEAD",
+      "type": "fetch",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.html?v=7.12.2&retry=1",
+      "method": "GET",
+      "type": "document",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/unity-loader.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/index.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/unity-loader.js",
+      "method": "GET",
+      "type": "script",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.json?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.json?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.wasm.code.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.wasm.framework.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.data.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.data.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.wasm.framework.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.wasm.code.unityweb?v=7.12.2",
+      "method": "GET",
+      "type": "xhr",
+      "body": null
+    }
+  ],
+  "responses": [
+    {
+      "url": "https://vlibras.gov.br/app/vlibras-plugin.js",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/vlibras-plugin.js",
+      "status": 200,
+      "declaredBytes": 1119
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/images/vlibras-popup.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/images/vlibras-access.svg",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/images/vlibras-access.svg",
+      "status": 200,
+      "declaredBytes": 1306
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/images/vlibras-popup.webp",
+      "status": 200,
+      "declaredBytes": 13174
+    },
+    {
+      "url": "https://vlibras.gov.br/app/vlibras-plugin-app.js?v=7.12.2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/vlibras-plugin-app.js?v=7.12.2",
+      "status": 200,
+      "declaredBytes": 42
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/vlibras-initial-CMx6VRWn.js",
+      "status": 200,
+      "declaredBytes": 57204
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-500i.woff2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-500.woff2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-600.woff2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-600i.woff2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-700.woff2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/expand.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/fonts/rawline/rawline-700i.woff2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/icaro.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/menu.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/skip.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/x.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/repeat.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/emotions/default.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/settings.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/subtitle.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.html?v=7.12.2",
+      "status": 200,
+      "declaredBytes": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/assets/icons/govbr.webp",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-600.woff2",
+      "status": 200,
+      "declaredBytes": 82180
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-500.woff2",
+      "status": 200,
+      "declaredBytes": 78596
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-500i.woff2",
+      "status": 200,
+      "declaredBytes": 80772
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/icaro.webp",
+      "status": 200,
+      "declaredBytes": 1034
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/expand.webp",
+      "status": 200,
+      "declaredBytes": 152
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-600i.woff2",
+      "status": 200,
+      "declaredBytes": 85272
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/menu.webp",
+      "status": 200,
+      "declaredBytes": 100
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/repeat.webp",
+      "status": 200,
+      "declaredBytes": 202
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/x.webp",
+      "status": 200,
+      "declaredBytes": 180
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-700i.woff2",
+      "status": 200,
+      "declaredBytes": 85240
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/skip.webp",
+      "status": 200,
+      "declaredBytes": 126
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/fonts/rawline/rawline-700.woff2",
+      "status": 200,
+      "declaredBytes": 81480
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/emotions/default.webp",
+      "status": 200,
+      "declaredBytes": 190
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/settings.webp",
+      "status": 200,
+      "declaredBytes": 178
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/subtitle.webp",
+      "status": 200,
+      "declaredBytes": 100
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/assets/icons/govbr.webp",
+      "status": 200,
+      "declaredBytes": 474
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.html?v=7.12.2",
+      "status": 200,
+      "declaredBytes": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.js",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/unity-loader.js",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/unity-loader.js",
+      "status": 200,
+      "declaredBytes": 82568
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/index.js",
+      "status": 200,
+      "declaredBytes": 637
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.json?v=7.12.2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.json?v=7.12.2",
+      "status": 200,
+      "declaredBytes": 253
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.data.unityweb?v=7.12.2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.wasm.framework.unityweb?v=7.12.2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.wasm.code.unityweb?v=7.12.2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.wasm.code.unityweb?v=7.12.2",
+      "status": 200,
+      "declaredBytes": 2996753
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.wasm.framework.unityweb?v=7.12.2",
+      "status": 200,
+      "declaredBytes": 76883
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.data.unityweb?v=7.12.2",
+      "status": 200,
+      "declaredBytes": 16992528
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.html?v=7.12.2&retry=1",
+      "status": 200,
+      "declaredBytes": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.html?v=7.12.2&retry=1",
+      "status": 200,
+      "declaredBytes": null
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/index.js",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/unity-loader.js",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/index.js",
+      "status": 200,
+      "declaredBytes": 637
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/unity-loader.js",
+      "status": 200,
+      "declaredBytes": 82568
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.json?v=7.12.2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.json?v=7.12.2",
+      "status": 200,
+      "declaredBytes": 253
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.data.unityweb?v=7.12.2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.wasm.framework.unityweb?v=7.12.2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://vlibras.gov.br/app/unity/playerweb.wasm.code.unityweb?v=7.12.2",
+      "status": 302,
+      "declaredBytes": 4
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.wasm.framework.unityweb?v=7.12.2",
+      "status": 200,
+      "declaredBytes": 76883
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.wasm.code.unityweb?v=7.12.2",
+      "status": 200,
+      "declaredBytes": 2996753
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@v7.12.2/app/unity/playerweb.data.unityweb?v=7.12.2",
+      "status": 200,
+      "declaredBytes": 16992528
+    }
+  ],
+  "errors": [],
+  "blocked": [],
+  "externalRequestsBeforeActivation": 0,
+  "bootstrapRequests": 6,
+  "frames": [
+    "http://127.0.0.1:42972/",
+    "http://127.0.0.1:42973/",
+    "https://vlibras.gov.br/app/unity/index.html?v=7.12.2&retry=1"
+  ],
+  "frameText": "Demonstração de acessibilidade\n\nOlá. Esta é uma demonstração de acessibilidade.\n\nAtive o botão azul e selecione o texto desta demonstração.",
+  "layout": {
+    "iframeBounds": {
+      "x": 18,
+      "y": 373.21875,
+      "width": 356,
+      "height": 662
+    },
+    "purchaseBounds": {
+      "x": 60.484375,
+      "y": 782.40625,
+      "width": 269.03125,
+      "height": 45.59375
+    },
+    "note": "The widget cannot paint outside its separate-origin iframe; the fixed footer has priority at the shell level."
+  },
+  "framesAfterClose": 1
+}

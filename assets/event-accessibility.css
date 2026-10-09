@@ -1,0 +1,59 @@
+/* Scoped to the two public event pages; home and partner styles stay independent. */
+.ct-event { --event-text:#fff; --event-muted:#c5cad1; --event-surface:#111820; --event-border:#69717d; --event-accent:#ffd66d; color-scheme:dark; }
+.ct-event .theme-control { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--event-text); }
+.ct-event .theme-control[hidden] { display:none; }
+.ct-event .theme-control select { min-height:44px; max-width:130px; border:1px solid var(--event-border); border-radius:10px; padding:7px; background:var(--event-surface); color:var(--event-text); font:inherit; }
+.ct-event .description-audio { margin:14px 0; }
+.ct-event .description-audio-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+.ct-event .description-audio button { min-height:44px; padding:9px 13px; border:1px solid var(--event-border); border-radius:10px; background:var(--event-surface); color:var(--event-text); cursor:pointer; font-weight:700; }
+.ct-event .description-audio button:disabled { cursor:default; opacity:.55; }
+.ct-event .description-audio button:focus-visible,
+.ct-event .theme-control select:focus-visible { outline:3px solid var(--event-accent); outline-offset:3px; }
+.ct-event .description-audio .description-audio-status { margin-top:9px; font-size:13px; color:var(--event-muted); }
+.ct-event #longDescription { white-space:pre-line; overflow-wrap:anywhere; }
+.ct-event .topbar-inner { height:auto; min-height:70px; flex-wrap:wrap; padding-block:10px; }
+.ct-event .top-actions { flex-wrap:wrap; }
+.ct-event .content { background:#0c1016; color:var(--event-text); }
+.ct-event .section { background:var(--event-surface); border-color:#38414d; }
+.ct-event .section p, .ct-event .ticket-price small { color:var(--event-muted); }
+.ct-event .section-label { color:var(--event-accent); }
+.ct-event .ticket { background:#19212b; border-color:#45505e; }
+.ct-event .footer { background:#0c1016; color:#bdc4ce; }
+html[data-home-theme="light"] .ct-event { --event-text:#20242a; --event-muted:#4d5662; --event-surface:#fff; --event-border:#68717d; --event-accent:#70500c; color-scheme:light; background:#f7f7f7; color:var(--event-text); }
+html[data-home-theme="light"] .ct-event .topbar { background:rgba(247,247,247,.96); border-color:#d6d9de; }
+html[data-home-theme="light"] .ct-event .brand-copy strong { color:var(--event-text); }
+html[data-home-theme="light"] .ct-event .brand-copy small,
+html[data-home-theme="light"] .ct-event .customer-link,
+html[data-home-theme="light"] .ct-event .eyebrow,
+html[data-home-theme="light"] .ct-event .price-line strong { color:var(--event-accent); }
+html[data-home-theme="light"] .ct-event .lead,
+html[data-home-theme="light"] .ct-event .top-security,
+html[data-home-theme="light"] .ct-event .meta-card small,
+html[data-home-theme="light"] .ct-event .price-line small,
+html[data-home-theme="light"] .ct-event .trust { color:var(--event-muted); }
+html[data-home-theme="light"] .ct-event .meta-card,
+html[data-home-theme="light"] .ct-event .trust span { background:#fff; border-color:#d6d9de; }
+html[data-home-theme="light"] .ct-event .price-line { border-color:#d6d9de; }
+html[data-home-theme="light"] .ct-event .content,
+html[data-home-theme="light"] .ct-event .footer { background:#f0f1f3; color:var(--event-text); }
+html[data-home-theme="light"] .ct-event .section,
+html[data-home-theme="light"] .ct-event .ticket { background:#fff; border-color:#d6d9de; }
+html[data-home-theme="light"] .ct-event .share-btn { background:#fff; color:var(--event-text); border-color:#8a7440; }
+html[data-home-theme="light"] .ct-event .share-btn:focus-visible { outline-color:var(--event-accent); }
+html[data-home-theme="light"] .ct-event .mobile-buy { background:rgba(247,247,247,.97); border-color:#d6d9de; }
+html[data-home-theme="light"] .ct-event .share-menu,
+html[data-home-theme="light"] .ct-event .share-toast,
+html[data-home-theme="light"] .ct-event .error { color:var(--event-text); background:#fff; border-color:#d6d9de; }
+html[data-home-theme="light"] .ct-event .share-option,
+html[data-home-theme="light"] .ct-event .share-menu-head button { color:var(--event-text); background:#f0f1f3; border-color:#d6d9de; }
+html[data-home-theme="light"] .ct-event .share-option small,
+html[data-home-theme="light"] .ct-event #errorText { color:var(--event-muted) !important; }
+html[data-home-theme="light"] .ct-event .loading { background:#f7f7f7; color:var(--event-text); }
+@media(max-width:560px) {
+  .ct-event .topbar-inner { gap:8px; }
+  .ct-event .top-actions { width:100%; justify-content:space-between; gap:8px; }
+  .ct-event .side-card { scroll-margin-top:150px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html:has(.ct-event) { scroll-behavior:auto; }
+}

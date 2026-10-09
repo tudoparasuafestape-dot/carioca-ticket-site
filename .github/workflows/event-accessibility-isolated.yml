@@ -1,0 +1,34 @@
+name: Event accessibility (isolated fixtures)
+on:
+  pull_request:
+    paths:
+      - 'evento/index.html'
+      - 'evento-v2/index.html'
+      - 'assets/event-accessibility.css'
+      - 'assets/event-description-speech.js'
+      - 'assets/home-theme.js'
+      - 'tests/event-accessibility/**'
+      - 'tests/event-accessibility-preview.cjs'
+      - 'playwright.event-accessibility.config.cjs'
+      - '.github/workflows/event-accessibility-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  accessibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --config=playwright.event-accessibility.config.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: event-accessibility-review
+          path: |
+            test-results/event-accessibility*
+            docs/reviews/event-accessibility/screenshots/

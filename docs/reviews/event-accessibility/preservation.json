@@ -1,0 +1,18 @@
+{
+  "base": "8d6ef2da57f69ed6b3e4201d090a570ac3c2c66a",
+  "lineEndingsNormalized": true,
+  "results": [
+    {
+      "file": "evento/index.html",
+      "inlineScriptsUnchanged": true,
+      "embeddedImagesUnchanged": true,
+      "originalInlineCssUnchanged": true
+    },
+    {
+      "file": "evento-v2/index.html",
+      "inlineScriptsUnchanged": true,
+      "embeddedImagesUnchanged": true,
+      "originalInlineCssUnchanged": true
+    }
+  ]
+}
