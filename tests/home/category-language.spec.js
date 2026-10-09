@@ -85,6 +85,14 @@ test('native flag choices keyboard, dismissal, repeated selection and original c
   await page.locator('.menu-toggle').click();
   await expect(page.locator('#home-accessibility')).toBeHidden();
   expect(await page.evaluate(() => ['Beleza e Negócios', 'Samba & pagode', 'Samba', 'Pagode', 'Beleza personalizada'].map(value => CTHome.categoryLabel(value).text))).toEqual(['Beauty & Business', 'Samba & Pagode', 'Samba', 'Pagode', 'Beleza personalizada']);
+  expect(await page.evaluate(() => CTHome.categoryLabel('Beleza').text)).toBe('Beauty');
+  expect(await page.evaluate(() => {
+    const values = ['Beleza & Negócios', 'Beleza e Negócios'];
+    return values.map(selected => {
+      CTHome.filters.category = selected;
+      return values.map(categoria => CTHome.matches({ visual: { categoria } }, true));
+    });
+  })).toEqual([[true, false], [false, true]]);
   expect(state.methods).toHaveLength(1);
   expect(state.errors).toEqual([]); expect(state.blocked).toEqual([]);
 });

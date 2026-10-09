@@ -55,3 +55,10 @@ jobs:
             test-results/home-stage1/**/fresh-mobile-reduced-auto-*.png
             test-results/home-stage1/**/events-pause-reduced-motion-320px-text150.png
             test-results/home-stage1/**/primary-ad-controls-reduced-motion-320px-text150.png
+      - name: Keep language flags screenshots for visual review
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: home-language-review
+          path: test-results/home-stage1/**/language-flags-*.png
+
