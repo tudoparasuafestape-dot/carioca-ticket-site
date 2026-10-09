@@ -34,7 +34,7 @@ async function fixture(browser, routePath, mobile, options = {}) {
     const req = route.request(), url = new URL(req.url());
     try {
       if (url.origin === ORIGIN && req.method() === 'GET') {
-        if (url.pathname === '/') { state.home++; return route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Home fixture</title><h1>Página inicial local</h1>' }); }
+        if (url.pathname === '/') { state.home++; return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><title>Home fixture</title><h1>Página inicial local</h1>' }); }
         const files = { '/checkout/': 'checkout/index.html', '/checkout-v2/': 'checkout-v2/index.html',
           '/assets/checkout-home-navigation.js': 'assets/checkout-home-navigation.js', '/assets/checkout-home-navigation.css': 'assets/checkout-home-navigation.css',
           '/assets/checkout-commercial-policy.js': 'assets/checkout-commercial-policy.js' };
@@ -57,18 +57,19 @@ async function fixture(browser, routePath, mobile, options = {}) {
       if (method === 'ctCheckoutPublicoCarregarEventoPROD') { assert.equal(args[0], EVENT); result = catalog(); }
       else if (method === 'ctCheckoutPixPublicoIniciarPROD') {
         state.payments.push(args[0]);
-        if(options.timeoutPayment) return route.fulfill({ contentType: 'text/html', body: '<!doctype html><!-- Simulated missing response: real bridge timeout must release the UI. -->' });
+        if(options.timeoutPayment) return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><!-- Simulated missing response: real bridge timeout must release the UI. -->' });
         if (options.holdPayment) await new Promise(resolve => { state.release = resolve; });
         result = options.failPayment ? { sucesso: false } : order(options.method, options.complete);
       } else if (method === 'ctCheckoutPixPublicoConsultarPROD') { state.consults++; assert.deepEqual(args, [ORDER, TOKEN]); if(options.holdConsult) await new Promise(resolve => { state.releaseConsult = resolve; }); result = order(options.method, options.complete); if(options.recoveredStatus) result.pedido.status = options.recoveredStatus; }
       else if (['ctCheckoutPixPublicoStatusLocalPROD', 'ctCheckoutPixPublicoReconciliarPROD'].includes(method)) { state.polls++; assert.deepEqual(args, [ORDER, TOKEN]); if(method === 'ctCheckoutPixPublicoReconciliarPROD' && state.holdReconcile) await new Promise(resolve => { state.releaseReconcile = resolve; }); result = order(options.method, options.complete); }
       else throw Error('undeclared-rpc');
       const payload = JSON.stringify({ ctMinhaCariocaPost: true, id: fields.get('ctMinhaCariocaRequestId'), ok: true, resultado: result }).replace(/</g, '\\u003c');
-      return route.fulfill({ contentType: 'text/html', body: '<!doctype html><script>window.top.postMessage(' + payload + ',"*")</script>' });
+      return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><script>window.top.postMessage(' + payload + ',"*")</script>' });
     } catch (e) { state.unexpected.push(e.message); await route.abort('blockedbyclient'); }
   });
   await page.goto(ORIGIN + routePath + '?evento=' + EVENT);
   await page.locator('#typeSelect option[value="LOCAL-TYPE"]').waitFor({ state: 'attached' });
+  assert.equal(await page.locator('#eventName').textContent(), 'Evento sintético de navegação', 'UTF-8 fixture text');
   if(!options.holdConsult) await page.locator('#loading').waitFor({ state: 'hidden' });
   return { page, state, context,
     async fill() {
@@ -159,7 +160,7 @@ async function fixture(browser, routePath, mobile, options = {}) {
     const f = await fixture(browser, routePath, false, { clock: true, timeoutPayment: true }); await f.fill();
     await f.page.locator('#payButton').click(); await until(() => f.state.payments.length === 1, 'silent local response');
     await f.page.evaluate(() => document.querySelector('#checkoutHome').click()); assert(await f.page.locator('#checkoutLeave').isDisabled());
-    await f.page.clock.fastForward(45001); await until(async () => !(await f.page.locator('#checkoutLeave').isDisabled()), 'real bridge timeout');
+    await f.page.clock.fastForward(routePath === '/checkout-v2/' ? 120001 : 45001); await until(async () => !(await f.page.locator('#checkoutLeave').isDisabled()), 'real bridge timeout');
     assert.equal(f.state.payments.length, 1); await f.page.locator('#checkoutStay').click(); await f.finish();
    });
    await test(routePath + ' unavailable storage does not promise recovery or create another payment', async () => {
