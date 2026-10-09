@@ -8,6 +8,15 @@
   function setMenu(open) { button.dataset.i18nAriaLabel = open ? 'closeMenu' : 'openMenu'; button.setAttribute('aria-expanded', String(open)); button.setAttribute('aria-label', label(open)); menu.hidden = !open; }
   button.addEventListener('click', function () { var open = menu.hidden; setMenu(open); if (open) document.dispatchEvent(new CustomEvent('ct:close-accessibility')); });
   button.addEventListener('keydown', function (event) { if (event.key === 'Tab' && !event.shiftKey && !menu.hidden) { event.preventDefault(); menu.querySelector('a').focus(); } });
+  // A disclosure, not a modal: Tab can always leave the menu.
+  menu.addEventListener('keydown', function (event) {
+    if (event.key !== 'Tab') return;
+    var links = menu.querySelectorAll('a');
+    if (event.shiftKey && event.target === links[0]) { event.preventDefault(); button.focus(); }
+    else if (!event.shiftKey && event.target === links[links.length - 1]) {
+      event.preventDefault(); setMenu(false); document.querySelector('.ct-home .producer-top-link').focus();
+    }
+  });
   menu.addEventListener('click', function (event) {
     var link = event.target.closest('a'); if (!link) return;
     setMenu(false);
@@ -23,11 +32,18 @@
   document.addEventListener('focusin', function (event) { if (!menu.hidden && !menu.contains(event.target) && event.target !== button) setMenu(false); });
   var desktop = window.matchMedia('(min-width: 1201px)');
   function onResize() {
-    if (!desktop.matches || menu.hidden) return;
+    if (menu.hidden) return;
     var hadFocus = menu.contains(document.activeElement) || document.activeElement === button;
-    setMenu(false); if (hadFocus) document.querySelector('.ct-home .links a').focus();
+    setMenu(false); if (hadFocus) button.focus();
   }
   if (desktop.addEventListener) desktop.addEventListener('change', onResize);
   function currentLink() { menu.querySelectorAll('a').forEach(function (link) { if (link.getAttribute('href') === (location.hash || '#todos-eventos')) link.setAttribute('aria-current', 'location'); else link.removeAttribute('aria-current'); }); }
-  window.addEventListener('hashchange', currentLink); currentLink();
+  function onHistoryNavigation() {
+    var hadFocus = menu.contains(document.activeElement);
+    setMenu(false); currentLink(); if (hadFocus) button.focus();
+  }
+  window.addEventListener('hashchange', onHistoryNavigation);
+  window.addEventListener('popstate', onHistoryNavigation);
+  window.addEventListener('pageshow', onHistoryNavigation);
+  currentLink();
 }());

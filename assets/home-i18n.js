@@ -3,6 +3,7 @@
   // Interface copy only. Producer-supplied names, places and descriptions are never translated.
   var dictionaries = {
   "pt-BR": {
+    "menuLabel": "Menu",
     "theme": "Tema",
     "mode": "Modo",
     "light": "Claro",
@@ -24,7 +25,7 @@
     "security": "Segurança",
     "help": "Ajuda",
     "about": "Sobre a Carioca Ticket",
-    "accessibility": "Acessibilidade",
+    "accessibility": "Idioma e acessibilidade",
     "language": "Idioma",
     "smaller": "Diminuir texto",
     "larger": "Aumentar texto",
@@ -144,9 +145,10 @@
     "adPosition": "Publicidade {n} de {total}",
     "pageTitle": "Carioca Ticket | Ingressos e tecnologia para eventos",
     "mainNavigation": "Navegação principal",
-    "mobileNavigation": "Navegação mobile"
+    "mobileNavigation": "Menu de navegação"
   },
   "en-US": {
+    "menuLabel": "Menu",
     "theme": "Theme",
     "mode": "Mode",
     "light": "Light",
@@ -168,7 +170,7 @@
     "security": "Security",
     "help": "Help",
     "about": "About Carioca Ticket",
-    "accessibility": "Accessibility",
+    "accessibility": "Language and accessibility",
     "language": "Language",
     "smaller": "Decrease text size",
     "larger": "Increase text size",
@@ -288,9 +290,10 @@
     "adPosition": "Advertisement {n} of {total}",
     "pageTitle": "Carioca Ticket | Tickets and event technology",
     "mainNavigation": "Main navigation",
-    "mobileNavigation": "Mobile navigation"
+    "mobileNavigation": "Navigation menu"
   },
   "es": {
+    "menuLabel": "Menú",
     "theme": "Tema",
     "mode": "Modo",
     "light": "Claro",
@@ -312,7 +315,7 @@
     "security": "Seguridad",
     "help": "Ayuda",
     "about": "Sobre Carioca Ticket",
-    "accessibility": "Accesibilidad",
+    "accessibility": "Idioma y accesibilidad",
     "language": "Idioma",
     "smaller": "Reducir texto",
     "larger": "Aumentar texto",
@@ -432,9 +435,10 @@
     "adPosition": "Publicidad {n} de {total}",
     "pageTitle": "Carioca Ticket | Entradas y tecnología para eventos",
     "mainNavigation": "Navegación principal",
-    "mobileNavigation": "Navegación móvil"
+    "mobileNavigation": "Menú de navegación"
   },
   "zh-Hans": {
+    "menuLabel": "菜单",
     "theme": "主题",
     "mode": "模式",
     "light": "浅色",
@@ -576,7 +580,7 @@
     "adPosition": "广告 {n}/{total}",
     "pageTitle": "Carioca Ticket | 门票与活动技术",
     "mainNavigation": "主导航",
-    "mobileNavigation": "移动导航"
+    "mobileNavigation": "导航菜单"
   }
 };
 

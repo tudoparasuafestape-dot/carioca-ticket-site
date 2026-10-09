@@ -170,7 +170,7 @@ test('keyboard skip link, mobile disclosure, escape, anchor focus and resizing',
   await page.locator('#mobile-menu a').first().focus();
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(page.locator('#mobile-menu')).toBeHidden();
-  await expect(page.locator('.links a').first()).toBeFocused();
+  await expect(button).toBeFocused();
 });
 
 for (const theme of ['light', 'dark']) {
