@@ -13,7 +13,10 @@
     var feedback = document.getElementById('event-search-feedback');
     var count = document.getElementById('event-count');
     var empty = document.getElementById('no-events');
-    var events = [], query = '', locationQuery = '', ready = false, requestId = 0;
+    var events = [], query = '', locationQuery = '', ready = false, requestId = 0, phase = 'loading';
+    var I = window.CTHome;
+    var H = I && typeof I.matches === 'function' ? I : null;
+    function tr(key, fallback, values) { return I ? I.t(key, values) : fallback; }
 
     function text(value) { return typeof value === 'string' ? value.trim() : ''; }
     function normalize(value) {
@@ -32,47 +35,67 @@
         return url.protocol === 'https:' || (url.origin === location.origin && url.protocol === 'http:') ? url.href : '';
       } catch (_) { return ''; }
     }
+    function original(element) {
+      element.lang = I ? I.sourceLanguage : (document.documentElement.lang || 'pt-BR');
+      element.setAttribute('translate', 'no');
+      element.classList.add('catalog-original');
+      return element;
+    }
     function card(event, index) {
       var visual = event.visual || {};
+      var token = 'catalog-event-' + index;
       var detail = '/evento/?evento=' + encodeURIComponent(event.id);
       var article = node('article', 'catalog-card');
       article.dataset.eventId = event.id;
       var cover = node('a', 'catalog-photo');
       cover.href = detail;
-      cover.setAttribute('aria-label', 'Ver evento: ' + event.nome);
-      var fallback = node('span', 'catalog-image-fallback', 'Capa indisponível');
+      var coverLabel = node('span', 'sr-only', tr('viewEvent', 'Ver evento') + ':');
+      coverLabel.id = token + '-view';
+      cover.appendChild(coverLabel);
+      cover.setAttribute('aria-labelledby', coverLabel.id + ' ' + token + '-title');
+      var fallback = node('span', 'catalog-image-fallback', tr('coverMissing', 'Capa indisponível'));
       cover.appendChild(fallback);
       var src = imageUrl(visual.capaUrl || visual.posterUrl);
       if (src) {
         var image = node('img', '');
-        image.alt = 'Capa de ' + event.nome;
+        // The enclosing link names the event using separately marked language nodes.
+        image.alt = '';
         image.loading = index < 2 ? 'eager' : 'lazy';
         image.decoding = 'async';
         // Keep lazy images measurable so the browser can start loading near the viewport.
         image.style.opacity = '0';
-        fallback.textContent = 'Carregando capa…';
+        fallback.textContent = tr('coverLoading', 'Carregando capa…');
         image.onload = function () { image.style.opacity = '1'; fallback.hidden = true; };
-        image.onerror = function () { image.hidden = true; fallback.hidden = false; fallback.textContent = 'Capa indisponível'; };
+        image.onerror = function () { image.hidden = true; fallback.hidden = false; fallback.textContent = tr('coverMissing', 'Capa indisponível'); };
         image.src = src;
         cover.appendChild(image);
       }
       var body = node('div', 'catalog-body');
-      if (text(visual.categoria)) body.appendChild(node('span', 'event-kicker', visual.categoria));
+      if (text(visual.categoria)) body.appendChild(original(node('span', 'event-kicker', visual.categoria)));
       var heading = node('h3', 'catalog-title');
-      var titleLink = node('a', '', event.nome);
+      var titleLink = original(node('a', '', event.nome));
+      titleLink.id = token + '-title';
       titleLink.href = detail;
       heading.appendChild(titleLink);
       body.appendChild(heading);
       var date = [text(event.data), text(event.horario)].filter(Boolean).join(' · ');
       var venue = [text(event.local), [text(event.cidade), text(event.uf)].filter(Boolean).join(' / ')].filter(Boolean).join(' · ');
-      body.appendChild(node('p', 'catalog-meta', date || 'Data e horário não informados'));
-      body.appendChild(node('p', 'catalog-venue', venue || 'Local não informado'));
-      if (text(visual.descricaoCurta)) body.appendChild(node('p', 'catalog-description', visual.descricaoCurta));
+      body.appendChild(date ? original(node('p', 'catalog-meta', date)) : node('p', 'catalog-meta', tr('dateMissing', 'Data e horário não informados')));
+      body.appendChild(venue ? original(node('p', 'catalog-venue', venue)) : node('p', 'catalog-venue', tr('venueMissing', 'Local não informado')));
+      if (text(visual.descricaoCurta)) body.appendChild(original(node('p', 'catalog-description', visual.descricaoCurta)));
       var actions = node('div', 'catalog-actions');
-      var buy = node('a', 'btn btn-primary', 'Comprar ingresso');
+      var buy = node('a', 'btn btn-primary');
       buy.href = '/checkout/?evento=' + encodeURIComponent(event.id);
-      buy.setAttribute('aria-label', 'Comprar ingresso: ' + event.nome);
-      var more = node('a', 'event-secondary', 'Ver evento');
+      var buyLabel = node('span', 'sr-only', tr('buy', 'Comprar ingresso') + ':');
+      var buyText = node('span', '', tr('buy', 'Comprar ingresso'));
+      buyText.dataset.i18n = 'buy';
+      buyText.setAttribute('aria-hidden', 'true');
+      buy.appendChild(buyText);
+      buyLabel.id = token + '-buy';
+      buy.appendChild(buyLabel);
+      buy.setAttribute('aria-labelledby', buyLabel.id + ' ' + token + '-title');
+      var more = node('a', 'event-secondary', tr('viewEvent', 'Ver evento'));
+      more.dataset.i18n = 'viewEvent';
       more.href = detail;
       actions.append(buy, more);
       body.appendChild(actions);
@@ -85,27 +108,28 @@
         var visual = event.visual || {};
         var matchesQuery = !query || normalize([event.nome, event.data, event.horario, event.local, event.cidade, event.uf, visual.categoria, visual.descricaoCurta].filter(Boolean).join(' ')).includes(query);
         var matchesLocation = !locationQuery || normalize([event.local, event.cidade, event.uf].filter(Boolean).join(' ')).includes(locationQuery);
-        return matchesQuery && matchesLocation;
+        return matchesQuery && matchesLocation && (!H || H.matches(event, true));
       });
       grid.replaceChildren();
       filtered.forEach(function (event, index) { grid.appendChild(card(event, index)); });
-      count.textContent = filtered.length + (filtered.length === 1 ? ' evento disponível para compra.' : ' eventos disponíveis para compra.');
+      count.textContent = tr(filtered.length === 1 ? 'availableOne' : 'availableMany', filtered.length + (filtered.length === 1 ? ' evento disponível para compra.' : ' eventos disponíveis para compra.'), { n: filtered.length });
       empty.hidden = !events.length || !!filtered.length;
-      feedback.textContent = (query || locationQuery) && events.length ? (filtered.length ? filtered.length + (filtered.length === 1 ? ' evento encontrado.' : ' eventos encontrados.') : 'Nenhum evento encontrado para essa pesquisa.') : '';
+      feedback.textContent = (query || locationQuery || (H && (H.filters.location || H.filters.period !== 'all' || H.filters.category))) && events.length ? (filtered.length ? tr(filtered.length === 1 ? 'foundOne' : 'foundMany', filtered.length + (filtered.length === 1 ? ' evento encontrado.' : ' eventos encontrados.'), { n: filtered.length }) : tr('noMatch', 'Nenhum evento encontrado para essa pesquisa.')) : '';
       status.hidden = !!events.length;
-      if (!events.length) message.textContent = 'Nenhum evento disponível no momento. Volte em breve para conferir a agenda.';
+      if (!events.length) message.textContent = tr('emptyCatalog', 'Nenhum evento disponível no momento. Volte em breve para conferir a agenda.');
+      if (H) H.updateCategories(events);
     }
     async function load() {
       var current = ++requestId;
-      ready = false;
+      ready = false; phase = 'loading';
       grid.replaceChildren();
       grid.setAttribute('aria-busy', 'true');
       status.hidden = false;
       retry.hidden = true;
       empty.hidden = true;
       feedback.textContent = '';
-      count.textContent = 'Consultando a agenda…';
-      message.textContent = 'Carregando eventos…';
+      count.textContent = tr('consulting', 'Consultando a agenda…');
+      message.textContent = tr('loading', 'Carregando eventos…');
       var timer;
       try {
         var result = await Promise.race([
@@ -123,12 +147,13 @@
           seen.add(event.id);
           return true;
         });
-        ready = true;
+        ready = true; phase = 'ready';
         render();
       } catch (_) {
         if (current !== requestId) return;
-        count.textContent = 'Agenda temporariamente indisponível.';
-        message.textContent = 'Não foi possível carregar os eventos. Tente novamente.';
+        phase = 'error';
+        count.textContent = tr('unavailable', 'Agenda temporariamente indisponível.');
+        message.textContent = tr('loadError', 'Não foi possível carregar os eventos. Tente novamente.');
         retry.hidden = false;
       } finally {
         clearTimeout(timer);
@@ -138,15 +163,20 @@
     document.getElementById('event-search-form').addEventListener('submit', function (event) {
       event.preventDefault();
       query = normalize(input.value);
-      locationQuery = locationInput ? normalize(locationInput.value) : '';
+      locationQuery = !H && locationInput && !locationInput.readOnly ? normalize(locationInput.value) : '';
       render();
     });
     document.getElementById('clear-event-search').addEventListener('click', function () {
       input.value = query = '';
       locationQuery = '';
-      if (locationInput) locationInput.value = '';
+      if (H) H.resetFilters(); else if (locationInput) locationInput.value = '';
       render();
       input.focus();
+    });
+    document.addEventListener('ct:filters', render);
+    document.addEventListener('ct:language', function () {
+      if (ready) render();
+      else { count.textContent = tr(phase === 'error' ? 'unavailable' : 'consulting', ''); message.textContent = tr(phase === 'error' ? 'loadError' : 'loading', ''); }
     });
     retry.addEventListener('click', load);
     load();

@@ -24,142 +24,89 @@
   <meta name="twitter:title" content="Carioca Ticket | Ingressos e tecnologia para eventos">
   <meta name="twitter:description" content="Ingressos digitais, PIX, cartão, confirmação automática e tecnologia para eventos.">
   <meta name="twitter:image" content="https://cariocaticket.com.br/assets/carioca-ticket-preview-oficial-v9.jpg">
-  <title>Carioca Ticket | Ingressos e tecnologia para eventos</title>
+  <title data-i18n="pageTitle">Carioca Ticket | Ingressos e tecnologia para eventos</title>
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/carioca-ticket-icon-192.png">
   <script src="/assets/home-theme.js?v=20261008-stage1"></script>
-  <link rel="stylesheet" href="/assets/home.css?v=20261008-stage1">
-  <noscript><style>.ct-home .event-search-form,.ct-home #catalog-status,.ct-home #event-count{display:none}</style></noscript>
+  <link rel="stylesheet" href="/assets/home.css?v=20261009-ads1">
+  <noscript><style>.ct-home .event-search-form,.ct-home #catalog-status,.ct-home #event-count,.ct-home .js-control{display:none}</style></noscript>
   <link rel="prefetch" href="/produtor/" as="document">
   <script src="/pwa-register.js" defer></script>
 </head>
 <body class="ct-home">
-  <a class="skip-link" href="#conteudo">Pular para os eventos</a>
+  <a class="skip-link" href="#conteudo" data-i18n="skip">Pular para os eventos</a>
   <header class="topbar">
     <div class="shell nav">
-      <a class="brand" href="/" aria-label="Carioca Ticket">
-        <img src="/assets/carioca-ticket-simbolo.png" alt="" width="42" height="42">
-        <span>Carioca <b>Ticket</b></span>
-      </a>
-      <nav class="links" aria-label="Principal">
-        <a href="#todos-eventos">Eventos</a>
-        <a href="/minha-carioca/conta/?v=20260919-2158">Minha Carioca</a>
-        <a href="#produtores">Para produtores</a>
-        <a href="/ajuda/">Ajuda</a>
-      </nav>
+      <div class="brand-location">
+        <a class="brand" href="/" aria-label="Carioca Ticket"><img src="/assets/carioca-ticket-simbolo.png" alt="" width="42" height="42"><span>Carioca <b>Ticket</b></span></a>
+        <button class="location-trigger js-control" type="button" aria-labelledby="place-action active-place" aria-haspopup="dialog" hidden><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span id="place-action" class="sr-only" data-i18n="choosePlace">Escolher localização</span><span id="active-place" class="active-place">Todos os lugares</span><span aria-hidden="true">⌄</span></button>
+      </div>
+      <nav class="links" data-i18n-aria-label="mainNavigation" aria-label="Navegação principal"><a href="#todos-eventos" ><span data-i18n="explore">Explorar eventos</span></a><a href="/minha-carioca/conta/?v=20260919-2158" ><span data-i18n="tickets">Meus ingressos</span></a><a href="/minha-carioca/conta/?v=20260919-2158" ><span data-i18n="login">Entrar</span></a></nav>
       <div class="nav-tools">
-        <div class="theme-control" hidden>
-          <label for="home-theme">Tema</label>
-          <select id="home-theme"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select>
+        <div class="theme-control" hidden><label for="home-theme" data-i18n="theme">Tema</label><select id="home-theme" aria-describedby="home-theme-help"><option value="system" data-i18n="mode">Modo</option><option value="light" data-i18n="light">Claro</option><option value="dark" data-i18n="dark">Escuro</option></select><span data-i18n="themeHelp" id="home-theme-help" class="sr-only">Modo acompanha o tema do dispositivo. Claro e Escuro são escolhas fixas.</span></div>
+        <div class="desktop-font-controls js-control" hidden><button id="font-down-desktop" type="button" aria-label="Diminuir texto" data-i18n-aria-label="smaller">A−</button><button id="font-up-desktop" type="button" aria-label="Aumentar texto" data-i18n-aria-label="larger">A+</button></div><button id="accessibility-toggle" class="icon-button js-control" type="button" aria-controls="home-accessibility" aria-expanded="false" data-i18n-aria-label="accessibility" aria-label="Acessibilidade" hidden><span aria-hidden="true">Aa</span></button>
+        <div id="home-accessibility" class="accessibility-panel" hidden>
+          <label class="language-field" for="home-language"><span data-i18n="language">Idioma</span><select id="home-language"><option value="pt-BR" lang="pt-BR">Português</option><option value="en-US" lang="en-US">English (US)</option><option value="es" lang="es">Español</option><option value="zh-Hans" lang="zh-Hans">简体中文</option></select></label>
+          <div class="font-controls"><button id="font-down" type="button" data-i18n-aria-label="smaller" aria-label="Diminuir texto">A−</button><button id="font-reset" type="button" data-i18n-aria-label="resetFont" aria-label="Tamanho padrão">100%</button><button id="font-up" type="button" data-i18n-aria-label="larger" aria-label="Aumentar texto">A+</button></div>
         </div>
-        <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-controls="mobile-menu" aria-expanded="false" hidden>Menu <span aria-hidden="true">☰</span></button>
+        <button class="menu-toggle" type="button" data-i18n-aria-label="openMenu" aria-label="Abrir menu" aria-controls="mobile-menu" aria-expanded="false" hidden><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
       </div>
+      <a class="producer-top-link" href="/produtor/"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v16M4 12h16"/></svg><span data-i18n="create">Crie seu evento</span></a>
     </div>
-    <nav id="mobile-menu" class="mobile-menu" aria-label="Menu mobile" hidden>
-      <div class="shell mobile-menu-inner">
-        <a href="#todos-eventos">Eventos</a>
-        <a href="/minha-carioca/conta/?v=20260919-2158">Minha Carioca · meus ingressos</a>
-        <a href="#produtores">Para produtores</a>
-        <a href="/produtor/">Portal do Produtor</a>
-        <a href="/parceiro/programa/">Programa Parceiro CT</a>
-        <a href="#seguranca">Segurança</a>
-        <a href="/ajuda/">Ajuda</a>
-        <a href="/sobre/">Sobre a Carioca Ticket</a>
-      </div>
-    </nav>
+    <nav id="mobile-menu" class="mobile-menu" data-i18n-aria-label="mobileNavigation" aria-label="Navegação mobile" hidden><div class="mobile-menu-inner">
+      <div class="menu-group"><h2 data-i18n="experience">Sua experiência</h2><a href="#todos-eventos"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 10h18M7 14h3m4 0h3M7 17h3"/></svg><span data-i18n="events">Eventos</span><span class="menu-arrow" aria-hidden="true">›</span></a><a href="/minha-carioca/conta/?v=20260919-2158"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4V7Z"/><path d="M15 7v2m0 4v2m0 2v2"/></svg><span data-i18n="tickets">Meus ingressos</span><span class="menu-arrow" aria-hidden="true">›</span></a></div>
+      <div class="menu-group"><h2 data-i18n="organize">Para quem realiza</h2><a href="#produtores"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7V4h8v3M3 12h18m-11 0v3h4v-3"/></svg><span data-i18n="forProducers">Para produtores</span><span class="menu-arrow" aria-hidden="true">›</span></a><a href="/produtor/"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v16M4 12h16"/></svg><span data-i18n="producerPortal">Portal do Produtor</span><span class="menu-arrow" aria-hidden="true">›</span></a><a href="/parceiro/programa/"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m10 13 4-4m-6 7-1 1a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0m0 2 1-1a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0"/></svg><span data-i18n="partnerProgram">Programa Parceiro CT</span><span class="menu-arrow" aria-hidden="true">›</span></a></div>
+      <div class="menu-group"><h2 data-i18n="supportGroup">Conte com a gente</h2><a href="#seguranca"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M7 12l3 3 7-7"/></svg><span data-i18n="security">Segurança</span><span class="menu-arrow" aria-hidden="true">›</span></a><a href="/ajuda/"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M9 8a3 3 0 1 1 5 3c-2 1-2 2-2 3m0 3v.1"/></svg><span data-i18n="help">Ajuda</span><span class="menu-arrow" aria-hidden="true">›</span></a><a href="/sobre/"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg><span data-i18n="about">Sobre a Carioca Ticket</span><span class="menu-arrow" aria-hidden="true">›</span></a></div>
+    </div></nav>
   </header>
-
+  <dialog id="location-dialog" aria-labelledby="location-title" aria-describedby="location-help">
+    <form id="location-form"><div class="dialog-heading"><h2 data-i18n="locationTitle" id="location-title">Onde você quer ir?</h2><button type="button" id="location-close" class="icon-button" aria-label="Fechar" data-i18n-aria-label="close">×</button></div>
+      <p data-i18n="locationHelp" id="location-help">Escolha a UF e busque uma cidade na lista oficial. Nenhuma localização é solicitada automaticamente.</p>
+      <p id="location-status" role="status"></p><button id="location-retry" type="button" class="btn btn-secondary" data-i18n="retry" hidden>Tentar novamente</button>
+      <label for="location-uf" data-i18n="state">UF</label><select id="location-uf"><option value="" data-i18n="allStates">Todas as UFs</option></select>
+      <label for="city-search" data-i18n="citySearch">Buscar cidade na lista</label><input id="city-search" type="search" autocomplete="off" disabled aria-controls="city-options">
+      <div id="city-options" class="city-options"></div>
+      <div class="dialog-actions"><button type="button" id="location-reset" class="btn btn-secondary" data-i18n="allPlaces">Todos os lugares</button><button type="submit" id="location-apply" class="btn btn-primary" data-i18n="applyPlace">Aplicar localização</button></div>
+    </form>
+  </dialog>
   <main id="conteudo" tabindex="-1">
     <section id="eventos" class="public-events shell" aria-labelledby="public-events-title">
-      <div id="todos-eventos" class="public-events-heading">
-        <div>
-          <span class="eyebrow">Agenda Carioca Ticket</span>
-          <h1 id="public-events-title">Seu próximo encontro está aqui.</h1>
-        </div>
+      <div id="todos-eventos" class="public-events-heading"><div><span data-i18n="agenda" class="eyebrow">Agenda Carioca Ticket</span><h1 data-i18n="headline" id="public-events-title">Seu próximo encontro está aqui.</h1></div>
         <form id="event-search-form" class="event-search-form" role="search">
-          <div class="search-field">
-            <label for="event-search-input">Pesquisar eventos</label>
-            <input id="event-search-input" type="search" autocomplete="off" placeholder="Nome ou categoria">
-          </div>
-          <div class="search-field">
-            <label for="event-location-input">Cidade ou local</label>
-            <input id="event-location-input" type="text" autocomplete="off" placeholder="Onde você quer ir?">
-          </div>
-          <button type="submit">Pesquisar</button>
+          <div class="search-field"><label for="event-search-input" data-i18n="searchLabel">Pesquisar eventos</label><input id="event-search-input" type="search" autocomplete="off" data-i18n-placeholder="searchPlaceholder" placeholder="Nome, categoria ou local"></div>
+          <div class="search-field"><label for="event-location-input" data-i18n="locationLabel">Cidade ou local</label><input id="event-location-input" disabled class="location-trigger" type="text" readonly value="Todos os lugares" aria-haspopup="dialog"></div>
+          <button type="submit" data-i18n="search">Pesquisar</button>
         </form>
       </div>
-      <div class="catalog-heading"><h2>Explore a agenda</h2><p id="event-count" aria-live="polite">Confira os eventos disponíveis para compra.</p></div>
-      <p id="event-search-feedback" class="catalog-feedback" aria-live="polite"></p>
-      <div id="catalog-status" class="catalog-state" role="status">
-        <p id="catalog-status-message">Carregando eventos…</p>
-        <button id="catalog-retry" class="btn btn-secondary" type="button" hidden>Tentar novamente</button>
-      </div>
+      <div class="catalog-heading"><h2 data-i18n="agendaTitle">Explore a agenda</h2><div class="catalog-tools"><p id="event-count" aria-live="polite">Consultando a agenda.</p><button type="button" id="filters-toggle" class="filter-toggle js-control" aria-controls="catalog-filters" aria-expanded="false" data-i18n="filters" hidden>Filtros</button></div></div>
+      <div id="catalog-filters" hidden><div class="period-filters"><button type="button" data-period="all" aria-pressed="true" data-i18n="allDates">Todos</button><button type="button" data-period="week" aria-pressed="false" data-i18n="thisWeek">Esta semana</button><button type="button" data-period="weekend" aria-pressed="false" data-i18n="weekend">Fim de semana</button></div><p id="period-dates"></p><button class="text-button" type="button" id="reset-filters" data-i18n="clearFilters">Limpar filtros</button></div>
+      <p id="active-filters" class="active-filters" hidden></p><p id="event-search-feedback" class="catalog-feedback" aria-live="polite"></p>
+      <div id="catalog-status" class="catalog-state" role="status"><p id="catalog-status-message">Carregando eventos.</p><button id="catalog-retry" class="btn btn-secondary" type="button" hidden data-i18n="retry">Tentar novamente</button></div>
       <div id="events-grid" class="events-grid public-events-grid" aria-busy="true"></div>
-      <div id="no-events" class="no-events" hidden>
-        <strong>Nenhum evento encontrado.</strong>
-        <p>Tente pesquisar por outro nome, categoria ou cidade.</p>
-        <button id="clear-event-search" type="button">Limpar pesquisa</button>
-      </div>
+      <div id="no-events" class="no-events" hidden><strong data-i18n="noResults">Nenhum evento encontrado.</strong><p data-i18n="noResultsHelp">Mantenha sua escolha ou limpe os filtros para ver outros eventos.</p><button id="clear-event-search" type="button" data-i18n="clearSearch">Limpar pesquisa</button></div>
+      <p data-i18n="producerOriginal" id="producer-language-note" class="source-note" hidden>Nomes e descrições dos eventos são apresentados no idioma original do organizador.</p>
+      <div id="collections" class="collections" hidden><h2 data-i18n="collections">Explore por categoria</h2><div id="category-choices" class="category-choices"></div></div>
       <noscript><p>Ative o JavaScript para consultar os eventos disponíveis. <a href="/ajuda/">Acesse a Central de Ajuda</a>.</p></noscript>
     </section>
-
-    <section id="produtores" class="producer-section shell" aria-labelledby="producer-title">
-      <div class="producer-copy">
-        <span class="eyebrow">Para quem faz acontecer</span>
-        <h2 id="producer-title">Seu evento. Nossa tecnologia.</h2>
-        <p>Venda de ingressos, gestão e check-in digital em uma jornada integrada.</p>
-        <div class="hero-actions">
-          <a id="producerPortalCta" class="btn btn-primary" href="/produtor/">Acessar Portal do Produtor</a>
-          <a id="partnerProgramCta" class="btn btn-secondary" href="/parceiro/programa/">Programa Parceiro CT</a>
-        </div>
-        <a id="partnerPortalCta" class="text-link" href="/parceiro/">Já sou parceiro: Acessar Portal Parceiro CT <span aria-hidden="true">→</span></a>
-      </div>
-      <div class="producer-note" aria-hidden="true"><span>DA IDEIA</span><strong>ao último<br>aplauso.</strong><span>CARIOCA TICKET</span></div>
-    </section>
-
-    <section id="seguranca" class="section shell">
-      <div class="security-grid">
-        <div>
-          <span class="eyebrow">Segurança</span>
-          <h2>Pagamento confirmado antes da emissão.</h2>
-          <p>A Carioca Ticket valida o pagamento antes de liberar o ingresso. No cartão, os dados sensíveis são informados no ambiente seguro do provedor de pagamentos, sem armazenamento de número, validade ou CVV pela Carioca Ticket.</p>
-        </div>
-        <div class="security-list">
-          <div><strong>PIX</strong><span>confirmação automática</span></div>
-          <div><strong>Cartão</strong><span>ambiente seguro de pagamento</span></div>
-          <div><strong>Ingresso</strong><span>QR Code individual</span></div>
-          <div><strong>Check-in</strong><span>validação digital na entrada</span></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="ajuda" class="section cta-section">
-      <div class="shell cta-box">
-        <div>
-          <span class="eyebrow">Atendimento</span>
-          <h2>Precisa de ajuda?</h2>
-          <p>Suporte para compradores e produtores em um só lugar.</p>
-        </div>
-        <a class="btn btn-primary" href="/ajuda/">Abrir Central de Ajuda</a>
-      </div>
-    </section>
+    <aside id="advertising-primary" class="advertisement shell" aria-labelledby="ad-title"><div><span data-i18n="adLabel" class="eyebrow">Publicidade</span><h2 data-i18n="adTitle" id="ad-title">Anuncie aqui</h2><p data-i18n="adCopy">Sua marca pode aparecer aqui. Divulgue seu negócio na Carioca Ticket.</p></div><a class="btn btn-primary" id="advertising-contact" href="https://wa.me/5581999311509?text=Ol%C3%A1%21%20Quero%20anunciar%20na%20Carioca%20Ticket." target="_blank" rel="noopener noreferrer"><span data-i18n="adCta">Quero anunciar</span><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a></aside>
+    <section id="produtores" class="producer-section shell" aria-labelledby="producer-title"><div class="producer-copy"><span data-i18n="producerEyebrow" class="eyebrow">Para quem faz acontecer</span><h2 data-i18n="producerTitle" id="producer-title">Seu evento. Nossa tecnologia.</h2><p data-i18n="producerCopy">Venda de ingressos, gestão e check-in digital em uma jornada integrada.</p><div class="hero-actions"><a href="/produtor/" id="producerPortalCta" class="btn btn-primary"><span data-i18n="accessProducer">Acessar Portal do Produtor</span></a><a href="/parceiro/programa/" id="partnerProgramCta" class="btn btn-secondary"><span data-i18n="partnerProgram">Programa Parceiro CT</span></a><a href="#perguntas" class="text-link"><span data-i18n="howWorks">Como funciona</span></a></div><a href="/parceiro/" id="partnerPortalCta" class="text-link"><span data-i18n="alreadyPartner">Já sou parceiro: Acessar Portal Parceiro CT</span></a></div><div class="producer-note" aria-hidden="true"><span data-i18n="fromIdea">DA IDEIA</span><strong data-i18n="applause">ao último aplauso.</strong><span>CARIOCA TICKET</span></div></section>
+    <section id="seguranca" class="section shell" aria-labelledby="payment-title"><div class="security-grid"><div class="security-intro"><span data-i18n="buyerJourney" class="eyebrow">Da compra à entrada</span><h2 data-i18n="paymentTitle" id="payment-title">Pagamento confirmado. Ingresso liberado.</h2><p data-i18n="paymentCopy">A emissão do ingresso acontece após a confirmação do pagamento.</p></div><div class="security-list">
+      <div class="security-item"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 2 10 10-10 10L2 12 12 2Z"/><path d="m5 9 3 3 4-4 4 4 3-3m-14 6 3-3m8 0 3 3"/></svg><div><h3 data-i18n="pix">PIX</h3><p data-i18n="pixCopy">Confirmação automática do pagamento.</p></div></div><div class="security-item"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg><div><h3 data-i18n="card">Cartão</h3><p data-i18n="cardCopy">Dados informados no ambiente do provedor de pagamentos.</p></div></div><div class="security-item"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4V7Z"/><path d="M15 7v2m0 4v2m0 2v2"/></svg><div><h3 data-i18n="ticket">Ingresso</h3><p data-i18n="ticketCopy">QR Code individual para apresentar no evento.</p></div></div><div class="security-item"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M7 12l3 3 7-7"/></svg><div><h3 data-i18n="checkin">Check-in</h3><p data-i18n="checkinCopy">Validação digital do ingresso na entrada.</p></div></div>
+      </div><div class="security-note"><svg class="home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg><p data-i18n="cardPrivacy">A Carioca Ticket não armazena número, validade ou CVV do cartão.</p></div></div></section>
+    <aside id="advertising-secondary" class="advertisement shell" hidden></aside>
+    <section id="perguntas" class="faq-section shell" aria-labelledby="faq-title"><h2 data-i18n="faqTitle" id="faq-title">Antes de sair, tire suas dúvidas.</h2><div class="faq-list"><details><summary data-i18n="faq1">Quando meu ingresso é liberado?</summary><p data-i18n="faq1a">Após a confirmação do pagamento. Consulte o andamento da compra e seus ingressos na Minha Carioca.</p></details><details><summary data-i18n="faq2">Como acesso meus ingressos?</summary><p data-i18n="faq2a">Acesse Minha Carioca com o e-mail usado na compra e siga a etapa de código de acesso.</p></details><details><summary data-i18n="faq3">Onde confiro o valor total?</summary><p data-i18n="faq3a">Confira os valores e as condições apresentados no checkout antes de confirmar a compra.</p></details><details><summary data-i18n="faq4">Quero criar um evento. Por onde começo?</summary><p data-i18n="faq4a">Use Crie seu evento para acessar o Portal do Produtor. Os acessos de compradores e produtores continuam nas áreas existentes.</p></details></div></section>
+    <section id="ajuda" class="section cta-section"><div class="shell cta-box"><div><span data-i18n="service" class="eyebrow">Atendimento</span><h2 data-i18n="needHelp">Precisa de ajuda?</h2><p data-i18n="helpCopy">Suporte para compradores e produtores em um só lugar.</p></div><a href="/ajuda/" class="btn btn-primary"><span data-i18n="helpCta">Abrir Central de Ajuda</span></a></div></section>
   </main>
-
-  <footer>
-    <div class="shell footer-grid footer-grid-5">
-      <div class="footer-brand">
-        <img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
-        <p>Ingressos, tecnologia e experiências para eventos.</p>
-      </div>
-      <div><strong>Acesso rápido</strong><a href="/minha-carioca/conta/?v=20260919-2158">Minha Carioca</a><a href="#todos-eventos">Eventos</a><a href="/ajuda/">Suporte ao comprador</a><a href="#seguranca">Segurança</a></div>
-      <div><strong>Produtores & Parceiros</strong><a href="#produtores">Para produtores</a><a href="/produtor/">Portal do Produtor</a><a href="/parceiro/programa/">Programa Parceiro CT</a><a href="/parceiro/">Portal Parceiro CT</a><a href="/fornecedor/">Portal do Fornecedor</a><a href="mailto:contato@cariocaticket.com.br?subject=Suporte%20ao%20produtor">Suporte ao produtor</a></div>
-      <div><strong>Legal</strong><a href="/termos/">Termos de Uso</a><a href="/privacidade/">Política de Privacidade</a><a href="/cancelamento-reembolso/">Cancelamento e reembolso</a><a href="/ajuda/">Central de Ajuda</a></div>
-      <div><strong>Contato</strong><a href="mailto:contato@cariocaticket.com.br">contato@cariocaticket.com.br</a><a href="https://instagram.com/cariocaticketbr" target="_blank" rel="noopener">@cariocaticketbr</a><a href="/sobre/">Sobre a Carioca Ticket</a><span>cariocaticket.com.br</span></div>
-    </div>
-    <div class="shell footer-bottom">© 2026 Carioca Ticket. Todos os direitos reservados.</div>
-  </footer>
-
-  <script src="/assets/home-navigation.js?v=20261008-stage1" defer></script>
-  <script src="/assets/public-event-catalog.js?v=20261008-stage1" defer></script>
+  <footer><div class="shell footer-grid footer-grid-5"><div class="footer-brand"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"><p data-i18n="footerCopy">Ingressos, tecnologia e experiências para eventos.</p></div>
+    <div><h2 data-i18n="quick" class="footer-title">Acesso rápido</h2><a href="/minha-carioca/conta/?v=20260919-2158" ><span data-i18n="myAccount">Minha Carioca</span></a><a href="#todos-eventos" ><span data-i18n="events">Eventos</span></a><a href="/ajuda/" ><span data-i18n="buyerHelp">Suporte ao comprador</span></a><a href="#seguranca" ><span data-i18n="security">Segurança</span></a></div>
+    <div><h2 data-i18n="partners" class="footer-title">Produtores &amp; Parceiros</h2><a href="#produtores" ><span data-i18n="forProducers">Para produtores</span></a><a href="/produtor/" ><span data-i18n="producerPortal">Portal do Produtor</span></a><a href="/parceiro/programa/" ><span data-i18n="partnerProgram">Programa Parceiro CT</span></a><a href="/parceiro/" ><span data-i18n="partnerPortal">Portal Parceiro CT</span></a><a href="/fornecedor/" ><span data-i18n="supplierPortal">Portal do Fornecedor</span></a><a href="mailto:contato@cariocaticket.com.br?subject=Suporte%20ao%20produtor" ><span data-i18n="producerHelp">Suporte ao produtor</span></a></div>
+    <div><h2 data-i18n="legal" class="footer-title">Legal</h2><a href="/termos/" ><span data-i18n="terms">Termos de Uso</span></a><a href="/privacidade/" ><span data-i18n="privacy">Política de Privacidade</span></a><a href="/cancelamento-reembolso/" ><span data-i18n="refunds">Cancelamento e reembolso</span></a><a href="/ajuda/" ><span data-i18n="helpCta">Abrir Central de Ajuda</span></a></div>
+    <div><h2 data-i18n="contact" class="footer-title">Contato</h2><a href="mailto:contato@cariocaticket.com.br">contato@cariocaticket.com.br</a><a href="https://instagram.com/cariocaticketbr" target="_blank" rel="noopener">@cariocaticketbr</a><a href="/sobre/" ><span data-i18n="about">Sobre a Carioca Ticket</span></a><span>cariocaticket.com.br</span></div>
+    </div><div class="shell footer-bottom" data-i18n="copyright">© 2026 Carioca Ticket. Todos os direitos reservados.</div></footer>
+  <script src="/assets/home-i18n.js?v=20261009-i18n2" defer></script>
+  <script src="/assets/home-controls.js?v=20261009-i18n2" defer></script>
+  <script src="/assets/home-advertisements.js?v=20261009-ads1" defer></script>
+  <script src="/assets/home-navigation.js?v=20261009-i18n2" defer></script>
+  <script src="/assets/public-event-catalog.js?v=20261009-i18n2" defer></script>
   <script src="/assets/ct-analytics.js?v=20260923a" defer></script>
 </body>
 </html>

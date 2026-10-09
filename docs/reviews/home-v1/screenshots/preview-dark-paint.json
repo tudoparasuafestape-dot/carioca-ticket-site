@@ -1,0 +1,32 @@
+{
+  "theme": "dark",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "text": "DA IDEIAao último aplauso.CARIOCA TICKET",
+  "color": "rgb(243, 182, 47)",
+  "background": "rgb(32, 32, 32)",
+  "region": {
+    "x": 858.21875,
+    "y": 1713.640625,
+    "width": 460.78125,
+    "height": 328.96875
+  },
+  "fonts": "loaded",
+  "detailGold": 8429,
+  "captures": [
+    {
+      "repeat": 1,
+      "goldPixels": 8429,
+      "sha256": "2020aa2e7c719d8315bdf331df19cc054cfc32292c273b07f8bfce2a2ab3f601"
+    },
+    {
+      "repeat": 2,
+      "goldPixels": 8429,
+      "sha256": "d9fd7151b8370af08e39bd9d1d5ea191ca66f588f7229dca76063ade2c2c1021"
+    }
+  ],
+  "externalRequests": 0,
+  "pageErrors": []
+}

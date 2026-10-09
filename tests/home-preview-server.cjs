@@ -6,7 +6,7 @@ const { events, cover } = require('./fixtures/home-stage1.cjs');
 const ROOT = path.resolve(__dirname, '..');
 const port = Number(process.env.CT_PREVIEW_PORT || 4174);
 const origin = `http://127.0.0.1:${port}`;
-const csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; form-action 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'";
+const csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'";
 const send = (res, code, type, body) => {
   res.writeHead(code, { 'Content-Type': type, 'Content-Security-Policy': csp, 'Cache-Control': 'no-store' });
   res.end(body);
@@ -34,20 +34,23 @@ http.createServer((req, res) => {
   if (url.pathname === '/pwa-register.js' || url.pathname === '/assets/ct-analytics.js') return send(res, 200, 'text/javascript', '// Disabled in isolated preview');
   if (url.pathname === '/' || url.pathname === '/index.html') {
     let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-    html = html.replace('<body class="ct-home">', '<body class="ct-home"><aside style="padding:6px 16px;background:#d5bb82;color:#242424;text-align:center;font:12px/1.5 system-ui">Preview local · dados sintéticos · destinos externos e transações bloqueados</aside>');
+    html = html.replace('<body class="ct-home">', '<body class="ct-home"><aside id="preview-notice" style="padding:6px 16px;background:#d5bb82;color:#242424;text-align:center;font:12px/1.5 system-ui">Preview local · dados sintéticos · destinos externos e transações bloqueados</aside>');
     // Preserve production hrefs in source, but make the review surface safe to click.
     html = html.replace(/<a\b([^>]*?)href="(?!#|\/")([^"]+)"/g, '<a$1href="/__blocked"');
     html = html.replace(/<link rel="prefetch"[^>]+>/, '');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(home\.css|home-theme\.js|home-navigation\.js|public-event-catalog\.js|carioca-ticket-(simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(home\.css|home-theme\.js|home-navigation\.js|home-i18n\.js|home-controls\.js|home-advertisements\.js|home-ad-(tpssf|priscila)\.png|home-municipalities\.json|public-event-catalog\.js|carioca-ticket-(simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/html; charset=utf-8', '<h1>Destino bloqueado no preview</h1><p>Este ambiente permite revisar somente a home com dados sintéticos.</p><a href="/">Voltar à home</a>');
   const file = path.join(ROOT, url.pathname.slice(1));
   let body = fs.readFileSync(file);
+  if (url.pathname.endsWith('home-advertisements.js')) {
+    body = body.toString('utf8').replace(/href: 'https:\/\/[^']+'/g, "href: '/__blocked'");
+  }
   if (url.pathname.endsWith('public-event-catalog.js')) {
     body = body.toString('utf8').replace(/https:\/\/script\.google\.com\/macros\/s\/[^']+\/exec/, `${origin}/__fixture/catalog`)
       .replace("event.origin !== 'https://script.google.com'", `event.origin !== '${origin}'`);
   }
-  const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : 'image/png';
+  const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';
   send(res, 200, type, body);
 }).listen(port, '127.0.0.1', () => console.log(`Synthetic home preview: ${origin}`));
