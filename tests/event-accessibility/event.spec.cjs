@@ -2,6 +2,90 @@ const { test, expect } = require('@playwright/test');
 const fs = require('node:fs');
 const path = require('node:path');
 
+async function contrast(locator, backgroundProperty = 'backgroundColor') {
+  return locator.evaluate((el, property) => {
+    const style = getComputedStyle(el);
+    function luminance(value) {
+      const c = value.match(/\d+/g).slice(0, 3).map(Number).map(x => {
+        x /= 255; return x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4;
+      });
+      return c[0] * .2126 + c[1] * .7152 + c[2] * .0722;
+    }
+    const a = luminance(style.color), b = luminance(style[property]);
+    return (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
+  }, backgroundProperty);
+}
+
+for (const route of ['evento', 'evento-v2']) {
+  test(`${route}: header logo goes home, cover stays noninteractive and account label is clear`, async ({ page }) => {
+    await speech(page);
+    await page.goto(`/${route}/?evento=PREVIEW-EVENT`);
+    await expect(page.locator('#app')).toBeVisible();
+    const logo = page.getByRole('link', { name: 'Carioca Ticket — página inicial' });
+    await expect(logo).toHaveAttribute('href', '/');
+    await expect(logo.locator('.brand-logo')).toHaveCount(1);
+    await expect(page.locator('.customer-link')).toHaveText('Meus ingressos');
+    await expect(page.locator('.customer-link')).toHaveAttribute('href', 'https://cariocaticket.com.br/minha-carioca/conta/?v=20260920-0035');
+    expect(await page.locator('#coverImage').evaluate(el => !!el.closest('a,button'))).toBe(false);
+    expect(await page.locator('.cover-brand').evaluate(el => !!el.closest('a,button'))).toBe(false);
+    for (const theme of ['light', 'dark']) {
+      await page.locator('#home-theme').selectOption(theme);
+      await page.locator('#description-listen').click();
+      await page.evaluate(() => window.addEventListener('pagehide', () => sessionStorage.setItem('logo-cancel-count', String(__speech.cancels))));
+      await logo.focus();
+      await expect(logo).toHaveCSS('outline-style', 'solid');
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL('http://127.0.0.1:42971/');
+      await expect(page.locator('#home-theme')).toHaveValue(theme);
+      expect(Number(await page.evaluate(() => sessionStorage.getItem('logo-cancel-count')))).toBeGreaterThanOrEqual(1);
+      await page.goBack();
+      await expect(page.locator('#app')).toBeVisible();
+      await expect(page.locator('html')).toHaveAttribute('data-home-theme', theme);
+      await expect(page.locator('#description-audio')).toHaveAttribute('data-state', 'idle');
+    }
+  });
+
+  test(`${route}: gold audio controls retain icons, contrast, focus and reflow in each state`, async ({ page }) => {
+    test.setTimeout(120000);
+    await speech(page);
+    await page.goto(`/${route}/?evento=PREVIEW-EVENT`);
+    await expect(page.locator('#app')).toBeVisible();
+    const out = path.resolve('docs/reviews/event-accessibility/screenshots');
+    fs.mkdirSync(out, { recursive: true });
+    const listen = page.locator('#description-listen');
+    for (const theme of ['light', 'dark']) {
+      await page.locator('#home-theme').selectOption(theme);
+      for (const width of [320, 390, 768, 1440]) {
+        await page.setViewportSize({ width, height: 1000 });
+        for (const state of ['idle', 'playing', 'paused', 'resumed', 'stopped']) {
+          if (state === 'playing' || state === 'resumed') await listen.click();
+          if (state === 'paused') await page.locator('#description-pause').click();
+          if (state === 'stopped') await page.locator('#description-stop').click();
+          await expect(page.locator('#description-audio')).toHaveAttribute('data-state', state === 'resumed' ? 'playing' : state === 'stopped' ? 'idle' : state);
+          await expect(listen).toHaveText(state === 'paused' ? 'Continuar descrição' : 'Ouvir descrição');
+          const icon = await listen.evaluate(el => getComputedStyle(el, '::before').clipPath);
+          expect(icon).not.toBe('none');
+          expect(await contrast(listen)).toBeGreaterThanOrEqual(4.5);
+          const enabled = state === 'playing' || state === 'resumed' ? page.locator('#description-pause') : listen;
+          await enabled.focus();
+          await expect(enabled).toHaveCSS('outline-style', 'solid');
+          await expect(enabled).toHaveCSS('outline-width', '3px');
+          for (const id of ['description-listen', 'description-pause', 'description-stop']) {
+            const bounds = await page.locator('#' + id).boundingBox();
+            expect(bounds.width).toBeGreaterThanOrEqual(44);
+            expect(bounds.height).toBeGreaterThanOrEqual(44);
+          }
+          expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+          await page.locator('#description-audio').screenshot({ path: path.join(out, `${route}-audio-${theme}-${width}-${state}.png`) });
+        }
+      }
+      await expect(listen).toHaveCSS('background-color', 'rgb(255, 214, 109)');
+      await expect(listen).toHaveCSS('border-top-color', 'rgb(137, 96, 12)');
+    }
+    expect(await page.evaluate(() => __speech.texts.length)).toBeGreaterThan(0);
+  });
+}
+
 async function speech(page, mode = 'normal') {
   await page.addInitScript(mode => {
     const calls = window.__speech = { texts: [], voices: [], cancels: 0, pauses: 0, resumes: 0, mode };
@@ -261,3 +345,4 @@ test('integrated current home loads its local assets and shares theme with both 
   expect(failures).toEqual([]);
   expect(errors).toEqual([]);
 });
+

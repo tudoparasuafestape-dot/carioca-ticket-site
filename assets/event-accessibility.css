@@ -7,8 +7,20 @@
 .ct-event .theme-control select { min-height:44px; max-width:130px; border:1px solid var(--event-border); border-radius:10px; padding:7px; background:var(--event-surface); color:var(--event-text); font:inherit; }
 .ct-event .description-audio { margin:14px 0; }
 .ct-event .description-audio-buttons { display:flex; flex-wrap:wrap; gap:8px; }
-.ct-event .description-audio button { min-height:44px; padding:9px 13px; border:1px solid var(--event-border); border-radius:10px; background:var(--event-surface); color:var(--event-text); cursor:pointer; font-weight:700; }
-.ct-event .description-audio button:disabled { cursor:default; opacity:.55; }
+.ct-event .description-audio button { display:inline-flex; align-items:center; justify-content:center; gap:9px; min-width:44px; min-height:44px; padding:10px 14px; border:2px solid var(--event-border); border-radius:10px; background:var(--event-surface); color:var(--event-text); cursor:pointer; font-weight:700; }
+.ct-event .description-audio button:disabled { cursor:default; opacity:.65; }
+/* Decorative CSS icons survive text updates without altering accessible button names. */
+.ct-event .description-audio button::before { content:""; display:block; flex:0 0 18px; width:18px; height:18px; background:currentColor; }
+.ct-event #description-listen { background:#ffd66d; color:#20242a; border-color:#89600c; box-shadow:0 2px 0 rgba(0,0,0,.16); }
+.ct-event #description-listen::before { clip-path:polygon(5% 30%,35% 30%,80% 0,80% 100%,35% 70%,5% 70%); }
+.ct-event #description-listen:enabled:hover { background:#efbc43; }
+.ct-event #description-listen:disabled { background:#f2d68f; color:#48402b; opacity:1; box-shadow:none; }
+.ct-event .description-audio[data-state="paused"] #description-listen::before { clip-path:polygon(20% 5%,95% 50%,20% 95%); }
+.ct-event #description-pause::before { background:linear-gradient(to right,currentColor 0 33%,transparent 33% 66%,currentColor 66%); width:14px; height:16px; flex-basis:14px; }
+.ct-event #description-stop::before { width:14px; height:14px; flex-basis:14px; border-radius:2px; }
+.ct-event .description-audio button:enabled:active { box-shadow:none; }
+.ct-event .brand { min-height:44px; border-radius:6px; }
+.ct-event .brand:focus-visible,
 .ct-event .description-audio button:focus-visible,
 .ct-event .theme-control select:focus-visible { outline:3px solid var(--event-accent); outline-offset:3px; }
 .ct-event .description-audio .description-audio-status { margin-top:9px; font-size:13px; color:var(--event-muted); }
@@ -59,3 +71,4 @@ html[data-home-theme="light"] .ct-event .loading { background:#f7f7f7; color:var
 @media(prefers-reduced-motion:reduce) {
   html:has(.ct-event) { scroll-behavior:auto; }
 }
+
