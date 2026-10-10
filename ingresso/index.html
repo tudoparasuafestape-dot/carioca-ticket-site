@@ -30,7 +30,7 @@
   <link rel="canonical" href="https://cariocaticket.com.br/ingresso/">
   <link rel="icon" type="image/png" href="/assets/carioca-ticket-simbolo.png">
 
-  <title>Ingresso Digital | Carioca Ticket</title>
+  <title data-checkout-text="Ingresso Digital | Carioca Ticket">Ingresso Digital | Carioca Ticket</title>
 
   <style>
     :root{
@@ -208,26 +208,34 @@
       font-size:10px;
     }
   </style>
+<link rel="stylesheet" href="/assets/checkout-language.css">
+<script src="/assets/public-i18n.js"></script>
+<script src="/assets/checkout-translations.js"></script>
+<script src="/assets/checkout-language.js"></script>
 </head>
 <body>
-  <main class="card">
+
+  <main class="card"><div id="checkoutLanguageControl" class="checkout-language" hidden><label for="checkoutLanguage" data-checkout-text="Idioma">Idioma</label><select id="checkoutLanguage"><option value="pt-BR" lang="pt-BR">Português</option><option value="en-US" lang="en-US">English</option><option value="es" lang="es">Español</option><option value="zh-Hans" lang="zh-Hans">简体中文</option></select><p id="checkoutOriginalNotice" hidden data-checkout-text="Os nomes e textos cadastrados pelo produtor permanecem no idioma original.">Os nomes e textos cadastrados pelo produtor permanecem no idioma original.</p></div>
     <img class="logo" src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
-    <span class="eyebrow">Ingresso oficial</span>
-    <h1>Abrindo seu ingresso digital</h1>
-    <p id="mensagem">Aguarde alguns instantes. Você será direcionado ao ingresso seguro da Carioca Ticket.</p>
+    <span class="eyebrow" data-checkout-text="Ingresso oficial">Ingresso oficial</span>
+    <h1 data-checkout-text="Abrindo seu ingresso digital">Abrindo seu ingresso digital</h1>
+    <p id="mensagem" data-checkout-text="Aguarde alguns instantes. Você será direcionado ao ingresso seguro da Carioca Ticket.">Aguarde alguns instantes. Você será direcionado ao ingresso seguro da Carioca Ticket.</p>
 
     <div id="spinner" class="spinner" aria-hidden="true"></div>
 
-    <a id="abrir" class="btn" href="#" rel="nofollow">Abrir ingresso</a>
+    <a id="abrir" class="btn" href="#" rel="nofollow" data-checkout-text="Abrir ingresso">Abrir ingresso</a>
     <div id="erro" class="erro"></div>
     <section id="ticket-view" class="ticket-view"></section>
 
-    <div class="rodape">Carioca Ticket · acesso seguro ao ingresso digital</div>
+    <div class="rodape" data-checkout-text="Carioca Ticket · acesso seguro ao ingresso digital">Carioca Ticket · acesso seguro ao ingresso digital</div>
   </main>
 
   <script>
     (function () {
       'use strict';
+      function checkoutUiFormat(node,key,values){if(window.CTCheckoutLanguage)return window.CTCheckoutLanguage.format(node,key,values);var text=key.replace(/\{(\w+)\}/g,function(token,name){return Object.prototype.hasOwnProperty.call(values,name)?String(values[name]):token;});node.textContent=text;return text;}
+      function checkoutUiRestore(node,saved){if(window.CTCheckoutLanguage)return window.CTCheckoutLanguage.restore(node,saved);node.textContent=saved;return saved;}
+      function checkoutUiWrite(node,value){if(window.CTCheckoutLanguage)return window.CTCheckoutLanguage.write(node,value);node.textContent=value;return value;}
 
       var BASE='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
       var parametros=new URLSearchParams(window.location.search);
@@ -273,8 +281,8 @@
       });
 
       function fail(msg){
-        spinner.style.display='none';mensagem.textContent='Não foi possível abrir este ingresso.';
-        erro.textContent=msg||'O link está incompleto, inválido ou expirado.';erro.style.display='block';
+        spinner.style.display='none';checkoutUiWrite(mensagem,'Não foi possível abrir este ingresso.');
+        checkoutUiWrite(erro,msg||'O link está incompleto, inválido ou expirado.');erro.style.display='block';
       }
 
       function render(res){
@@ -292,20 +300,21 @@
         view.innerHTML=cover+
           '<span class="status">● '+esc(t.status||'Ingresso válido')+'</span>'+
           '<div class="info">'+
-            '<div><small>Participante</small><strong>'+esc(t.nome||'—')+'</strong></div>'+
-            '<div><small>Ingresso</small><strong>'+esc([t.tipo,t.lote].filter(Boolean).join(' · ')||'—')+'</strong></div>'+
-            '<div><small>Data</small><strong>'+esc([e.data,e.horario].filter(Boolean).join(' · ')||'—')+'</strong></div>'+
-            '<div><small>Local</small><strong>'+esc([e.local,e.cidade,e.uf].filter(Boolean).join(' · ')||'—')+'</strong></div>'+
+            '<div><small data-checkout-text="Participante">Participante</small><strong>'+esc(t.nome||'—')+'</strong></div>'+
+            '<div><small data-checkout-text="Ingresso">Ingresso</small><strong>'+esc([t.tipo,t.lote].filter(Boolean).join(' · ')||'—')+'</strong></div>'+
+            '<div><small data-checkout-text="Data">Data</small><strong>'+esc([e.data,e.horario].filter(Boolean).join(' · ')||'—')+'</strong></div>'+
+            '<div><small data-checkout-text="Local">Local</small><strong>'+esc([e.local,e.cidade,e.uf].filter(Boolean).join(' · ')||'—')+'</strong></div>'+
           '</div>'+
-          (qr?'<img class="qr" src="'+esc(qr)+'" alt="QR Code do ingresso">':'')+
+          (qr?'<img class="qr" src="'+esc(qr)+'" alt="QR Code do ingresso" data-checkout-alt="QR Code do ingresso">':'')+
           '<div class="code">'+esc(t.codigo||codigo)+'</div>'+
           '<div class="security-note">'+esc(seg.mensagem||(autoriza?'Este ingresso é individual e permite somente uma entrada.':'Este ingresso não autoriza entrada neste momento.'))+'</div>'+
           '<div class="actions">'+
-            (autoriza?'<a id="share-whatsapp" class="action whatsapp full" href="#" target="_blank" rel="noopener">📲 Compartilhar pelo WhatsApp</a><button id="share-ticket" class="action" type="button">🔗 Compartilhar ingresso</button><button id="save-pdf" class="action" type="button">📄 Salvar em PDF</button>':'')+
-            '<a class="action primary" href="/minha-carioca/conta/?v=20260919-2215">Voltar para Minha Carioca</a>'+
-            '<a class="action" href="https://cariocaticket.com.br/?v=20260920-0035#todos-eventos">Ver eventos</a>'+
+            (autoriza?'<a id="share-whatsapp" class="action whatsapp full" href="#" target="_blank" rel="noopener" data-checkout-text="📲 Compartilhar pelo WhatsApp">📲 Compartilhar pelo WhatsApp</a><button id="share-ticket" class="action" type="button" data-checkout-text="🔗 Compartilhar ingresso">🔗 Compartilhar ingresso</button><button id="save-pdf" class="action" type="button" data-checkout-text="📄 Salvar em PDF">📄 Salvar em PDF</button>':'')+
+            '<a class="action primary" href="/minha-carioca/conta/?v=20260919-2215" data-checkout-text="Voltar para Minha Carioca">Voltar para Minha Carioca</a>'+
+            '<a class="action" href="https://cariocaticket.com.br/?v=20260920-0035#todos-eventos" data-checkout-text="Ver eventos">Ver eventos</a>'+
           '</div>';
 
+        if(window.CTCheckoutLanguage){if(!seg.mensagem)checkoutUiWrite(view.querySelector('.security-note'),autoriza?'Este ingresso é individual e permite somente uma entrada.':'Este ingresso não autoriza entrada neste momento.');window.CTCheckoutLanguage.apply(view);}
         var shareUrl=location.origin+location.pathname+
           '?v=20260919-2332&codigo='+encodeURIComponent(codigo)+
           '&sig='+encodeURIComponent(sig);
@@ -316,17 +325,18 @@
           );
         }
 
+        if(whatsapp&&window.CTCheckoutLanguage)window.CTCheckoutLanguage.shareLink(whatsapp,'Meu ingresso Carioca Ticket — {event}',shareUrl,{event:e.nome||'Evento'});
         var shareButton=document.getElementById('share-ticket');
         if(shareButton){
           shareButton.addEventListener('click',async function(){
-            var dados={title:'Ingresso Carioca Ticket',text:'Meu ingresso para '+(e.nome||'o evento'),url:shareUrl};
+            var dados={title:window.CTCheckoutLanguage?window.CTCheckoutLanguage.text('Ingresso Carioca Ticket'):'Ingresso Carioca Ticket',text:window.CTCheckoutLanguage?window.CTCheckoutLanguage.text('Meu ingresso para {event}',{event:e.nome||'o evento'}):'Meu ingresso para '+(e.nome||'o evento'),url:shareUrl};
             if(navigator.share){
               try{await navigator.share(dados);return}catch(err){if(err&&err.name==='AbortError')return}
             }
             try{
               await navigator.clipboard.writeText(shareUrl);
-              shareButton.textContent='✓ Link copiado';
-              setTimeout(function(){shareButton.textContent='🔗 Compartilhar ingresso'},2200);
+              checkoutUiWrite(shareButton,'✓ Link copiado');
+              setTimeout(function(){checkoutUiWrite(shareButton,'🔗 Compartilhar ingresso')},2200);
             }catch(_){
               try{
                 var area=document.createElement('textarea');
@@ -339,11 +349,11 @@
                 var copiado=document.execCommand('copy');
                 area.remove();
                 if(!copiado)throw new Error('COPY_FALLBACK');
-                shareButton.textContent='✓ Link copiado';
-                setTimeout(function(){shareButton.textContent='🔗 Compartilhar ingresso'},2200);
+                checkoutUiWrite(shareButton,'✓ Link copiado');
+                setTimeout(function(){checkoutUiWrite(shareButton,'🔗 Compartilhar ingresso')},2200);
               }catch(__){
-                shareButton.textContent='Use o menu do navegador para copiar';
-                setTimeout(function(){shareButton.textContent='🔗 Compartilhar ingresso'},3200);
+                checkoutUiWrite(shareButton,'Use o menu do navegador para copiar');
+                setTimeout(function(){checkoutUiWrite(shareButton,'🔗 Compartilhar ingresso')},3200);
               }
             }
           });
@@ -371,3 +381,4 @@
   </script>
 </body>
 </html>
+

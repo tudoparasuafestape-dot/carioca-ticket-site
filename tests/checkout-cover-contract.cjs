@@ -30,8 +30,11 @@ for (const route of ['checkout', 'checkout-v2']) {
   const state = { eventId: 'NEW-2026 & próximo', privateFlow: false };
   const ctx = { state, el, document: { createElement: () => ({}) }, queryCampanha: () => '',
     showClosed() { assert.fail('Cover rendering must not close a valid catalog'); } };
+  ctx.window=ctx;
   vm.createContext(ctx);
-  vm.runInContext(html.slice(start, end), ctx);
+  const uiWrite=html.match(/function checkoutUiWrite\(node,value\)\{[^\n]+\}/);
+  assert(uiWrite,'Exact presentation fallback exists');
+  vm.runInContext(uiWrite[0]+'\n'+html.slice(start, end), ctx);
   function render(visual) {
     state.catalog = { evento: { nome: 'Próximo evento sintético', local: 'Novo local' }, visual,
       tipos: [{ id: 'NEW-TYPE', nome: 'Ingresso sintético' }] };

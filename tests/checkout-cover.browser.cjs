@@ -8,7 +8,7 @@ const ROOT = path.resolve(__dirname, '..'), ORIGIN = 'http://127.0.0.1:4183';
 const EVENT = 'NEW-COVER-2026 & próximo';
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zs3sAAAAASUVORK5CYII=', 'base64');
 const ENDPOINTS = new Set(['https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec', 'https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec']);
-const ASSETS = new Set(['/assets/checkout-home-navigation.css', '/assets/checkout-home-navigation.js', '/assets/checkout-commercial-policy.js']);
+const ASSETS = new Set(['/assets/public-i18n.js','/assets/checkout-language.js','/assets/checkout-language.css','/assets/checkout-translations.js','/assets/checkout-home-navigation.css', '/assets/checkout-home-navigation.js', '/assets/checkout-commercial-policy.js']);
 async function run(browser, routePath, mobile) {
   const context = await browser.newContext({ viewport: { width: mobile ? 320 : 1365, height: 900 }, serviceWorkers: 'block' });
   const page = await context.newPage(), errors = [], unexpected = [], images = [], held = new Map();
