@@ -4,11 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { events, cover } = require('./fixtures/home-stage1.cjs');
 const root = path.resolve(__dirname, '..');
-const port = Number(process.env.CT_EVENT_PREVIEW_PORT || 42978);
+const port = Number(process.env.CT_EVENT_PREVIEW_PORT || 42979);
 const origin = `http://127.0.0.1:${port}`;
 const fixture = {
   sucesso: true,
-  evento: { id: 'PREVIEW-EVENT', nome: 'Encontro de música — demonstração', data: '20/12/2030', horario: '18h às 22h', local: 'Espaço de demonstração', endereco: 'Rua de teste, 123', cidade: 'Recife', uf: 'PE' },
+  evento: { id: 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD', nome: 'Encontro de música — demonstração', data: '20/12/2030', horario: '18h às 22h', local: 'Vevets Recepções', endereco: 'Rua Arenópolis, 82', cidade: 'Jaboatão dos Guararapes', uf: 'PE' },
   visual: { capaUrl: '/__fixture/music.svg', categoria: 'Música · fixture', realizacao: 'Equipe de demonstração', destaque: 'Uma noite para celebrar a música.', descricaoCurta: 'Evento fictício para revisar a página pública.', descricaoCompleta: 'Venha celebrar a música com a gente.\n\nOs portões abrem às dezoito horas. O espaço terá apresentações e uma área de convivência.\n\nEsta é uma demonstração com dados sintéticos, sem venda ou emissão de ingressos.', observacoes: 'Dados sintéticos. Nenhuma compra está disponível nesta prévia.' },
   menorPreco: 'R$ 35,00',
   tipos: [{ nome: 'Entrada — demonstração', descricao: 'Acesso fictício para revisão.', lotes: [{ nome: 'Lote de demonstração', precoNumero: 35, preco: 'R$ 35,00' }] }]
@@ -20,6 +20,8 @@ HTMLFormElement.prototype.submit = function () {
   if (fields.get('ctMinhaCariocaAction') !== 'publicRpc' ||
       !['ctEventoPublicoCarregarPROD','ctEventosPublicosListarPROD'].includes(method)) throw new Error('Blocked in synthetic preview');
   const result = method === 'ctEventosPublicosListarPROD' ? ${JSON.stringify({ sucesso: true, eventos: events })} : ${JSON.stringify(fixture)};
+  if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'unknown') result.evento.id = 'UNKNOWN-EVENT';
+  if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'changed') result.evento.endereco = 'Outra rua, 9';
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'no-cover') {
     result.visual.capaUrl = '';
     result.visual.posterUrl = '';
@@ -56,7 +58,7 @@ module.exports = http.createServer((req, res) => {
     html = html.replace(/(<body[^>]*>)/, '$1<aside id="preview-notice" style="padding:8px 16px;background:#ffd66d;color:#171717;text-align:center;font:13px system-ui">Prévia local · dados sintéticos · compras e destinos externos bloqueados</aside>');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(home-location\.(?:js|css)|event-(?:directions|map-preview)\.(?:js|css)|event-uber\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-share\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(home-location\.(?:js|css)|event-(?:directions|map-preview|uber|ride-destinations)\.(?:js|css)|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-share\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/plain', 'Destination blocked in synthetic preview');
   const file = path.join(root, url.pathname.slice(1));
   const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';
