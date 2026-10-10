@@ -2,6 +2,7 @@ name: Event directions isolated
 on:
   pull_request:
     paths:
+      - 'assets/event-map-preview.*'
       - 'evento/index.html'
       - 'evento-v2/index.html'
       - 'assets/event-directions.*'
@@ -31,3 +32,4 @@ jobs:
         with:
           name: event-directions-review
           path: test-results/event-directions/
+

@@ -19,6 +19,9 @@ for(const routeName of ['evento','evento-v2'])for(const locale of locales){
  assert((await map.innerText()).includes(words[locale]));
  const fallback=page.locator('#directions-map');
  assert.equal(await map.locator('#directions-map').count(),1);
+ const linkWords={'pt-BR':'Abrir no Google Maps','en-US':'Open in Google Maps',es:'Abrir en Google Maps','zh-Hans':'在 Google 地图中打开'};
+ assert((await fallback.innerText()).includes(linkWords[locale]));
+ assert((await fallback.getAttribute('aria-label')).includes(linkWords[locale]));
  assert.equal(await page.locator('.directions-actions #directions-map').count(),0);
  assert(await fallback.isVisible());
  await fallback.focus();assert(await fallback.evaluate(e=>e===document.activeElement));
@@ -45,11 +48,14 @@ for(const routeName of ['evento','evento-v2'])for(const locale of locales){
  await page.evaluate(()=>{delete window.CTPublicI18n;localStorage.setItem('ct-home-locale','invalid');dispatchEvent(new StorageEvent('storage',{key:'ct-home-locale'}));});assert.equal(await map.getAttribute('lang'),'pt-BR');
  await page.evaluate(()=>{CTEventDirections.render({local:'Outro espaço',endereco:'Avenida Nova, 42',cidade:'Olinda',uf:'PE'});CTEventMapPreview.renderPublicDirections();});
  await map.scrollIntoViewIfNeeded();await map.locator('iframe').waitFor();assert.equal(new URL(await map.locator('iframe').getAttribute('src')).searchParams.get('q'),'Outro espaço, Avenida Nova, 42, Olinda, PE, Brasil');
+ await page.locator('#directions-map').focus();
  await page.evaluate(()=>CTEventMapPreview.clear());
+ assert(await page.locator('#directions-map').evaluate(e=>e===document.activeElement));
  assert.equal(await page.locator('.directions-actions #directions-map').count(),1);
  assert(await page.locator('#directions-map').isVisible());
  assert.equal(await page.locator('#directions-map').getAttribute('class'),'');
  await page.evaluate(()=>CTEventMapPreview.renderPublicDirections());
+ assert(await page.locator('#directions-map').evaluate(e=>e===document.activeElement));
  for(const e of [{},{local:'Online' ,endereco:'Rua de teste, 123',cidade:'Recife',uf:'PE'},{local:'Espaço',endereco:'A confirmar',cidade:'Recife',uf:'PE'}]){
   await page.evaluate(e=>{CTEventDirections.render(e);CTEventMapPreview.renderPublicDirections();},e);assert(await map.isHidden());assert.equal(await map.locator('iframe').count(),0);
  }
