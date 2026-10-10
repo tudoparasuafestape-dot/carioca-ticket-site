@@ -2,6 +2,7 @@ name: Event accessibility (isolated fixtures)
 on:
   pull_request:
     paths:
+      - 'assets/event-map-preview.*'
       - 'evento/index.html'
       - 'evento-v2/index.html'
       - 'assets/event-accessibility.css'
@@ -44,3 +45,4 @@ jobs:
             docs/reviews/event-accessibility/screenshots/
             test-results/home-stage1*
             test-results/catalog-isolated*
+

@@ -21,3 +21,15 @@ The iframe has a translated accessible title. Feedback uses a status region. Con
 
 ## Verification
 Dependency-free tests cover lazy lifecycle, encoding, fixed host, privacy attributes, timeout/fallback, language refresh, old-event cleanup, invalid input and teardown. Isolated browser CI exercises both actual public templates with synthetic transport, no real application RPC/checkout, and mock map responses: four languages, 320/390/768/1440px, light/dark, copy/map-link preservation, event changes, missing/online addresses and storage denial. Mock maps are never evidence of real pin location. Independent review and CI on the final SHA are required before release.
+
+
+## Reduced duplicate action emphasis
+
+The same validated directions link moves from the large action row to a permanent
+text fallback beneath the map while the map exists. The original node, URL,
+translation hooks and new-tab safety attributes are retained. Teardown restores
+the original position, so absent/invalid maps do not remove the directions path.
+Copy address is unchanged. Error/timeout adds a border and weight to the fallback;
+load never hides it because a provider error page may also fire load. The link
+keeps a 44px target and keyboard focus styling. No claim of provider success or
+precise venue geocoding is made by these isolated UI tests.
