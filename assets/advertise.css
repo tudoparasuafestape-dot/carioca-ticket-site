@@ -88,5 +88,10 @@
 
 .ct-advertise .ad-tabs button:focus-visible { outline-offset:-3px; }
 
-/* Follow the transparent artwork edge to keep white lettering legible on light surfaces. */
-html[data-home-theme="light"] .ct-advertise .ad-brand img { filter:drop-shadow(0 0 1px #333) drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }
+
+/* Reuse the established CT symbol and theme-aware brand name without a halo. */
+.ct-advertise .ad-brand { display:inline-flex; flex:none; align-items:center; justify-content:flex-start; gap:9px; width:auto; height:auto; max-width:100%; min-width:44px; min-height:44px; padding:0; line-height:1.15; overflow:visible; background:transparent; border-radius:0; color:var(--home-text); text-decoration:none; }
+.ct-advertise .ad-brand img { display:block; flex:none; width:42px; height:42px; max-width:none; max-height:none; margin:0; object-fit:contain; background:transparent; filter:none; }
+.ct-advertise .ad-brand .brand-name { display:block; min-width:0; font-family:system-ui,sans-serif; font-size:1.125rem; font-weight:750; line-height:1.15; letter-spacing:-.04em; color:inherit; }
+.ct-advertise .ad-brand b { font-weight:450; }
+@media(max-width:800px) { .ct-advertise .nav .ad-brand { flex:1 1 6rem; min-width:0; } .ct-advertise .ad-preferences { flex-basis:10rem; } }
