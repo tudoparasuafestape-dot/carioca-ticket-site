@@ -12,11 +12,12 @@ const server=require('./event-destination-preview.cjs'),origin='http://127.0.0.1
     if(u.hostname==='fixture.invalid')script='window.top.postMessage('+JSON.stringify(forged)+',"*")';
     else if(data.fixtureUnrelated)script='window.top.postMessage('+JSON.stringify(data)+',"*");setTimeout(()=>window.top.postMessage('+JSON.stringify({...data,erro:'REPLAY'})+',"*"),300)';
     else script='window.top.postMessage('+JSON.stringify({...forged,id:'WRONG-NONCE'})+',"*");setTimeout(()=>window.top.postMessage('+JSON.stringify(data)+',"*"),'+(data.fixtureTimeout?250:100)+')';
-    return r.fulfill({status:200,contentType:'text/html',body:'<script>'+script+'</script>'});
+    return r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<script>'+script+'</script>'});
   }
   external.push(r.request().url());return r.abort();
  });const page=await context.newPage();let errors=[];page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(origin+'/produtor/destino/?evento=EVT-TEST-A');await page.locator('#editor').waitFor({state:'visible'});
+ assert((await page.locator('#event-address').textContent()).includes('Salão sintético'));
  assert(await page.evaluate(()=>fixtureMessages.some(x=>x.error==='WRONG_FRAME'&&x.pending)));
  assert(await page.evaluate(()=>fixtureMessages.some(x=>x.id==='WRONG-NONCE'&&x.pending)));
  await page.waitForTimeout(350);assert(await page.evaluate(()=>fixtureMessages.some(x=>x.error==='REPLAY'&&!x.pending)));assert(await page.locator('#editor').isVisible());
