@@ -34,6 +34,7 @@ for(const route of ['evento','evento-v2']){
  assert.match(html,/id="directions-uber" hidden target="_self" rel="noreferrer"/);
  assert.match(html,/CTEventUber\.render\(e,state\.eventoId\)/);
  assert.match(html,/function showError\(msg,retryable\)\{\s*if\(window.CTEventUber\)window.CTEventUber.clear\(\)/);
+ assert.match(html,/event-ride-destinations\.js\?v=20261010-2/);
  assert(html.indexOf('event-ride-destinations.js')<html.indexOf('event-uber.js'));
 }
 console.log('PASS: approved event/address binding, current URL encoding, no coordinate guessing, invalid pin/ID guards, locale/storage handling, stale-state cleanup, both templates');
