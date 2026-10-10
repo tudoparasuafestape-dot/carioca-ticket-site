@@ -15,5 +15,6 @@ for(const os of [false,true])for(const saved of [null,'invalid','light','dark','
 }
 for(const os of [false,true]){let r=run('light',os,true);assert.equal(r.root.dataset.homeTheme,'dark');r.change('light');assert.equal(r.root.dataset.homeTheme,'light');cases++;}
 for(const file of ['index.html','anuncie/index.html','evento/index.html','evento-v2/index.html']){const h=fs.readFileSync(file,'utf8');assert(h.indexOf('home-theme.js')<h.indexOf('<style')||h.indexOf('home-theme.js')<h.indexOf('home.css'));assert.match(h,/home-theme.js\?v=20261009-dark-default/);}
-const html=fs.readFileSync('index.html','utf8');assert.match(html,/class="ad-house-actions"/);assert.match(html,/href="\/anuncie\/" data-i18n="adLearnMore">Saiba mais/);assert.equal((fs.readFileSync('assets/home-i18n.js','utf8').match(/"adLearnMore"/g)||[]).length,4);
+const html=fs.readFileSync('index.html','utf8');assert.match(html,/class="ad-house-actions"/);assert.match(html,/href="\/anuncie\/" data-i18n="adLearnMore">Conheça os planos/);assert.equal((fs.readFileSync('assets/home-i18n.js','utf8').match(/"adLearnMore"/g)||[]).length,4);
 console.log(cases+' theme contract cases passed; four route bootstraps and localized CTA verified.');
+
