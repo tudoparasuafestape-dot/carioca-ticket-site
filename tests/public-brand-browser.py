@@ -56,7 +56,9 @@ with sync_playwright() as pw:
      checks.append([path,width,scale,theme])
   # Existing native navigation only; the destination is fulfilled from static files.
   for sel in selectors:
-   page.goto(ORIGIN+path);page.locator(sel).focus();page.keyboard.press('Enter');page.wait_for_url(ORIGIN+'/')
+   page.goto(ORIGIN+path);page.locator(sel).focus()
+   with page.expect_navigation(wait_until='load'):page.keyboard.press('Enter')
+   assert page.url==ORIGIN+'/'
    if path!='/':page.go_back();page.wait_for_url(ORIGIN+path)
  context.close();browser.close()
 assert not blocked,blocked
