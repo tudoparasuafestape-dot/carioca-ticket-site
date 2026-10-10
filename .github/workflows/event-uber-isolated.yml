@@ -1,0 +1,34 @@
+name: Event Uber link (isolated)
+on:
+  pull_request:
+    paths:
+      - 'evento/**'
+      - 'evento-v2/**'
+      - 'assets/event-uber.*'
+      - 'assets/event-ride-destinations.js'
+      - 'tests/event-uber-*'
+      - '.github/workflows/event-uber-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  uber-link:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npx playwright install --with-deps chromium
+      - name: Validate isolated Uber destination controls
+        run: |
+          node --check assets/event-uber.js
+          node --check assets/event-ride-destinations.js
+          node tests/event-uber-contract.cjs
+          node tests/event-uber-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-event-uber-link
+          path: test-results/event-uber
