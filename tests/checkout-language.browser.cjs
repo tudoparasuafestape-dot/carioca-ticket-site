@@ -113,9 +113,18 @@ async function shot(f, routePath, mobile, stage) {
     await f.page.evaluate(()=>Array.from(document.querySelectorAll('body *')).map(n=>[n,parseFloat(getComputedStyle(n).fontSize)]).forEach(([n,size])=>{n.dataset.previousSize=n.style.fontSize;n.style.fontSize=(size*1.5)+'px';}));
     await f.page.screenshot({path:path.join(evidence,name+'-font150.png'),fullPage:true});
     assert(await f.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'150% horizontal overflow');
-    await f.page.evaluate(()=>document.querySelectorAll('[data-previous-size]').forEach(n=>{n.style.fontSize=n.dataset.previousSize;delete n.dataset.previousSize;}));
+    assert.equal(await f.page.evaluate(()=>localStorage.getItem('ct-public-privacy-v1')),null,'no privacy choice required');
+    assert(await f.page.locator('#ct-privacy-banner').isVisible());
+    for(const id of ['buyerName','buyerCpf','buyerWhatsapp','buyerEmail']){
+     const input=f.page.locator('#'+id),original=await input.inputValue();
+     await input.evaluate(node=>node.scrollIntoView({block:'center'}));await input.click();
+     assert(await input.evaluate(node=>document.activeElement===node),'field can receive focus with undecided privacy');
+     await input.fill(original);assert.equal(await input.inputValue(),original);
+    }
     for(let i=0;i<2;i++){await f.open();await f.page.keyboard.press('Escape');await f.page.locator('#checkoutLeaveDialog').waitFor({state:'hidden'});assert(await f.page.locator('#checkoutHome').evaluate(e=>document.activeElement===e));}
     await f.page.locator('#payButton').click();await until(()=>f.state.payments.length===1,'one synthetic payment');
+    assert.equal(await f.page.evaluate(()=>localStorage.getItem('ct-public-privacy-v1')),null,'synthetic purchase did not require privacy choice');
+    await f.page.evaluate(()=>document.querySelectorAll('[data-previous-size]').forEach(n=>{n.style.fontSize=n.dataset.previousSize;delete n.dataset.previousSize;}));
     const submitted=JSON.stringify(f.state.payments);const polls=f.state.polls;
     for(const target of ['es','pt-BR',locale])await f.page.locator('#checkoutLanguage').selectOption(target);
     assert.equal(JSON.stringify(f.state.payments),submitted);assert.equal(f.state.polls,polls);
