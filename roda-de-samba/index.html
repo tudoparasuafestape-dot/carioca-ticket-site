@@ -40,11 +40,16 @@
     .loader{width:40px;height:40px;margin:22px auto 0;border-radius:50%;border:4px solid rgba(255,255,255,.12);border-top-color:#f1b640;animation:spin .8s linear infinite}
     .link{display:inline-block;margin-top:18px;color:#111;background:#f1b640;padding:11px 14px;border-radius:12px;text-decoration:none;font-size:12px;font-weight:900}
     @keyframes spin{to{transform:rotate(360deg)}}
-  </style>
+  
+.public-brand-wordmark { display:inline-flex; flex:none; align-items:center; justify-content:center; width:96px; height:72px; min-width:44px; min-height:44px; overflow:hidden; background:transparent; padding:0; }
+.public-brand-wordmark img { display:block; flex:none; width:164px; height:110px; max-width:none; max-height:none; margin:0; object-fit:contain; object-position:center; background:transparent; }
+.public-brand-wordmark:focus-visible { outline:3px solid #f1c56f; outline-offset:4px; }
+ .public-brand-wordmark { margin-bottom:12px; }
+</style>
 </head>
 <body>
   <main class="card">
-    <img class="logo" src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket">
+    <span class="public-brand-wordmark"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></span>
     <div class="brand">Carioca Ticket</div>
     <h1>Roda de Samba Estilo Carioca</h1>
     <p>Abrindo a página oficial de vendas…</p>

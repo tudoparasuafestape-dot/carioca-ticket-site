@@ -1,0 +1,40 @@
+name: Secondary public brand (isolated)
+on:
+  pull_request:
+    paths:
+      - 'convite/index.html'
+      - 'minha-carioca/**'
+      - 'parceiro/programa/index.html'
+      - 'parceiro/manual/index.html'
+      - 'parceiro/conduta/index.html'
+      - 'parceiro/regulamento/index.html'
+      - 'produtor/solicitar/index.html'
+      - 'campanha/index.html'
+      - 'roda-de-samba/index.html'
+      - 'tests/public-brand-secondary*'
+      - '.github/workflows/public-brand-secondary-review.yml'
+permissions:
+  contents: read
+jobs:
+  logos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: node tests/public-brand-secondary-contract.cjs
+      - run: pip install playwright==1.55.0
+      - run: python -m playwright install --with-deps chromium
+      - run: python tests/public-brand-secondary-browser.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-brand-secondary-review
+          path: test-results/public-brand-secondary/
