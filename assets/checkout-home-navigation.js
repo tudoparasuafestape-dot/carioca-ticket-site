@@ -26,6 +26,7 @@
           .some(function (input) { return input.type === 'checkbox' ? input.checked : !!input.value.trim(); });
         return changed || filled ? 'form' : '';
       }
+      function tr(source){return root.CTCheckoutLanguage?root.CTCheckoutLanguage.text(source):source;}
       function text(kind) {
         if (kind === 'busy') return 'Estamos aguardando a resposta da criação do pedido. Continue nesta tela por enquanto para não interromper a recuperação do pagamento. A saída será liberada após a resposta.';
         if (kind === 'recovery') return 'Estamos consultando um pedido anterior. Aguarde a resposta para conferir o andamento antes de sair ou iniciar outra compra.';
@@ -36,7 +37,7 @@
       function refresh() {
         var kind = reason();
         var value = text(kind);
-        if (message.textContent !== value) message.textContent = value;
+        if(root.CTCheckoutLanguage)root.CTCheckoutLanguage.write(message,value);else if (message.textContent !== value) message.textContent = value;
         leave.disabled = kind === 'busy' || kind === 'recovery';
       }
       function goHome() {
@@ -73,8 +74,8 @@
         var kind = reason();
         if (!kind) { goHome(); return; }
         if (typeof dialog.showModal !== 'function') {
-          if (kind === 'busy' || kind === 'recovery') { root.alert(text(kind)); return; }
-          if (root.confirm(text(kind))) {
+          if (kind === 'busy' || kind === 'recovery') { root.alert(tr(text(kind))); return; }
+          if (root.confirm(tr(text(kind)))) {
             var current = reason();
             if (current !== 'busy' && current !== 'recovery') goHome();
           }
@@ -95,3 +96,4 @@
     }
   };
 }(window));
+
