@@ -87,3 +87,6 @@
 @media(max-width:420px) { .ct-advertise .ad-tabs button { padding-inline:10px; font-size:.875rem; } }
 
 .ct-advertise .ad-tabs button:focus-visible { outline-offset:-3px; }
+
+/* Follow the transparent artwork edge to keep white lettering legible on light surfaces. */
+html[data-home-theme="light"] .ct-advertise .ad-brand img { filter:drop-shadow(0 0 1px #333) drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }

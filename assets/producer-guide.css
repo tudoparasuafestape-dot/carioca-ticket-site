@@ -5,3 +5,6 @@
 .brand { display:inline-flex; width:96px; height:72px; min-width:44px; min-height:44px; padding:0; align-items:center; justify-content:center; overflow:hidden; background:transparent; border-radius:0; }
 .brand img { flex:none; width:164px; height:110px; max-width:none; object-fit:contain; }
 @media(max-width:800px) { .brand { width:80px; height:64px; } .brand img { width:144px; height:96px; } }
+
+/* Follow the transparent artwork edge to keep white lettering legible on light surfaces. */
+html[data-home-theme="light"] .brand img { filter:drop-shadow(0 0 1px #333) drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }

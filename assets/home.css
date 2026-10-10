@@ -443,3 +443,6 @@
 
 /* Keep the home logo link comfortably reachable on touch screens. */
 .ct-home header .brand { min-height:44px; min-width:44px; }
+
+/* Follow the transparent artwork edge to keep white lettering legible on light surfaces. */
+html[data-home-theme="light"] .ct-home .footer-brand .footer-home-link img { filter:drop-shadow(0 0 1px #333) drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }
