@@ -42,6 +42,15 @@ for(const route of ['evento','evento-v2']){
  assert.match(html,/id="directions-waze" hidden target="_self" rel="noreferrer" aria-describedby="directions-waze-note"/);
  assert.match(html,/id="directions-uber"[^\n]*\n\s*<a id="directions-waze"/);
  assert.match(html,/id="directions-waze-note" hidden/);
- assert.match(html,/event-uber\.js\?v=20261010-universal1/);assert.match(html,/event-uber\.css\?v=20261010-4/);checks++;
+ assert.match(html,/<img class="waze-mark" src="\/assets\/waze-mark\.svg" width="28" height="26" alt="" aria-hidden="true"><span id="directions-waze-label">/);
+ assert.equal((html.match(/class="waze-mark"/g)||[]).length,1);
+ assert.match(html,/event-uber\.js\?v=20261010-universal1/);assert.match(html,/event-uber\.css\?v=20261010-5/);checks++;
 }
 console.log(`PASS: ${checks} Waze synthetic groups; exact Uber destination, URL encoding, 4 locales, stale state, no destination, invalid coordinates, future registry record, both templates. Zero network/navigation.`);
+
+// Pin the original artwork bytes. Waze is a third-party trademark; see asset provenance.
+const icon=fs.readFileSync(path.join(root,'assets/waze-mark.svg'));
+assert.equal(require('node:crypto').createHash('sha256').update(icon).digest('hex'),'817b77a1d7df3aa57776c18e8f3ba8ee20a298e5ed884395c8c3638b12916c7f');
+assert.match(icon.toString(),/viewBox="0 0 108 100"/);
+assert(!/<(?:script|foreignObject|image|use)\b|\b(?:href|onload|onclick)=/i.test(icon.toString()));
+console.log('PASS: official bundled Waze mark, pinned bytes, decorative accessible markup on both routes.');

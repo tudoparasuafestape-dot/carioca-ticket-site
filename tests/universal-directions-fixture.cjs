@@ -12,7 +12,7 @@ const origin = 'http://127.0.0.1:42983';
 const routes = ['evento', 'evento-v2'];
 const templates = routes.map(route => `/${route}/`);
 const assetNames = [
-  'public-i18n.js', 'event-i18n.js', 'home-theme.js',
+  'public-i18n.js', 'event-i18n.js', 'home-theme.js', 'waze-mark.svg',
   'event-accessibility.css', 'event-directions.css', 'event-i18n.css',
   'event-directions.js', 'event-uber.css', 'event-ride-destinations.js',
   'event-uber.js', 'event-map-preview.css', 'event-map-preview.js',
@@ -143,7 +143,7 @@ function localResponse(requestUrl, method = 'GET') {
   if (url.pathname === '/manifest.webmanifest') return response(200, 'application/manifest+json', fs.readFileSync(path.join(siteRoot, 'manifest.webmanifest')));
   assert(assets.has(url.pathname), `Non-allowlisted loopback asset: ${url.pathname}`);
   const file = path.join(siteRoot, url.pathname.slice(1));
-  const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : 'image/png';
+  const type = file.endsWith('.svg') ? 'image/svg+xml' : file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : 'image/png';
   return response(200, type, fs.readFileSync(file));
 }
 function fingerprint() {
@@ -174,6 +174,10 @@ function staticChecks() {
   for (const name of assetNames.filter(name => name.endsWith('.js'))) {
     new vm.Script(fs.readFileSync(path.join(siteRoot, 'assets', name), 'utf8'), {filename:name});
   }
+  const mark = localResponse(origin + '/assets/waze-mark.svg');
+  assert.equal(mark.headers['content-type'], 'image/svg+xml');
+  assert.equal(crypto.createHash('sha256').update(mark.body).digest('hex'), '817b77a1d7df3aa57776c18e8f3ba8ee20a298e5ed884395c8c3638b12916c7f');
+  assert.throws(() => localResponse(origin + '/assets/other-mark.svg'), /Non-allowlisted/);
   assert.throws(() => localResponse('https://example.invalid/'), /fixed loopback/);
   assert.throws(() => localResponse(origin + '/assets/event-uber.js', 'POST'), /writes/);
   assert.throws(() => localResponse(origin + '/checkout/'), /Non-allowlisted/);

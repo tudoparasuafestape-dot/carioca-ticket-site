@@ -77,6 +77,13 @@ async function render(page, event) {
       await page.locator('#app').waitFor({state:'visible'});
       const waze = page.locator('#directions-waze'), uber = page.locator('#directions-uber');
       await expect(waze).toBeVisible();
+      const mark = waze.locator('img.waze-mark');
+      await expect(mark).toBeVisible();
+      await expect(mark).toHaveAttribute('alt', '');
+      await expect(mark).toHaveAttribute('aria-hidden', 'true');
+      await expect(mark).toHaveJSProperty('complete', true);
+      assert(await mark.evaluate(node => node.naturalWidth > 0 && node.naturalHeight > 0), 'Bundled Waze SVG must decode');
+      assert.equal(await mark.getAttribute('src'), '/assets/waze-mark.svg');
       await expect(waze).toHaveAccessibleName(labels[locale]);
       assert.equal(await waze.getAttribute('lang'), locale);
       assert.equal(await waze.getAttribute('aria-label'), null);
@@ -98,6 +105,9 @@ async function render(page, event) {
         await waze.scrollIntoViewIfNeeded();
         assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${route}/${event.key}/${locale}/${width}/${theme}: overflow`);
         const a = await uber.boundingBox(), b = await waze.boundingBox();
+        const icon = await mark.boundingBox(), label = await page.locator('#directions-waze-label').boundingBox();
+        assert.equal(icon.width, 28); assert.equal(icon.height, 26);
+        assert(icon.x >= b.x && icon.y >= b.y && icon.x + icon.width <= label.x && icon.y + icon.height <= b.y + b.height, 'Icon must fit beside label without clipping');
         assert(a.height >= 44 && b.height >= 44 && b.width >= 44);
         assert(b.x >= 0 && b.x + b.width <= width + 1);
         assert(b.y >= a.y && (b.y >= a.y + a.height || b.x >= a.x + a.width));
@@ -110,6 +120,10 @@ async function render(page, event) {
       }
       await page.emulateMedia({forcedColors:'active'});
       await expect(waze).toBeVisible();
+      await expect(mark).toBeVisible();
+      assert.deepEqual(await mark.evaluate(node => {const s=getComputedStyle(node);return [s.forcedColorAdjust,s.backgroundColor];}), ['none','rgb(255, 255, 255)']);
+      assert.equal(await waze.evaluate(node => getComputedStyle(node).forcedColorAdjust), 'auto');
+      await expect(waze).toHaveAccessibleName(labels[locale]);
       await page.locator('#event-directions').screenshot({path:`${out}/${route}-${event.key}-${locale}-forced-colors.png`});
       await page.emulateMedia({forcedColors:'none'});
       await page.setViewportSize({width:320,height:1100});

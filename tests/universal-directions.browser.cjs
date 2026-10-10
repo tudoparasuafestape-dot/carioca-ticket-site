@@ -57,6 +57,14 @@ async function sharedPinAssertions(page, expect, event, locale) {
   for (const locator of [uber,waze,maps]) await expect(locator).toBeVisible();
   await expect(uber).toHaveAccessibleName(locales[locale].uber);
   await expect(waze).toHaveAccessibleName(locales[locale].waze);
+  const mark = waze.locator('img.waze-mark');
+  await expect(mark).toBeVisible();
+  await expect(mark).toHaveAttribute('src', '/assets/waze-mark.svg');
+  await expect(mark).toHaveAttribute('alt', '');
+  await expect(mark).toHaveAttribute('aria-hidden', 'true');
+  await expect(mark).toHaveJSProperty('complete', true);
+  assert(await mark.evaluate(node => node.naturalWidth > 0 && node.naturalHeight > 0), 'Official local Waze icon must decode for a generic event');
+
   await expect(maps).toHaveAccessibleName(locales[locale].map);
   const uberUrl = new URL(await uber.getAttribute('href'));
   const drop = JSON.parse(uberUrl.searchParams.get('drop[0]'));
@@ -182,6 +190,11 @@ async function runCase(browser, expect, route, locale, result) {
         const ratio = contrast(...pair);
         assert(ratio >= 4.5, `${selector}: text contrast ${ratio.toFixed(2)} for ${pair}`);
       }
+      const wazeBounds = await page.locator('#directions-waze').boundingBox();
+      const iconBounds = await page.locator('#directions-waze img.waze-mark').boundingBox();
+      const labelBounds = await page.locator('#directions-waze-label').boundingBox();
+      assert.equal(iconBounds.width, 28); assert.equal(iconBounds.height, 26);
+      assert(iconBounds.x >= wazeBounds.x && iconBounds.y >= wazeBounds.y && iconBounds.x + iconBounds.width <= labelBounds.x && iconBounds.y + iconBounds.height <= wazeBounds.y + wazeBounds.height, 'Official icon fits beside generic event label');
       await page.locator('#directions-uber').focus();
       await page.keyboard.press('Tab');
       await expect(page.locator('#directions-waze')).toBeFocused();
