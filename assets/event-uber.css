@@ -4,3 +4,10 @@
 .ct-event #directions-uber-note{font-size:13px;line-height:1.5;color:var(--event-muted);margin:0 0 12px}
 .ct-event #directions-uber[hidden],.ct-event #directions-uber-note[hidden]{display:none!important}
 @media(forced-colors:active){.ct-event .directions-actions #directions-uber{background:ButtonFace;color:ButtonText;border-color:ButtonText;box-shadow:none}}
+
+
+.ct-event .directions-actions #directions-waze{background:#33ccff;color:#102a33;border-color:#167a9b;text-decoration:none;gap:10px;box-shadow:0 2px 0 rgba(0,0,0,.16)}
+.ct-event .directions-actions #directions-waze:hover{background:#74dcff;border-color:#126581}
+.ct-event #directions-waze-note{font-size:13px;line-height:1.5;color:var(--event-muted);margin:0 0 12px}
+.ct-event #directions-waze[hidden],.ct-event #directions-waze-note[hidden]{display:none!important}
+@media(forced-colors:active){.ct-event .directions-actions #directions-waze{background:ButtonFace;color:ButtonText;border-color:ButtonText;box-shadow:none}}

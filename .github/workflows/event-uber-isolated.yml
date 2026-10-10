@@ -7,6 +7,7 @@ on:
       - 'assets/event-uber.*'
       - 'assets/event-ride-destinations.js'
       - 'tests/event-uber-*'
+      - 'tests/event-waze-*'
       - '.github/workflows/event-uber-isolated.yml'
 permissions:
   contents: read
@@ -27,8 +28,15 @@ jobs:
           node --check assets/event-ride-destinations.js
           node tests/event-uber-contract.cjs
           node tests/event-uber-browser.cjs
+      - name: Validate Waze contract and isolated browser matrix
+        run: |
+          node --check tests/event-waze-browser.cjs
+          node tests/event-waze-contract.cjs
+          node tests/event-waze-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: public-event-uber-link
-          path: test-results/event-uber
+          path: |
+            test-results/event-uber
+            test-results/event-waze
