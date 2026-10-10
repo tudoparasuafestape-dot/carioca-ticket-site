@@ -78,7 +78,7 @@ const catalog=[{id:'FIXTURE-LANGUAGE-1',nome:'Evento original',data:'10/10/2026'
      const home=page.locator('.footer-home-logo');assert.equal(await home.getAttribute('href'),'/');
      const image=await home.locator('img').getAttribute('src');assert.equal(image,'/assets/carioca-ticket-logo.png');
      await home.focus();assert.notEqual(await home.evaluate(e=>getComputedStyle(e).outlineStyle),'none');
-     assert.ok(await page.locator('link[href="/assets/public-logo-links.css?v=20261009"]').count());
+     assert.ok(await page.locator('link[href="/assets/public-logo-links.css?v=20261010-public-logo"]').count());
      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),name+' horizontal overflow '+width+' '+locale);
      if(legal.has(name)){
       const original=page.locator('#legal-original');const notice=page.locator('#legal-translation-notice');
@@ -114,3 +114,4 @@ const catalog=[{id:'FIXTURE-LANGUAGE-1',nome:'Evento original',data:'10/10/2026'
   console.log(JSON.stringify({passed:true,actualPageCases:cases,widths:[320,1440],locales:['pt-BR','en-US','es','zh-Hans'],interceptedCatalogCalls:rpc,unexpectedRequests:unexpected,legalOriginalsPreserved:true,screenshots:'test-results/public-language'}));
  }catch(error){const active=context.pages()[0];if(active)await active.screenshot({path:path.join(screenshots,'failure.png'),fullPage:true}).catch(()=>{});throw error;}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
+

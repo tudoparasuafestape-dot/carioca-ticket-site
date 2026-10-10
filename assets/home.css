@@ -440,3 +440,6 @@
  .ct-home .footer-brand .footer-home-link { width:80px; height:64px; }
  .ct-home .footer-brand .footer-home-link img { width:144px; height:96px; }
 }
+
+/* Keep the home logo link comfortably reachable on touch screens. */
+.ct-home header .brand { min-height:44px; min-width:44px; }
