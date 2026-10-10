@@ -162,7 +162,7 @@ async function regression(browser) {
       const unseen = f.page.locator('[data-event-id="SYNTHETIC-5"] img');
       assert.equal(await unseen.getAttribute('src'), null);
       await filter(f.page, 'sintético 5 10/10/2027'); await ready(f.page, 1);
-      assert.equal(await unseen.getAttribute('src'), '/__fixture/cover-5.svg');
+      assert.equal(await unseen.getAttribute('src'), ORIGIN + '/__fixture/cover-5.svg');
       await unseen.evaluate(img => img.decode());
       await filter(f.page, ''); await ready(f.page, n);
     }
