@@ -2,6 +2,7 @@
 'use strict';
 const {chromium, expect} = require('@playwright/test');
 const fs = require('node:fs');
+const http = require('node:http');
 const assert = require('node:assert/strict');
 const server = require('./event-uber-preview-server.cjs');
 const origin = `http://127.0.0.1:${Number(process.env.CT_EVENT_PREVIEW_PORT || 42979)}`;
@@ -13,6 +14,23 @@ const events = [
   {key:'era', id:'EVT-23112026-ERA-BEAUTY-EAC4B673', local:'SEBRAE PE', endereco:'Rua Tabajaras, 360 - Ilha do Retiro', cidade:'Recife', uf:'PE'}
 ];
 const labels = {'pt-BR':'Ir com Waze', 'en-US':'Go with Waze', es:'Ir con Waze', 'zh-Hans':'使用 Waze 导航'};
+function fixtureResponse(url) {
+  // Read only the fixed loopback fixture server; do not follow redirects.
+  assert.equal(url.origin, origin);
+  return new Promise((resolve, reject) => {
+    const request = http.get(url, response => {
+      const chunks = [];
+      response.on('data', chunk => chunks.push(chunk));
+      response.on('end', () => resolve({status:response.statusCode, headers:{
+        'content-type':response.headers['content-type'] || 'application/octet-stream',
+        'content-security-policy':response.headers['content-security-policy'] || "default-src 'none'"
+      }, body:Buffer.concat(chunks)}));
+      response.on('error', reject);
+    });
+    request.setTimeout(5000, () => request.destroy(new Error('Loopback fixture timeout')));
+    request.on('error', reject);
+  });
+}
 function contrast(fg, bg) {
   const lum = color => color.match(/[\d.]+/g).slice(0,3).map(Number).map(v => {
     v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
@@ -37,19 +55,19 @@ async function render(page, event) {
   let browser;
   try {
     browser = await chromium.launch({
-      proxy: {server:'http://127.0.0.1:9', bypass:'127.0.0.1'},
+      proxy: {server:'http://127.0.0.1:9', bypass:'<-loopback>'},
       args:['--disable-background-networking', '--disable-quic', '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1']
     });
     for (const route of ['evento','evento-v2']) for (const event of events) for (const locale of Object.keys(labels)) {
-      const context = await browser.newContext({viewport:{width:390,height:1100}, serviceWorkers:'block', permissions:[]});
+      const context = await browser.newContext({viewport:{width:390,height:1100}, offline:true, serviceWorkers:'block', permissions:[]});
       const external = [], errors = [];
       await context.addInitScript(locale => {
         localStorage.setItem('ct-home-locale', locale);
         Object.defineProperty(navigator, 'clipboard', {value:{writeText:async value => {window.copied = value;}}});
       }, locale);
-      await context.route('**/*', request => {
+      await context.route('**/*', async request => {
         const url = new URL(request.request().url());
-        if (url.origin === origin && request.request().method() === 'GET') return request.continue();
+        if (url.origin === origin && request.request().method() === 'GET') return request.fulfill(await fixtureResponse(url));
         external.push(url.origin + url.pathname);
         return request.abort('blockedbyclient');
       });
