@@ -6,6 +6,11 @@ on:
       - 'eventos-v2/index.html'
       - 'assets/event-destination-*'
       - 'assets/event-uber.js'
+      - 'assets/event-directions.js'
+      - 'assets/event-map-preview.js'
+      - 'evento/index.html'
+      - 'evento-v2/index.html'
+      - 'tests/universal-directions*'
       - 'tests/event-destination-*'
       - '.github/workflows/event-destination-isolated.yml'
 permissions:
@@ -16,6 +21,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -26,9 +33,42 @@ jobs:
           node tests/event-destination-contract.cjs
           node tests/event-destination-editor-runtime.cjs
           node tests/event-uber-contract.cjs
+          node tests/event-destination-navigation.cjs
           node tests/event-destination-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: event-destination-editor
           path: test-results/event-destination
+
+
+  public-navigation:
+    name: Universal directions with synthetic events
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npx playwright install --with-deps chromium
+      - name: Validate generic destination and privacy contracts
+        run: |
+          node --check tests/universal-directions.browser.cjs
+          node --check tests/universal-directions-fixture.cjs
+          node tests/event-destination-navigation.cjs
+          node tests/event-directions-contract.cjs
+          node tests/event-waze-contract.cjs
+          node tests/event-map-contract.cjs
+          node tests/public-privacy.contract.cjs
+          node tests/public-privacy.runtime.cjs
+      - name: Two actual templates with synthetic third event and no external network
+        run: node tests/universal-directions.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: universal-event-directions
+          path: test-results/universal-directions

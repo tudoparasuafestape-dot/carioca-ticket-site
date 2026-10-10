@@ -272,6 +272,8 @@ test('ads start on artwork under fixture seed and alternate instantly with reduc
   const ad=page.locator('#advertising-primary'); await ad.scrollIntoViewIfNeeded();
   await expect(ad.locator('.ad-campaign')).toBeVisible();
   await expect(ad.getByRole('button',{name:'Pausar',exact:true})).toBeEnabled();
+  // Visibility is asynchronous: wait for the real observer to start playback before advancing virtual time.
+  await expect(ad.locator('.ad-playback-state')).toHaveText('Troca a cada 5 s');
   await page.clock.runFor(5000); await expect(ad.locator('.ad-house')).toBeVisible();
   await page.clock.runFor(5000); await expect(ad.locator('.ad-campaign')).toBeVisible();
   expect(await page.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);

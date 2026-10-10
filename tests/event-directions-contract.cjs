@@ -16,7 +16,7 @@ for (const id of ['details','unavailable','address','map','copy','status']) elem
 };
 const window = {isSecureContext:true};
 const navigator = {clipboard:{async writeText(text) {copied.push(text);}}};
-vm.runInNewContext(source,{window,navigator,document:{getElementById(id){return elements[id];}}});
+vm.runInNewContext(source,{window,navigator,document:{addEventListener(){},getElementById(id){return elements[id];}}});
 const render=window.CTEventDirections.render;
 const el=name=>elements['directions-'+name];
 function valid(e=event) {render(e);assert.equal(el('details').hidden,false);assert.equal(el('address').value,destination);checks++;}
@@ -42,8 +42,8 @@ let reject;navigator.clipboard.writeText=()=>new Promise((_,r)=>reject=r);valid(
 for(const route of ['evento','evento-v2']) {
  const html=fs.readFileSync(path.join(root,route,'index.html'),'utf8');
  assert.equal((html.match(/id="event-directions"/g)||[]).length,1);
- assert.match(html,/CTEventDirections\.render\(e\)/);
- assert.match(html,/event-directions\.js\?v=20261009-1/);
+ assert.match(html,/CTEventDirections\.render\(e,state\.eventoId\)/);
+ assert.match(html,/event-directions\.js\?v=20261010-universal1/);
  assert.match(html,/id="directions-map" target="_blank" rel="noopener noreferrer"/);
  assert.match(html,/id="directions-status" role="status" aria-live="polite"/);
  assert(!/uber:\/\/|99taxis:\/\/|m\.uber\.com/.test(html));
@@ -53,3 +53,4 @@ for(const route of ['evento','evento-v2']) {
 assert(!/fetch\(|XMLHttpRequest|navigator\.geolocation|window\.open|innerHTML|\.submit\(/.test(source));
 console.log(`${checks} isolated contract cases passed; inline scripts parsed on both event pages.`);
 })().catch(e=>{console.error(e);process.exitCode=1;});
+

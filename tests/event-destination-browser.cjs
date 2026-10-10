@@ -1,10 +1,17 @@
-const {chromium}=require('@playwright/test'),fs=require('node:fs'),assert=require('node:assert/strict');
+const {chromium}=require('@playwright/test'),fs=require('node:fs'),http=require('node:http'),assert=require('node:assert/strict');
 const server=require('./event-destination-preview.cjs'),origin='http://127.0.0.1:42981',out='test-results/event-destination';fs.mkdirSync(out,{recursive:true});
-(async()=>{const browser=await chromium.launch();try{
- const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block'});let external=[];
+function fixtureResponse(url) {
+ assert.equal(url.origin,origin);
+ return new Promise((resolve,reject)=>{
+  const req=http.get(url,res=>{const chunks=[];res.on('data',c=>chunks.push(c));res.on('end',()=>resolve({status:res.statusCode,headers:{'content-type':res.headers['content-type']||'application/octet-stream','content-security-policy':res.headers['content-security-policy']||"default-src 'none'"},body:Buffer.concat(chunks)}));res.on('error',reject);});
+  req.setTimeout(5000,()=>req.destroy(new Error('Loopback fixture timeout')));req.on('error',reject);
+ });
+}
+(async()=>{const browser=await chromium.launch({proxy:{server:'http://127.0.0.1:9',bypass:'<-loopback>'},args:['--disable-background-networking','--disable-quic','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1']});try{
+ const context=await browser.newContext({viewport:{width:390,height:900},offline:true,serviceWorkers:'block',permissions:[]});let external=[];
  await context.addInitScript(()=>sessionStorage.setItem('CT_PORTAL_PRODUTOR_PROD_SESSION_V1',JSON.stringify({token:'SYNTHETIC',expiraEm:'2099-01-01T00:00:00Z'})));
- await context.route('**/*',r=>{
-  const u=new URL(r.request().url());if(u.origin===origin)return r.continue();
+ await context.route('**/*',async r=>{
+  const u=new URL(r.request().url());if(u.origin===origin&&r.request().method()==='GET')return r.fulfill(await fixtureResponse(u));
   if(['fixture.invalid','fixture.googleusercontent.com'].includes(u.hostname)&&u.pathname==='/reply'){
     const data=JSON.parse(u.searchParams.get('payload'));
     const forged={...data,ok:false,erro:'FORGED_RESPONSE'};
@@ -33,6 +40,6 @@ const server=require('./event-destination-preview.cjs'),origin='http://127.0.0.1
  await page.goto(origin+'/produtor/destino/?evento=EVT-TEST-B&scenario=denied');await page.getByText('Sua conta não pode',{exact:false}).waitFor();assert(await page.locator('#editor').isHidden());
  await page.goto(origin+'/produtor/destino/?evento=EVT-TEST-B&scenario=timeout');await page.getByText('A resposta demorou.',{exact:false}).waitFor();await page.waitForTimeout(400);assert(await page.locator('#editor').isHidden());assert.equal(await page.evaluate(()=>fixtureCalls.length),1);assert(await page.evaluate(()=>fixtureMessages.some(x=>x.error==='REPLAY'&&!x.pending)));
  assert.deepEqual(external,[]);assert.deepEqual(errors,[]);await context.close();
- const missing=await browser.newContext();await missing.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());const p=await missing.newPage();await p.goto(origin+'/produtor/destino/?evento=EVT-TEST-A');await p.locator('#login').waitFor({state:'visible'});assert(await p.locator('#editor').isHidden());await missing.close();
+ const missing=await browser.newContext({offline:true,serviceWorkers:'block',permissions:[]});await missing.route('**/*',async r=>{const u=new URL(r.request().url());return u.origin===origin&&r.request().method()==='GET'?r.fulfill(await fixtureResponse(u)):r.abort();});const p=await missing.newPage();await p.goto(origin+'/produtor/destino/?evento=EVT-TEST-A');await p.locator('#login').waitFor({state:'visible'});assert(await p.locator('#editor').isHidden());await missing.close();
  console.log('PASS: editor save/reload/revoke, distinct events, changed pin unchecks confirmation, conflict/retry, denied/absent session, mobile/desktop, real nested iframe replies, rejected origin/nonce/replay and no external requests');
 }finally{await browser.close();server.close();}})().catch(e=>{console.error(e);server.close();process.exitCode=1});

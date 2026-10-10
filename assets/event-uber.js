@@ -1,4 +1,4 @@
-/* Opens a rider-controlled Uber flow only after a visitor clicks. No ride API. */
+/* Opens visitor-controlled Uber/Waze flows only after a click. No ride/navigation API. */
 (function () {
   'use strict';
   var active = null;
@@ -7,6 +7,12 @@
     'en-US': ['Go with Uber', 'Check the destination in Uber before requesting your ride.', 'Open Uber with the event destination'],
     es: ['Ir con Uber', 'Revisa el destino en Uber antes de solicitar el viaje.', 'Abrir Uber con el destino del evento'],
     'zh-Hans': ['乘坐 Uber', '叫车前，请在 Uber 中确认目的地。', '打开 Uber 并填写活动目的地']
+  };
+  var wazeLabels = {
+    'pt-BR': ['Ir com Waze', 'Confira o destino no Waze antes de iniciar a navegação.'],
+    'en-US': ['Go with Waze', 'Check the destination in Waze before starting navigation.'],
+    es: ['Ir con Waze', 'Revisa el destino en Waze antes de iniciar la navegación.'],
+    'zh-Hans': ['使用 Waze 导航', '开始导航前，请在 Waze 中确认目的地。']
   };
   function text(value) { return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : ''; }
   function signature(value) { return text(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s*,\s*/g, ','); }
@@ -52,6 +58,16 @@
       addressLine1: text(point.addressLine1), addressLine2: text(point.addressLine2) };
     return 'https://m.uber.com/looking?pickup=my_location&drop%5B0%5D=' + encodeURIComponent(JSON.stringify(drop));
   }
+  function buildWazeUrl(event, requestedId) {
+    // Share Uber's reviewed destination policy; never derive coordinates from a map viewport.
+    var point = resolve(event, requestedId);
+    if (!point) return '';
+    return 'https://waze.com/ul?ll=' + encodeURIComponent(point.latitude + ',' + point.longitude) + '&navigate=yes';
+  }
+  function buildMapsDestination(event, requestedId) {
+    var point = resolve(event, requestedId);
+    return point ? point.latitude + ',' + point.longitude : '';
+  }
   function locale() {
     try {
       var value = window.CTPublicI18n && typeof window.CTPublicI18n.getLocale === 'function' ? window.CTPublicI18n.getLocale() : window.localStorage.getItem('ct-home-locale');
@@ -64,6 +80,10 @@
     var note = document.getElementById('directions-uber-note');
     if (link) { link.hidden = true; link.removeAttribute('href'); }
     if (note) { note.hidden = true; note.textContent = ''; }
+    var waze = document.getElementById('directions-waze');
+    var wazeNote = document.getElementById('directions-waze-note');
+    if (waze) { waze.hidden = true; waze.removeAttribute('href'); }
+    if (wazeNote) { wazeNote.hidden = true; wazeNote.textContent = ''; }
   }
   function refreshLanguage() {
     if (!active) return;
@@ -76,6 +96,14 @@
     label.textContent = words[0]; note.textContent = words[1];
     // Keep the accessible name identical to the visible action (voice control).
     link.removeAttribute('aria-label');
+    var waze = document.getElementById('directions-waze');
+    var wazeLabel = document.getElementById('directions-waze-label');
+    var wazeNote = document.getElementById('directions-waze-note');
+    if (waze && wazeLabel && wazeNote) {
+      waze.setAttribute('lang', lang); wazeNote.setAttribute('lang', lang);
+      wazeLabel.textContent = wazeLabels[lang][0]; wazeNote.textContent = wazeLabels[lang][1];
+      waze.removeAttribute('aria-label');
+    }
   }
   function render(event, requestedId) {
     clear();
@@ -87,10 +115,16 @@
     if (!url) return;
     active = true;
     link.setAttribute('href', url); link.hidden = false; note.hidden = false;
+    var waze = document.getElementById('directions-waze');
+    var wazeNote = document.getElementById('directions-waze-note');
+    var wazeUrl = buildWazeUrl(event, requestedId);
+    if (waze && wazeNote && wazeUrl) {
+      waze.setAttribute('href', wazeUrl); waze.hidden = false; wazeNote.hidden = false;
+    }
     refreshLanguage();
   }
   document.addEventListener('ct:public-language', refreshLanguage);
   window.addEventListener('storage', function (event) { if (!event.key || event.key === 'ct-home-locale') refreshLanguage(); });
   window.addEventListener('pageshow', refreshLanguage);
-  window.CTEventUber = Object.freeze({ render: render, clear: clear, buildUrl: buildUrl });
+  window.CTEventUber = Object.freeze({ render: render, clear: clear, buildUrl: buildUrl, buildWazeUrl: buildWazeUrl, buildMapsDestination: buildMapsDestination });
 }());

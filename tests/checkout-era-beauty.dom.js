@@ -107,6 +107,13 @@ class Element {
     else if (!name.startsWith('data-') && !name.startsWith('aria-')) this[name] = String(value);
   }
   getAttribute(name) { return name in this.attributes ? this.attributes[name] : null; }
+  removeAttribute(name) {
+    delete this.attributes[name];
+    if (name === 'class') this.className = '';
+    else if (name === 'value') this.value = '';
+    else if (name === 'disabled' || name === 'checked') this[name] = false;
+    else if (!name.startsWith('data-') && !name.startsWith('aria-')) delete this[name];
+  }
   appendChild(child) { child.parentNode = this; this.children.push(child); return child; }
   append(...children) { children.forEach(c => this.appendChild(c)); }
   remove() { if (this.parentNode) this.parentNode.children = this.parentNode.children.filter(c => c !== this); this.parentNode = null; }
@@ -658,3 +665,4 @@ test('checkout event-back link stays on the official relative event route', () =
 console.log(`\n${failed ? 'FAIL' : 'PASS'} checkout-era-beauty.dom: ${passed} passed, ${failed} failed; actual inline JS + local DOM/RPC mocks; zero real charges/orders/tickets.`);
 console.log('Not verified here: real browser rendering/navigation/accessibility, iframe RPC transport, or backend/payment-provider behavior.');
 if (failed) process.exitCode = 1;
+

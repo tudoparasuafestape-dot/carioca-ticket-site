@@ -4,6 +4,13 @@
 (function () {
   'use strict';
   var current = null;
+  function mapsAllowed(){return !!(window.CTPrivacy && window.CTPrivacy.allowed('maps'));}
+  var mapChoice = {
+    'pt-BR':['Carregar este mapa uma vez','O mapa está desativado. Você pode carregá-lo uma vez ou alterar as preferências.','Preferências de privacidade'],
+    'en-US':['Load this map once','The map is disabled. Load it once or change your preferences.','Privacy preferences'],
+    es:['Cargar este mapa una vez','El mapa está desactivado. Puedes cargarlo una vez o cambiar tus preferencias.','Preferencias de privacidad'],
+    'zh-Hans':['单次加载此地图','地图已停用。您可以单次加载地图或修改偏好设置。','隐私偏好设置']
+  };
   var copies = {
   "pt-BR": [
     "Mapa do endereço do evento no Google Maps",
@@ -73,6 +80,7 @@
     clearTimeout(current.timer);
     if (current.observer) current.observer.disconnect();
     current.frame.onload = current.frame.onerror = null;
+    current.frame.removeAttribute('src');
     if (current.link) {
       var hadFocus = document.activeElement === current.link;
       current.linkLabel.textContent = current.linkText;
@@ -102,9 +110,13 @@
     var frame = document.createElement('iframe');
     var viewport = document.createElement('div');
     viewport.className = 'event-map-viewport';
+    viewport.hidden=true;
     var notice = document.createElement('p');
     var status = document.createElement('p');
     var privacy = document.createElement('a');
+    var once = document.createElement('button');once.type='button';once.className='event-map-once';
+    var preferences = document.createElement('button');preferences.type='button';preferences.className='event-map-preferences';
+    preferences.addEventListener('click',function(){if(window.CTPrivacy)window.CTPrivacy.open(preferences);});
     var safety = document.createElement('p');
     safety.className = 'event-map-safety';
     frame.loading = 'lazy';
@@ -116,10 +128,10 @@
     privacy.target = '_blank';
     privacy.rel = 'noopener noreferrer';
     host.classList.add('event-map-preview');
-    host.replaceChildren(notice, viewport, status, safety, privacy);
+    host.replaceChildren(notice, once, preferences, viewport, status, safety, privacy);
     host.hidden = false;
     var state = current = { host: host, frame: frame, notice: notice, status: status, privacy: privacy, safety: safety,
-      message: 'O mapa será carregado ao chegar a esta seção.', timer: null, observer: null, started: false };
+      message: 'O mapa será carregado ao chegar a esta seção.', timer: null, observer: null, started: false, once:once, preferences:preferences, oneTime:false };
     function fail() {
       if (current !== state) return;
       clearTimeout(state.timer);
@@ -138,11 +150,13 @@
       translate();
     };
     function start() {
-      if (current !== state || state.started) return;
+      if (current !== state || state.started || (!state.oneTime && !mapsAllowed())) return;
       state.started = true;
+      viewport.hidden=false;
       if (state.observer) state.observer.disconnect();
       state.message = 'Carregando mapa do Google…';
       translate();
+      if(document.activeElement===once){status.tabIndex=-1;status.focus({preventScroll:true});}
       state.timer = setTimeout(function () {
         if (current !== state) return;
         host.setAttribute('data-map-fallback', 'timeout');
@@ -153,23 +167,37 @@
       // Set src while detached, avoiding an initial about:blank load race.
       viewport.replaceChildren(frame);
     }
-    translate();
-    if (typeof IntersectionObserver === 'function') {
-      state.observer = new IntersectionObserver(function (entries) {
-        if (entries.some(function (entry) { return entry.isIntersecting; })) start();
-      }, { rootMargin: '0px' });
-      state.observer.observe(host);
-    } else {
-      // Native lazy loading remains the fallback; timer is advisory only.
-      start();
+    function arm() {
+      if (current !== state || state.started || (!state.oneTime && !mapsAllowed())) {translate();return;}
+      if (state.observer) state.observer.disconnect();
+      if (typeof IntersectionObserver === 'function') {
+        state.observer = new IntersectionObserver(function(entries){if(entries.some(function(entry){return entry.isIntersecting;}))start();}, {rootMargin:'0px'});
+        state.observer.observe(host);
+      } else start();
+      translate();
     }
+    state.permissionChanged=function(){
+      state.oneTime=false;
+      if (!mapsAllowed()) {
+        clearTimeout(state.timer);if(state.observer)state.observer.disconnect();
+        state.started=false;viewport.replaceChildren();frame.removeAttribute('src');frame.hidden=false;viewport.hidden=true;
+        host.removeAttribute('data-map-fallback');state.message='O mapa será carregado ao chegar a esta seção.';
+      }
+      arm();
+    };
+    once.addEventListener('click',function(){state.oneTime=true;start();});
+    arm();
   }
   function translate() {
     if (!current) return;
     current.host.lang = locale();
     current.frame.title = t('Mapa do endereço do evento no Google Maps');
     current.notice.textContent = t('Mapa fornecido pelo Google. Ao carregar, o Google recebe seu IP e dados do navegador e pode usar cookies. Não solicitamos sua localização.');
-    current.status.textContent = t(current.message);
+    current.once.textContent=mapChoice[locale()][0];
+    current.once.hidden=current.started||mapsAllowed();
+    current.preferences.textContent=mapChoice[locale()][2];
+    current.preferences.hidden=!window.CTPrivacy;
+    current.status.textContent = !current.started&&!mapsAllowed()&&!current.oneTime ? mapChoice[locale()][1] : t(current.message);
     current.privacy.textContent = t('Privacidade do Google');
     current.safety.textContent = t('Se beber, não dirija. Planeje uma volta segura.');
     if (current.link) {
@@ -177,6 +205,7 @@
       current.link.setAttribute('aria-label', t('Abrir no Google Maps (nova aba)'));
     }
   }
+  document.addEventListener('ct:privacy',function(){if(current&&current.permissionChanged)current.permissionChanged();});
   document.addEventListener('ct:public-language', translate);
   window.addEventListener('storage', function (event) {
     if (event.key === 'ct-home-locale' || event.key === null) translate();
@@ -192,8 +221,10 @@
     if (details && !details.hidden && address && link) {
       try {
         var target = new URL(link.href);
-        if (target.origin === 'https://www.google.com' && target.pathname === '/maps/dir/' &&
-            target.searchParams.get('destination') === address.value) destination = address.value;
+        var verified = window.CTEventDirections && typeof window.CTEventDirections.getMapDestination === 'function'
+          ? window.CTEventDirections.getMapDestination() : address.value;
+        if (verified && target.origin === 'https://www.google.com' && target.pathname === '/maps/dir/' &&
+            target.searchParams.get('destination') === verified) destination = verified;
       } catch (_) {}
     }
     render(host, destination);
@@ -215,4 +246,5 @@
   }
   window.CTEventMapPreview = { render: render, clear: clear, renderPublicDirections: renderPublicDirections };
 }());
+
 

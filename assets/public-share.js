@@ -12,12 +12,64 @@
     'es': { cta:'Descubre este evento en Carioca Ticket.', copied:'Mensaje copiado.', failed:'No se pudo copiar. Selecciona el mensaje de abajo para copiarlo.', label:'Mensaje del evento para compartir' },
     'zh-Hans': { cta:'在 Carioca Ticket 查看此活动。', copied:'消息已复制。', failed:'无法复制。请选择下方消息进行复制。', label:'用于分享的活动消息' }
   };
-  function copy() { return eventCopy[window.CTHome && window.CTHome.locale] || eventCopy['pt-BR']; }
+  function locale() {
+    var value = window.CTHome && window.CTHome.locale;
+    if (!value && window.CTPublicI18n && typeof window.CTPublicI18n.getLocale === 'function') value = window.CTPublicI18n.getLocale();
+    if (!value) { try { value = window.localStorage.getItem('ct-home-locale'); } catch (_) {} }
+    return Object.prototype.hasOwnProperty.call(eventCopy, value) ? value : 'pt-BR';
+  }
+  function copy() { return eventCopy[locale()]; }
   function eventText(destination) {
     // A single line remains fully selectable in the existing fallback input.
     return [destination.title, destination.date, destination.venue, copy().cta].filter(Boolean).join(' · ');
   }
   var mounted = new WeakMap();
+  var whatsAppLinks = new WeakMap();
+  var whatsAppBound = new WeakSet();
+  var whatsAppLabels = { 'pt-BR':'Compartilhar no WhatsApp', 'en-US':'Share on WhatsApp', es:'Compartir en WhatsApp', 'zh-Hans':'通过 WhatsApp 分享' };
+  function updateWhatsApp(link) {
+    var entry = whatsAppLinks.get(link);
+    if (!entry) return;
+    var destination = entry.destination;
+    var language = locale();
+    var message = destination.event ? eventText(destination) + ' ' + destination.url : destination.title + ' ' + destination.url;
+    link.textContent = whatsAppLabels[language];
+    link.lang = language;
+    link.setAttribute('aria-label', whatsAppLabels[language] + (destination.event ? ': ' + destination.title : ''));
+    link.href = 'https://wa.me/?text=' + encodeURIComponent(message);
+    link.hidden = false;
+  }
+  function mountWhatsApp(link, destination, onClick) {
+    if (!link) return;
+    if (!whatsAppBound.has(link)) {
+      whatsAppBound.add(link);
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.addEventListener('click', function (event) {
+        event.stopPropagation();
+        if (activeShare || link.closest('[inert]') || !whatsAppLinks.has(link)) { event.preventDefault(); return; }
+        updateWhatsApp(link);
+        var callback = whatsAppLinks.get(link).onClick;
+        if (callback) callback();
+      });
+    }
+    whatsAppLinks.set(link, { destination:destination, onClick:onClick });
+    updateWhatsApp(link);
+  }
+  // Public data only. No current query string, form fields or recipient number.
+  window.CTPublicShare = {
+    eventWhatsApp: function (link, event, id, onClick) {
+      function clean(value) { return typeof value === 'string' ? value.trim() : ''; }
+      if (!link || !event || !clean(id)) return;
+      mountWhatsApp(link, { event:true, title:clean(event.nome) || 'Carioca Ticket',
+        date:[clean(event.data), clean(event.horario)].filter(Boolean).join(' · '),
+        venue:[clean(event.local), clean(event.cidade), clean(event.uf)].filter(Boolean).join(' · '),
+        url:'https://cariocaticket.com.br/evento/?evento=' + encodeURIComponent(id) }, onClick);
+    },
+    clearEventWhatsApp: function (link) {
+      if (link) { whatsAppLinks.delete(link); link.hidden = true; link.removeAttribute('href'); }
+    }
+  };
   var activeShare = false;
   function mount(host, destination) {
     if (!destination || mounted.has(host)) return;
@@ -28,12 +80,17 @@
     // the native share sheet or clipboard promise is still open.
     var activityTarget = host.closest('#event-feature') || host;
     function notify(phase) { activityTarget.dispatchEvent(new CustomEvent('ct:public-share', { bubbles:true, detail:{ phase:phase, host:host } })); }
+    var whatsApp = document.createElement('a');
+    whatsApp.className = 'ct-whatsapp-share';
+    host.insertBefore(whatsApp, feedback);
+    mountWhatsApp(whatsApp, destination, function () { notify('interaction'); });
     function labels() {
       label.textContent = text(destination.label);
       input.setAttribute('aria-label', destination.event ? copy().label : text('shareLink'));
       feedback.textContent = message ? (destination.event ? copy()[message === 'shareCopied' ? 'copied' : 'failed'] : text(message)) : '';
       input.value = destination.event ? eventText(destination) + ' ' + destination.url : destination.url;
       host.classList.toggle('has-feedback', !!message);
+      updateWhatsApp(whatsApp);
     }
     input.value = destination.url;
     input.addEventListener('focus', function () { input.select(); });
@@ -93,6 +150,10 @@
   document.addEventListener('ct:language', function () {
     document.querySelectorAll('[data-public-share]').forEach(function (host) { var labels = mounted.get(host); if (labels) labels(); });
   });
+  function refreshWhatsApp() { document.querySelectorAll('.ct-whatsapp-share').forEach(updateWhatsApp); }
+  document.addEventListener('ct:public-language', refreshWhatsApp);
+  window.addEventListener('storage', function (event) { if (!event.key || event.key === 'ct-home-locale') refreshWhatsApp(); });
 }());
+
 
 

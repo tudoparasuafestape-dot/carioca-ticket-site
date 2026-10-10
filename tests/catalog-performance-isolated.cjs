@@ -23,7 +23,11 @@ function source(variant, file) {
 function warmSources() {
   // Avoid charging git-show/process startup to only the first baseline sample.
   const files = ['index.html', 'manifest.webmanifest', ...fs.readdirSync(path.join(ROOT, 'assets')).filter(name => /^(home|public-).+\.(js|css|json)$/.test(name)).map(name => 'assets/' + name)];
-  for (const variant of ['before', 'after']) for (const file of files) source(variant, file);
+  for (const variant of ['before', 'after']) for (const file of files) {
+    // These new controls did not exist in the historical catalog baseline.
+    if(variant==='before'&&/^assets\/public-privacy\.(js|css)$/.test(file))continue;
+    source(variant,file);
+  }
 }
 function rows(n) {
   return Array.from({ length: n }, (_, i) => ({ id: 'SYNTHETIC-' + i, nome: 'Evento sintético ' + i,
@@ -311,3 +315,4 @@ async function regression(browser) {
     console.log('PASS: isolated catalog benchmark and ' + report.regressions + ' regression groups; zero forwarded requests.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+

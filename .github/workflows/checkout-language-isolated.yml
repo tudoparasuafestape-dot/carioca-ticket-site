@@ -1,0 +1,49 @@
+name: Checkout and ticket language (isolated)
+on:
+  pull_request:
+    paths:
+      - 'checkout/index.html'
+      - 'checkout-v2/index.html'
+      - 'ingresso/index.html'
+      - 'assets/checkout-language*'
+      - 'assets/checkout-translations.js'
+      - 'assets/public-i18n.js'
+      - 'assets/checkout-home-navigation.js'
+      - 'tests/checkout-language*'
+      - 'tests/ticket-language*'
+      - '.github/workflows/checkout-language-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  language:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Install print fonts
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+      - name: Dependency-free contracts, no network
+        run: |
+          node tests/checkout-language.dom.cjs
+          CT_LOCALE_ROUTE=checkout-v2 node tests/checkout-language.dom.cjs
+          node tests/ticket-language.dom.cjs
+      - name: Checkout language, synthetic traffic only
+        env:
+          CT_EVIDENCE_DIR: test-results/checkout-language
+        run: node tests/checkout-language.browser.cjs
+      - name: Ticket language and print, synthetic traffic only
+        if: always()
+        env:
+          CT_EVIDENCE_DIR: test-results/checkout-language
+        run: node tests/ticket-language.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checkout-language-evidence
+          path: test-results/checkout-language
+          if-no-files-found: error

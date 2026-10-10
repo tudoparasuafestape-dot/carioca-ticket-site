@@ -35,9 +35,10 @@ async function fixture(browser, routePath, mobile, options = {}) {
     try {
       if (url.origin === ORIGIN && req.method() === 'GET') {
         if (url.pathname === '/') { state.home++; return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><title>Home fixture</title><h1>Página inicial local</h1>' }); }
-        const files = { '/checkout/': 'checkout/index.html', '/checkout-v2/': 'checkout-v2/index.html',
+        const files = { '/assets/public-i18n.js':'assets/public-i18n.js','/assets/checkout-language.js':'assets/checkout-language.js','/assets/checkout-language.css':'assets/checkout-language.css','/assets/checkout-translations.js':'assets/checkout-translations.js', '/checkout/': 'checkout/index.html', '/checkout-v2/': 'checkout-v2/index.html',
           '/assets/checkout-home-navigation.js': 'assets/checkout-home-navigation.js', '/assets/checkout-home-navigation.css': 'assets/checkout-home-navigation.css',
-          '/assets/checkout-commercial-policy.js': 'assets/checkout-commercial-policy.js' };
+          '/assets/checkout-commercial-policy.js': 'assets/checkout-commercial-policy.js',
+          '/assets/public-privacy.js':'assets/public-privacy.js', '/assets/public-privacy.css':'assets/public-privacy.css' };
         if (Object.hasOwn(files, url.pathname)) {
           if (options.missingHelper && url.pathname.endsWith('checkout-home-navigation.js')) return route.fulfill({ contentType: 'application/javascript', body: '// Simulated missing helper' });
           const type = url.pathname.endsWith('.css') ? 'text/css' : url.pathname.endsWith('.js') ? 'application/javascript' : 'text/html';
@@ -202,3 +203,4 @@ async function fixture(browser, routePath, mobile, options = {}) {
   console.log('PASS checkout-home-navigation: ' + passed + ' isolated scenarios; zero forwarded requests/real payments.');
  } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
