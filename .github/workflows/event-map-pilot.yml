@@ -1,0 +1,50 @@
+name: Event map pilot (no deployment)
+on:
+  pull_request:
+    paths:
+      - 'tests/map-pilot/**'
+      - '.github/workflows/event-map-pilot.yml'
+permissions:
+  contents: read
+jobs:
+  map-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npx playwright install --with-deps chromium
+      - name: Offline contracts and isolated browser geometry
+        working-directory: tests/map-pilot
+        run: |
+          node --check assets/event-map-preview.js
+          node tests/event-map-contract.cjs
+          node tests/map-pilot-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: event-map-isolated-evidence
+          path: tests/map-pilot/test-results/map-isolated
+  map-live-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npx playwright install --with-deps chromium
+      - name: Capture real public-address iframe, never approve pin automatically
+        working-directory: tests/map-pilot
+        env:
+          CT_MAP_LIVE: '1'
+        run: node tests/map-pilot-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: event-map-live-review-required
+          path: tests/map-pilot/test-results/map-live
