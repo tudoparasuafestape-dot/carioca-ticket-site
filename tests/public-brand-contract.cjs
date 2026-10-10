@@ -1,11 +1,12 @@
 const fs=require('node:fs'),cp=require('node:child_process'),assert=require('node:assert/strict');
-const base='7f86913bc3089eaf02632dc74c4743c937dac4d1';
+// Preserve the approved catalog release as well as the public-brand markup.
+const base='ad904039f13b17da7f3f0c5f8a598ec065201ac2';
 const pages=['index.html','anuncie/index.html','como-funciona/index.html','ajuda/index.html','sobre/index.html','termos/index.html','privacidade/index.html','cancelamento-reembolso/index.html'];
 for(const path of pages){
  const now=fs.readFileSync(path,'utf8');
- const local='../public-brand-audit-base/'+path;
+ const local='../public-brand-postcatalog-base/'+path;
  const old=fs.existsSync(local)?fs.readFileSync(local,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'});
- // The only HTML changes in this patch are stylesheet cache versions.
+ // The logo suite must not roll back later approved script-order/version changes.
  const normalize=s=>s.replace(/((?:home|advertise|producer-guide|public-logo-links)\.css)\?v=[^"']*/g,'$1').trim();
  assert.equal(normalize(now),normalize(old),path+' preserves all markup, scripts, links, alt text and commercial copy');
 }
