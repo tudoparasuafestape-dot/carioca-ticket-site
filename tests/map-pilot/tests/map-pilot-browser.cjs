@@ -31,7 +31,7 @@ const server=http.createServer((req,res)=>{
      if(mode==='hold')return;
      return route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html lang="pt-BR"><body style="margin:0;background:#dae7df">MAP MOCK — não é mapa real</body></html>'});
     }
-    const allowed=/^(?:maps\.google\.com|www\.google\.com|maps\.gstatic\.com|www\.gstatic\.com|fonts\.gstatic\.com|maps\.googleapis\.com|lh[0-9]+\.googleusercontent\.com)$/;
+    const allowed=/^(?:maps\.google\.com|www\.google\.com|maps\.gstatic\.com|www\.gstatic\.com|fonts\.gstatic\.com|maps\.googleapis\.com|places\.googleapis\.com|fonts\.googleapis\.com|lh[0-9]+\.googleusercontent\.com)$/;
     if(u.protocol!=='https:'||!allowed.test(u.hostname)){blocked.push(u.origin);return route.abort();}
     requests.push(u.origin);return route.continue();
    });
