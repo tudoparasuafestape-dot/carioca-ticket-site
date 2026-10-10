@@ -1,5 +1,5 @@
 """Loopback-only browser checks. Start event-language-preview.cjs first."""
-import json, os
+import json, os, traceback
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 ORIGIN='http://127.0.0.1:42975'
@@ -14,7 +14,7 @@ Object.defineProperty(navigator,'share',{value:async data=>{window.__share=data;
 })()"""
 def run(name,fn):
  try:fn();results.append({'test':name,'status':'passed'})
- except Exception as e:results.append({'test':name,'status':'failed','error':str(e)});print('FAIL',name,str(e))
+ except Exception as e:results.append({'test':name,'status':'failed','error':str(e),'traceback':traceback.format_exc()});print('FAIL',name,traceback.format_exc())
 def page_for(browser,locale='pt-BR',blocked=False):
  context=browser.new_context(service_workers='block',viewport={'width':1440,'height':1000})
  blocked_requests=[]
@@ -44,6 +44,7 @@ with sync_playwright() as p:
      assert page.locator('#producer-language-notice').is_visible()==(locale!='pt-BR')
      assert '/checkout'+('-v2' if route=='evento-v2' else '')+'/?evento=PREVIEW-EVENT'==page.locator('#buyHero').get_attribute('href')
      assert page.evaluate("[...document.querySelectorAll('[data-public-i18n]')].every(n=>n.textContent===CTPublicI18n.message(n.dataset.publicI18n).text)")
+     overflows=[]
      for width in [320,390,1440]:
       page.set_viewport_size({'width':width,'height':1000})
       for theme in ['light','dark']:
@@ -55,7 +56,9 @@ with sync_playwright() as p:
      page.evaluate("[...document.querySelectorAll('body *')].map(n=>[n,parseFloat(getComputedStyle(n).fontSize)]).forEach(([n,s])=>n.style.fontSize=(s*1.5)+'px')")
      for width in [320,390,1440]:
       page.set_viewport_size({'width':width,'height':1000})
-      assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),f'150% overflow {width} {locale}'
+      page.screenshot(path=str(OUT/f'{route}-{locale}-{width}-text150.png'),full_page=True)
+      if not page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'):
+       overflows.append({'width':width,'elements':page.evaluate("[...document.querySelectorAll('body *')].filter(n=>{const r=n.getBoundingClientRect();return r.width&&r.right>innerWidth+1}).map(n=>({tag:n.tagName,id:n.id,cls:n.className,right:n.getBoundingClientRect().right,width:n.getBoundingClientRect().width,text:n.innerText?.slice(0,80)})).slice(-25)")})
      page.set_viewport_size({'width':1440,'height':1000})
      page.locator('#shareHero').click();assert page.locator('#shareMenu').is_visible()
      page.keyboard.press('Shift+Tab');assert page.locator('#copyLinkAction').evaluate('n=>n===document.activeElement')
@@ -82,6 +85,7 @@ with sync_playwright() as p:
      page.locator('#shareHero').click();page.go_back();assert page.locator('#shareMenu').is_hidden()
      assert not errors,errors
      assert not requests,requests
+     assert not overflows,overflows
     finally:context.close()
    run(route+' '+locale+' matrix',matrix)
   def fallback(route=route):
