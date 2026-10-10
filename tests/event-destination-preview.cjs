@@ -2,6 +2,8 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),port=42981;
 const prelude=`<script>
+window.fixtureMessages=[];window.addEventListener('message',e=>window.fixtureMessages.push({origin:e.origin,id:e.data&&e.data.id,error:e.data&&e.data.erro,pending:document.querySelectorAll('form[target^="CTDEST-"]').length>0}));
+const originalTimeout=window.setTimeout;window.setTimeout=function(fn,ms,...args){return originalTimeout(fn,ms===40000&&new URLSearchParams(window.location.search).get('scenario')==='timeout'?80:ms,...args)};
 HTMLFormElement.prototype.submit=function(){
  const f=new FormData(this),method=f.get('metodo'),args=JSON.parse(f.get('argsJson')||'[]'),id=args[1];
  if(f.get('ctMinhaCariocaAction')!=='portalRpc'||!['ctEventoDestinoCarregarPROD','ctEventoDestinoSalvarPROD','ctEventoDestinoRevogarPROD'].includes(method))throw Error('Synthetic method rejected');
@@ -17,9 +19,9 @@ HTMLFormElement.prototype.submit=function(){
   else{const value={version:1,eventId:id,revision:d.expectedRevision+1,confirmed:true,latitude:d.latitude,longitude:d.longitude,location};sessionStorage.setItem(key,JSON.stringify(value));result={sucesso:true,revision:value.revision,destinoTransporte:value};}
  }else{const value={...record,confirmed:false,revision:record.revision+1};sessionStorage.setItem(key,JSON.stringify(value));result={sucesso:true,revision:value.revision,destinoTransporte:null};}
  const frame=document.querySelector('iframe[name="'+this.target+'"]');
- const payload={ctMinhaCariocaPost:true,id:f.get('ctMinhaCariocaRequestId'),ok:!error,resultado:result,erro:error};
+ const payload={fixtureTimeout:new URLSearchParams(window.location.search).get('scenario')==='timeout',ctMinhaCariocaPost:true,id:f.get('ctMinhaCariocaRequestId'),ok:!error,resultado:result,erro:error};
  const query=encodeURIComponent(JSON.stringify(payload));
- const unrelated=document.createElement('iframe');unrelated.hidden=true;unrelated.src='https://fixture.googleusercontent.com/reply?payload='+encodeURIComponent(JSON.stringify({...payload,ok:false,erro:'WRONG_FRAME'}));document.body.appendChild(unrelated);setTimeout(()=>unrelated.remove(),150);
+ const unrelated=document.createElement('iframe');unrelated.hidden=true;unrelated.src='https://fixture.googleusercontent.com/reply?payload='+encodeURIComponent(JSON.stringify({...payload,ok:false,erro:'WRONG_FRAME',fixtureUnrelated:true}));document.body.appendChild(unrelated);setTimeout(()=>unrelated.remove(),450);
  // Real nested frames: the sandbox posts directly to top, as Apps Script does.
  frame.srcdoc='<iframe src="https://fixture.invalid/reply?payload='+query+'"></iframe><iframe src="https://fixture.googleusercontent.com/reply?payload='+query+'"></iframe>';
 
