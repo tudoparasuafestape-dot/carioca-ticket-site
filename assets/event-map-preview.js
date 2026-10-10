@@ -14,7 +14,9 @@
     "Se o mapa não aparecer, use Abrir no Google Maps ou Copiar endereço. Confira o endereço com a organização.",
     "Carregando mapa do Google…",
     "O mapa está demorando. Use Abrir no Google Maps ou Copiar endereço.",
-    "Se beber, não dirija. Planeje uma volta segura."
+    "Se beber, não dirija. Planeje uma volta segura.",
+    "Abrir no Google Maps",
+    "Abrir no Google Maps (nova aba)"
   ],
   "en-US": [
     "Map of the event address on Google Maps",
@@ -25,7 +27,9 @@
     "If the map does not appear, use Open in Google Maps or Copy address. Confirm the address with the organizer.",
     "Loading Google map…",
     "The map is taking longer than expected. Use Open in Google Maps or Copy address.",
-    "If you drink, do not drive. Plan a safe trip home."
+    "If you drink, do not drive. Plan a safe trip home.",
+    "Open in Google Maps",
+    "Open in Google Maps (new tab)"
   ],
   "es": [
     "Mapa de la dirección del evento en Google Maps",
@@ -36,7 +40,9 @@
     "Si el mapa no aparece, usa Abrir en Google Maps o Copiar dirección. Confirma la dirección con la organización.",
     "Cargando mapa de Google…",
     "El mapa está tardando. Usa Abrir en Google Maps o Copiar dirección.",
-    "Si bebes, no conduzcas. Planifica un regreso seguro."
+    "Si bebes, no conduzcas. Planifica un regreso seguro.",
+    "Abrir en Google Maps",
+    "Abrir en Google Maps (nueva pestaña)"
   ],
   "zh-Hans": [
     "Google 地图上的活动地址",
@@ -47,7 +53,9 @@
     "如果地图未显示，请使用“在 Google 地图中打开”或“复制地址”。请向主办方确认地址。",
     "正在加载 Google 地图…",
     "地图加载较慢。请使用“在 Google 地图中打开”或“复制地址”。",
-    "饮酒后请勿驾车。请提前安排安全返程。"
+    "饮酒后请勿驾车。请提前安排安全返程。",
+    "在 Google 地图中打开",
+    "在 Google 地图中打开（新标签页）"
   ]
 };
   function locale() {
@@ -65,6 +73,17 @@
     clearTimeout(current.timer);
     if (current.observer) current.observer.disconnect();
     current.frame.onload = current.frame.onerror = null;
+    if (current.link) {
+      var hadFocus = document.activeElement === current.link;
+      current.linkLabel.textContent = current.linkText;
+      if (current.linkAria === null) current.link.removeAttribute('aria-label');
+      else current.link.setAttribute('aria-label', current.linkAria);
+      current.link.classList.remove('event-map-fallback');
+      current.linkParent.insertBefore(current.link,
+        current.linkNext && current.linkNext.parentNode === current.linkParent ? current.linkNext : null);
+      if (hadFocus) current.link.focus({ preventScroll: true });
+    }
+    current.host.removeAttribute('data-map-fallback');
     current.host.replaceChildren();
     current.host.hidden = true;
     current = null;
@@ -105,6 +124,7 @@
       if (current !== state) return;
       clearTimeout(state.timer);
       state.message = 'Não foi possível carregar o mapa. Use Abrir no Google Maps ou Copiar endereço.';
+      host.setAttribute('data-map-fallback', 'error');
       frame.hidden = true;
       viewport.hidden = true;
       translate();
@@ -125,6 +145,7 @@
       translate();
       state.timer = setTimeout(function () {
         if (current !== state) return;
+        host.setAttribute('data-map-fallback', 'timeout');
         state.message = 'O mapa está demorando. Use Abrir no Google Maps ou Copiar endereço.';
         translate();
       }, 15000);
@@ -151,6 +172,10 @@
     current.status.textContent = t(current.message);
     current.privacy.textContent = t('Privacidade do Google');
     current.safety.textContent = t('Se beber, não dirija. Planeje uma volta segura.');
+    if (current.link) {
+      current.linkLabel.textContent = t('Abrir no Google Maps');
+      current.link.setAttribute('aria-label', t('Abrir no Google Maps (nova aba)'));
+    }
   }
   document.addEventListener('ct:public-language', translate);
   window.addEventListener('storage', function (event) {
@@ -172,6 +197,22 @@
       } catch (_) {}
     }
     render(host, destination);
+    if (current && link && link.parentNode) {
+      // Keep the same accessible, translated link and URL. Move it out of the
+      // prominent action row only while a map exists; restore it on teardown.
+      var hadFocus = document.activeElement === link;
+      current.link = link;
+      current.linkLabel = link.querySelector('span') || link;
+      current.linkText = current.linkLabel.textContent;
+      current.linkAria = link.getAttribute('aria-label');
+      current.linkParent = link.parentNode;
+      current.linkNext = link.nextSibling;
+      link.classList.add('event-map-fallback');
+      current.status.after(link);
+      translate();
+      if (hadFocus) link.focus({ preventScroll: true });
+    }
   }
   window.CTEventMapPreview = { render: render, clear: clear, renderPublicDirections: renderPublicDirections };
 }());
+
