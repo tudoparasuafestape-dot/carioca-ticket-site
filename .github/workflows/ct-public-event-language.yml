@@ -1,0 +1,38 @@
+name: Public event language (isolated)
+on:
+  pull_request:
+    paths:
+      - 'evento/**'
+      - 'evento-v2/**'
+      - 'assets/event-*.js'
+      - 'assets/event-*.css'
+      - 'assets/public-i18n.js'
+      - 'tests/event-language*'
+      - '.github/workflows/ct-public-event-language.yml'
+permissions:
+  contents: read
+jobs:
+  event-language:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright==1.55.0
+      - run: python -m playwright install --with-deps chromium
+      - name: Loopback-only synthetic event checks
+        run: |
+          node tests/event-language-preview.cjs > /tmp/event-preview.log 2>&1 &
+          trap 'kill $!' EXIT
+          for i in $(seq 1 20); do curl --fail --silent http://127.0.0.1:42975/evento/?evento=PREVIEW-EVENT >/dev/null && break; sleep 1; done
+          python tests/event-language.spec.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-event-language-evidence
+          path: test-results/event-language

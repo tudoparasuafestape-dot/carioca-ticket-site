@@ -1,0 +1,21 @@
+/* Scoped public-event language controls; preserve existing theme variables. */
+.event-language-control{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--event-text,#fff);min-width:0}
+.event-language-control select{max-width:130px;min-height:44px;font:inherit;color:inherit;background:var(--event-surface,#111820);border:1px solid var(--event-border,#69717d);border-radius:9px;padding:6px}
+.event-language-control select:focus-visible{outline:3px solid var(--event-accent,#ffd66d);outline-offset:3px}
+.producer-language-notice{padding:12px;border:1px solid var(--line,rgba(255,255,255,.2));border-radius:10px;font-size:13px;line-height:1.5}
+.top-actions{flex-wrap:wrap}
+.hero-actions,.mobile-buy-inner,.description-audio-buttons{flex-wrap:wrap}
+.cta,.share-btn,.journey-card,.secure-item{overflow-wrap:anywhere}
+@media(max-width:600px){.topbar-inner{flex-wrap:wrap}.top-actions{width:100%;justify-content:space-between}.event-language-control select{max-width:120px}.hero-actions .cta{white-space:normal}.mobile-buy-inner .cta{white-space:normal;min-width:0}}
+
+.ct-event .topbar-inner{height:auto;min-height:70px;padding-block:10px}
+.ct-event .top-actions{flex-wrap:wrap}
+.ct-event .ticket-top{flex-wrap:wrap}
+.ct-event .ticket-top>div{min-width:0;overflow-wrap:anywhere}
+.ct-event .share-menu{max-height:calc(100dvh - 32px);overflow:auto}
+.ct-event .event-language-control{flex-wrap:wrap}
+
+.ct-event .event-language-control[hidden]{display:none}
+/* Grid items must shrink when the original event name is long or text is enlarged. */
+.ct-event .event-copy,.ct-event .hero-grid>*,.ct-event .content-grid>*{min-width:0}
+.ct-event #eventName,.ct-event #highlight,.ct-event .meta-card strong{overflow-wrap:anywhere}
