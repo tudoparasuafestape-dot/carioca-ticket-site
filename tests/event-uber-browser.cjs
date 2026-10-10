@@ -34,6 +34,18 @@ const expected={'pt-BR':'Ir de Uber','en-US':'Go with Uber',es:'Ir con Uber','zh
   await page.evaluate(()=>CTEventUber.clear());await page.evaluate(()=>dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));assert(await link.isHidden());
   assert.deepEqual(errors,[]);assert(!external.some(x=>x.includes('uber.com')));report.push({route,locale,passed:true,blockedExternal:[...new Set(external)]});await context.close();
  }
+ for(const route of ['evento','evento-v2']){
+  const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block'});
+  await context.route('**/*',r=>{const u=new URL(r.request().url());if(u.origin===origin)return r.continue();if(['maps.google.com','www.google.com'].includes(u.hostname))return r.fulfill({status:200,contentType:'text/html',body:'<!doctype html><p>Mapa simulado</p>'});return r.abort();});
+  const page=await context.newPage(),eraId='EVT-23112026-ERA-BEAUTY-EAC4B673';
+  await page.goto(`${origin}/${route}/?evento=${eraId}&scenario=era`);await page.locator('#app').waitFor({state:'visible'});
+  const link=page.locator('#directions-uber');assert(await link.isVisible());
+  const drop=JSON.parse(new URL(await link.getAttribute('href')).searchParams.get('drop[0]'));
+  assert.equal(drop.latitude,-8.0651289);assert.equal(drop.longitude,-34.9050337);assert.equal(drop.addressLine1,'Sebrae - Recife');
+  assert.match(await page.locator('#directions-address').inputValue(),/Rua Tabajaras, 360 - Ilha do Retiro/);
+  for(const width of [320,390,1440])for(const theme of ['light','dark']){await page.setViewportSize({width,height:1100});await page.selectOption('#home-theme',theme);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.locator('#event-directions').screenshot({path:`${out}/${route}-era-${width}-${theme}.png`});}
+  report.push({route,event:'ERA',passed:true,destination:drop});await context.close();
+ }
  for(const scenario of ['unknown','changed','old-fixture']){
   const context=await browser.newContext({serviceWorkers:'block'});await context.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());const page=await context.newPage();
   await page.goto(`${origin}/evento/?evento=${ID}&scenario=${scenario}`);await page.locator('#app').waitFor({state:'visible'});assert(await page.locator('#directions-uber').isHidden());assert.equal(await page.locator('#directions-uber').getAttribute('href'),null);await context.close();

@@ -14,6 +14,20 @@
       uf: 'PE',
       addressLine1: 'Vevets Recepções',
       addressLine2: 'Rua Arenópolis, 82, Candeias, Jaboatão dos Guararapes - PE, Brasil'
+    }),
+    'EVT-23112026-ERA-BEAUTY-EAC4B673': Object.freeze({
+      revision: '2026-10-10-sebrae-map-1',
+      approved: true,
+      // Google Maps establishment pin corroborated by Sebrae's own venue listing.
+      // Not a claim about a specific door. Keep the exact current event signature.
+      latitude: -8.0651289,
+      longitude: -34.9050337,
+      local: 'SEBRAE PE',
+      endereco: 'Rua Tabajaras, 360 - Ilha do Retiro',
+      cidade: 'Recife',
+      uf: 'PE',
+      addressLine1: 'Sebrae - Recife',
+      addressLine2: 'Rua Tabaiares, 360 - Ilha do Retiro, Recife - PE, 50750-230, Brasil'
     })
   });
 }());
