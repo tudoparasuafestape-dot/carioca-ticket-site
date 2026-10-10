@@ -1,0 +1,41 @@
+name: Checkout ticket access (isolated)
+on:
+  pull_request:
+    paths:
+      - 'checkout/index.html'
+      - 'checkout-v2/index.html'
+      - 'tests/checkout-ticket-status*'
+      - '.github/workflows/checkout-ticket-status-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  ticket-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Prepare original presentation for before screenshots
+        run: |
+          mkdir -p /tmp/checkout-ticket-before
+          git archive f29f1a8d257085a9efdc7fdaf1218c9e3b5c5ed6 checkout checkout-v2 assets | tar -x -C /tmp/checkout-ticket-before
+      - run: node tests/checkout-era-beauty.dom.js
+      - run: node tests/checkout-home-navigation.runtime.cjs
+      - run: node tests/checkout-home-navigation.browser.cjs
+      - name: Post-payment states and screenshots, entirely mocked
+        env:
+          CT_BASE_ROOT: /tmp/checkout-ticket-before
+          CT_EVIDENCE_DIR: test-results/checkout-ticket-status
+        run: node tests/checkout-ticket-status.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checkout-ticket-status-review
+          path: test-results/checkout-ticket-status
+          if-no-files-found: error

@@ -297,7 +297,14 @@ test.describe('Jornada completa do comprador sem cobrança real', () => {
     await page.locator('#refreshButton').click();
     await expect.poll(()=>state.reconcileCalls).toBeGreaterThanOrEqual(1);
     await expect(page.locator('#successPanel')).toBeVisible({timeout:15000});
-    await expect(page.locator('#ticketLinks')).toContainText('Abrir ingresso 1');
+    const releasedTicket = page.locator('#ticketLinks a');
+    await expect(releasedTicket).toHaveCount(1);
+    await expect(releasedTicket).toHaveText('🎫 Abrir meu ingresso — Cliente Homologação');
+    const releasedUrl = new URL(await releasedTicket.getAttribute('href'));
+    expect(releasedUrl.origin).toBe('https://cariocaticket.com.br');
+    expect(releasedUrl.pathname).toBe('/ingresso/');
+    expect(releasedUrl.searchParams.get('codigo')).toBe(TICKET_CODE);
+    expect(releasedUrl.searchParams.get('sig')).toBe(TICKET_SIG);
 
     const minhaHref=await page.locator('#minhaCariocaLink').getAttribute('href');
     expect(minhaHref).toContain('/minha-carioca/?pedido='+ORDER_ID);
@@ -325,3 +332,4 @@ test.describe('Jornada completa do comprador sem cobrança real', () => {
     expect(state.initCalls).toBe(1);
   });
 });
+
