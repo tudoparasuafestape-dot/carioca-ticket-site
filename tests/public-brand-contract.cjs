@@ -13,5 +13,5 @@ for(const path of pages){
  assert.equal(normalize(now),normalize(old),path+' preserves all markup, scripts, links, alt text and commercial copy');
 }
 assert.equal(fs.readFileSync('assets/advertise.js','utf8').includes('"annualPrice": "R$ 149 por mês"'),true);
-console.log('Public brand contract: eight pages preserve all HTML except stylesheet versions; logo image bytes untouched.');
+console.log('Public brand contract: only approved footer signature and stylesheet versions change; other markup and official image bytes remain intact.');
 

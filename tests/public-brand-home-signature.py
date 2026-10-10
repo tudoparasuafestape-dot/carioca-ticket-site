@@ -44,7 +44,7 @@ with sync_playwright() as pw:
      logo=page.locator('.footer-home-link');header=page.locator('header .brand');assert logo.get_attribute('href')=='/' and logo.get_attribute('aria-label')=='Carioca Ticket'
      assert logo.locator('img').get_attribute('src')==header.locator('img').get_attribute('src')=='/assets/carioca-ticket-simbolo.png'
      assert logo.locator('img').get_attribute('alt')=='';assert logo.locator('img').evaluate('e=>e.complete && e.naturalWidth>0')
-     assert logo.locator('span').inner_text()==header.locator('span').inner_text()
+     assert ' '.join(logo.locator('span').inner_text().split())==' '.join(header.locator('span').inner_text().split())=='Carioca Ticket'
      assert logo.locator('img').evaluate('e=>getComputedStyle(e).filter')=='none'
      assert logo.evaluate('e=>getComputedStyle(e).backgroundColor')=='rgba(0, 0, 0, 0)'
      box=logo.bounding_box();assert box['width']>=44 and box['height']>=44 and box['x']>=0 and box['x']+box['width']<=width+1,(width,scale,theme,box)
