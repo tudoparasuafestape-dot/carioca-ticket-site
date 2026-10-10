@@ -16,6 +16,13 @@ REGRAS:
 
   var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
   var SESSION_KEY='CT_ANALYTICS_SESSION_V1';
+  // Capture the page's explicit scope now: document.currentScript is null in callbacks.
+  var publicPrivacyRequired=!!(document.currentScript && document.currentScript.getAttribute('data-ct-public-privacy')==='required');
+  var sent=false, scheduled=false;
+  function permitted(){
+    if(!publicPrivacyRequired)return true; // Preserve legacy internal pages outside this public control.
+    return safe(function(){return !!(window.CTPrivacy && window.CTPrivacy.allowed('analytics'))},false);
+  }
 
   function safe(fn,fallback){
     try{return fn()}catch(_){return fallback}
@@ -85,6 +92,8 @@ REGRAS:
   }
 
   function send(){
+    scheduled=false;
+    if(sent||!permitted())return;
     var pagina=pageType();
     if(!pagina)return;
 
@@ -142,7 +151,9 @@ REGRAS:
       document.body.appendChild(frame);
       document.body.appendChild(form);
 
+      if(!permitted()){cleanup(frame,form);return;}
       form.submit();
+      sent=true;
 
       window.setTimeout(function(){
         cleanup(frame,form);
@@ -174,8 +185,9 @@ REGRAS:
     },900);
   }
 
-  function schedule(){
-    emergencyEventFallback();
+  function scheduleAnalytics(){
+    if(sent||scheduled||!permitted())return;
+    scheduled=true;
     window.setTimeout(function(){
       if(typeof window.requestIdleCallback==='function'){
         window.requestIdleCallback(function(){send()},{timeout:2500});
@@ -185,9 +197,22 @@ REGRAS:
     },2500);
   }
 
+  function schedule(){
+    // Recovery must never depend on analytics permission.
+    emergencyEventFallback();
+    scheduleAnalytics();
+  }
+  document.addEventListener('ct:privacy',function(){
+    if(!publicPrivacyRequired)return;
+    if(!permitted()){safe(function(){sessionStorage.removeItem(SESSION_KEY)},null);return;}
+    if(document.readyState==='complete')scheduleAnalytics();
+  });
+
+  if(!permitted())safe(function(){sessionStorage.removeItem(SESSION_KEY)},null);
   if(document.readyState==='complete'){
     schedule();
   }else{
     window.addEventListener('load',schedule,{once:true});
   }
 }());
+

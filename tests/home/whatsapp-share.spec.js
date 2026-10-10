@@ -113,3 +113,4 @@ test('event link clears stale data and remounts without duplicate click callback
   await page.evaluate(()=>CTPublicShare.clearEventWhatsApp(document.getElementById('shareWhatsAppAction')));
   await expect(link).toBeHidden(); await expect(link).not.toHaveAttribute('href');
 });
+

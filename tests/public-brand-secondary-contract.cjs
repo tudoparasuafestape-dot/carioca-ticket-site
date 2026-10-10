@@ -3,7 +3,7 @@ const fs=require('node:fs'),cp=require('node:child_process'),assert=require('nod
 const paths=['convite','minha-carioca','minha-carioca/login','minha-carioca/acesso','parceiro/programa','parceiro/manual','parceiro/conduta','parceiro/regulamento','produtor/solicitar','campanha','roda-de-samba'];
 const base='7f86913bc3089eaf02632dc74c4743c937dac4d1';
 for(const route of paths){
- const path=route+'/index.html';let source=fs.existsSync('../public-brand-audit-base/'+path)?fs.readFileSync('../public-brand-audit-base/'+path,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'});const current=fs.readFileSync(path,'utf8');
+ const path=route+'/index.html';let source=fs.existsSync('../public-brand-audit-base/'+path)?fs.readFileSync('../public-brand-audit-base/'+path,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'});const current=fs.readFileSync(path,'utf8').replace(/  <link rel="stylesheet" href="\/assets\/public-privacy.css\?v=20261010-1">\n/g,'').replace(/  <script src="\/assets\/public-privacy.js\?v=20261010-1" defer><\/script>\n/g,'');
  // Approved explicit WhatsApp enhancement changes only the public share cache keys.
  if(route==='parceiro/programa')source=source.replace('/assets/public-share.js?v=20261009-card-share1','/assets/public-share.js?v=20261010-whatsapp1').replace('/assets/public-share.css?v=20261009-share1','/assets/public-share.css?v=20261010-whatsapp1');
  // A later public-markup repair relocates this exact preexisting helper into the script.
@@ -20,3 +20,4 @@ for(const route of paths){
  assert.ok(!current.includes('src="/assets/carioca-ticket-icon-192.png"'),route+' opaque app icon still used');
 }
 console.log('Secondary public brand: eleven pages preserve scripts, navigation, forms, copy and original CSS; official transparent artwork only.');
+
