@@ -55,10 +55,15 @@
     "footer": "Publicidade para empresas",
     "rights": "© 2026 Carioca Ticket. Todos os direitos reservados.",
     "message": "Olá! Quero solicitar uma proposta de publicidade na Carioca Ticket.",
-    "inquiry": "Valores e condições sob consulta.",
-    "annualPrice": "R$ 150 por mês",
-    "annualBilling": "Cobrança mensal com compromisso de 12 meses. Total do período: R$ 1.800.",
-    "annualTerms": "Condições de cancelamento e renovação a definir na proposta."
+    "annualPrice": "R$ 149 por mês",
+    "annualBilling": "Cobrança mensal com compromisso de 12 meses. Total do período: R$ 1.788.",
+    "planTerms": "Condições de cancelamento e renovação a definir na proposta.",
+    "monthlyPrice": "R$ 249 por mês",
+    "monthlyBilling": "Cobrança mensal com compromisso de 1 mês. Total do período: R$ 249.",
+    "quarterlyPrice": "R$ 219 por mês",
+    "quarterlyBilling": "Cobrança mensal com compromisso de 3 meses. Total do período: R$ 657.",
+    "halfYearPrice": "R$ 179 por mês",
+    "halfYearBilling": "Cobrança mensal com compromisso de 6 meses. Total do período: R$ 1.074."
   },
   "en-US": {
     "title": "Advertise on Carioca Ticket | Advertising",
@@ -113,10 +118,15 @@
     "footer": "Advertising for businesses",
     "rights": "© 2026 Carioca Ticket. All rights reserved.",
     "message": "Hello! I would like to request an advertising proposal for Carioca Ticket.",
-    "inquiry": "Request pricing and terms.",
-    "annualPrice": "R$ 150 per month",
-    "annualBilling": "Monthly billing with a 12-month commitment. Total for the period: R$ 1,800.",
-    "annualTerms": "Cancellation and renewal terms will be defined in the proposal."
+    "annualPrice": "R$ 149 per month",
+    "annualBilling": "Monthly billing with a 12-month commitment. Total for the period: R$ 1,788.",
+    "planTerms": "Cancellation and renewal terms will be defined in the proposal.",
+    "monthlyPrice": "R$ 249 per month",
+    "monthlyBilling": "Monthly billing with a 1-month commitment. Total for the period: R$ 249.",
+    "quarterlyPrice": "R$ 219 per month",
+    "quarterlyBilling": "Monthly billing with a 3-month commitment. Total for the period: R$ 657.",
+    "halfYearPrice": "R$ 179 per month",
+    "halfYearBilling": "Monthly billing with a 6-month commitment. Total for the period: R$ 1,074."
   },
   "es": {
     "title": "Anuncia en Carioca Ticket | Publicidad",
@@ -171,10 +181,15 @@
     "footer": "Publicidad para empresas",
     "rights": "© 2026 Carioca Ticket. Todos los derechos reservados.",
     "message": "¡Hola! Quiero solicitar una propuesta de publicidad en Carioca Ticket.",
-    "inquiry": "Precios y condiciones bajo consulta.",
-    "annualPrice": "R$ 150 al mes",
-    "annualBilling": "Facturación mensual con un compromiso de 12 meses. Total del período: R$ 1.800.",
-    "annualTerms": "Las condiciones de cancelación y renovación se definirán en la propuesta."
+    "annualPrice": "R$ 149 al mes",
+    "annualBilling": "Facturación mensual con un compromiso de 12 meses. Total del período: R$ 1.788.",
+    "planTerms": "Las condiciones de cancelación y renovación se definirán en la propuesta.",
+    "monthlyPrice": "R$ 249 al mes",
+    "monthlyBilling": "Facturación mensual con un compromiso de 1 mes. Total del período: R$ 249.",
+    "quarterlyPrice": "R$ 219 al mes",
+    "quarterlyBilling": "Facturación mensual con un compromiso de 3 meses. Total del período: R$ 657.",
+    "halfYearPrice": "R$ 179 al mes",
+    "halfYearBilling": "Facturación mensual con un compromiso de 6 meses. Total del período: R$ 1.074."
   },
   "zh-Hans": {
     "title": "在 Carioca Ticket 投放广告 | 广告服务",
@@ -229,10 +244,15 @@
     "footer": "面向企业的广告服务",
     "rights": "© 2026 Carioca Ticket。保留所有权利。",
     "message": "您好！我想咨询在 Carioca Ticket 投放广告的方案。",
-    "inquiry": "价格及条件请咨询。",
-    "annualPrice": "每月 R$ 150",
-    "annualBilling": "按月收费，承诺期限为 12 个月。整个期限的总额为 R$ 1,800。",
-    "annualTerms": "取消及续约条件将在方案中确定。"
+    "annualPrice": "每月 R$ 149",
+    "annualBilling": "按月收费，承诺期限为 12 个月。整个期限的总额为 R$ 1,788。",
+    "planTerms": "取消及续约条件将在方案中确定。",
+    "monthlyPrice": "每月 R$ 249",
+    "monthlyBilling": "按月收费，承诺期限为 1 个月。整个期限的总额为 R$ 249。",
+    "quarterlyPrice": "每月 R$ 219",
+    "quarterlyBilling": "按月收费，承诺期限为 3 个月。整个期限的总额为 R$ 657。",
+    "halfYearPrice": "每月 R$ 179",
+    "halfYearBilling": "按月收费，承诺期限为 6 个月。整个期限的总额为 R$ 1,074。"
   }
 };
   var select = document.getElementById('advertise-language');
