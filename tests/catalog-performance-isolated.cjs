@@ -64,7 +64,8 @@ async function fixture(browser, variant, count, options = {}) {
         state.imageRequests.push(url.pathname);
         if (options.holdThirdCover && url.pathname === '/__fixture/cover-2.svg') await new Promise(resolve => { state.releaseImage = resolve; });
         if (options.imageDelay) await sleep(options.imageDelay);
-        return route.fulfill({ status: options.brokenImages ? 404 : 200, contentType: 'image/svg+xml', body: cover });
+        if (options.brokenImages) return route.fulfill({ status: 404, contentType: 'text/plain', body: 'Invalid synthetic image bytes' });
+        return route.fulfill({ status: 200, contentType: 'image/svg+xml', body: cover });
       }
       // Unchanged decorative images are synthetic too. No production resources.
       if (/\.(png|jpg|webp)$/.test(url.pathname)) return route.fulfill({ contentType: 'image/svg+xml', body: cover });
@@ -267,7 +268,17 @@ async function regression(browser) {
   const coverDeadline = Date.now() + 5000;
   while (!lateCover.state.releaseImage && Date.now() < coverDeadline) await sleep(10);
   assert.equal(typeof lateCover.state.releaseImage, 'function'); lateCover.state.releaseImage();
-  await lateCover.page.waitForFunction(() => document.querySelector('.catalog-card:not([inert]) .catalog-image-fallback').textContent === 'Capa indisponível');
+  try {
+    await lateCover.page.waitForFunction(() => document.querySelector('.catalog-card:not([inert]) .catalog-image-fallback').textContent === CTHome.t('coverMissing'));
+  } catch (error) {
+    console.error('Synthetic broken cover failure', await loadingCover.evaluate(card => {
+      const fallback = card.querySelector('.catalog-image-fallback'), img = card.querySelector('img');
+      return { fallback: fallback.textContent, fallbackHidden: fallback.hidden, imageHidden: img.hidden, complete: img.complete, naturalWidth: img.naturalWidth };
+    }));
+    throw error;
+  }
+  assert.equal(await loadingCover.locator('.catalog-image-fallback').isVisible(), true);
+  assert.equal(await loadingCover.locator('img').evaluate(img => img.hidden && img.naturalWidth === 0), true);
   assert.equal(await loadingCover.locator('.catalog-title').textContent(), 'Evento sintético 2');
   assert.equal(await loadingCover.locator('.btn-primary').getAttribute('href'), '/checkout/?evento=SYNTHETIC-2');
   await lateCover.finish(); passed++;
