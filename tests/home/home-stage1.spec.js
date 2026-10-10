@@ -558,7 +558,16 @@ async function checkAnnotatedCopy(page, locale) {
 async function unlocalizedVisibleCopy(page) {
   return page.evaluate(() => {
       const allowedText = new Set(['Carioca', 'Ticket', 'CARIOCA TICKET', 'contato@cariocaticket.com.br', '@cariocaticketbr', 'Instagram', 'Facebook', 'cariocaticket.com.br', 'A−', 'A-', 'A+']);
-      const dynamic = '#event-rail-position, #event-rail-announcement, #active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
+      // The isolated share component owns these translated dynamic labels.
+      // Validate every text/language/accessible name before excluding it from static annotations.
+      const whatsAppLabels = { 'pt-BR':'Compartilhar no WhatsApp', 'en-US':'Share on WhatsApp', es:'Compartir en WhatsApp', 'zh-Hans':'通过 WhatsApp 分享' };
+      for (const link of document.querySelectorAll('.ct-whatsapp-share')) {
+        const label = whatsAppLabels[CTHome.locale];
+        const card = link.closest('.catalog-card');
+        const expectedAria = label + (card ? ': ' + card.querySelector('.catalog-title a').textContent : '');
+        if (link.textContent !== label || link.lang !== CTHome.locale || link.getAttribute('aria-label') !== expectedAria) return [{ tag:'A', text:link.textContent, error:'WhatsApp translation or accessible name mismatch' }];
+      }
+      const dynamic = '.ct-whatsapp-share, #event-rail-position, #event-rail-announcement, #active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
       const sourceOnly = '.language-choice span[translate="no"], .catalog-original[translate="no"], .ad-campaign-title[translate="no"], [data-share-event-title][translate="no"], .active-place[translate="no"], #active-filters > span[translate="no"], #category-choices button[translate="no"], #city-options button[translate="no"]';
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       const result = [];
@@ -590,7 +599,7 @@ for (const locale of Object.keys(dictionaries)) {
     const unlabeledAttributes = await page.locator('[aria-label], [placeholder]').evaluateAll(nodes => nodes.filter(node => {
       if (node.id === 'events-grid' || node.classList.contains('catalog-card')) return false; // Dynamic interpolated labels are asserted below.
       // Event-share fallback labels are translated by their isolated component.
-      if (node.matches('[data-public-share="event"] input')) return false;
+      if (node.matches('[data-public-share="event"] input, .ct-whatsapp-share')) return false; // WhatsApp names were checked by unlocalizedVisibleCopy.
       const aria = node.getAttribute('aria-label'), placeholder = node.getAttribute('placeholder');
       return (aria && !node.dataset.i18nAriaLabel && aria !== 'Carioca Ticket') || (placeholder && !node.dataset.i18nPlaceholder);
     }).map(node => ({ id: node.id, aria: node.getAttribute('aria-label'), placeholder: node.getAttribute('placeholder') })));
