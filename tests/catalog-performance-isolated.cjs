@@ -39,6 +39,8 @@ async function fixture(browser, variant, count, options = {}) {
   page.on('pageerror', error => state.errors.push(error.message));
   await page.addInitScript(() => {
     window.__perf = { created: 0, articles: 0, attributes: 0, started: performance.now() };
+    document.addEventListener('DOMContentLoaded', () => { window.__perf.domReadyAt = performance.now(); }, { once: true });
+    window.addEventListener('message', event => { if (event.data && event.data.ctMinhaCariocaPost && event.data.ok === false) window.__perf.transportErrorAt = performance.now(); });
     const create = Document.prototype.createElement;
     Document.prototype.createElement = function (...args) { window.__perf.created++; if (args[0] === 'article') window.__perf.articles++; return create.apply(this, args); };
     const set = Element.prototype.setAttribute;
@@ -46,10 +48,18 @@ async function fixture(browser, variant, count, options = {}) {
     new MutationObserver(() => { if (!window.__perf.cardsAt && document.querySelector('.catalog-card')) window.__perf.cardsAt = performance.now(); }).observe(document, { childList: true, subtree: true });
     Math.random = () => 0;
   });
+  if (options.sharePending) await page.addInitScript(() => {
+    window.shareCalls = [];
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: payload => { window.shareCalls.push(payload); return new Promise(resolve => { window.releaseShare = resolve; }); } });
+  });
   await context.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
     if (url.origin === ORIGIN && request.method() === 'GET') {
       if (url.pathname === '/away') return route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Fixture</title><a href="/">Home</a>' });
+      // The unchanged home prefetches this document. Keep it a blank fixture;
+      // never load or execute the producer portal in a catalog benchmark.
+      if (url.pathname === '/produtor/') return route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Prefetch fixture</title>' });
       if (url.pathname.startsWith('/__fixture/')) {
         state.imageRequests.push(url.pathname);
         if (options.imageDelay) await sleep(options.imageDelay);
@@ -167,6 +177,8 @@ async function regression(browser) {
   await f.finish(); passed++;
   const retry = await fixture(browser, 'after', 2, { presentationDelay: 500, responses: [{ transportError: true }, { sucesso: true, eventos: rows(1) }] });
   await retry.page.locator('#catalog-retry').waitFor({ state: 'visible' });
+  const rejected = await snapshot(retry.page);
+  assert(rejected.transportErrorAt > 0 && rejected.transportErrorAt < rejected.domReadyAt);
   await retry.page.locator('#catalog-retry').click(); await ready(retry.page, 1);
   assert.equal(retry.state.calls.length, 2); await retry.finish(); passed++;
   const missing = await fixture(browser, 'after', 3, { noRail: true, brokenImages: true });
@@ -175,12 +187,35 @@ async function regression(browser) {
   await missing.finish(); passed++;
   const initialFilter = await fixture(browser, 'after', 15, { hold: true });
   await filter(initialFilter.page, 'sintético 5');
-  while (!initialFilter.state.release) await sleep(10);
+  const releaseDeadline = Date.now() + 5000;
+  while (!initialFilter.state.release && Date.now() < releaseDeadline) await sleep(10);
+  assert.equal(typeof initialFilter.state.release, 'function');
   initialFilter.state.release(); await ready(initialFilter.page, 1);
   assert.equal(await initialFilter.page.locator('.catalog-card').getAttribute('data-event-id'), 'SYNTHETIC-5');
   assert.equal(await initialFilter.page.locator('.catalog-photo img').getAttribute('loading'), 'eager');
   assert.equal(await initialFilter.page.locator('.catalog-title a').getAttribute('id'), 'catalog-event-5-title');
   await initialFilter.finish(); passed++;
+  const categoryRows = rows(2); categoryRows[0].visual.categoria = 'Beleza';
+  const category = await fixture(browser, 'after', 2, { responses: [{ sucesso: true, eventos: categoryRows }] });
+  await ready(category.page, 2);
+  await filter(category.page, 'Beauty'); await ready(category.page, 0);
+  await category.page.locator('#home-language').selectOption('en-US', { force: true }); await ready(category.page, 1);
+  assert.equal(await category.page.locator('.catalog-card').getAttribute('data-event-id'), 'SYNTHETIC-0');
+  await category.page.locator('#home-language').selectOption('pt-BR', { force: true }); await ready(category.page, 0);
+  await category.finish(); passed++;
+  const share = await fixture(browser, 'after', 15, { sharePending: true });
+  await ready(share.page, 15);
+  await share.page.locator('.catalog-card:not([inert]) [data-public-share="event"] button').click();
+  await filter(share.page, 'Recife'); await ready(share.page, 7);
+  await filter(share.page, ''); await ready(share.page, 15);
+  await share.page.locator('#home-language').selectOption('en-US', { force: true }); await ready(share.page, 15);
+  assert.equal(await share.page.locator('#event-rail-next').isDisabled(), true);
+  assert.equal(await share.page.evaluate(() => shareCalls.length), 1);
+  await share.page.evaluate(() => releaseShare());
+  await share.page.waitForFunction(() => !document.querySelector('#event-rail-next').disabled);
+  await share.page.locator('#event-rail-next').click();
+  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), '1');
+  await share.finish(); passed++;
   return passed;
 }
 (async () => {
