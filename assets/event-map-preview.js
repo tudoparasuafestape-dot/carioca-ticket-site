@@ -151,12 +151,13 @@
     };
     function start() {
       if (current !== state || state.started || (!state.oneTime && !mapsAllowed())) return;
+      var hadFocus = document.activeElement === once;
       state.started = true;
       viewport.hidden=false;
       if (state.observer) state.observer.disconnect();
       state.message = 'Carregando mapa do Google…';
       translate();
-      if(document.activeElement===once){status.tabIndex=-1;status.focus({preventScroll:true});}
+      if(hadFocus){status.tabIndex=-1;status.focus({preventScroll:true});}
       state.timer = setTimeout(function () {
         if (current !== state) return;
         host.setAttribute('data-map-fallback', 'timeout');

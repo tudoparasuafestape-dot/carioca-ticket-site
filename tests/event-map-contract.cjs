@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 let created=[];let observer,timers=new Map(),seq=0,listeners={};
-class Node {constructor(){this.attrs={};this.children=[];this.hidden=false;this.classList={add(){}};}addEventListener(){}setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];}replaceChildren(...nodes){this.children=nodes;}}
+class Node {constructor(){this.attrs={};this.children=[];this._hidden=false;this.events={};this.classList={add(){}};}get hidden(){return this._hidden;}set hidden(value){this._hidden=value;if(value&&context.document.activeElement===this)context.document.activeElement=null;}focus(){context.document.activeElement=this;}addEventListener(name,fn){this.events[name]=fn;}setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];}replaceChildren(...nodes){this.children=nodes;}}
 const context={window:{CTPrivacy:{allowed:()=>true},addEventListener:(k,v)=>listeners[k]=v},document:{createElement:(tag)=>{const n=new Node();n.tag=tag;created.push(n);return n;},addEventListener:(k,v)=>listeners[k]=v},
  setTimeout(fn){timers.set(++seq,fn);return seq;},clearTimeout(id){timers.delete(id);},
  IntersectionObserver:class{constructor(cb){this.cb=cb;observer=this;}observe(n){this.node=n;}disconnect(){this.disconnected=true;}}};
@@ -27,3 +27,17 @@ assert.equal(observer.disconnected,true);
 console.log('PASS: lazy load, URL encoding, privacy attributes, timeout, non-authoritative load, language hook, rerender cleanup, error fallback, invalid input, teardown');
 
 
+// Real browsers blur a control as soon as it becomes hidden. Preserve keyboard
+// focus before translate() hides the one-time button; never steal unrelated focus.
+context.window.CTPrivacy.allowed=()=>false;
+const keyboardHost=new Node();api.render(keyboardHost,destination);
+let once=keyboardHost.children[1],message=keyboardHost.children[4];
+once.focus();once.events.click();
+assert.equal(once.hidden,true);assert.equal(context.document.activeElement,message);
+assert.equal(message.tabIndex,-1);
+api.clear();
+api.render(keyboardHost,destination);once=keyboardHost.children[1];
+const unrelated=new Node();unrelated.focus();once.events.click();
+assert.equal(context.document.activeElement,unrelated);
+api.clear();
+console.log('PASS: one-time map keyboard focus survives the hidden-button blur; unrelated focus is not stolen');

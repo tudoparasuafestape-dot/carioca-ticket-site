@@ -168,9 +168,16 @@ async function runCase(browser, expect, route, locale, result) {
       assert.equal(await page.locator('html').getAttribute('data-home-theme'), theme);
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${route}/${locale}/${width}/${theme}: horizontal overflow`);
       for (const selector of ['#directions-uber','#directions-waze','#directions-copy','.event-map-once','.event-map-preferences','#directions-map']) {
-        const node = page.locator(selector), box = await node.boundingBox();
+        const node = page.locator(selector);
+        await node.evaluate(element => element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
+        const box = await node.boundingBox();
         assert(box && box.height >= 44 && box.width >= 44, `${selector}: minimum touch target`);
         assert(box.x >= -1 && box.x + box.width <= width + 1, `${selector}: horizontal clipping`);
+        assert(await node.evaluate(element => {
+          const bounds = element.getBoundingClientRect();
+          const hit = document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+          return hit === element || element.contains(hit);
+        }), `${route}/${locale}/${width}/${theme}/${selector}: center obscured by fixed chrome or another element`);
         const pair = await colors(node);
         const ratio = contrast(...pair);
         assert(ratio >= 4.5, `${selector}: text contrast ${ratio.toFixed(2)} for ${pair}`);
@@ -185,8 +192,18 @@ async function runCase(browser, expect, route, locale, result) {
       const name = `${route}-${locale}-${width}-${theme}-directions.png`;
       await page.locator('#event-directions').screenshot({path:path.join(out,name)});
       result.screenshots.push(name);
+      if (width === 320) {
+        // Keep the full component capture and add reachable viewport evidence.
+        // Fixed chrome remains unchanged and visible in both screenshots.
+        for (const [part,selector] of [['upper-controls','.directions-actions'],['lower-consent','#directions-map-preview']]) {
+          await page.locator(selector).evaluate(element => element.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
+          const viewportName = `${route}-${locale}-${width}-${theme}-${part}-viewport.png`;
+          await page.screenshot({path:path.join(out,viewportName)});
+          result.screenshots.push(viewportName);
+        }
+      }
     }
-    result.checks.push('320/390/1440 layouts; light/dark; labels, keyboard focus, 44px targets, 4.5:1 action contrast and no horizontal overflow');
+    result.checks.push('320/390/1440 layouts; light/dark; labels, keyboard focus, 44px targets, 4.5:1 action contrast, no horizontal overflow and reachable unobscured control centers');
     await page.setViewportSize({width:390,height:1100});
     await page.locator('#directions-copy').click();
     assert.equal(await page.evaluate(() => window.__CT_UNIVERSAL_COPIED__), await page.locator('#directions-address').inputValue());
