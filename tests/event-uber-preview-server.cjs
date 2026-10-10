@@ -21,6 +21,7 @@ HTMLFormElement.prototype.submit = function () {
   if (fields.get('ctMinhaCariocaAction') !== 'publicRpc' ||
       !['ctEventoPublicoCarregarPROD','ctEventosPublicosListarPROD'].includes(method)) throw new Error('Blocked in synthetic preview');
   const result = method === 'ctEventosPublicosListarPROD' ? ${JSON.stringify({ sucesso: true, eventos: events })} : ${JSON.stringify(fixture)};
+  if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'era') Object.assign(result.evento, {id:'EVT-23112026-ERA-BEAUTY-EAC4B673',local:'SEBRAE PE',endereco:'Rua Tabajaras, 360 - Ilha do Retiro',cidade:'Recife',uf:'PE'});
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'unknown') result.evento.id = 'UNKNOWN-EVENT';
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'changed') result.evento.endereco = 'Outra rua, 9';
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'old-fixture') result.evento.endereco = 'Rua Arenópolis, 82';

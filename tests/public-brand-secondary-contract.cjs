@@ -4,6 +4,8 @@ const paths=['convite','minha-carioca','minha-carioca/login','minha-carioca/aces
 const base='7f86913bc3089eaf02632dc74c4743c937dac4d1';
 for(const route of paths){
  const path=route+'/index.html';let source=fs.existsSync('../public-brand-audit-base/'+path)?fs.readFileSync('../public-brand-audit-base/'+path,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'});const current=fs.readFileSync(path,'utf8');
+ // Approved explicit WhatsApp enhancement changes only the public share cache keys.
+ if(route==='parceiro/programa')source=source.replace('/assets/public-share.js?v=20261009-card-share1','/assets/public-share.js?v=20261010-whatsapp1').replace('/assets/public-share.css?v=20261009-share1','/assets/public-share.css?v=20261010-whatsapp1');
  // A later public-markup repair relocates this exact preexisting helper into the script.
  // Normalize only that approved movement; every other script byte remains protected.
  if(['minha-carioca/login','minha-carioca/acesso'].includes(route)){

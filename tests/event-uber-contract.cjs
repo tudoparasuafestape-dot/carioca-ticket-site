@@ -34,7 +34,20 @@ for(const route of ['evento','evento-v2']){
  assert.match(html,/id="directions-uber" hidden target="_self" rel="noreferrer"/);
  assert.match(html,/CTEventUber\.render\(e,state\.eventoId\)/);
  assert.match(html,/function showError\(msg,retryable\)\{\s*if\(window.CTEventUber\)window.CTEventUber.clear\(\)/);
- assert.match(html,/event-ride-destinations\.js\?v=20261010-2/);
+ assert.match(html,/event-ride-destinations\.js\?v=20261010-3/);
  assert(html.indexOf('event-ride-destinations.js')<html.indexOf('event-uber.js'));
 }
 console.log('PASS: approved event/address binding, current URL encoding, no coordinate guessing, invalid pin/ID guards, locale/storage handling, stale-state cleanup, both templates');
+
+// ERA fields confirmed from public event row 1007, not inferred from Samba.
+const ERA='EVT-23112026-ERA-BEAUTY-EAC4B673';
+const era={id:ERA,local:'SEBRAE PE',endereco:'Rua Tabajaras, 360 - Ilha do Retiro',cidade:'Recife',uf:'PE'};
+const eraUrl=api.buildUrl(era,ERA);assert(eraUrl);assert.notEqual(eraUrl,url.href);
+const eraDrop=JSON.parse(new URL(eraUrl).searchParams.get('drop[0]'));
+assert.equal(eraDrop.latitude,-8.0651289);assert.equal(eraDrop.longitude,-34.9050337);
+assert.equal(eraDrop.addressLine1,'Sebrae - Recife');assert.match(eraDrop.addressLine2,/Rua Tabaiares, 360/);
+api.render(era,ERA);assert.equal(link.hidden,false);
+assert.equal(api.buildUrl(era,ID),'');assert.equal(api.buildUrl(event,ERA),'');
+for(const change of [{id:'ERA-OTHER'},{local:'Outro Sebrae'},{endereco:'Rua Tabajaras, 361 - Ilha do Retiro'},{endereco:'Rua Tabaiares, 360 - Ilha do Retiro'},{cidade:'Jaboatão dos Guararapes'},{uf:'PB'}])assert.equal(api.buildUrl({...era,...change},ERA),'');
+assert.equal(Object.keys(registry).length,2);
+console.log('PASS: ERA approved venue identity, exact live address binding, distinct destination and no cross-event pin reuse');
