@@ -27,10 +27,13 @@
     "secondaryCopy": "Depois da seção de segurança, antes das perguntas frequentes.",
     "placementNote": "Os espaços usam carrossel e podem alternar anúncios. A posição, a disponibilidade e o formato da campanha serão confirmados na proposta.",
     "plans": "Escolha o tempo da sua campanha",
-    "plansIntro": "Três períodos para conversar com o comercial. Valores e condições sob consulta.",
+    "plansIntro": "Quatro períodos para sua campanha. Escolha um plano para ver os detalhes e conversar com o comercial.",
     "monthly": "Mensal",
     "monthlyDuration": "1 mês",
     "monthlyCopy": "Para uma ação com período mais curto.",
+    "quarterly": "Trimestral",
+    "quarterlyDuration": "3 meses",
+    "quarterlyCopy": "Para planejar a divulgação ao longo de três meses.",
     "halfYear": "Semestral",
     "halfYearDuration": "6 meses",
     "halfYearCopy": "Para planejar a divulgação ao longo do semestre.",
@@ -51,7 +54,11 @@
     "whatsappNote": "O WhatsApp abre em uma nova aba. Nenhuma mensagem é enviada automaticamente.",
     "footer": "Publicidade para empresas",
     "rights": "© 2026 Carioca Ticket. Todos os direitos reservados.",
-    "message": "Olá! Quero solicitar uma proposta de publicidade na Carioca Ticket."
+    "message": "Olá! Quero solicitar uma proposta de publicidade na Carioca Ticket.",
+    "inquiry": "Valores e condições sob consulta.",
+    "annualPrice": "R$ 150 por mês",
+    "annualBilling": "Cobrança mensal com compromisso de 12 meses. Total do período: R$ 1.800.",
+    "annualTerms": "Condições de cancelamento e renovação a definir na proposta."
   },
   "en-US": {
     "title": "Advertise on Carioca Ticket | Advertising",
@@ -78,10 +85,13 @@
     "secondaryCopy": "After the security section, before frequently asked questions.",
     "placementNote": "These spaces use a carousel and may rotate ads. Placement, availability and campaign format will be confirmed in the proposal.",
     "plans": "Choose your campaign period",
-    "plansIntro": "Three periods to discuss with our sales team. Request pricing and terms.",
+    "plansIntro": "Four campaign periods. Select a plan to see the details and talk to sales.",
     "monthly": "Monthly",
     "monthlyDuration": "1 month",
     "monthlyCopy": "For a shorter campaign.",
+    "quarterly": "Quarterly",
+    "quarterlyDuration": "3 months",
+    "quarterlyCopy": "Plan your advertising over three months.",
     "halfYear": "Six months",
     "halfYearDuration": "6 months",
     "halfYearCopy": "Plan your advertising over six months.",
@@ -102,7 +112,11 @@
     "whatsappNote": "WhatsApp opens in a new tab. No message is sent automatically.",
     "footer": "Advertising for businesses",
     "rights": "© 2026 Carioca Ticket. All rights reserved.",
-    "message": "Hello! I would like to request an advertising proposal for Carioca Ticket."
+    "message": "Hello! I would like to request an advertising proposal for Carioca Ticket.",
+    "inquiry": "Request pricing and terms.",
+    "annualPrice": "R$ 150 per month",
+    "annualBilling": "Monthly billing with a 12-month commitment. Total for the period: R$ 1,800.",
+    "annualTerms": "Cancellation and renewal terms will be defined in the proposal."
   },
   "es": {
     "title": "Anuncia en Carioca Ticket | Publicidad",
@@ -129,10 +143,13 @@
     "secondaryCopy": "Después de la sección de seguridad, antes de las preguntas frecuentes.",
     "placementNote": "Los espacios usan un carrusel y pueden alternar anuncios. La posición, la disponibilidad y el formato se confirmarán en la propuesta.",
     "plans": "Elige la duración de tu campaña",
-    "plansIntro": "Tres períodos para consultar con el equipo comercial. Precios y condiciones bajo consulta.",
+    "plansIntro": "Cuatro períodos para tu campaña. Elige un plan para ver los detalles y hablar con el equipo comercial.",
     "monthly": "Mensual",
     "monthlyDuration": "1 mes",
     "monthlyCopy": "Para una campaña de menor duración.",
+    "quarterly": "Trimestral",
+    "quarterlyDuration": "3 meses",
+    "quarterlyCopy": "Para planificar la publicidad durante tres meses.",
     "halfYear": "Semestral",
     "halfYearDuration": "6 meses",
     "halfYearCopy": "Para planificar la publicidad durante el semestre.",
@@ -153,7 +170,11 @@
     "whatsappNote": "WhatsApp se abre en una pestaña nueva. No se envía ningún mensaje automáticamente.",
     "footer": "Publicidad para empresas",
     "rights": "© 2026 Carioca Ticket. Todos los derechos reservados.",
-    "message": "¡Hola! Quiero solicitar una propuesta de publicidad en Carioca Ticket."
+    "message": "¡Hola! Quiero solicitar una propuesta de publicidad en Carioca Ticket.",
+    "inquiry": "Precios y condiciones bajo consulta.",
+    "annualPrice": "R$ 150 al mes",
+    "annualBilling": "Facturación mensual con un compromiso de 12 meses. Total del período: R$ 1.800.",
+    "annualTerms": "Las condiciones de cancelación y renovación se definirán en la propuesta."
   },
   "zh-Hans": {
     "title": "在 Carioca Ticket 投放广告 | 广告服务",
@@ -180,10 +201,13 @@
     "secondaryCopy": "位于安全板块之后、常见问题之前。",
     "placementNote": "广告位采用轮播形式，可能交替展示不同广告。具体位置、可用情况和广告形式将在方案中确认。",
     "plans": "选择广告周期",
-    "plansIntro": "提供三种周期供您与商务团队洽谈。价格及条件请咨询。",
+    "plansIntro": "四种广告周期。选择方案查看详情，并与商务团队沟通。",
     "monthly": "月度",
     "monthlyDuration": "1 个月",
     "monthlyCopy": "适合较短周期的推广。",
+    "quarterly": "季度",
+    "quarterlyDuration": "3 个月",
+    "quarterlyCopy": "规划三个月的广告推广。",
     "halfYear": "半年",
     "halfYearDuration": "6 个月",
     "halfYearCopy": "规划半年的广告推广。",
@@ -204,7 +228,11 @@
     "whatsappNote": "WhatsApp 将在新标签页打开。系统不会自动发送消息。",
     "footer": "面向企业的广告服务",
     "rights": "© 2026 Carioca Ticket。保留所有权利。",
-    "message": "您好！我想咨询在 Carioca Ticket 投放广告的方案。"
+    "message": "您好！我想咨询在 Carioca Ticket 投放广告的方案。",
+    "inquiry": "价格及条件请咨询。",
+    "annualPrice": "每月 R$ 150",
+    "annualBilling": "按月收费，承诺期限为 12 个月。整个期限的总额为 R$ 1,800。",
+    "annualTerms": "取消及续约条件将在方案中确定。"
   }
 };
   var select = document.getElementById('advertise-language');
@@ -214,6 +242,8 @@
     var copy = dictionaries[locale];
     document.documentElement.lang = locale;
     document.title = copy.title;
+    var tablist = document.querySelector('.ad-tabs');
+    if (tablist) tablist.setAttribute('aria-label', copy.plans);
     select.value = locale;
     document.querySelectorAll('[data-ad-text]').forEach(function (node) {
       node.textContent = copy[node.dataset.adText];
@@ -233,7 +263,45 @@
     apply(select.value);
     try { localStorage.setItem('ct-home-locale', select.value); } catch (_) {}
   });
+
+  // Progressive enhancement: without JavaScript all four plan details stay visible.
+  var tablist = document.querySelector('.ad-tabs');
+  var tabs = Array.prototype.slice.call(tablist.querySelectorAll('button'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.ad-plan'));
+  function activate(index, focus) {
+    tabs.forEach(function (tab, i) {
+      tab.setAttribute('aria-selected', String(i === index));
+      tab.tabIndex = i === index ? 0 : -1;
+      panels[i].hidden = i !== index;
+    });
+    if (focus) {
+      tabs[index].focus({ preventScroll: true });
+      tabs[index].scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+    }
+  }
+  tabs.forEach(function (tab, index) {
+    tab.setAttribute('role', 'tab');
+    tab.setAttribute('aria-controls', panels[index].id);
+    panels[index].setAttribute('role', 'tabpanel');
+    panels[index].setAttribute('aria-labelledby', tab.id);
+    panels[index].tabIndex = 0;
+    tab.addEventListener('click', function () { activate(index, false); });
+    tab.addEventListener('keydown', function (event) {
+      var next;
+      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+      if (event.key === 'Home') next = 0;
+      if (event.key === 'End') next = tabs.length - 1;
+      if (next !== undefined) { event.preventDefault(); activate(next, true); }
+    });
+  });
+  tablist.setAttribute('role', 'tablist');
+  document.querySelector('.ad-plans').classList.add('ad-plans-tabs');
+  activate(0, false);
+  tablist.hidden = false;
+
   window.addEventListener('storage', function (event) {
     if (event.key === 'ct-home-locale' || event.key === null) apply(event.newValue);
   });
 }());
+

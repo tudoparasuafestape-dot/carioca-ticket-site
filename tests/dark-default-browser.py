@@ -49,12 +49,12 @@ with sync_playwright() as p:
   for slot in ['advertising-primary','advertising-secondary']:
    house=page.locator('#'+slot+' .ad-house');nextbutton=page.locator('#'+slot+' .ad-controls button').last
    if not house.is_visible():nextbutton.click()
-   link=house.locator('a[href="/anuncie/"]');assert link.is_visible();assert link.inner_text()=='Saiba mais';assert house.locator('a[href^="https://wa.me/5581999311509"]').count()==1
+   link=house.locator('a[href="/anuncie/"]');assert link.is_visible();assert link.inner_text()=='Conheça os planos';assert house.locator('a[href^="https://wa.me/5581999311509"]').count()==1
    box=link.bounding_box();assert box['height']>=44 and box['x']>=0 and box['x']+box['width']<=width+1
    link.focus();page.keyboard.press('Tab');assert page.url==ORIGIN+'/'
    link.dispatch_event('pointerdown',dict(pointerId=1,isPrimary=True,button=0,pointerType='touch'));page.dispatch_event('body','pointercancel',dict(pointerId=1,pointerType='touch'));assert page.url==ORIGIN+'/'
    page.locator('#'+slot).screenshot(path=str(OUT/f'{slot}-{width}.png'))
- for locale,label in [('pt-BR','Saiba mais'),('en-US','Learn more'),('es','Más información'),('zh-Hans','了解更多')]:
+ for locale,label in [('pt-BR','Conheça os planos'),('en-US','Explore the plans'),('es','Conoce los planes'),('zh-Hans','了解广告方案')]:
   page.evaluate('l=>{CTHome.setLocale(l)}',locale)
   page.set_viewport_size(dict(width=320,height=1000))
   page.evaluate("document.documentElement.style.setProperty('--home-font-scale','1.5')")
@@ -79,3 +79,4 @@ assert not errors,errors
 assert not external,external
 (OUT/'results.json').write_text(json.dumps(dict(theme_checks=checks,errors=errors,external=external),indent=2))
 print('48 route/theme/reload cases, persistence, OS change, cross-tab sync, no-JS and carousel CTA tests passed.')
+
