@@ -42,10 +42,12 @@ for(const routeName of ['evento','evento-v2'])for(const locale of locales){
   await page.locator('#event-directions').screenshot({path:`${out}/${routeName}-${locale}-${width}-${theme}.png`});
  }
  await page.locator('#directions-copy').click();assert.equal(await page.evaluate(()=>copied),await page.locator('#directions-address').inputValue());assert.equal(await page.locator('#directions-map').getAttribute('href'),before);
- await page.evaluate(()=>{localStorage.setItem('ct-home-locale','es');dispatchEvent(new StorageEvent('storage',{key:'ct-home-locale'}));});assert.equal(await map.getAttribute('lang'),'es');
+ await page.evaluate(()=>{localStorage.setItem('ct-home-locale','es');dispatchEvent(new StorageEvent('storage',{key:'ct-home-locale',newValue:localStorage.getItem('ct-home-locale'),storageArea:localStorage}));});assert.equal(await map.getAttribute('lang'),'es');
  await page.evaluate(()=>{localStorage.setItem('ct-home-locale','en-US');dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));});assert.equal(await map.getAttribute('lang'),'en-US');
- await page.evaluate(()=>{window.CTPublicI18n={getLocale:()=> 'zh-Hans'};document.dispatchEvent(new CustomEvent('ct:public-language'));});assert.equal(await map.getAttribute('lang'),'zh-Hans');
- await page.evaluate(()=>{delete window.CTPublicI18n;localStorage.setItem('ct-home-locale','invalid');dispatchEvent(new StorageEvent('storage',{key:'ct-home-locale'}));});assert.equal(await map.getAttribute('lang'),'pt-BR');
+ await page.evaluate(()=>{CTPublicI18n.setLocale('zh-Hans');});assert.equal(await map.getAttribute('lang'),'zh-Hans');
+ await page.evaluate(()=>{localStorage.setItem('ct-home-locale','invalid');dispatchEvent(new StorageEvent('storage',{key:'ct-home-locale',newValue:localStorage.getItem('ct-home-locale'),storageArea:localStorage}));});assert.equal(await map.getAttribute('lang'),'zh-Hans');
+ // The shared locale controller ignores invalid updates, and removal restores Portuguese.
+ await page.evaluate(()=>{localStorage.removeItem('ct-home-locale');dispatchEvent(new StorageEvent('storage',{key:'ct-home-locale',newValue:null,storageArea:localStorage}));});assert.equal(await map.getAttribute('lang'),'pt-BR');
  await page.evaluate(()=>{CTEventDirections.render({local:'Outro espaço',endereco:'Avenida Nova, 42',cidade:'Olinda',uf:'PE'});CTEventMapPreview.renderPublicDirections();});
  await map.scrollIntoViewIfNeeded();await map.locator('iframe').waitFor();assert.equal(new URL(await map.locator('iframe').getAttribute('src')).searchParams.get('q'),'Outro espaço, Avenida Nova, 42, Olinda, PE, Brasil');
  await page.locator('#directions-map').focus();
