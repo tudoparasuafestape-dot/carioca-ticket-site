@@ -5,6 +5,7 @@ on:
       - 'evento/**'
       - 'evento-v2/**'
       - 'assets/event-uber.*'
+      - 'assets/waze-mark.svg'
       - 'assets/event-ride-destinations.js'
       - 'tests/event-uber-*'
       - 'tests/event-waze-*'
