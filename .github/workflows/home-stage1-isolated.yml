@@ -5,6 +5,9 @@ on:
       - 'index.html'
       - 'assets/home*'
       - 'assets/public-share.*'
+      - 'evento/index.html'
+      - 'evento-v2/index.html'
+      - 'tests/whatsapp-share-contract.cjs'
       - 'parceiro/programa/index.html'
       - 'assets/public-event-catalog.js'
       - 'tests/home/**'
@@ -29,6 +32,8 @@ jobs:
           node-version: '20'
       - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
+      - name: Public WhatsApp contracts without network
+        run: node tests/whatsapp-share-contract.cjs
       - name: Home against synthetic fixtures only
         env:
           CT_BASE_URL: http://127.0.0.1:4174
@@ -69,4 +74,12 @@ jobs:
         with:
           name: home-install-social-review
           path: test-results/home-stage1/**/install-social-*.png
+
+
+      - name: Keep explicit WhatsApp review captures
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-whatsapp-review
+          path: test-results/home-stage1/**/whatsapp-*.png
 

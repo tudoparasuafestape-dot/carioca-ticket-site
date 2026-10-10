@@ -68,6 +68,14 @@
     banner.lang = dialog.lang = reopen.lang = locale(); banner.hidden = state.decided;
     if (!dialog.open) { analyticsInput.checked = allowed('analytics'); mapsInput.checked = allowed('maps'); }
     saveNotice.hidden = !memoryOnly;
+    measureDock();
+  }
+  function measureDock(){
+    if(!banner||!banner.getBoundingClientRect)return;
+    var buy=document.getElementById('mobileBuy'),height=0;
+    if(buy&&window.getComputedStyle(buy).position==='fixed')height=buy.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--privacy-buy-offset',height+'px');
+    document.documentElement.style.setProperty('--privacy-height',(banner.hidden?0:banner.getBoundingClientRect().height+16)+'px');
   }
   function open(event) { opener = event && event.currentTarget || reopen; analyticsInput.checked = allowed('analytics'); mapsInput.checked = allowed('maps'); if (!dialog.open) dialog.showModal(); dialog.querySelector('button').focus(); }
   function focusContent(){
@@ -79,13 +87,14 @@
   function init() {
     if (document.getElementById('ct-privacy-banner')) return;
     banner = node('section'); banner.id = 'ct-privacy-banner'; banner.className = 'ct-privacy-banner'; banner.setAttribute('aria-labelledby', 'ct-privacy-title');
-    node('h2', 'title', banner).id = 'ct-privacy-title'; node('p', 'intro', banner);
+    node('h2', 'title', banner).id = 'ct-privacy-title';
     var actions = node('div', null, banner); actions.className = 'ct-privacy-actions';
     function finish(a, m) { var focus = banner.contains(document.activeElement); choose(a, m); if(memoryOnly){open();return;} if (focus) focusContent(); }
     button('accept', actions, function () { finish(true, true); }); button('reject', actions, function () { finish(false, false); }); button('details', actions, open);
     var reopenHost=node('div',null,document.body);reopenHost.className='ct-privacy-reopen-wrap';
     reopen = button('reopen', reopenHost, open); reopen.id = 'ct-privacy-reopen'; reopen.className = 'ct-privacy-reopen';
     dialog = node('dialog'); dialog.id = 'ct-privacy-dialog'; dialog.className = 'ct-privacy-dialog'; dialog.setAttribute('aria-labelledby', 'ct-privacy-dialog-title');
+    node('p', 'intro', dialog);
     var head = node('div', null, dialog); head.className = 'ct-privacy-heading'; node('h2', 'title', head).id = 'ct-privacy-dialog-title'; button('close', head, function () { dialog.close(); });
     [['analytics', 'analyticsInfo'], ['maps', 'mapsInfo']].forEach(function (pair) { var section = node('section', null, dialog), label = node('label', null, section), input = node('input', null, label); input.type = 'checkbox'; input.id = 'ct-privacy-' + pair[0]; node('span', pair[0], label); var desc = node('p', pair[1], section); desc.id = input.id + '-info'; input.setAttribute('aria-describedby', desc.id); if (pair[0] === 'analytics') analyticsInput = input; else mapsInput = input; });
     [['local','localInfo'],['limits','limitsInfo']].forEach(function (pair) { node('h3', pair[0], dialog); node('p', pair[1], dialog); });
@@ -93,10 +102,10 @@
     saveNotice = node('p', 'failed', dialog); saveNotice.setAttribute('role','status');
     button('save', dialog, function () { choose(analyticsInput.checked, mapsInput.checked); if (!memoryOnly) dialog.close(); });
     dialog.addEventListener('close', function () { if (opener && opener.isConnected && !opener.closest('[hidden]')) opener.focus(); else focusContent(); });
-    // In normal document flow, never an overlay over purchase controls.
-    var main=document.querySelector('main');
-    if(main&&main.parentNode)main.parentNode.insertBefore(banner,main);
-    else document.body.insertBefore(banner,document.body.firstChild);
+    // Compact bottom notice; reserve footer space and stay above fixed purchase controls.
+    document.body.appendChild(banner);
+    window.addEventListener('resize',measureDock);
+    if(typeof ResizeObserver!=='undefined'){var observer=new ResizeObserver(measureDock);observer.observe(banner);var buy=document.getElementById('mobileBuy');if(buy)observer.observe(buy);}
     document.body.appendChild(dialog); paint(); notify();
   }
   window.CTPrivacy = Object.freeze({ allowed: allowed, open: function (trigger) { if (dialog) open({currentTarget:trigger || reopen}); } });

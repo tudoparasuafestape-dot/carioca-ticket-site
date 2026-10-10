@@ -1,9 +1,12 @@
 .ct-public-share { margin-top:12px; max-width:100%; font-family:inherit; }
 .ct-public-share[hidden], .ct-public-share [hidden] { display:none !important; }
-.ct-public-share button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:8px 12px; border:1px solid var(--home-line,var(--line,#555)); border-radius:10px; background:var(--home-surface,var(--panel,#111318)); color:var(--home-text,var(--text,#fff)); font:inherit; font-size:.8125rem; line-height:1.4; cursor:pointer; }
+.ct-public-share button, .ct-public-share .ct-whatsapp-share { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:8px 12px; border:1px solid var(--home-line,var(--line,#555)); border-radius:10px; background:var(--home-surface,var(--panel,#111318)); color:var(--home-text,var(--text,#fff)); font:inherit; font-size:.8125rem; line-height:1.4; cursor:pointer; }
 .ct-public-share button:disabled { opacity:.65; cursor:wait; }
 .ct-public-share svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-.ct-public-share :is(button,input):focus-visible { outline:3px solid var(--home-focus,var(--gold2,#f0c95d)); outline-offset:3px; }
+.ct-public-share :is(button,input,a):focus-visible { outline:3px solid var(--home-focus,var(--gold2,#f0c95d)); outline-offset:3px; }
 .ct-public-share [role="status"] { font-size:.8125rem; line-height:1.5; color:var(--home-text,var(--text,#fff)); margin:6px 0 0; }
 .ct-public-share [role="status"]:empty { display:none; }
 .ct-public-share input { display:block; width:min(100%,28rem); margin-top:8px; min-height:44px; padding:8px; border:1px solid var(--home-line,var(--line,#555)); border-radius:8px; color:var(--home-text,var(--text,#fff)); background:var(--home-surface,var(--panel,#111318)); font:inherit; font-size:.8125rem; }
+
+.ct-public-share .ct-whatsapp-share { margin-left:6px; text-decoration:none; max-width:100%; box-sizing:border-box; text-align:center; vertical-align:middle; }
+

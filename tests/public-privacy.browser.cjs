@@ -27,7 +27,7 @@ for(const route of ['/','/evento/','/checkout/']){
  const t=await setup();await t.page.goto(origin+route+'?evento='+EVENT+'&src=CANARIO');await t.page.waitForTimeout(4200);
  assert.equal(t.guard.state.telemetry.length,0);assert.equal(await t.page.evaluate(()=>sessionStorage.getItem('CT_ANALYTICS_SESSION_V1')),null);
  await expect(t.page.locator('#ct-privacy-banner')).toBeVisible();
- assert.equal(await t.page.locator('#ct-privacy-banner').evaluate(e=>getComputedStyle(e).position),'relative');
+ assert.equal(await t.page.locator('#ct-privacy-banner').evaluate(e=>getComputedStyle(e).position),'fixed');
  await expect(t.page.locator('#ct-privacy-dialog')).not.toBeVisible();
  if(route==='/evento/'){await t.page.locator('#buyMobile').click({trial:true});assert(await t.page.locator('#buyMobile').evaluate(e=>{const b=document.getElementById('ct-privacy-banner').getBoundingClientRect(),a=e.getBoundingClientRect();return b.bottom<=a.top||b.top>=a.bottom||b.right<=a.left||b.left>=a.right;}));}
  if(route==='/checkout/'){await t.page.locator('#buyerName').fill('Comprador sintético');await t.page.locator('#quantity').fill('2');assert.equal(await t.page.locator('#buyerName').inputValue(),'Comprador sintético');}
@@ -53,15 +53,17 @@ for(const route of ['/evento/','/evento-v2/']){
  await t.page.locator('#ct-privacy-reopen').click();await t.page.locator('#ct-privacy-maps').uncheck();await t.page.getByRole('button',{name:'Salvar escolhas',exact:true}).click();assert.equal(await host.locator('iframe').count(),0);assert.equal(await t.page.locator('#directions-map').getAttribute('href'),before);
  await t.close('map explicit/once/revoke '+route);
 }
-for(const width of [320,1440])for(const locale of ['pt-BR','en-US','es','zh-Hans'])for(const theme of ['light','dark'])for(const font of [100,150]){
- const t=await setup({width,locale,theme,font});await t.page.goto(origin+'/');await expect(t.page.locator('#ct-privacy-banner')).toBeVisible();
+for(const route of ['/','/evento/'])for(const width of [320,1440])for(const locale of ['pt-BR','en-US','es','zh-Hans'])for(const theme of ['light','dark'])for(const font of [100,150]){
+ const t=await setup({width,locale,theme,font});await t.page.goto(origin+route+'?evento='+EVENT);if(route==='/evento/')await expect(t.page.locator('#app')).toBeVisible();const surface=route==='/'?'home':'event';await expect(t.page.locator('#ct-privacy-banner')).toBeVisible();
  assert(await t.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
- await t.page.locator('#ct-privacy-banner').screenshot({path:path.join(screenshotDir,`banner-${width}-${locale}-${theme}-${font}.png`)});
+ if(route==='/evento/'&&width===320){await t.page.locator('#buyMobile').click({trial:true});assert(await t.page.locator('#buyMobile').evaluate(e=>{const a=e.getBoundingClientRect(),b=document.getElementById('ct-privacy-banner').getBoundingClientRect();return b.bottom<=a.top||b.top>=a.bottom;}));}
+ await t.page.screenshot({path:path.join(screenshotDir,`page-${surface}-${width}-${locale}-${theme}-${font}.png`)});
+ await t.page.locator('#ct-privacy-banner').screenshot({path:path.join(screenshotDir,`banner-${surface}-${width}-${locale}-${theme}-${font}.png`)});
  await t.page.locator('#ct-privacy-banner button').last().click();await expect(t.page.locator('#ct-privacy-dialog')).toBeVisible();
  assert.equal(await t.page.locator('#ct-privacy-dialog').getAttribute('lang'),locale);assert(await t.page.locator('#ct-privacy-dialog').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
- await t.page.locator('#ct-privacy-dialog').screenshot({path:path.join(screenshotDir,`dialog-${width}-${locale}-${theme}-${font}.png`)});
+ await t.page.locator('#ct-privacy-dialog').screenshot({path:path.join(screenshotDir,`dialog-${surface}-${width}-${locale}-${theme}-${font}.png`)});
  await t.page.keyboard.press('Escape');await expect(t.page.locator('#ct-privacy-dialog')).not.toBeVisible();await expect(t.page.locator('#ct-privacy-banner button').last()).toBeFocused();
- await t.close('layout/focus '+width+' '+locale+' '+theme+' '+font);
+ await t.close('layout/focus '+surface+' '+width+' '+locale+' '+theme+' '+font);
 }
 {
  const t=await setup({denied:true});await t.page.goto(origin+'/');await t.page.getByRole('button',{name:'Ver detalhes e escolher'}).click();await t.page.locator('#ct-privacy-analytics').check();await t.page.getByRole('button',{name:'Salvar escolhas',exact:true}).click();await expect(t.page.locator('#ct-privacy-dialog [role=status]')).toBeVisible();await expect.poll(()=>t.guard.state.telemetry.length,{timeout:10000}).toBe(1);await t.close('storage denied memory-only');

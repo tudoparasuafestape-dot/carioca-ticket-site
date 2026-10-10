@@ -153,6 +153,9 @@
       width:100%;min-height:52px;border-radius:15px;padding:0 15px;display:flex;align-items:center;gap:11px;
       border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.055);color:#fff;font-weight:900;cursor:pointer;text-align:left
     }
+    .share-option[hidden]{display:none}
+    a.share-option{text-decoration:none}
+    .share-option:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
     .share-option:hover{background:rgba(217,166,46,.11);border-color:rgba(255,214,109,.35)}
     .share-option small{display:block;color:#aeb5bf;font-weight:600;margin-top:2px}
     .trust{
@@ -254,6 +257,7 @@
   <link rel="stylesheet" href="/assets/event-map-preview.css?v=20261010-privacy1">
   <script src="/assets/event-map-preview.js?v=20261010-privacy1"></script>
   <script src="/assets/event-description-speech.js?v=20261009" defer></script>
+  <script src="/assets/public-share.js?v=20261010-whatsapp1"></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
 </head>
@@ -569,6 +573,7 @@
         <span>↗</span>
         <span>Compartilhar…<small>WhatsApp, Instagram e outros apps</small></span>
       </button>
+      <a id="shareWhatsAppAction" class="share-option ct-whatsapp-share" hidden>Compartilhar no WhatsApp</a>
       <button id="copyLinkAction" class="share-option" type="button">
         <span>🔗</span>
         <span>Copiar link<small>Ideal para colar no Story ou em uma mensagem</small></span>
@@ -733,6 +738,7 @@
       }
 
       function configurarCompartilhamento(){
+        if(window.CTPublicShare)window.CTPublicShare.eventWhatsApp($('shareWhatsAppAction'),state.data&&state.data.evento,state.eventoId,fecharMenuCompartilhamento);
         var url=linkCanonicoEvento();
 
         ['shareHero','shareMobile'].forEach(function(id){
@@ -761,6 +767,7 @@
 
       function showError(msg,retryable){
         if(window.CTEventUber)window.CTEventUber.clear();
+        if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('loading').classList.add('hidden');
         $('app').classList.add('hidden');
         $('mobileBuy').classList.add('hidden');
@@ -861,6 +868,7 @@
         if(loadRunning)return;
         loadRunning=true;
         if(window.CTEventUber)window.CTEventUber.clear();
+        if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('errorBox').classList.add('hidden');
         $('retryEventLoad').classList.add('hidden');
         $('loading').classList.remove('hidden');
