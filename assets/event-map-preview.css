@@ -15,3 +15,6 @@
 .ct-event .event-map-preview .event-map-fallback{gap:8px;max-width:100%;min-width:44px;min-height:44px;padding:4px 0;font-size:14px;line-height:1.5;overflow-wrap:anywhere;background:transparent;color:inherit;border:0;border-radius:4px;box-shadow:none;text-align:left}
 .ct-event .event-map-preview .event-map-fallback svg{display:none}
 .ct-event .event-map-preview[data-map-fallback] .event-map-fallback{padding:10px 14px;border:1px solid currentColor;font-weight:750}
+
+
+.event-map-once,.event-map-preferences{font:600 .875rem/1.5 system-ui,sans-serif;min-height:44px;padding:10px 14px;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;cursor:pointer;margin:4px 8px 8px 0}.event-map-once:focus-visible,.event-map-preferences:focus-visible{outline:3px solid var(--event-accent,#805400);outline-offset:3px}.event-map-once[hidden],.event-map-preferences[hidden]{display:none!important}

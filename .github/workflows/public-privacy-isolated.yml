@@ -1,0 +1,49 @@
+name: Public privacy controls (isolated)
+on:
+  pull_request:
+    paths:
+      - 'assets/public-privacy.*'
+      - 'assets/ct-analytics.js'
+      - 'assets/event-map-preview.*'
+      - 'tests/public-privacy.*'
+      - 'tests/safety/telemetry-isolated.browser.cjs'
+      - 'index.html'
+      - 'evento/**'
+      - 'evento-v2/**'
+      - 'checkout/**'
+      - 'checkout-v2/**'
+      - '.github/workflows/public-privacy-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  isolated-privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npx playwright install --with-deps chromium
+      - name: Contracts and offline runtime checks
+        run: |
+          node --check assets/public-privacy.js
+          node --check assets/ct-analytics.js
+          node --check assets/event-map-preview.js
+          node tests/public-privacy.contract.cjs
+          node tests/public-privacy.runtime.cjs
+          node tests/event-map-contract.cjs
+          node tests/public-i18n.runtime.cjs
+          node tests/safety/public-request-policy.test.cjs
+      - name: Browser fixtures and four-language accessible layout
+        run: node tests/public-privacy.browser.cjs
+      - name: Existing telemetry contract with explicit fixture opt-in
+        run: node tests/safety/telemetry-isolated.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-privacy-evidence
+          path: |
+            test-results/privacy
+            test-results/telemetry-isolated.json

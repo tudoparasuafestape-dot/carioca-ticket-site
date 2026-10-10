@@ -6,7 +6,7 @@ const words={'pt-BR':'Mapa fornecido pelo Google','en-US':'Map provided by Googl
 (async()=>{const browser=await chromium.launch();try{
 for(const routeName of ['evento','evento-v2'])for(const locale of locales){
  const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block',permissions:[]});
- await context.addInitScript(l=>{localStorage.setItem('ct-home-locale',l);Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.copied=value;}}});},locale);
+ await context.addInitScript(l=>{localStorage.setItem('ct-public-privacy-v1',JSON.stringify({version:1,analytics:false,maps:true}));localStorage.setItem('ct-home-locale',l);Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.copied=value;}}});},locale);
  let provider=[],blocked=[],errors=[];
  await context.route('**/*',r=>{const u=new URL(r.request().url());if(u.origin===origin)return r.continue();if(u.hostname==='maps.google.com'&&u.pathname==='/maps'){provider.push(u);return r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><p>Mapa fictício: apenas teste de interface</p>'});}blocked.push(u.origin);return r.abort();});
  const page=await context.newPage();page.on('pageerror',e=>errors.push(String(e)));
@@ -64,7 +64,7 @@ for(const routeName of ['evento','evento-v2'])for(const locale of locales){
 // Deliberately stalled provider: shorten only the advisory timer, no external traffic.
 for (const routeName of ['evento','evento-v2']) {
  const stalled=await browser.newContext({serviceWorkers:'block'});
- await stalled.addInitScript(()=>{const original=window.setTimeout;window.setTimeout=(fn,ms,...args)=>original(fn,ms===15000?30:ms,...args);});
+ await stalled.addInitScript(()=>{localStorage.setItem('ct-public-privacy-v1',JSON.stringify({version:1,analytics:false,maps:true}));const original=window.setTimeout;window.setTimeout=(fn,ms,...args)=>original(fn,ms===15000?30:ms,...args);});
  await stalled.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():new Promise(()=>{}));
  const p=await stalled.newPage();await p.goto(origin+'/'+routeName+'/?evento=PREVIEW-EVENT');await p.locator('#app').waitFor({state:'visible'});
  await p.locator('#directions-map-preview').scrollIntoViewIfNeeded();
@@ -77,4 +77,5 @@ for (const routeName of ['evento','evento-v2']) {
 // Map text remains usable when local storage is denied; host only, not page language.
 const context=await browser.newContext();await context.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());await context.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw Error('disabled')}}));const page=await context.newPage();await page.goto(origin+'/evento/?evento=PREVIEW-EVENT');await page.locator('#app').waitFor({state:'visible'});assert.equal(await page.locator('#directions-map-preview').getAttribute('lang'),'pt-BR');await context.close();
 }finally{fs.writeFileSync(out+'/report.json',JSON.stringify(cases,null,2));await browser.close();server.close();}})().catch(e=>{console.error(e);server.close();process.exitCode=1});
+
 
