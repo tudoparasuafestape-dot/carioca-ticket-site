@@ -4,11 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { events, cover } = require('./fixtures/home-stage1.cjs');
 const root = path.resolve(__dirname, '..');
-const port = Number(process.env.CT_EVENT_PREVIEW_PORT || 42971);
+const port = Number(process.env.CT_EVENT_PREVIEW_PORT || 42975);
 const origin = `http://127.0.0.1:${port}`;
 const fixture = {
   sucesso: true,
-  evento: { id: 'PREVIEW-EVENT', nome: 'Encontro de música — demonstração', data: '20/12/2030', horario: '18h às 22h', local: 'Espaço de demonstração', cidade: 'Recife', uf: 'PE' },
+  evento: { id: 'PREVIEW-EVENT', nome: 'Encontro de música — demonstração', data: '20/12/2030', horario: '18h às 22h', local: 'Espaço de demonstração', endereco: 'Rua de teste, 123', cidade: 'Recife', uf: 'PE' },
   visual: { capaUrl: '/__fixture/music.svg', categoria: 'Música · fixture', realizacao: 'Equipe de demonstração', destaque: 'Uma noite para celebrar a música.', descricaoCurta: 'Evento fictício para revisar a página pública.', descricaoCompleta: 'Venha celebrar a música com a gente.\n\nOs portões abrem às dezoito horas. O espaço terá apresentações e uma área de convivência.\n\nEsta é uma demonstração com dados sintéticos, sem venda ou emissão de ingressos.', observacoes: 'Dados sintéticos. Nenhuma compra está disponível nesta prévia.' },
   menorPreco: 'R$ 35,00',
   tipos: [{ nome: 'Entrada — demonstração', descricao: 'Acesso fictício para revisão.', lotes: [{ nome: 'Lote de demonstração', precoNumero: 35, preco: 'R$ 35,00' }] }]
@@ -19,7 +19,9 @@ HTMLFormElement.prototype.submit = function () {
   const method = fields.get('metodo');
   if (fields.get('ctMinhaCariocaAction') !== 'publicRpc' ||
       !['ctEventoPublicoCarregarPROD','ctEventosPublicosListarPROD'].includes(method)) throw new Error('Blocked in synthetic preview');
+  window.__previewCalls=(window.__previewCalls||0)+1;
   const result = method === 'ctEventosPublicosListarPROD' ? ${JSON.stringify({ sucesso: true, eventos: events })} : ${JSON.stringify(fixture)};
+  if(new URL(location.href).searchParams.get('scenario') === 'failure') { result.sucesso=false;result.mensagem='Mensagem original da organização'; }
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'no-cover') {
     result.visual.capaUrl = '';
     result.visual.posterUrl = '';
