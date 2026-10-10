@@ -57,7 +57,8 @@
     var lang = locale(), words = labels[lang];
     link.setAttribute('lang', lang); note.setAttribute('lang', lang);
     label.textContent = words[0]; note.textContent = words[1];
-    link.setAttribute('aria-label', words[2]);
+    // Keep the accessible name identical to the visible action (voice control).
+    link.removeAttribute('aria-label');
   }
   function render(event, requestedId) {
     clear();

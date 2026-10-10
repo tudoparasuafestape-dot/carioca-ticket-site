@@ -12,7 +12,7 @@ const url=new URL(api.buildUrl(event,ID));assert.equal(url.origin,'https://m.ube
 assert.deepEqual([...url.searchParams.keys()],['pickup','drop[0]']);assert.equal(url.searchParams.get('pickup'),'my_location');
 const drop=JSON.parse(url.searchParams.get('drop[0]'));
 assert.equal(drop.latitude,-8.1932272);assert.equal(drop.longitude,-34.9293376);assert.equal(drop.addressLine1,'Vevets Recepções');assert.match(drop.addressLine2,/Rua Arenópolis, 82/);
-api.render(event,ID);assert.equal(link.hidden,false);assert.equal(note.hidden,false);assert.equal(link.attrs.href,url.href);assert.equal(nodes['directions-uber-label'].textContent,'Ir de Uber');
+api.render(event,ID);assert.equal(link.hidden,false);assert.equal(note.hidden,false);assert.equal(link.attrs['aria-label'],undefined);assert.equal(link.attrs.href,url.href);assert.equal(nodes['directions-uber-label'].textContent,'Ir de Uber');
 for(const locale of ['en-US','es','zh-Hans']){context.window.CTPublicI18n={getLocale:()=>locale};listeners['ct:public-language']();assert.equal(link.attrs.lang,locale);assert.equal(note.attrs.lang,locale);}
 delete context.window.CTPublicI18n;context.window.localStorage={getItem(){throw Error('denied')}};listeners.pageshow();assert.equal(link.attrs.lang,'pt-BR');
 for(const bad of [null,{}, {...event,id:'OTHER'}, {...event,id:''}, {...event,local:'Outro salão'}, {...event,endereco:'Rua Arenópolis, 83'}, {...event,cidade:'Recife'}, {...event,uf:'RJ'}, {...event,endereco:''}, {...event,local:'Online'}, {...event,endereco:'https://example.test'}, {...event,endereco:['Rua Arenópolis, 82']}]){
