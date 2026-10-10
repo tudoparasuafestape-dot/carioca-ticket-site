@@ -5,10 +5,10 @@ from urllib.parse import urlsplit,parse_qs
 import json,os,re,subprocess
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'test-results/advertise';OUT.mkdir(parents=True,exist_ok=True)
 ORIGIN='http://127.0.0.1:4197';checks=[];blocked=[];errors=[];baseline=False
-BASE='f29f1a8d257085a9efdc7fdaf1218c9e3b5c5ed6'
+BASE='2f68945b70ff6c5e6612f334f35524795c17a2c5'
 basefiles={}
 for path in ['anuncie/index.html','assets/advertise.css','assets/advertise.js']:
- local=ROOT.parent/'advertise-refinement-base'/path
+ local=ROOT.parent/'advertise-prices-base'/path
  basefiles['/'+path]=local.read_bytes() if local.is_file() else subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT)
 copies=json.loads(re.search(r'var dictionaries = ([\s\S]*?);\n  var select',(ROOT/'assets/advertise.js').read_text())[1])
 plans=['monthly','quarterly','halfYear','annual']
@@ -63,7 +63,7 @@ with sync_playwright() as pw:
       b=page.locator(selector).bounding_box();assert b['width']>=44 and b['height']>=44
      page.evaluate('scrollTo(0,0)')
      page.locator('header').screenshot(path=str(OUT/f'header-{width}-{scale}-{theme}-{locale}.png'))
-     if scale==100 and width in [320,390]:assert page.locator('header').bounding_box()['height'] < before_heights[width]
+     if scale==100 and width in [320,390]:assert page.locator('header').bounding_box()['height'] <= before_heights[width]
      for plan in plans:
       tab=page.locator('#ad-tab-'+plan);tab.click();tab,panel=selected(page,plan)
       assert tab.get_attribute('aria-controls')==panel.get_attribute('id')
@@ -73,10 +73,11 @@ with sync_playwright() as pw:
       assert q['text'][0]==copy['message']+' '+copy[plan]+' ('+copy[plan+'Duration']+').'
       assert a.get_attribute('target')=='_blank' and a.get_attribute('rel')=='noopener noreferrer'
       b=a.bounding_box();assert b['width']>=44 and b['height']>=44
-      if plan=='annual':
-       assert panel.locator('[data-ad-text="annualPrice"]').inner_text()==copy['annualPrice']
-       assert panel.locator('[data-ad-text="annualBilling"]').inner_text()==copy['annualBilling']
-      else:assert panel.locator('[data-ad-text="inquiry"]').inner_text()==copy['inquiry']
+      assert panel.locator('[data-ad-text="'+plan+'Price"]').inner_text()==copy[plan+'Price']
+      assert panel.locator('[data-ad-text="'+plan+'Billing"]').inner_text()==copy[plan+'Billing']
+      assert panel.locator('[data-ad-text="planTerms"]').inner_text()==copy['planTerms']
+      if width==390 and scale==100:
+       panel.screenshot(path=str(OUT/f'plan-{plan}-{theme}-{locale}.png'))
       no_overflow(page,case+[plan])
      if locale=='pt-BR' and ((width in [320,390] and theme=='dark') or (width==1440 and scale==100)):
       page.evaluate('scrollTo(0,0)');page.screenshot(path=str(OUT/f'after-{width}-{scale}-{theme}.png'),full_page=True)
@@ -111,6 +112,10 @@ with sync_playwright() as pw:
  context.close()
  context=browser.new_context(java_script_enabled=False,viewport={'width':320,'height':1000});context.route('**/*',route);page=context.new_page();page.goto(ORIGIN+'/anuncie/')
  assert page.locator('[data-proposal]').count()==6;assert page.locator('.ad-preferences').is_hidden();assert page.locator('.ad-tabs').is_hidden();assert page.locator('.ad-plan:visible').count()==4
+ for plan in plans:
+  panel=page.locator('#ad-panel-'+plan)
+  assert panel.locator('[data-ad-text="'+plan+'Price"]').inner_text()==copies['pt-BR'][plan+'Price']
+  assert panel.locator('[data-ad-text="'+plan+'Billing"]').inner_text()==copies['pt-BR'][plan+'Billing']
  u=urlsplit(page.locator('[data-proposal="quarterly"]').get_attribute('href'));assert 'Trimestral (3 meses)' in parse_qs(u.query)['text'][0]
  no_overflow(page,'no-JS');page.screenshot(path=str(OUT/'noscript-320.png'),full_page=True);context.close()
  context=browser.new_context();context.route('**/*',route);context.add_init_script("Object.defineProperty(window,'localStorage',{get(){throw new Error('disabled')}})");page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.goto(ORIGIN+'/anuncie/');page.select_option('#advertise-language','es');page.select_option('#home-theme','light');page.locator('#ad-tab-quarterly').click();selected(page,'quarterly');assert page.locator('html').get_attribute('lang')=='es';assert page.locator('html').get_attribute('data-home-theme')=='light';context.close();browser.close()
