@@ -14,6 +14,9 @@
     var count = document.getElementById('event-count');
     var empty = document.getElementById('no-events');
     var events = [], query = '', locationQuery = '', ready = false, requestId = 0, phase = 'loading';
+    // Reuse presentation nodes only within this authoritative response. Nothing
+    // is persisted across page visits, retries, new responses or locale changes.
+    var cards = new Map(), positions = new Map(), searchText = new Map();
     var I = window.CTHome;
     var H = I && typeof I.matches === 'function' ? I : null;
     function tr(key, fallback, values) { return I ? I.t(key, values) : fallback; }
@@ -41,7 +44,7 @@
       element.classList.add('catalog-original');
       return element;
     }
-    function card(event, index) {
+    function card(event, index, visibleIndex) {
       var visual = event.visual || {};
       var token = 'catalog-event-' + index;
       var detail = '/evento/?evento=' + encodeURIComponent(event.id);
@@ -63,14 +66,19 @@
         var image = node('img', '');
         // The enclosing link names the event using separately marked language nodes.
         image.alt = '';
-        image.loading = index < 2 ? 'eager' : 'lazy';
+        image.loading = visibleIndex < 2 ? 'eager' : 'lazy';
         image.decoding = 'async';
         // Keep lazy images measurable so the browser can start loading near the viewport.
         image.style.opacity = '0';
         fallback.textContent = tr('coverLoading', 'Carregando capa…');
         image.onload = function () { image.style.opacity = '1'; fallback.hidden = true; };
         image.onerror = function () { image.hidden = true; fallback.hidden = false; fallback.textContent = tr('coverMissing', 'Capa indisponível'); };
-        image.src = src;
+        // Overlapped carousel cards are all geometrically near the viewport,
+        // so native lazy loading alone can fetch the complete catalog. Only a
+        // successfully initialized rail defers URLs beyond its first pair.
+        // Without that optional enhancement, retain native lazy-list behavior.
+        if (visibleIndex > 1 && grid.dataset.catalogCoverWindow === 'ready') image.dataset.catalogSrc = src;
+        else image.src = src;
         cover.appendChild(image);
       }
       var body = node('div', 'catalog-body');
@@ -114,12 +122,21 @@
       if (!ready) return;
       var filtered = events.filter(function (event) {
         var visual = event.visual || {};
-        var matchesQuery = !query || normalize([event.nome, event.data, event.horario, event.local, event.cidade, event.uf, visual.categoria, I && I.categoryLabel ? I.categoryLabel(visual.categoria).text : '', visual.descricaoCurta].filter(Boolean).join(' ')).includes(query);
+        if (query && !searchText.has(event.id)) searchText.set(event.id, normalize([event.nome, event.data, event.horario, event.local, event.cidade, event.uf, visual.categoria, I && I.categoryLabel ? I.categoryLabel(visual.categoria).text : '', visual.descricaoCurta].filter(Boolean).join(' ')));
+        var matchesQuery = !query || searchText.get(event.id).includes(query);
         var matchesLocation = !locationQuery || normalize([event.local, event.cidade, event.uf].filter(Boolean).join(' ')).includes(locationQuery);
         return matchesQuery && matchesLocation && (!H || H.matches(event, true));
       });
-      grid.replaceChildren();
-      filtered.forEach(function (event, index) { grid.appendChild(card(event, index)); });
+      var fragment = document.createDocumentFragment();
+      filtered.forEach(function (event, index) {
+        if (!cards.has(event.id)) cards.set(event.id, card(event, positions.get(event.id), index));
+        var element = cards.get(event.id), image = element.querySelector('.catalog-photo img');
+        // Stable IDs use response order, while loading priority follows the
+        // visible result. Filtering must never make the first cover lazy.
+        if (image && index < 2) image.loading = 'eager';
+        fragment.appendChild(element);
+      });
+      grid.replaceChildren(fragment);
       count.textContent = tr(filtered.length === 1 ? 'availableOne' : 'availableMany', filtered.length + (filtered.length === 1 ? ' evento disponível para compra.' : ' eventos disponíveis para compra.'), { n: filtered.length });
       empty.hidden = !events.length || !!filtered.length;
       feedback.textContent = (query || locationQuery || (H && (H.filters.location || H.filters.period !== 'all' || H.filters.category))) && events.length ? (filtered.length ? tr(filtered.length === 1 ? 'foundOne' : 'foundMany', filtered.length + (filtered.length === 1 ? ' evento encontrado.' : ' eventos encontrados.'), { n: filtered.length }) : tr('noMatch', 'Nenhum evento encontrado para essa pesquisa.')) : '';
@@ -130,6 +147,7 @@
     async function load() {
       var current = ++requestId;
       ready = false; phase = 'loading';
+      events = []; cards.clear(); positions.clear(); searchText.clear();
       grid.replaceChildren();
       grid.setAttribute('aria-busy', 'true');
       status.hidden = false;
@@ -155,6 +173,7 @@
           seen.add(event.id);
           return true;
         });
+        events.forEach(function (event, index) { positions.set(event.id, index); });
         ready = true; phase = 'ready';
         render();
       } catch (_) {
@@ -183,6 +202,7 @@
     });
     document.addEventListener('ct:filters', render);
     document.addEventListener('ct:language', function () {
+      cards.clear(); searchText.clear();
       if (ready) render();
       else { count.textContent = tr(phase === 'error' ? 'unavailable' : 'consulting', ''); message.textContent = tr(phase === 'error' ? 'loadError' : 'loading', ''); }
     });
@@ -231,5 +251,20 @@
       try { form.submit(); } catch (error) { cleanup(); reject(error); }
     });
   }
-  mount(loadPublicEvents);
+  // This defer script is first in the document. Start the same public request
+  // while optional presentation modules download, then mount once they have
+  // initialized. A handled early rejection is still delivered to the normal
+  // retry UI; every later load creates a fresh request.
+  var initialRequest = loadPublicEvents();
+  initialRequest.catch(function () {});
+  function initialize() {
+    mount(function () {
+      var request = initialRequest;
+      initialRequest = null;
+      return request || loadPublicEvents();
+    });
+  }
+  if (document.readyState === 'complete') initialize();
+  else document.addEventListener('DOMContentLoaded', initialize, { once: true });
 }());
+
