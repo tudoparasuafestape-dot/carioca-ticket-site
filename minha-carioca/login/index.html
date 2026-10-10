@@ -1,6 +1,5 @@
 <!doctype html>
 
-  function officialPurchaseLink(raw){try{var u=new URL(String(raw||''),location.href),p=String(u.searchParams.get('pedido')||'').trim(),t=String(u.searchParams.get('token')||'').trim();if(p&&t)return '/minha-carioca/?pedido='+encodeURIComponent(p)+'&token='+encodeURIComponent(t)}catch(_){}return '#'}
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -122,6 +121,7 @@
 <script>
 (function(){
   'use strict';
+  function officialPurchaseLink(raw){try{var u=new URL(String(raw||''),location.href),p=String(u.searchParams.get('pedido')||'').trim(),t=String(u.searchParams.get('token')||'').trim();if(p&&t)return '/minha-carioca/?pedido='+encodeURIComponent(p)+'&token='+encodeURIComponent(t)}catch(_){}return '#'}
 
   var app=document.getElementById('app');
   var TOKEN_KEY='ct_minha_carioca_session_v4';
