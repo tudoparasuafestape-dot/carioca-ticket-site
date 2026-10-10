@@ -3,13 +3,13 @@
   'use strict';
   window.CTEventRideDestinations = Object.freeze({
     'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD': Object.freeze({
-      revision: '2026-10-10-approved-destination-1',
+      revision: '2026-10-10-approved-destination-2',
       approved: true,
       // Owner-approved tested destination; not a claim of exact venue entrance.
       latitude: -8.1932272,
       longitude: -34.9293376,
       local: 'Vevets Recepções',
-      endereco: 'Rua Arenópolis, 82',
+      endereco: 'Rua Arenópolis, 82 - Candeias',
       cidade: 'Jaboatão dos Guararapes',
       uf: 'PE',
       addressLine1: 'Vevets Recepções',

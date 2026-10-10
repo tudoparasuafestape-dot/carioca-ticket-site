@@ -18,3 +18,6 @@ The anchor is hidden without a reviewed matching record. It uses the existing di
 
 ## Verification
 Run `node tests/event-uber-contract.cjs` and `node tests/event-uber-browser.cjs`. Browser tests are isolated with synthetic event payloads, blocked external destinations, no real app RPC, and no rides. They cover both page templates, approved and rejected events, four languages, responsive light/dark captures, keyboard access and repeated renders. Actual app handoff is not simulated by the browser checks.
+
+## Address-contract correction (2026-10-10)
+The initial registry used a test fixture that omitted the district suffix. Read-only confirmation of PROD EVENTOS row 1002 showed the same event ID and venue, city and state, but `endereco` is `Rua Arenópolis, 82 - Candeias`. The strict address comparison correctly hid the button on that real payload. Revision 2 corrects this event's reviewed registry to the confirmed full field and exercises it in the isolated browser fixture. Coordinates and all guards are unchanged. Tests reject the old shortened fixture, a different district, street number, venue, city, state and event ID. No production RPC was used for diagnosis.
