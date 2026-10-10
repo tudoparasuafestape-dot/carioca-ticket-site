@@ -73,8 +73,10 @@ with sync_playwright() as p:
      page.locator('#directions-copy').click();assert 'Rua de teste, 123' in page.evaluate('window.__clipboard')
      page.locator('#description-listen').click();page.wait_for_timeout(50)
      assert page.evaluate('__speech.said[0].lang')=='pt-BR'
+     page.evaluate("window.__mapBeforeLocale=document.querySelector('#directions-map-preview iframe')")
      page.select_option('#event-language','es' if locale!='es' else 'en-US');assert page.evaluate('__speech.cancels')>=1
      assert page.evaluate('window.__previewCalls')==1
+     assert page.evaluate("window.__mapBeforeLocale===document.querySelector('#directions-map-preview iframe')")
      page.evaluate("localStorage.setItem('ct-home-locale','zh-Hans');dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
      assert page.locator('#event-language').input_value()=='zh-Hans'
      page.evaluate("dispatchEvent(new StorageEvent('storage',{key:'ct-home-locale',newValue:'en-US',storageArea:localStorage}))")

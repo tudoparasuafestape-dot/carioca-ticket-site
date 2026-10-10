@@ -633,7 +633,7 @@
         node.lang=value?'pt-BR':locale();
       }
       document.addEventListener('ct:public-language',function(){
-        if(state.data)render(state.data);
+        if(state.data)render(state.data,true);
         if(errorSource){$('errorText').textContent=tr(errorSource);$('errorText').lang=window.CTEventI18n&&window.CTEventI18n.has(errorSource)?locale():'pt-BR';}
       });
 
@@ -801,7 +801,7 @@
         $('retryEventLoad').classList.toggle('hidden',retryable!==true);
       }
 
-      function render(res){
+      function render(res,languageOnly){
         state.data=res;
         var e=res.evento||{};
         var v=res.visual||{};
@@ -813,9 +813,13 @@
         display('dateTime',[e.data,e.horario].filter(Boolean).join(' · '),'A confirmar');
         display('venue',[e.local,e.endereco].filter(Boolean).join(' · '),'A confirmar');
         display('city',[e.cidade,e.uf].filter(Boolean).join(' / '),'A confirmar');
-        if(window.CTEventDirections)window.CTEventDirections.render(e);
-        if(window.CTEventUber)window.CTEventUber.render(e,state.eventoId);
-        if(window.CTEventMapPreview)window.CTEventMapPreview.renderPublicDirections();
+        // Language-only updates must not recreate a loaded map or reset direction state.
+        // These components translate themselves via ct:public-language.
+        if(!languageOnly){
+          if(window.CTEventDirections)window.CTEventDirections.render(e);
+          if(window.CTEventUber)window.CTEventUber.render(e,state.eventoId);
+          if(window.CTEventMapPreview)window.CTEventMapPreview.renderPublicDirections();
+        }
         display('producer',v.realizacao,'Produção do evento');
         display('category',v.categoria,'Evento Carioca Ticket');
         display('highlight',v.destaque,'Uma experiência para viver.');
