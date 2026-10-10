@@ -1,9 +1,12 @@
 'use strict';
 const fs=require('node:fs'),cp=require('node:child_process'),assert=require('node:assert/strict');
 const paths=['convite','minha-carioca','minha-carioca/login','minha-carioca/acesso','parceiro/programa','parceiro/manual','parceiro/conduta','parceiro/regulamento','produtor/solicitar','campanha','roda-de-samba'];
+// Public privacy integration is separately covered by public-privacy.contract/runtime/browser.
+// Strip only its two exact external includes; keep every legacy script/form byte protected.
+const withoutPrivacy=s=>s.replace('  <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">\n','').replace('  <script src="/assets/public-privacy.js?v=20261010-1" defer></script>\n','');
 const base='7f86913bc3089eaf02632dc74c4743c937dac4d1';
 for(const route of paths){
- const path=route+'/index.html';let source=fs.existsSync('../public-brand-audit-base/'+path)?fs.readFileSync('../public-brand-audit-base/'+path,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'});const current=fs.readFileSync(path,'utf8');
+ const path=route+'/index.html';let source=fs.existsSync('../public-brand-audit-base/'+path)?fs.readFileSync('../public-brand-audit-base/'+path,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'});const current=withoutPrivacy(fs.readFileSync(path,'utf8'));
  // A later public-markup repair relocates this exact preexisting helper into the script.
  // Normalize only that approved movement; every other script byte remains protected.
  if(['minha-carioca/login','minha-carioca/acesso'].includes(route)){
@@ -18,3 +21,4 @@ for(const route of paths){
  assert.ok(!current.includes('src="/assets/carioca-ticket-icon-192.png"'),route+' opaque app icon still used');
 }
 console.log('Secondary public brand: eleven pages preserve scripts, navigation, forms, copy and original CSS; official transparent artwork only.');
+

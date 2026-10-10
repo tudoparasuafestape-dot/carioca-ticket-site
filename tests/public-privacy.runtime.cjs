@@ -57,4 +57,7 @@ for(const denied of [false,true]){
 {
  const e=env();e.run('assets/ct-analytics.js');e.document.currentScript=null;e.window.CTPrivacy={allowed(){throw Error('broken controller')}};e.flush();assert.equal(e.sent.length,0);console.log('PASS public scope captured before callbacks and broken controller fails closed');
 }
+{
+ const e=env({choice:{version:1,analytics:false,maps:true}});e.run('assets/event-map-preview.js');const host=element('div');e.window.CTEventMapPreview.render(host,'Local Sintético, Rua de Teste, Recife, PE');assert.equal(host.children.flatMap(x=>[x,...desc(x)]).filter(n=>n.tagName==='IFRAME').length,0);e.run('assets/public-privacy.js');assert.equal(host.children.flatMap(x=>[x,...desc(x)]).filter(n=>n.tagName==='IFRAME').length,1);console.log('PASS restored map permission after late controller initialization');
+}
 console.log('All isolated runtime checks passed. These VM checks are not browser/layout validation.');

@@ -83,7 +83,8 @@
     var actions = node('div', null, banner); actions.className = 'ct-privacy-actions';
     function finish(a, m) { var focus = banner.contains(document.activeElement); choose(a, m); if(memoryOnly){open();return;} if (focus) focusContent(); }
     button('accept', actions, function () { finish(true, true); }); button('reject', actions, function () { finish(false, false); }); button('details', actions, open);
-    reopen = button('reopen', document.body, open); reopen.id = 'ct-privacy-reopen'; reopen.className = 'ct-privacy-reopen';
+    var reopenHost=node('div',null,document.body);reopenHost.className='ct-privacy-reopen-wrap';
+    reopen = button('reopen', reopenHost, open); reopen.id = 'ct-privacy-reopen'; reopen.className = 'ct-privacy-reopen';
     dialog = node('dialog'); dialog.id = 'ct-privacy-dialog'; dialog.className = 'ct-privacy-dialog'; dialog.setAttribute('aria-labelledby', 'ct-privacy-dialog-title');
     var head = node('div', null, dialog); head.className = 'ct-privacy-heading'; node('h2', 'title', head).id = 'ct-privacy-dialog-title'; button('close', head, function () { dialog.close(); });
     [['analytics', 'analyticsInfo'], ['maps', 'mapsInfo']].forEach(function (pair) { var section = node('section', null, dialog), label = node('label', null, section), input = node('input', null, label); input.type = 'checkbox'; input.id = 'ct-privacy-' + pair[0]; node('span', pair[0], label); var desc = node('p', pair[1], section); desc.id = input.id + '-info'; input.setAttribute('aria-describedby', desc.id); if (pair[0] === 'analytics') analyticsInput = input; else mapsInput = input; });
@@ -93,8 +94,10 @@
     button('save', dialog, function () { choose(analyticsInput.checked, mapsInput.checked); if (!memoryOnly) dialog.close(); });
     dialog.addEventListener('close', function () { if (opener && opener.isConnected && !opener.closest('[hidden]')) opener.focus(); else focusContent(); });
     // In normal document flow, never an overlay over purchase controls.
-    document.body.insertBefore(banner, document.body.firstChild);
-    document.body.appendChild(dialog); paint();
+    var main=document.querySelector('main');
+    if(main&&main.parentNode)main.parentNode.insertBefore(banner,main);
+    else document.body.insertBefore(banner,document.body.firstChild);
+    document.body.appendChild(dialog); paint(); notify();
   }
   window.CTPrivacy = Object.freeze({ allowed: allowed, open: function (trigger) { if (dialog) open({currentTarget:trigger || reopen}); } });
   window.addEventListener('storage', function (event) { var storage; try { storage = localStorage; } catch (_) { return; } if (event.storageArea === storage && (event.key === key || event.key === null)) { memoryOnly = false; sync(); } else if (event.key === 'ct-home-locale') paint(); });
