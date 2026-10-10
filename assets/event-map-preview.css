@@ -9,3 +9,9 @@
 .ct-event .event-map-viewport{height:280px}}
 
 .ct-event .event-map-preview .event-map-safety{font-weight:750}
+
+
+/* A permanent, low-emphasis escape route: iframe load does not prove success. */
+.ct-event .event-map-preview .event-map-fallback{gap:8px;max-width:100%;min-width:44px;min-height:44px;padding:4px 0;font-size:14px;line-height:1.5;overflow-wrap:anywhere;background:transparent;color:inherit;border:0;border-radius:4px;box-shadow:none;text-align:left}
+.ct-event .event-map-preview .event-map-fallback svg{display:none}
+.ct-event .event-map-preview[data-map-fallback] .event-map-fallback{padding:10px 14px;border:1px solid currentColor;font-weight:750}

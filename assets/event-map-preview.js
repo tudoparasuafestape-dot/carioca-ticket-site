@@ -65,6 +65,12 @@
     clearTimeout(current.timer);
     if (current.observer) current.observer.disconnect();
     current.frame.onload = current.frame.onerror = null;
+    if (current.link) {
+      current.link.classList.remove('event-map-fallback');
+      current.linkParent.insertBefore(current.link,
+        current.linkNext && current.linkNext.parentNode === current.linkParent ? current.linkNext : null);
+    }
+    current.host.removeAttribute('data-map-fallback');
     current.host.replaceChildren();
     current.host.hidden = true;
     current = null;
@@ -105,6 +111,7 @@
       if (current !== state) return;
       clearTimeout(state.timer);
       state.message = 'Não foi possível carregar o mapa. Use Abrir no Google Maps ou Copiar endereço.';
+      host.setAttribute('data-map-fallback', 'error');
       frame.hidden = true;
       viewport.hidden = true;
       translate();
@@ -125,6 +132,7 @@
       translate();
       state.timer = setTimeout(function () {
         if (current !== state) return;
+        host.setAttribute('data-map-fallback', 'timeout');
         state.message = 'O mapa está demorando. Use Abrir no Google Maps ou Copiar endereço.';
         translate();
       }, 15000);
@@ -172,6 +180,16 @@
       } catch (_) {}
     }
     render(host, destination);
+    if (current && link && link.parentNode) {
+      // Keep the same accessible, translated link and URL. Move it out of the
+      // prominent action row only while a map exists; restore it on teardown.
+      current.link = link;
+      current.linkParent = link.parentNode;
+      current.linkNext = link.nextSibling;
+      link.classList.add('event-map-fallback');
+      current.status.after(link);
+    }
   }
   window.CTEventMapPreview = { render: render, clear: clear, renderPublicDirections: renderPublicDirections };
 }());
+
