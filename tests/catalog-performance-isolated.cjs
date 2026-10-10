@@ -158,6 +158,14 @@ async function regression(browser) {
     }
     await filter(f.page, 'Recife'); await ready(f.page, Math.floor(n / 2));
     await filter(f.page, ''); await ready(f.page, n);
+    if (n > 5) {
+      const unseen = f.page.locator('[data-event-id="SYNTHETIC-5"] img');
+      assert.equal(await unseen.getAttribute('src'), null);
+      await filter(f.page, 'sintético 5 10/10/2027'); await ready(f.page, 1);
+      assert.equal(await unseen.getAttribute('src'), '/__fixture/cover-5.svg');
+      await unseen.evaluate(img => img.decode());
+      await filter(f.page, ''); await ready(f.page, n);
+    }
     const ids = await f.page.locator('[id]').evaluateAll(nodes => nodes.map(n => n.id));
     assert.equal(new Set(ids).size, ids.length);
     if (n) assert.equal(await f.page.locator('.catalog-card:not([inert])').count(), 1);
@@ -254,7 +262,8 @@ async function regression(browser) {
   const lateCover = await fixture(browser, 'after', 3, { holdThirdCover: true, brokenImages: true }); await ready(lateCover.page, 3);
   await lateCover.page.locator('#events-grid').focus(); await lateCover.page.keyboard.press('End');
   const loadingCover = lateCover.page.locator('.catalog-card:not([inert])');
-  assert.equal(await loadingCover.locator('.catalog-image-fallback').textContent(), 'Carregando capa…');
+  assert.equal(await loadingCover.locator('.catalog-image-fallback').textContent(), await lateCover.page.evaluate(() => CTHome.t('coverLoading')));
+  assert.equal(await loadingCover.locator('.catalog-image-fallback').isVisible(), true);
   const coverDeadline = Date.now() + 5000;
   while (!lateCover.state.releaseImage && Date.now() < coverDeadline) await sleep(10);
   assert.equal(typeof lateCover.state.releaseImage, 'function'); lateCover.state.releaseImage();
@@ -269,7 +278,7 @@ async function regression(browser) {
   warmSources();
   const browser = await chromium.launch({ headless: true, ...(process.env.CT_CHROMIUM_EXECUTABLE ? { executablePath: process.env.CT_CHROMIUM_EXECUTABLE } : {}) });
   try {
-    const report = { baseline: BASE, synthetic: true, productionRpc: 0, browser: await browser.version(), cases: [], regressions: 0 };
+    const report = { baseline: BASE, synthetic: true, completed: false, productionRpc: 0, browser: await browser.version(), cases: [], regressions: 0 };
     for (const count of [1, 15, 50, 200]) for (const variant of ['before', 'after']) {
       report.cases.push(await benchmark(browser, variant, count));
       fs.writeFileSync(path.join(OUT, 'results.json'), JSON.stringify(report, null, 2));
@@ -285,6 +294,7 @@ async function regression(browser) {
       assert(after.initialImageRequests <= 2);
       assert.equal(after.initialImageSources, 2);
     }
+    report.completed = true;
     fs.writeFileSync(path.join(OUT, 'results.json'), JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report, null, 2));
     console.log('PASS: isolated catalog benchmark and ' + report.regressions + ' regression groups; zero forwarded requests.');
