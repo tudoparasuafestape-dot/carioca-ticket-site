@@ -17,7 +17,7 @@ for (const [locale, copy] of Object.entries(dictionaries)) {
     assert.equal(url.searchParams.get('text'), message);
     assert.equal(url.pathname, '/5581999311509');
   }
-  const prices = { monthly: [249, 1], quarterly: [219, 3], halfYear: [179, 6], annual: [150, 12] };
+  const prices = { monthly: [249, 1], quarterly: [219, 3], halfYear: [179, 6], annual: [149, 12] };
   for (const [plan, [monthly, months]] of Object.entries(prices)) {
     assert.match(copy[plan + 'Duration'], new RegExp('^' + months + ' '));
     assert.ok(copy[plan + 'Price'].includes('R$ ' + monthly), `${locale} ${plan} monthly price`);
@@ -28,7 +28,7 @@ for (const [locale, copy] of Object.entries(dictionaries)) {
   assert.ok(!Object.hasOwn(copy, 'inquiry'));
   for (const key of Object.keys(copy)) if (!/Price$|Billing$/.test(key)) assert.ok(!/R\$/.test(copy[key]));
 }
-assert.equal(dictionaries['pt-BR'].annualBilling, 'Cobrança mensal com compromisso de 12 meses. Total do período: R$ 1.800.');
+assert.equal(dictionaries['pt-BR'].annualBilling, 'Cobrança mensal com compromisso de 12 meses. Total do período: R$ 1.788.');
 assert.equal(dictionaries['pt-BR'].planTerms, 'Condições de cancelamento e renovação a definir na proposta.');
 assert.deepEqual([...html.matchAll(/data-proposal="([^"]*)"/g)].map(m=>m[1]), ['', ...plans, '']);
 assert.equal((html.match(/<h1\b/g) || []).length, 1);
