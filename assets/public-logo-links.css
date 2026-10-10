@@ -1,2 +1,15 @@
 .footer-brand .footer-home-logo{display:inline-flex;align-items:center;justify-self:start;min-width:44px;min-height:44px}
 .footer-brand .footer-home-logo:focus-visible{outline:3px solid var(--gold2);outline-offset:4px;border-radius:6px}
+
+
+/* Transparent official full wordmark for public institutional headers/footers. */
+.brand .brand-logo,.footer-brand .footer-home-logo { display:inline-flex; align-items:center; justify-content:center; flex:none; width:96px; height:72px; padding:0; overflow:hidden; background:transparent; }
+.brand .brand-logo img,.footer-brand .footer-home-logo img { flex:none; display:block; width:164px; height:110px; max-width:none; max-height:none; margin:0; object-fit:contain; object-position:center; background:transparent; }
+@media(max-width:800px) {
+ .footer-brand .footer-home-logo { width:80px; height:64px; }
+ .footer-brand .footer-home-logo img { width:144px; height:96px; }
+}
+@media(max-width:600px) {
+ .brand .brand-logo { width:44px; height:44px; }
+ .brand .brand-logo img { width:44px; height:44px; }
+}
