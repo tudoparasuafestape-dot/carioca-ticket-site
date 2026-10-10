@@ -432,17 +432,12 @@
 .ct-home .ad-house-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
 
 
-/* Public footer: preserve the official transparent wordmark without a dark tile.
-   Match the advertising and producer-guide logo frame; crop empty asset margins. */
-.ct-home .footer-brand .footer-home-link { display:inline-flex; flex:none; align-items:center; justify-content:center; width:96px; height:72px; min-width:44px; min-height:44px; padding:0; overflow:hidden; background:transparent; border-radius:0; }
-.ct-home .footer-brand .footer-home-link img { flex:none; width:164px; height:110px; max-width:none; max-height:none; margin:0; object-fit:contain; background:transparent; border-radius:0; }
-@media(max-width:800px) {
- .ct-home .footer-brand .footer-home-link { width:80px; height:64px; }
- .ct-home .footer-brand .footer-home-link img { width:144px; height:96px; }
-}
+/* The footer reuses the existing header signature: official CT symbol and theme-aware name. */
+.ct-home .footer-brand .footer-home-link { display:inline-flex; flex:none; align-items:center; gap:9px; width:auto; max-width:100%; min-width:44px; min-height:44px; padding:0; line-height:1.15; background:transparent; color:var(--home-text); border-radius:0; text-decoration:none; }
+.ct-home .footer-brand .footer-home-link img { display:block; flex:none; width:42px; height:42px; max-width:none; max-height:none; margin:0; object-fit:contain; background:transparent; border-radius:0; filter:none; }
+.ct-home .footer-brand .footer-home-link > span { display:block; min-width:0; padding:0; font-size:1.125rem; line-height:1.15; font-weight:750; letter-spacing:-.04em; color:inherit; overflow-wrap:normal; }
+.ct-home .footer-brand .footer-home-link b { font-weight:450; }
 
 /* Keep the home logo link comfortably reachable on touch screens. */
 .ct-home header .brand { min-height:44px; min-width:44px; }
 
-/* Follow the transparent artwork edge to keep white lettering legible on light surfaces. */
-html[data-home-theme="light"] .ct-home .footer-brand .footer-home-link img { filter:drop-shadow(0 0 1px #333) drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }

@@ -48,4 +48,5 @@ console.log('Advertising contracts passed: four localized plans, six commercial 
 const css = fs.readFileSync('assets/advertise.css', 'utf8');
 assert.match(css, /\.ct-advertise \.ad-brand \{[^}]*background:transparent;/);
 assert.equal((html.match(/class="ad-brand" href="\/"/g) || []).length, 2);
-assert.equal((html.match(/src="\/assets\/carioca-ticket-logo.png" alt="Carioca Ticket"/g) || []).length, 2);
+assert.equal((html.match(/src="\/assets\/carioca-ticket-simbolo.png" alt=""/g) || []).length, 2);
+
