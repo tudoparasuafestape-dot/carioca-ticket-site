@@ -32,3 +32,4 @@ for(const file of ['evento/index.html','evento-v2/index.html']) {
  for(const [,body] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(body);
 }
 new vm.Script(source);console.log('PASS WhatsApp: 4 locales, public encoding, no recipient/private fields, missing facts, inert guard, language refresh, stale clearing and single listener; both event template scripts parse.');
+

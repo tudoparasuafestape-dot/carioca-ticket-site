@@ -38,7 +38,7 @@ async function fixture(browser, routePath, mobile, options = {}) {
     try {
       if (url.origin === ORIGIN && req.method() === 'GET') {
         if (url.pathname === '/') { state.home++; return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><title>Home fixture</title><h1>Página inicial local</h1>' }); }
-        const files = { '/assets/public-i18n.js':'assets/public-i18n.js','/assets/checkout-translations.js':'assets/checkout-translations.js','/assets/checkout-language.js':'assets/checkout-language.js','/assets/checkout-language.css':'assets/checkout-language.css', '/checkout/': 'checkout/index.html', '/checkout-v2/': 'checkout-v2/index.html',
+        const files = { '/assets/public-privacy.js':'assets/public-privacy.js','/assets/public-privacy.css':'assets/public-privacy.css', '/assets/public-i18n.js':'assets/public-i18n.js','/assets/checkout-translations.js':'assets/checkout-translations.js','/assets/checkout-language.js':'assets/checkout-language.js','/assets/checkout-language.css':'assets/checkout-language.css', '/checkout/': 'checkout/index.html', '/checkout-v2/': 'checkout-v2/index.html',
           '/assets/checkout-home-navigation.js': 'assets/checkout-home-navigation.js', '/assets/checkout-home-navigation.css': 'assets/checkout-home-navigation.css',
           '/assets/checkout-commercial-policy.js': 'assets/checkout-commercial-policy.js' };
         if (Object.hasOwn(files, url.pathname)) {

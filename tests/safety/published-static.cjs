@@ -13,6 +13,7 @@ const ROUTES = Object.freeze(['/', '/evento/', '/evento-v2/', '/checkout/', '/ch
   '/eventos-v2/', '/fornecedores/', '/crm/', '/financeiro/', '/reembolsos/', '/saude-vendas/', '/relatorios/', '/comissionado/', '/comissoes/',
   '/ingresso/', '/assets/public-i18n.js', '/assets/event-i18n.js', '/assets/event-i18n.css',
   '/assets/checkout-language.js', '/assets/checkout-language.css', '/assets/checkout-translations.js',
+  '/assets/public-privacy.js', '/assets/public-privacy.css', '/assets/event-map-preview.js', '/assets/event-map-preview.css',
   '/manifest.webmanifest', '/sw.js', '/assets/ct-analytics.js', '/assets/carioca-ticket-logo.png',
   '/assets/carioca-ticket-icon-192.png', '/assets/carioca-ticket-icon-512.png', '/assets/carioca-ticket-icon-maskable-512.png']);
 function readStatic(base, route) {

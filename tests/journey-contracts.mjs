@@ -344,8 +344,8 @@ for(const path of ['evento/index.html','evento-v2/index.html']){
     'checkout-v2/index.html'
   ]){
     const pagina=read(path);
-    const analyticsVersion=['evento/index.html','evento-v2/index.html'].includes(path)
-      ? '20261008-recovery' : '20260923a';
+    const analyticsVersion=path==='eventos-v2/index.html'?'20260923a':'20261010-privacy1';
+    if(path!=='eventos-v2/index.html'&&!pagina.includes('data-ct-public-privacy="required"'))failures.push(path+': escopo de privacidade público ausente');
     if(!pagina.includes('/assets/ct-analytics.js?v='+analyticsVersion)){
       failures.push(path+': coletor Analytics Master seguro/versionado ausente');
     }
@@ -645,3 +645,4 @@ if(failures.length){
   process.exit(1);
 }
 console.log('✅ Gate de jornada: acessos críticos possuem caminho, retorno e saída.');
+

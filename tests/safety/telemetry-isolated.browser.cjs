@@ -13,6 +13,7 @@ const origin = 'http://127.0.0.1:4173', reports = [];
   try {
     for (const width of [1365, 412]) for (const [route, kind] of [['/', 'HOME'], ['/evento/', 'EVENTO'], ['/checkout/', 'CHECKOUT']]) {
       const context = await browser.newContext({ offline: true, serviceWorkers: 'block', viewport: {width, height: 915} });
+      await context.addInitScript(() => localStorage.setItem('ct-public-privacy-v1', JSON.stringify({version:1,analytics:true,maps:false})));
       const fixtures = createFixtures(), capture = fixtures.handlers['publicRpc:ctAnalyticsMasterRegistrarLotePublicoPROD'];
       fixtures.handlers['publicRpc:ctAnalyticsMasterRegistrarLotePublicoPROD'] = (args, state) => {
         assert.equal(args[0].length, 1);
@@ -37,3 +38,4 @@ const origin = 'http://127.0.0.1:4173', reports = [];
     fs.writeFileSync('test-results/telemetry-isolated.json', JSON.stringify(reports, null, 2));
   }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
