@@ -1,0 +1,28 @@
+name: One approved public catalog latency sample
+on:
+  push:
+    branches: ['diagnose/catalog-latency-20261010-once']
+permissions:
+  contents: read
+jobs:
+  sample-once:
+    if: github.run_attempt == 1 && github.event.created == true && github.event.before == '0000000000000000000000000000000000000000'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: One public catalog read, other POSTs blocked
+        env:
+          CT_ALLOW_ONE_PUBLIC_CATALOG_READ: 'true'
+        run: node tests/diagnostics/catalog-one-shot.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: catalog-one-shot-timings
+          path: test-results/catalog-one-shot/timings.json
+          retention-days: 7
