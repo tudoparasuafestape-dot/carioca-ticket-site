@@ -73,7 +73,12 @@
         fallback.textContent = tr('coverLoading', 'Carregando capa…');
         image.onload = function () { image.style.opacity = '1'; fallback.hidden = true; };
         image.onerror = function () { image.hidden = true; fallback.hidden = false; fallback.textContent = tr('coverMissing', 'Capa indisponível'); };
-        image.src = src;
+        // Overlapped carousel cards are all geometrically near the viewport,
+        // so native lazy loading alone can fetch the complete catalog. Only a
+        // successfully initialized rail defers URLs beyond its first pair.
+        // Without that optional enhancement, retain native lazy-list behavior.
+        if (visibleIndex > 1 && grid.dataset.catalogCoverWindow === 'ready') image.dataset.catalogSrc = src;
+        else image.src = src;
         cover.appendChild(image);
       }
       var body = node('div', 'catalog-body');

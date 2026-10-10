@@ -62,6 +62,7 @@ async function fixture(browser, variant, count, options = {}) {
       if (url.pathname === '/produtor/') return route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Prefetch fixture</title>' });
       if (url.pathname.startsWith('/__fixture/')) {
         state.imageRequests.push(url.pathname);
+        if (options.holdThirdCover && url.pathname === '/__fixture/cover-2.svg') await new Promise(resolve => { state.releaseImage = resolve; });
         if (options.imageDelay) await sleep(options.imageDelay);
         return route.fulfill({ status: options.brokenImages ? 404 : 200, contentType: 'image/svg+xml', body: cover });
       }
@@ -86,7 +87,7 @@ async function fixture(browser, variant, count, options = {}) {
       const result = state.responses.length ? state.responses.shift() : { sucesso: true, eventos: rows(count) };
       const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: !result.transportError, resultado: result };
       call.reply = await page.evaluate(() => performance.now());
-      return route.fulfill({ contentType: 'text/html', body: '<script>parent.postMessage(' + JSON.stringify(payload).replace(/</g, '\\u003c') + ', "*")</script>' });
+      return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<script>parent.postMessage(' + JSON.stringify(payload).replace(/</g, '\\u003c') + ', "*")</script>' });
     }
     state.unexpected.push(request.method() + ' ' + url.origin + url.pathname);
     return route.abort();
@@ -95,7 +96,12 @@ async function fixture(browser, variant, count, options = {}) {
   return { page, context, state, async finish() { assert.deepEqual(state.unexpected, []); assert.deepEqual(state.errors, []); await context.close(); } };
 }
 async function ready(page, count) {
-  await page.waitForFunction(n => document.querySelectorAll('.catalog-card').length === n && document.querySelector('#events-grid').getAttribute('aria-busy') === 'false', count);
+  try {
+    await page.waitForFunction(n => document.querySelectorAll('.catalog-card').length === n && document.querySelector('#events-grid').getAttribute('aria-busy') === 'false', count);
+  } catch (error) {
+    console.error('Synthetic readiness failure', await page.evaluate(expected => ({ expected, count: document.querySelectorAll('.catalog-card').length, busy: document.querySelector('#events-grid').getAttribute('aria-busy'), query: document.querySelector('#event-search-input').value, status: document.querySelector('#catalog-status').textContent, names: Array.from(document.querySelectorAll('.catalog-title'), n => n.textContent) }), count));
+    throw error;
+  }
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 }
 async function snapshot(page) { return page.evaluate(() => ({ ...window.__perf })); }
@@ -113,6 +119,8 @@ async function benchmark(browser, variant, count) {
   await f.page.locator('.catalog-card').first().locator('img').evaluate(img => img.decode());
   const first = await snapshot(f.page);
   const firstCoverAt = await f.page.evaluate(() => performance.now());
+  const initialImageRequests = f.state.imageRequests.length;
+  const initialImageSources = await f.page.locator('.catalog-photo img[src]').count();
   const filtered = await filter(f.page, 'Recife');
   await ready(f.page, Math.floor(count / 2));
   const restored = await filter(f.page, '');
@@ -127,7 +135,7 @@ async function benchmark(browser, variant, count) {
     await f.page.waitForFunction(() => document.querySelector('#events-grid').dataset.activeIndex === '1');
   }
   assert.equal(f.state.calls.length, 1);
-  const result = { variant, count, rpcStartMs: f.state.calls[0].start, rpcReplyMs: f.state.calls[0].reply, cardsAtMs: first.cardsAt, firstCoverAtMs: firstCoverAt, firstCreated: first.created, filtered, restored, rotation, imageRequests: f.state.imageRequests.length };
+  const result = { variant, count, rpcStartMs: f.state.calls[0].start, rpcReplyMs: f.state.calls[0].reply, cardsAtMs: first.cardsAt, firstCoverAtMs: firstCoverAt, firstCreated: first.created, initialImageRequests, initialImageSources, filtered, restored, rotation, imageRequests: f.state.imageRequests.length };
   await f.finish();
   return result;
 }
@@ -138,9 +146,14 @@ async function regression(browser) {
     await ready(f.page, n);
     assert.deepEqual(await f.page.locator('.catalog-card').evaluateAll(nodes => nodes.map(n => n.dataset.eventId)), rows(n).map(e => e.id));
     if (n > 1) {
+      assert(f.state.imageRequests.length <= 2, 'Only the initial pair of covers may start before interaction');
+      assert.equal(await f.page.locator('.catalog-photo img[src]').count(), 2);
       await f.page.locator('#events-grid').focus(); await f.page.keyboard.press('End');
       assert.equal(await f.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), 'SYNTHETIC-' + (n - 1));
       await f.page.locator('.catalog-card:not([inert]) img').evaluate(img => img.decode());
+      await f.page.keyboard.press('Home');
+      await f.page.keyboard.press('ArrowLeft');
+      assert.equal(await f.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), 'SYNTHETIC-' + (n - 1));
       await f.page.keyboard.press('Home');
     }
     await filter(f.page, 'Recife'); await ready(f.page, Math.floor(n / 2));
@@ -184,6 +197,8 @@ async function regression(browser) {
   const missing = await fixture(browser, 'after', 3, { noRail: true, brokenImages: true });
   await ready(missing.page, 3);
   assert.equal(await missing.page.locator('.catalog-actions .btn-primary').count(), 3);
+  assert.equal(await missing.page.locator('.catalog-photo img[src]').count(), 3);
+  assert.equal(await missing.page.locator('[data-catalog-src]').count(), 0);
   await missing.finish(); passed++;
   const initialFilter = await fixture(browser, 'after', 15, { hold: true });
   await filter(initialFilter.page, 'sintético 5');
@@ -216,6 +231,37 @@ async function regression(browser) {
   await share.page.locator('#event-rail-next').click();
   assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), '1');
   await share.finish(); passed++;
+  const drag = await fixture(browser, 'after', 3); await ready(drag.page, 3);
+  async function dragStart() {
+    const cover = drag.page.locator('.catalog-card:not([inert]) .catalog-photo');
+    await cover.scrollIntoViewIfNeeded(); const box = await cover.boundingBox();
+    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await drag.page.mouse.move(point.x, point.y); await drag.page.mouse.down(); return point;
+  }
+  let point = await dragStart();
+  await drag.page.mouse.move(point.x - 90, point.y, { steps: 4 });
+  await drag.page.mouse.move(point.x + 90, point.y, { steps: 6 });
+  await drag.page.mouse.up();
+  assert.equal(await drag.page.locator('#events-grid').getAttribute('data-active-index'), '2');
+  await drag.page.locator('.catalog-card:not([inert]) img').evaluate(img => img.decode());
+  point = await dragStart(); await drag.page.mouse.move(point.x - 90, point.y, { steps: 4 });
+  await drag.page.locator('#events-grid').dispatchEvent('pointercancel', { pointerId: 1, pointerType: 'mouse', isPrimary: true });
+  await drag.page.mouse.up();
+  assert.equal(await drag.page.locator('#events-grid').getAttribute('data-active-index'), '2');
+  assert.equal(await drag.page.locator('.catalog-card:not([inert])').count(), 1);
+  assert.equal(drag.page.url(), ORIGIN + '/');
+  await drag.finish(); passed++;
+  const lateCover = await fixture(browser, 'after', 3, { holdThirdCover: true, brokenImages: true }); await ready(lateCover.page, 3);
+  await lateCover.page.locator('#events-grid').focus(); await lateCover.page.keyboard.press('End');
+  const loadingCover = lateCover.page.locator('.catalog-card:not([inert])');
+  assert.equal(await loadingCover.locator('.catalog-image-fallback').textContent(), 'Carregando capa…');
+  const coverDeadline = Date.now() + 5000;
+  while (!lateCover.state.releaseImage && Date.now() < coverDeadline) await sleep(10);
+  assert.equal(typeof lateCover.state.releaseImage, 'function'); lateCover.state.releaseImage();
+  await lateCover.page.waitForFunction(() => document.querySelector('.catalog-card:not([inert]) .catalog-image-fallback').textContent === 'Capa indisponível');
+  assert.equal(await loadingCover.locator('.catalog-title').textContent(), 'Evento sintético 2');
+  assert.equal(await loadingCover.locator('.btn-primary').getAttribute('href'), '/checkout/?evento=SYNTHETIC-2');
+  await lateCover.finish(); passed++;
   return passed;
 }
 (async () => {
@@ -236,6 +282,8 @@ async function regression(browser) {
       assert(after.restored.created < before.restored.created);
       assert(after.rotation.attributes < before.rotation.attributes);
       assert(after.rpcStartMs < before.rpcStartMs);
+      assert(after.initialImageRequests <= 2);
+      assert.equal(after.initialImageSources, 2);
     }
     fs.writeFileSync(path.join(OUT, 'results.json'), JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report, null, 2));

@@ -65,6 +65,11 @@
   function show(card, distance) {
     card.style.transition = 'none'; card.style.visibility = 'visible';
     card.style.transform = 'translateX(' + distance + 'px)';
+    var image = card.querySelector('.catalog-photo img[data-catalog-src]');
+    if (image) {
+      image.loading = 'eager'; image.src = image.dataset.catalogSrc;
+      image.removeAttribute('data-catalog-src');
+    }
     visibleCards.push(card);
   }
   function schedule(delay) {
@@ -212,6 +217,8 @@
   new MutationObserver(reset).observe(grid, { childList: true });
   document.addEventListener('ct:language', function () { labelCards(); labels(); });
   reset();
+  // Advertise the opt-in only after this optional enhancement initializes.
+  grid.dataset.catalogCoverWindow = 'ready';
 }());
 
 
