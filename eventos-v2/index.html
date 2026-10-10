@@ -2129,6 +2129,7 @@
           '</div>' +
 
           '<div class="evento-acoes">' +
+            '<a class="botao botao-secundario" href="/produtor/destino/?evento=' + encodeURIComponent(String(evento.id || '')) + '">Formato e localização</a>' +
             (evento.id === 'EVT-23112026-ERA-BEAUTY-EAC4B673' ? '<button class="botao botao-secundario" type="button" data-era-approved-visual="EVT-23112026-ERA-BEAUTY-EAC4B673">Aplicar visual aprovado do ERA</button>' : '') +
             botaoAtivar +
             '<button class="botao botao-secundario" type="button" onclick="abrirModalidadeEvento(\'' +
@@ -3110,7 +3111,7 @@
             }
 
             mostrarMensagemCadastro(
-              'Evento salvo como rascunho e enviado automaticamente para análise da Carioca Ticket. Você não precisa solicitar autorização em outra tela.',
+              'Evento salvo como rascunho e enviado para análise. Agora configure o ponto de chegada em Formato e localização, no cartão deste evento.',
               true
             );
 
@@ -3738,3 +3739,4 @@
   <script src="/assets/era-approved-visual.js?v=20261008-category"></script>
 </body>
 </html>
+

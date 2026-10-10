@@ -253,12 +253,12 @@
   <link rel="stylesheet" href="/assets/event-accessibility.css?v=20261009-visibility">
   <link rel="stylesheet" href="/assets/event-directions.css?v=20261009-1">
   <link rel="stylesheet" href="/assets/event-i18n.css?v=20261009-1">
-  <script src="/assets/event-directions.js?v=20261009-1"></script>
+  <script src="/assets/event-directions.js?v=20261010-universal1"></script>
   <link rel="stylesheet" href="/assets/event-uber.css?v=20261010-5">
   <script src="/assets/event-ride-destinations.js?v=20261010-3"></script>
-  <script src="/assets/event-uber.js?v=20261010-4"></script>
+  <script src="/assets/event-uber.js?v=20261010-universal1"></script>
   <link rel="stylesheet" href="/assets/event-map-preview.css?v=20261010-privacy1">
-  <script src="/assets/event-map-preview.js?v=20261010-privacy1"></script>
+  <script src="/assets/event-map-preview.js?v=20261010-universal1"></script>
   <script src="/assets/event-description-speech.js?v=20261009" defer></script>
   <script src="/assets/public-share.js?v=20261010-whatsapp1"></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
@@ -810,6 +810,9 @@
 
       function showError(msg,retryable){
         if(window.CTEventUber)window.CTEventUber.clear();
+        if(window.CTEventMapPreview)window.CTEventMapPreview.clear();
+        if(window.CTEventDirections)window.CTEventDirections.render({},state.eventoId);
+        state.data=null;
         if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('loading').classList.add('hidden');
         $('app').classList.add('hidden');
@@ -836,7 +839,7 @@
         // Language-only updates must not recreate a loaded map or reset direction state.
         // These components translate themselves via ct:public-language.
         if(!languageOnly){
-          if(window.CTEventDirections)window.CTEventDirections.render(e);
+          if(window.CTEventDirections)window.CTEventDirections.render(e,state.eventoId);
           if(window.CTEventUber)window.CTEventUber.render(e,state.eventoId);
           if(window.CTEventMapPreview)window.CTEventMapPreview.renderPublicDirections();
         }
@@ -919,6 +922,9 @@
         if(loadRunning)return;
         loadRunning=true;
         if(window.CTEventUber)window.CTEventUber.clear();
+        if(window.CTEventMapPreview)window.CTEventMapPreview.clear();
+        if(window.CTEventDirections)window.CTEventDirections.render({},state.eventoId);
+        state.data=null;
         if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('errorBox').classList.add('hidden');
         $('retryEventLoad').classList.add('hidden');

@@ -19,12 +19,29 @@
   function resolve(event, requestedId) {
     if (!event || typeof event !== 'object') return null;
     var id = text(event.id);
-    var records = window.CTEventRideDestinations;
-    if (!id || id !== text(requestedId) || !records || !Object.prototype.hasOwnProperty.call(records, id)) return null;
-    var point = records[id];
+    if (!id || id !== text(requestedId)) return null;
+    var point;
+    if (Object.prototype.hasOwnProperty.call(event, 'destinoTransporte')) {
+      // A present null/unconfirmed contract revokes any legacy registry fallback.
+      var destination = event.destinoTransporte;
+      if (!destination || destination.version !== 1 || destination.eventId !== id ||
+          destination.confirmed !== true || !Number.isSafeInteger(destination.revision) ||
+          destination.revision < 1 || !destination.location) return null;
+      point = { approved: true, revision: String(destination.revision),
+        latitude: destination.latitude, longitude: destination.longitude,
+        local: destination.location.local, endereco: destination.location.endereco,
+        cidade: destination.location.cidade, uf: destination.location.uf,
+        addressLine1: text(destination.location.local),
+        addressLine2: [text(destination.location.endereco), text(destination.location.cidade), text(destination.location.uf), 'Brasil'].join(', ') };
+    } else {
+      // Transitional compatibility only until every existing event is migrated.
+      var records = window.CTEventRideDestinations;
+      if (!records || !Object.prototype.hasOwnProperty.call(records, id)) return null;
+      point = records[id];
+    }
     if (!point || point.approved !== true || !text(point.revision)) return null;
-    // The current public payload has no coordinate/veracity fields. Only this
-    // reviewed registry is eligible, and a changed venue invalidates the pin.
+    // Both the new public contract and the transitional reviewed registry
+    // are bound to the current event location; changed venue invalidates the pin.
     if (!['local', 'endereco', 'cidade', 'uf'].every(function (key) {
       return text(event[key]) && signature(event[key]) === signature(point[key]);
     })) return null;
@@ -46,6 +63,10 @@
     var point = resolve(event, requestedId);
     if (!point) return '';
     return 'https://waze.com/ul?ll=' + encodeURIComponent(point.latitude + ',' + point.longitude) + '&navigate=yes';
+  }
+  function buildMapsDestination(event, requestedId) {
+    var point = resolve(event, requestedId);
+    return point ? point.latitude + ',' + point.longitude : '';
   }
   function locale() {
     try {
@@ -105,5 +126,5 @@
   document.addEventListener('ct:public-language', refreshLanguage);
   window.addEventListener('storage', function (event) { if (!event.key || event.key === 'ct-home-locale') refreshLanguage(); });
   window.addEventListener('pageshow', refreshLanguage);
-  window.CTEventUber = Object.freeze({ render: render, clear: clear, buildUrl: buildUrl, buildWazeUrl: buildWazeUrl });
+  window.CTEventUber = Object.freeze({ render: render, clear: clear, buildUrl: buildUrl, buildWazeUrl: buildWazeUrl, buildMapsDestination: buildMapsDestination });
 }());
