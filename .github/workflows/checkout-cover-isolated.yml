@@ -1,0 +1,32 @@
+name: Checkout cover fallback (isolated)
+on:
+  pull_request:
+    paths:
+      - 'checkout/index.html'
+      - 'checkout-v2/index.html'
+      - 'tests/checkout-cover*'
+      - '.github/workflows/checkout-cover-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  cover-fallback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/checkout-cover-contract.cjs
+      - name: Both checkout pages and real image races, entirely mocked
+        env:
+          CT_EVIDENCE_DIR: test-results/checkout-cover
+        run: node tests/checkout-cover.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checkout-cover-review
+          path: test-results/checkout-cover
+          if-no-files-found: warn
