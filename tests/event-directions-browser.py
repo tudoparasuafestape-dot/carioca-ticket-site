@@ -12,7 +12,7 @@ ORIGIN = 'http://127.0.0.1:42973'
 EVENT = dict(local='Espaço São João & Arte', endereco='Rua da Música, 120', cidade='Recife', uf='PE')
 DEST = 'Espaço São João & Arte, Rua da Música, 120, Recife, PE, Brasil'
 FIXTURE = dict(sucesso=True, evento=dict(EVENT, nome='Evento de demonstração', data='20/12/2030'), visual={}, tipos=[])
-checks, blocked, errors = [], [], []
+checks, blocked, errors, map_mocks = [], [], [], []
 PRELUDE = '''HTMLFormElement.prototype.submit = function() {
  const data = new FormData(this);
  if (data.get('metodo') !== 'ctEventoPublicoCarregarPROD') throw new Error('Unexpected RPC');
@@ -28,6 +28,13 @@ navigator.geolocation.watchPosition = () => { throw new Error('Unexpected geoloc
 
 def route(r):
     u = r.request.url
+    parsed = urlsplit(u)
+    if (r.request.method == 'GET' and parsed.scheme == 'https' and
+        parsed.netloc == 'maps.google.com' and parsed.path == '/maps' and
+        parse_qs(parsed.query) == dict(output=['embed'], q=[DEST])):
+        # Expected inline map is fulfilled locally: fixture address never leaves CI.
+        map_mocks.append(u)
+        return r.fulfill(content_type='text/html; charset=utf-8', body='<html><meta charset="utf-8"><p>Mapa fictício para teste de direções</p></html>')
     if not u.startswith(ORIGIN + '/') or r.request.method != 'GET':
         blocked.append(u); return r.abort()
     p = urlsplit(u).path
@@ -107,5 +114,6 @@ with sync_playwright() as pw:
     browser.close()
 assert not blocked, blocked
 assert not errors, errors
-(OUT/'results.json').write_text(json.dumps(dict(layout_checks=checks, functional_pages=2, blocked=blocked, errors=errors), indent=2))
-print(f'{len(checks)} layout cases and 2 functional page suites passed; zero external requests or production RPC.')
+(OUT/'results.json').write_text(json.dumps(dict(layout_checks=checks, functional_pages=2, blocked=blocked, errors=errors, mocked_map_requests=len(map_mocks)), indent=2))
+print(f'{len(checks)} layout cases and 2 functional page suites passed; zero real external traffic or production RPC; expected map frames mocked locally.')
+

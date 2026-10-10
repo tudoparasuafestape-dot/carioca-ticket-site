@@ -1,0 +1,32 @@
+name: Event map integration (isolated)
+on:
+  pull_request:
+    paths:
+      - 'evento/**'
+      - 'evento-v2/**'
+      - 'assets/event-map-preview.*'
+      - 'tests/event-map-*'
+      - '.github/workflows/event-map-integration.yml'
+permissions:
+  contents: read
+jobs:
+  integrated-map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npx playwright install --with-deps chromium
+      - name: Map contracts and both public-route browser matrices
+        run: |
+          node --check assets/event-map-preview.js
+          node tests/event-map-contract.cjs
+          node tests/event-map-integration.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-event-map-integration
+          path: test-results/event-map-integration

@@ -271,6 +271,8 @@
   <link rel="stylesheet" href="/assets/event-accessibility.css?v=20261009-visibility">
   <link rel="stylesheet" href="/assets/event-directions.css?v=20261009-1">
   <script src="/assets/event-directions.js?v=20261009-1"></script>
+  <link rel="stylesheet" href="/assets/event-map-preview.css?v=20261010-1">
+  <script src="/assets/event-map-preview.js?v=20261010-1"></script>
   <script src="/assets/event-description-speech.js?v=20261009" defer></script>
   <script src="/pwa-register.js" defer></script>
 </head>
@@ -509,6 +511,7 @@
               </div>
               <p id="directions-help">Confira o destino antes de sair. Para usar Uber ou 99, copie o endereço e cole no aplicativo.</p>
               <p id="directions-status" role="status" aria-live="polite" aria-atomic="true"></p>
+              <div id="directions-map-preview" hidden></div>
             </div>
           </article>
 
@@ -755,6 +758,7 @@
         $('venue').textContent=[e.local,e.endereco].filter(Boolean).join(' · ')||'A confirmar';
         $('city').textContent=[e.cidade,e.uf].filter(Boolean).join(' / ')||'A confirmar';
         if(window.CTEventDirections)window.CTEventDirections.render(e);
+        if(window.CTEventMapPreview)window.CTEventMapPreview.renderPublicDirections();
         $('producer').textContent=v.realizacao||'Produção do evento';
         $('category').textContent=v.categoria||'Evento Carioca Ticket';
         $('highlight').textContent=v.destaque||'Uma experiência para viver.';
