@@ -24,6 +24,8 @@ def route(r):
   text=re.sub(r'<iframe\b[^>]*>[\s\S]*?</iframe>','',text,flags=re.I)
   text=re.sub(r'<link\b[^>]*href=["\']https?://[^>]*>','',text,flags=re.I)
   text=re.sub(r'<link\b[^>]*rel=["\'](?:manifest|prefetch|preconnect|dns-prefetch)["\'][^>]*>','',text,flags=re.I)
+  # The producer-request loader is controlled by auth; hide it only in this static visual fixture.
+  if path=='produtor/solicitar/index.html':text=text.replace('</head>','<style>#loading{display:none!important}</style></head>')
   data=text.encode()
  return r.fulfill(content_type={'.html':'text/html','.css':'text/css','.png':'image/png','.svg':'image/svg+xml'}.get(f.suffix,'text/plain'),body=data)
 with sync_playwright() as pw:
