@@ -12,11 +12,11 @@ HTMLFormElement.prototype.submit=function(){
  const sig=JSON.stringify(Object.values(location).map(s=>s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/\\s*,\\s*/g,',')));
  const key='CT_DEST_TEST_'+id,record=JSON.parse(sessionStorage.getItem(key)||'null');let result,error;
  if(new URLSearchParams(window.location.search).get('scenario')==='denied')error='CT_DESTINO_ACESSO_NEGADO';
- else if(method==='ctEventoDestinoCarregarPROD')result={sucesso:true,evento:{id,nome:'Evento de teste',...location},locationSignature:sig,revision:record?record.revision:0,status:record&&record.confirmed?'CONFIRMADO':'PENDENTE',destinoTransporte:record&&record.confirmed?record:null};
+ else if(method==='ctEventoDestinoCarregarPROD')result={sucesso:true,evento:{id,nome:'Evento de teste',...location},locationSignature:sig,revision:record?record.revision:0,format:record?record.format:'',status:record&&record.confirmed?'CONFIRMADO':'PENDENTE',destinoTransporte:record&&record.confirmed&&record.format!=='ONLINE'?record:null};
  else if(new URLSearchParams(window.location.search).get('scenario')==='conflict')error='CT_DESTINO_REVISAO_DIVERGENTE';
  else if(method==='ctEventoDestinoSalvarPROD'){
   const d=args[2];if(d.expectedRevision!==(record?record.revision:0))error='CT_DESTINO_REVISAO_DIVERGENTE';
-  else{const value={version:1,eventId:id,revision:d.expectedRevision+1,confirmed:true,latitude:d.latitude,longitude:d.longitude,location};sessionStorage.setItem(key,JSON.stringify(value));result={sucesso:true,revision:value.revision,destinoTransporte:value};}
+  else{const value={version:1,eventId:id,revision:d.expectedRevision+1,confirmed:true,format:d.format,latitude:d.latitude,longitude:d.longitude,location};sessionStorage.setItem(key,JSON.stringify(value));result={sucesso:true,revision:value.revision,destinoTransporte:value.format==='ONLINE'?null:value};}
  }else{const value={...record,confirmed:false,revision:record.revision+1};sessionStorage.setItem(key,JSON.stringify(value));result={sucesso:true,revision:value.revision,destinoTransporte:null};}
  const frame=document.querySelector('iframe[name="'+this.target+'"]');
  const payload={fixtureTimeout:new URLSearchParams(window.location.search).get('scenario')==='timeout',ctMinhaCariocaPost:true,id:f.get('ctMinhaCariocaRequestId'),ok:!error,resultado:result,erro:error};
