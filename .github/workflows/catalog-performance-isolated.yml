@@ -1,0 +1,35 @@
+name: Public catalog performance (isolated)
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'assets/public-event-catalog.js'
+      - 'assets/home-event-rail.js'
+      - 'tests/catalog-performance-isolated.cjs'
+      - '.github/workflows/catalog-performance-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  catalog-performance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Syntax and synthetic before-after comparison
+        run: |
+          node --check assets/public-event-catalog.js
+          node --check assets/home-event-rail.js
+          node tests/catalog-performance-isolated.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: catalog-performance-isolated
+          path: test-results/catalog-performance/
+          retention-days: 14

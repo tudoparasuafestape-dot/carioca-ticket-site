@@ -255,8 +255,10 @@ test('existing home destinations and the public transport contract remain unchan
   expect([...new Set(hrefs)].filter(href => !actual.includes(href))).toEqual([]);
   const oldCatalog = execFileSync('git', ['show', 'edcfe04d:assets/public-event-catalog.js'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   const catalog = fs.readFileSync(path.join(ROOT, 'assets/public-event-catalog.js'), 'utf8').replace(/\r\n/g, '\n');
-  const marker = '  // Reuse the public POST/iframe bridge';
-  expect(catalog.slice(catalog.indexOf(marker))).toBe(oldCatalog.slice(oldCatalog.indexOf(marker)));
+  // Scheduling may start the public read earlier; the complete transport
+  // implementation (endpoint, fields, origin checks and timeout) stays exact.
+  const adapter = code => code.match(/  function loadPublicEvents\(\) \{[\s\S]*?\n  \}/)[0];
+  expect(adapter(catalog)).toBe(adapter(oldCatalog));
   expect(fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8').replace(/\r\n/g, '\n')).toBe(execFileSync('git', ['show', 'edcfe04d:styles.css'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n'));
 });
 
@@ -883,6 +885,7 @@ for (const width of [320, 375, 390]) for (const enlarged of [false, true]) {
     expect(state.blocked).toEqual([]);
   });
 }
+
 
 
 

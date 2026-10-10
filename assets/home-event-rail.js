@@ -10,7 +10,7 @@
   var motionNote = document.getElementById('event-rail-motion-note');
   var announcement = document.getElementById('event-rail-announcement');
   var reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  var cards = [], index = 0, paused = false, visible = false, hovered = false;
+  var cards = [], visibleCards = [], index = 0, paused = false, visible = false, hovered = false;
   var timer, animationTimer, frame, moving = false, drag = null, clickBlockedUntil = 0, toggleIntent = null;
   var INTERVAL = 5000, DURATION = 320;
   var sharing = new Set();
@@ -24,11 +24,14 @@
     document.getElementById('event-rail-previous').disabled = sharing.size > 0;
     document.getElementById('event-rail-next').disabled = sharing.size > 0;
     pause.dataset.i18n = paused ? 'railPlay' : 'railPause';
-    H.applyTranslations(host);
+    H.applyTranslations(controls);
     position.textContent = cards.length ? H.t('railPosition', { n: index + 1, total: cards.length }) : '';
     position.lang = H.locale;
     announcement.setAttribute('aria-live', paused ? 'polite' : 'off');
     grid.setAttribute('aria-label', H.t('eventFeature'));
+  }
+  function labelCards() {
+    H.applyTranslations(host);
     cards.forEach(function (card, number) {
       card.setAttribute('role', 'group');
       card.setAttribute('aria-roledescription', H.t('railSlide'));
@@ -42,15 +45,27 @@
   }
   function paint() {
     var distance = step();
-    cards.forEach(function (card, number) {
-      var current = number === index, peek = cards.length > 1 && number === modulo(index + 1);
-      card.style.transition = 'none';
-      card.style.transform = 'translateX(' + (current ? 0 : distance) + 'px)';
-      card.style.visibility = current || peek ? 'visible' : 'hidden';
-      card.inert = !current;
-      card.setAttribute('aria-hidden', String(!current));
-    });
+    hideVisible();
+    if (cards.length) {
+      show(cards[index], 0);
+      cards[index].inert = false; cards[index].setAttribute('aria-hidden', 'false');
+      if (cards.length > 1) show(cards[modulo(index + 1)], distance);
+    }
     grid.dataset.activeIndex = String(index);
+  }
+  // Reset initializes all nodes once. Animation and touch frames only update
+  // the small visible set, independent of the public catalog's length.
+  function hideVisible() {
+    visibleCards.forEach(function (card) {
+      card.style.transition = 'none'; card.style.visibility = 'hidden';
+      card.inert = true; card.setAttribute('aria-hidden', 'true');
+    });
+    visibleCards = [];
+  }
+  function show(card, distance) {
+    card.style.transition = 'none'; card.style.visibility = 'visible';
+    card.style.transform = 'translateX(' + distance + 'px)';
+    visibleCards.push(card);
   }
   function schedule(delay) {
     clearTimeout(timer);
@@ -72,9 +87,7 @@
     var from = index, target = targetIndex === undefined ? modulo(index + direction) : targetIndex;
     if (target === from) { paint(); schedule(); return; }
     var distance = step(), outgoing = cards[from], incoming = cards[target];
-    cards.forEach(function (card) { card.style.transition = 'none'; card.style.visibility = 'hidden'; card.inert = true; card.setAttribute('aria-hidden', 'true'); });
-    outgoing.style.visibility = incoming.style.visibility = 'visible';
-    outgoing.style.transform = 'translateX(0px)'; incoming.style.transform = 'translateX(' + direction * distance + 'px)';
+    hideVisible(); show(outgoing, 0); show(incoming, direction * distance);
     index = target;
     if (reduced.matches) { finish(manual); return; }
     moving = true; grid.dataset.moving = 'true';
@@ -133,10 +146,8 @@
     if (!drag.horizontal) return;
     event.preventDefault(); drag.dx = dx;
     var direction = dx < 0 ? 1 : -1, target = modulo(index + direction), distance = step();
-    cards.forEach(function (card, number) {
-      card.style.visibility = number === index || number === target ? 'visible' : 'hidden';
-      card.style.transform = 'translateX(' + (number === index ? dx : direction * distance + dx) + 'px)';
-    });
+    hideVisible(); show(cards[index], dx); show(cards[target], direction * distance + dx);
+    cards[index].inert = false; cards[index].setAttribute('aria-hidden', 'false');
   });
   function release(event, cancelled) {
     if (!drag || event.pointerId !== drag.id) return;
@@ -183,6 +194,11 @@
   function reset() {
     clearTimeout(timer); clearAnimation(); drag = null; index = 0;
     cards = Array.from(grid.children);
+    visibleCards = [];
+    cards.forEach(function (card) {
+      card.style.transition = 'none'; card.style.visibility = 'hidden';
+      card.inert = true; card.setAttribute('aria-hidden', 'true');
+    });
     grid.classList.toggle('is-event-rail', cards.length > 0);
     grid.classList.toggle('has-one-event', cards.length === 1);
     host.hidden = cards.length === 0;
@@ -191,11 +207,12 @@
     grid.setAttribute('aria-describedby', 'event-rail-help');
     host.setAttribute('aria-roledescription', H.t('railCarousel'));
     announcement.textContent = '';
-    paint(); labels(); schedule();
+    paint(); labelCards(); labels(); schedule();
   }
   new MutationObserver(reset).observe(grid, { childList: true });
-  document.addEventListener('ct:language', labels);
+  document.addEventListener('ct:language', function () { labelCards(); labels(); });
   reset();
 }());
+
 
 
