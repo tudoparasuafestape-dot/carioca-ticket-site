@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { events, cover } = require('./fixtures/home-stage1.cjs');
 const root = path.resolve(__dirname, '..');
-const port = Number(process.env.CT_EVENT_PREVIEW_PORT || 42978);
+const port = Number(process.env.CT_EVENT_PREVIEW_PORT || 42975);
 const origin = `http://127.0.0.1:${port}`;
 const fixture = {
   sucesso: true,
@@ -19,7 +19,10 @@ HTMLFormElement.prototype.submit = function () {
   const method = fields.get('metodo');
   if (fields.get('ctMinhaCariocaAction') !== 'publicRpc' ||
       !['ctEventoPublicoCarregarPROD','ctEventosPublicosListarPROD'].includes(method)) throw new Error('Blocked in synthetic preview');
+  window.__previewCalls=(window.__previewCalls||0)+1;
   const result = method === 'ctEventosPublicosListarPROD' ? ${JSON.stringify({ sucesso: true, eventos: events })} : ${JSON.stringify(fixture)};
+  if(new URL(location.href).searchParams.get('scenario') === 'fallback-fields') { result.evento.nome=''; result.tipos[0].descricao=''; }
+  if(new URL(location.href).searchParams.get('scenario') === 'failure') { result.sucesso=false;result.mensagem='Mensagem original da organização'; }
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'no-cover') {
     result.visual.capaUrl = '';
     result.visual.posterUrl = '';
@@ -38,7 +41,7 @@ document.addEventListener('click', function(event) {
   document.getElementById('preview-notice').textContent = 'Destino bloqueado nesta prévia. Nenhuma compra ou acesso externo foi feito.';
 }, true);
 </script>`;
-const csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; form-action 'none'; frame-src https://maps.google.com https://www.google.com; object-src 'none'; base-uri 'none'";
+const csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'";
 function send(res, code, type, body) {
   res.writeHead(code, { 'Content-Type': type, 'Content-Security-Policy': csp, 'Cache-Control': 'no-store' });
   res.end(body);
@@ -56,13 +59,11 @@ module.exports = http.createServer((req, res) => {
     html = html.replace(/(<body[^>]*>)/, '$1<aside id="preview-notice" style="padding:8px 16px;background:#ffd66d;color:#171717;text-align:center;font:13px system-ui">Prévia local · dados sintéticos · compras e destinos externos bloqueados</aside>');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(public-i18n\.js|event-i18n\.(?:js|css)|home-location\.(?:js|css)|event-(?:directions|map-preview)\.(?:js|css)|event-uber\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-privacy\.(?:js|css)|public-event-catalog\.js|public-share\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(public-i18n\.js|event-i18n\.(?:js|css)|home-location\.(?:js|css)|event-(?:directions|map-preview|uber)\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-(?:share|privacy)\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/plain', 'Destination blocked in synthetic preview');
   const file = path.join(root, url.pathname.slice(1));
   const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';
   send(res, 200, type, fs.readFileSync(file));
 }).listen(port, '127.0.0.1', () => console.log(`Synthetic event preview: ${origin}/evento/?evento=PREVIEW-EVENT`));
-
-
 
 

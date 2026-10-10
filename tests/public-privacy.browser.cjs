@@ -44,8 +44,10 @@ for(const route of ['/evento/','/evento-v2/']){
  await t.page.getByRole('button',{name:'Continuar sem estas opções',exact:true}).click();
  const host=t.page.locator('#directions-map-preview');await host.scrollIntoViewIfNeeded();await t.page.waitForTimeout(200);
  assert.equal(t.maps.length,0);assert.equal(await host.locator('iframe').count(),0);
+ await t.page.selectOption('#event-language','en-US');await t.page.selectOption('#event-language','pt-BR');assert.equal(t.maps.length,0);assert.equal(await host.locator('iframe').count(),0);assert.equal(await t.page.evaluate(()=>CTPrivacy.allowed('maps')),false);
  await host.getByRole('button',{name:'Carregar este mapa uma vez'}).click();await expect.poll(()=>t.maps.length).toBe(1);await expect(host.locator('iframe')).toBeVisible();
  assert.equal(await t.page.evaluate(()=>CTPrivacy.allowed('maps')),false);
+ await t.page.evaluate(()=>window.privacyMapBeforeLocale=document.querySelector('#directions-map-preview iframe'));await t.page.selectOption('#event-language','en-US');await t.page.selectOption('#event-language','pt-BR');assert(await t.page.evaluate(()=>window.privacyMapBeforeLocale===document.querySelector('#directions-map-preview iframe')));assert.equal(t.maps.length,1);
  await t.page.locator('#ct-privacy-reopen').click();await t.page.getByRole('button',{name:'Salvar escolhas',exact:true}).click();assert.equal(await host.locator('iframe').count(),0);
  await t.page.locator('#ct-privacy-reopen').click();await t.page.locator('#ct-privacy-maps').check();await t.page.getByRole('button',{name:'Salvar escolhas',exact:true}).click();
  await host.scrollIntoViewIfNeeded();await expect.poll(()=>t.maps.length).toBe(2);
@@ -53,15 +55,15 @@ for(const route of ['/evento/','/evento-v2/']){
  await t.page.locator('#ct-privacy-reopen').click();await t.page.locator('#ct-privacy-maps').uncheck();await t.page.getByRole('button',{name:'Salvar escolhas',exact:true}).click();assert.equal(await host.locator('iframe').count(),0);assert.equal(await t.page.locator('#directions-map').getAttribute('href'),before);
  await t.close('map explicit/once/revoke '+route);
 }
-for(const route of ['/','/evento/'])for(const width of [320,1440])for(const locale of ['pt-BR','en-US','es','zh-Hans'])for(const theme of ['light','dark'])for(const font of [100,150]){
- const t=await setup({width,locale,theme,font});await t.page.goto(origin+route+'?evento='+EVENT);if(route==='/evento/')await expect(t.page.locator('#app')).toBeVisible();const surface=route==='/'?'home':'event';await expect(t.page.locator('#ct-privacy-banner')).toBeVisible();
+for(const route of ['/','/evento/'])for(const width of [320,390,1440])for(const locale of ['pt-BR','en-US','es','zh-Hans'])for(const theme of ['light','dark'])for(const font of [100,150]){
+ const t=await setup({width,locale,theme,font});await t.page.goto(origin+route+'?evento='+EVENT);if(route==='/evento/')await expect(t.page.locator('#app')).toBeVisible();const surface=route==='/'?'home':'event';await t.page.evaluate(font=>{document.documentElement.style.fontSize=(16*font/100)+'px'},font);assert.equal(await t.page.evaluate(()=>getComputedStyle(document.documentElement).fontSize),(16*font/100)+'px');await expect(t.page.locator('#ct-privacy-banner')).toBeVisible();
  assert(await t.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  if(route==='/evento/'&&width===320){await t.page.locator('#buyMobile').click({trial:true});assert(await t.page.locator('#buyMobile').evaluate(e=>{const a=e.getBoundingClientRect(),b=document.getElementById('ct-privacy-banner').getBoundingClientRect();return b.bottom<=a.top||b.top>=a.bottom;}));}
  await t.page.screenshot({path:path.join(screenshotDir,`page-${surface}-${width}-${locale}-${theme}-${font}.png`)});
  await t.page.locator('#ct-privacy-banner').screenshot({path:path.join(screenshotDir,`banner-${surface}-${width}-${locale}-${theme}-${font}.png`)});
  await t.page.locator('#ct-privacy-banner button').last().click();await expect(t.page.locator('#ct-privacy-dialog')).toBeVisible();
- assert.equal(await t.page.locator('#ct-privacy-dialog').getAttribute('lang'),locale);assert(await t.page.locator('#ct-privacy-dialog').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
  await t.page.locator('#ct-privacy-dialog').screenshot({path:path.join(screenshotDir,`dialog-${surface}-${width}-${locale}-${theme}-${font}.png`)});
+ assert.equal(await t.page.locator('#ct-privacy-dialog').getAttribute('lang'),locale);assert(await t.page.locator('#ct-privacy-dialog').evaluate(e=>e.scrollWidth<=e.clientWidth+1), 'dialog overflow '+surface+' '+width+' '+locale+' '+font);
  await t.page.keyboard.press('Escape');await expect(t.page.locator('#ct-privacy-dialog')).not.toBeVisible();await expect(t.page.locator('#ct-privacy-banner button').last()).toBeFocused();
  await t.close('layout/focus '+surface+' '+width+' '+locale+' '+theme+' '+font);
 }

@@ -1,6 +1,6 @@
 # Controles de privacidade públicos: candidato para revisão
 
-Base auditada: main `e1a19fab8831cf2662a3be699dc6f1e230f89c5d`, confirmada via GitHub em 10/10/2026. Nenhum site ativo, RPC, compra, login ou deploy foi executado nesta tarefa. Alterações são somente candidatas locais.
+Base auditada: main `e1a19fab8831cf2662a3be699dc6f1e230f89c5d`, confirmada via GitHub em 10/10/2026. Nenhum site ativo, RPC, compra, login ou deploy foi executado nesta tarefa. Candidato em draft PR209, sem merge/deploy.
 
 ## Resultado e limite de escopo
 
@@ -38,7 +38,7 @@ Links usam `https://github.com/tudoparasuafestape-dot/carioca-ticket-site/blob/e
 
 Passaram:
 - `node --check` nos scripts novos/alterados e testes.
-- `node tests/public-privacy.runtime.cjs`: 14 grupos de verificações em VM isolada: ausência de envio sem escolha, recusa, opt-in, payload, limpeza seletiva, deduplicação, revogação durante atraso, fallback de evento, controlador ausente, storage inválido/bloqueado, sincronização/BFCache e estados do mapa, escopo público capturado antes dos callbacks, falha do controlador e preservação do comportamento interno.
+- `node tests/public-privacy.runtime.cjs`: 15 grupos de verificações em VM isolada: ausência de envio sem escolha, recusa, opt-in, payload, limpeza seletiva, deduplicação, revogação durante atraso, fallback de evento, controlador ausente, storage inválido/bloqueado, sincronização/BFCache e estados do mapa, escopo público capturado antes dos callbacks, falha do controlador e preservação do comportamento interno.
 - `CT_PRIVACY_BASE=../public-privacy-base node tests/public-privacy.contract.cjs`: includes e versões apenas nos HTML, texto original e lógica de compra sem alteração, função de fallback preservada, nenhuma rede nova ou limpeza geral de storage.
 - `node tests/event-map-contract.cjs`: contrato de mapa legado adaptado à autorização explícita; URL/privacidade, carregamento por visibilidade, timeout, erro, idioma, invalidação e teardown.
 - `node tests/public-i18n.runtime.cjs`: 28 testes existentes.
@@ -63,7 +63,7 @@ Não executados até conclusão:
 - Controlador ausente ou que lança erro permanece fail-closed nas páginas públicas marcadas; teste de regressão específico.
 - Banner em fluxo normal antes do conteúdo, sem posição fixa e sem backdrop; só o diálogo de detalhes voluntariamente aberto é modal. Nenhuma trava, atributo inert ou desativação de compra depende da decisão.
 - Cobertura pública e exclusão dos painéis internos agora constam nos detalhes, nas quatro línguas. Campanhas/cupons e fontes continuam explicitamente fora do controle, sem reclassificação como essenciais.
-- Contratos e 14 grupos VM passaram novamente. O teste de navegador foi ampliado, mas permanece não executado devido ao bloqueio já registrado.
+- Contratos e 15 grupos VM passaram novamente. O teste de navegador foi ampliado, mas permanece não executado devido ao bloqueio já registrado.
 
 ## Preparação para CI
 
@@ -72,3 +72,27 @@ Workflow public-privacy-isolated.yml com contents:read, sem segredos, sem deploy
 PRs concorrentes 207 (ERA/Uber) e 208 (WhatsApp) permaneciam abertos sobre a mesma base e1a19fab na preparação. Esta branch parte de main sem sobrescrever essas branches; os hunks de cache/include devem ser reconciliados quando houver integração, preservando as três entregas.
 
 Branch candidata sincronizada sobre main 96a7de5246d3bd4872a4e2e0cc24a18feabe0ec0 após merge da PR207. Registro ERA herdado da nova base; ambos os templates preservam event-ride-destinations.js?v=20261010-3. PR208 ainda independente, sem sobrescrita da sua branch.
+
+## Revisão de interface e integração (10/10/2026)
+
+Substitui a apresentação em fluxo normal descrita acima: faixa inferior compacta, com título e três ações de mesmo destaque; introdução e explicações ficam nos detalhes. A faixa mede a altura da compra móvel fixa para permanecer acima dela. Reserva espaço no rodapé e scroll-padding para não esconder o controle de reabertura. O diálogo usa cabeçalho empilhado em telas estreitas para fonte ampliada. Cabeçalho, skip link e posição natural do catálogo são preservados.
+
+Base sincronizada com main05ad109212313d6abfb744dcb23a5a4aa477536c, incorporando207 e208. WhatsApp público, pino ERA e versões de assets preservados. Contratos de cópia estática reconhecem somente os dois includes novos e o marcador/versão exatos de analytics; demais bytes continuam protegidos. Finais de linha dos14templates foram conferidos contra GitHub para evitar alterações incidentais.
+
+CI isolada dacf22ae comprovou ausência de métricas antes da escolha, recusa, opt-in e revogação em home/evento/checkout; compra móvel disponível antes da escolha; mapas com carga pontual, opt-in/revogação e links preservados nas duas páginas de evento. A matriz visual revelou overflow do cabeçalho do diálogo em320px/fonte150, corrigido no candidato subsequente. A matriz completa e demais suítes ainda precisam passar no SHA final. Nenhuma dessas verificações executa compra, login, RPC ou mapa real.
+
+## Estado do bloqueio de escrita às 10:30 UTC
+
+PR209 permanece em dacf22ae036877335750241207b1efbe1e26a1e1, base05ad109, mergeable. CI:14workflows passaram e6falharam. Home e acessibilidade têm a mesma falha:2cenários de botão A+ encoberto pela faixa (324outros casos da home passaram); correção local coloca faixa abaixo do cabeçalho/painéis existentes no empilhamento. Privacidade passou os fluxos de métricas em3páginas, mapas nas2páginas e primeiro layout; falhou no diálogo320/150, corrigido localmente. Marca pública e login tinham comparação de includes/finaldearquivo, resolvida por normalização exata e preservação dos finais originais. Pós-compra precisava allowlist dos2assets locais novos, adicionada. Todas essas correções precisam de CI no novoSHA; não constituem aprovação visual.
+
+A recriação autorizada do objeto tree imutável foi explicitamente negada após uma chamada anterior sem resultado. Nenhum novo commit ou ref foi escrito após dacf22a. Candidato local preservado. Capturas390normal e diálogo320/150corrigido ainda não existem. Não publicar nem declarar pronto. Sincronizar PR197 se ela entrar na main, preservando handler de idioma sem remontar iframe ou converter idioma em consentimento.
+
+## Retomada autorizada e integração197 (10:38 UTC)
+
+Autorização específica recebida para salvar e testar PR209, sem publicação. Branch revalidada em dacf22a; nova main a800992972ee6d6a59a0f4fd5ae06d6732716532 integrada ao candidato. Preservados scripts/dicionários de idioma, controles de idioma e handler que atualiza apenas textos sem recriar mapa em troca de idioma. Teste de privacidade ampliado para comprovar que idioma não concede permissão e não troca iframe existente. Fixtures de acessibilidade, idioma e mapa recebem somente os assets locais necessários. Matriz de privacidade agora inclui320/390/1440, ambas as páginas home/evento, quatro idiomas, dois temas e fonte100/150real conferida. Aprovação visual e CI final continuam pendentes.
+
+Às10:41UTC a tentativa e única repetição da árvore complementar da fixture de mapa foram negadas expressamente, apesar da autorização nova. Nenhum commit/ref novo foi criado. Tree principal9423b85a64de3a0a681cfef5b6495d494a2a7beb existe sem referência na branch; não inclui o ajuste complementar de fixture nem atualização final deste relatório. A branch continua dacf22a, sem CI nova ou capturas finais.
+
+## Lote autorizado de11:19UTC
+
+Main revalidada em ed0ef078fc3289cfb85fa71145db57db03304458, com197 e211. Templates checkout atualizados preservando lógica de capa, idioma de evento e todos os includes de privacidade. Branch209 revalidada em dacf22a. Novo lote autoriza salvar e testar, sem merge/deploy. Estado definitivo de CI/capturas será informado após commit verificado.

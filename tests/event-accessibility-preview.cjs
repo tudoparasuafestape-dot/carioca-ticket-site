@@ -56,7 +56,7 @@ module.exports = http.createServer((req, res) => {
     html = html.replace(/(<body[^>]*>)/, '$1<aside id="preview-notice" style="padding:8px 16px;background:#ffd66d;color:#171717;text-align:center;font:13px system-ui">Prévia local · dados sintéticos · compras e destinos externos bloqueados</aside>');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(home-location\.(?:js|css)|public-i18n\.js|event-(?:directions|map-preview)\.(?:js|css)|event-uber\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-privacy\.(?:js|css)|public-event-catalog\.js|public-share\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(home-location\.(?:js|css)|public-i18n\.js|event-i18n\.(?:js|css)|event-(?:directions|map-preview)\.(?:js|css)|event-uber\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-(?:share|privacy)\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/plain', 'Destination blocked in synthetic preview');
   const file = path.join(root, url.pathname.slice(1));
   const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';

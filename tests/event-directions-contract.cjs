@@ -16,7 +16,7 @@ for (const id of ['details','unavailable','address','map','copy','status']) elem
 };
 const window = {isSecureContext:true};
 const navigator = {clipboard:{async writeText(text) {copied.push(text);}}};
-vm.runInNewContext(source,{window,navigator,document:{getElementById(id){return elements[id];}}});
+vm.runInNewContext(source,{window,navigator,document:{addEventListener(){},getElementById(id){return elements[id];}}});
 const render=window.CTEventDirections.render;
 const el=name=>elements['directions-'+name];
 function valid(e=event) {render(e);assert.equal(el('details').hidden,false);assert.equal(el('address').value,destination);checks++;}
@@ -53,3 +53,4 @@ for(const route of ['evento','evento-v2']) {
 assert(!/fetch\(|XMLHttpRequest|navigator\.geolocation|window\.open|innerHTML|\.submit\(/.test(source));
 console.log(`${checks} isolated contract cases passed; inline scripts parsed on both event pages.`);
 })().catch(e=>{console.error(e);process.exitCode=1;});
+

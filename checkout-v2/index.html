@@ -771,12 +771,29 @@
           el.eventBack.onclick=null;
         }
 
-        if(visual.capaUrl){
-          el.checkoutCoverImage.src=visual.capaUrl;
-          el.checkoutCover.classList.remove('hidden');
-        }else{
-          el.checkoutCover.classList.add('hidden');
+        // Keep the public event cover order and try the poster if an image fails.
+        var coverImage=el.checkoutCoverImage;
+        var coverUrls=[visual.capaUrl,visual.posterUrl].filter(function(url){
+          return typeof url==='string'&&url.trim();
+        }).map(function(url){return url.trim();}).filter(function(url,index,urls){
+          return urls.indexOf(url)===index;
+        });
+        coverImage.onerror=null;
+        coverImage.removeAttribute('src');
+        el.checkoutCover.classList.add('hidden');
+        function loadNextCover(){
+          if(coverImage.onerror!==loadNextCover)return;
+          if(coverUrls.length){
+            coverImage.src=coverUrls.shift();
+            el.checkoutCover.classList.remove('hidden');
+          }else{
+            coverImage.onerror=null;
+            coverImage.removeAttribute('src');
+            el.checkoutCover.classList.add('hidden');
+          }
         }
+        coverImage.onerror=loadNextCover;
+        loadNextCover();
 
         el.typeSelect.innerHTML='<option value="">Selecione</option>';
         (state.catalog.tipos||[]).forEach(function(t){
