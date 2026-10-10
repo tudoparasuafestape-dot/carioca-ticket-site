@@ -32,7 +32,7 @@ async function fixture(browser,locale,width,options={}){
      const body=options.noCore&&url.pathname.endsWith('/public-i18n.js')?'// absent core fixture':fs.readFileSync(path.join(ROOT,files[url.pathname]));
      return route.fulfill({contentType:type+'; charset=utf-8',body});
     }
-    if(url.pathname==='/assets/carioca-ticket-logo.png')return route.fulfill({contentType:'image/png',body:Buffer.from(PIXEL.split(',')[1],'base64')});
+    if(url.pathname==='/assets/carioca-ticket-logo.png')return route.fulfill({contentType:'image/png',body:fs.readFileSync(path.join(ROOT,'assets/carioca-ticket-logo.png'))});
     throw Error('unknown local asset '+url.pathname);
    }
    assert.equal(req.url(),ENDPOINT);assert.equal(req.method(),'POST');
@@ -41,7 +41,7 @@ async function fixture(browser,locale,width,options={}){
    state.consultations.push({codigo:fields.get('codigo'),sig:fields.get('sig')});
    const result={sucesso:true,ingresso:{nome:'Participante Sintético Cupom VIP',tipo:'Participante Premium',lote:'Cupom VIP',codigo:CODE,qrUrl:QR,status:'VÁLIDO'},evento:{nome:'Evento Original Sintético',data:'10/10/2026',horario:'20h',local:'Local Original',cidade:'Recife',uf:'PE'},seguranca:{autorizaEntrada:true,mensagem:'Instrução original do ingresso sintético.'}};
    const payload=JSON.stringify({ctMinhaCariocaPost:true,id:fields.get('ctMinhaCariocaRequestId'),ok:true,resultado:result}).replace(/</g,'\\u003c');
-   return route.fulfill({contentType:'text/html',body:'<!doctype html><script>window.top.postMessage('+payload+',"*")</script>'});
+   return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><script>window.top.postMessage('+payload+',"*")</script>'});
   }catch(error){state.unexpected.push(error.message);await route.abort('blockedbyclient');}
  });
  await page.goto(ORIGIN+'/ingresso/?codigo='+CODE+'&sig='+SIG);

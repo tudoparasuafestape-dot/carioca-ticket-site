@@ -101,7 +101,7 @@ async function shot(f, routePath, mobile, stage) {
    try{
     const options={locale,clock:true,method:width===390?'CREDIT_CARD':'PIX'};
     f=await fixture(browser,routePath,width<1000,options);await f.page.setViewportSize({width,height:900});
-    await f.page.clock.pauseAt(new Date());await f.fill();
+    await f.page.clock.pauseAt(new Date(await f.page.evaluate(()=>Date.now()+60000)));await f.fill();
     const values=await f.page.locator('#buyerPanel input').evaluateAll(nodes=>nodes.map(n=>[n.id,n.value,n.checked]));
     const calls=[f.state.consults,f.state.polls,f.state.payments.length];
     for(const target of ['en-US','zh-Hans',locale])await f.page.locator('#checkoutLanguage').selectOption(target);
