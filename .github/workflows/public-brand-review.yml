@@ -1,0 +1,36 @@
+name: Public brand surfaces (isolated)
+on:
+  pull_request:
+    paths:
+      - 'assets/home.css'
+      - 'assets/advertise.css'
+      - 'assets/producer-guide.css'
+      - 'assets/public-logo-links.css'
+      - 'tests/public-brand-*'
+      - '.github/workflows/public-brand-review.yml'
+permissions:
+  contents: read
+jobs:
+  logos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: node tests/public-brand-contract.cjs
+      - run: node tests/advertise-contract.cjs
+      - run: pip install playwright==1.55.0
+      - run: python -m playwright install --with-deps chromium
+      - run: python tests/public-brand-browser.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-brand-review
+          path: test-results/public-brand/
