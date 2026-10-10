@@ -94,4 +94,5 @@
 .ct-advertise .ad-brand img { display:block; flex:none; width:42px; height:42px; max-width:none; max-height:none; margin:0; object-fit:contain; background:transparent; filter:none; }
 .ct-advertise .ad-brand .brand-name { display:block; min-width:0; font-family:system-ui,sans-serif; font-size:1.125rem; font-weight:750; line-height:1.15; letter-spacing:-.04em; color:inherit; }
 .ct-advertise .ad-brand b { font-weight:450; }
-@media(max-width:800px) { .ct-advertise .nav .ad-brand { flex:1 1 6rem; min-width:0; } .ct-advertise .ad-preferences { flex-basis:10rem; } }
+@media(max-width:800px) { .ct-advertise .nav .ad-brand { flex:0 0 auto; min-width:max-content; } .ct-advertise .ad-preferences { flex-basis:12rem; } }
+@media(max-width:480px) { .ct-advertise .nav .ad-brand { flex-basis:100%; min-width:0; } .ct-advertise .ad-preferences { flex-basis:100%; max-width:none; } }

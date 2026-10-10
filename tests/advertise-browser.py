@@ -63,6 +63,12 @@ with sync_playwright() as pw:
      assert page.locator('[data-ad-text]').evaluate_all('(nodes)=>nodes.every(n=>n.textContent.trim()&&n.lang===document.documentElement.lang)')
      for selector in ['#home-theme','#advertise-language']:
       b=page.locator(selector).bounding_box();assert b['width']>=44 and b['height']>=44
+     logo_box=page.locator('header .ad-brand').bounding_box();prefs_box=page.locator('.ad-preferences').bounding_box()
+     assert logo_box['y']+logo_box['height']<=prefs_box['y']+1 or logo_box['x']+logo_box['width']+8<=prefs_box['x'],(case,'brand/control collision')
+     assert page.locator('header .ad-brand').evaluate('e=>e.scrollWidth<=e.clientWidth+1'),(case,'brand text overflow')
+     for selector in ['#home-theme','#advertise-language']:
+      fits=page.locator(selector).evaluate('e=>{const s=getComputedStyle(e),c=document.createElement("canvas").getContext("2d");c.font=s.font;return c.measureText(e.selectedOptions[0].text).width+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)+24<=e.clientWidth}')
+      assert fits,(case,selector,'selected label clipped')
      page.evaluate('scrollTo(0,0)')
      page.locator('header').screenshot(path=str(OUT/f'header-{width}-{scale}-{theme}-{locale}.png'))
      for brand in page.locator('.ad-brand').all():
@@ -75,7 +81,8 @@ with sync_playwright() as pw:
       if scale==100:
        page.locator('header .ad-brand').screenshot(path=str(OUT/f'header-logo-{width}-{theme}.png'))
        page.locator('footer .ad-brand').screenshot(path=str(OUT/f'footer-logo-{width}-{theme}.png'))
-     if scale==100 and width in [320,390]:assert page.locator('header').bounding_box()['height'] <= before_heights[width]
+     # Two deliberate compact rows preserve the full brand and select labels on narrow screens.
+     if scale==100 and width in [320,390]:assert page.locator('header').bounding_box()['height'] <= 144
      for plan in plans:
       tab=page.locator('#ad-tab-'+plan);tab.click();tab,panel=selected(page,plan)
       assert tab.get_attribute('aria-controls')==panel.get_attribute('id')
@@ -92,7 +99,13 @@ with sync_playwright() as pw:
        panel.screenshot(path=str(OUT/f'plan-{plan}-{theme}-{locale}.png'))
       no_overflow(page,case+[plan])
      if locale=='pt-BR' and ((width in [320,390] and theme=='dark') or (width==1440 and scale==100)):
-      page.evaluate('scrollTo(0,0)');page.screenshot(path=str(OUT/f'after-{width}-{scale}-{theme}.png'),full_page=True)
+      logo_box=page.locator('header .ad-brand').bounding_box();prefs_box=page.locator('.ad-preferences').bounding_box()
+     assert logo_box['y']+logo_box['height']<=prefs_box['y']+1 or logo_box['x']+logo_box['width']+8<=prefs_box['x'],(case,'brand/control collision')
+     assert page.locator('header .ad-brand').evaluate('e=>e.scrollWidth<=e.clientWidth+1'),(case,'brand text overflow')
+     for selector in ['#home-theme','#advertise-language']:
+      fits=page.locator(selector).evaluate('e=>{const s=getComputedStyle(e),c=document.createElement("canvas").getContext("2d");c.font=s.font;return c.measureText(e.selectedOptions[0].text).width+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)+24<=e.clientWidth}')
+      assert fits,(case,selector,'selected label clipped')
+     page.evaluate('scrollTo(0,0)');page.screenshot(path=str(OUT/f'after-{width}-{scale}-{theme}.png'),full_page=True)
      checks.append(case)
  # Keyboard roving focus; wrapping arrows, Home/End, repeated clicks and panel Tab order.
  page.goto(ORIGIN+'/anuncie/');page.set_viewport_size({'width':320,'height':1000});page.locator('#ad-tab-monthly').focus()
@@ -136,3 +149,4 @@ assert not errors,errors
 assert not blocked,blocked
 (OUT/'results.json').write_text(json.dumps({'matrix':checks,'planChecks':len(checks)*4,'keyboard':True,'history':True,'noScript':True,'blockedStorage':True,'storageSynchronization':True,'beforeHeaderHeights':before_heights,'externalRequests':blocked,'errors':errors},indent=2))
 print(f'{len(checks)} responsive/font/theme/language cases and {len(checks)*4} plan panels passed; keyboard, history, no-JS and storage passed.')
+
