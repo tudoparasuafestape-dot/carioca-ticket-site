@@ -6,5 +6,9 @@
 .brand img { flex:none; width:164px; height:110px; max-width:none; object-fit:contain; }
 @media(max-width:800px) { .brand { width:80px; height:64px; } .brand img { width:144px; height:96px; } }
 
-/* Follow the transparent artwork edge to keep white lettering legible on light surfaces. */
-html[data-home-theme="light"] .brand img { filter:drop-shadow(0 0 1px #333) drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }
+
+/* Reuse the established CT symbol and theme-aware brand name without a halo. */
+.brand { display:inline-flex; flex:none; align-items:center; justify-content:flex-start; gap:9px; width:auto; height:auto; max-width:100%; min-width:44px; min-height:44px; padding:0; line-height:1.15; overflow:visible; background:transparent; border-radius:0; color:var(--ink); text-decoration:none; }
+.brand img { display:block; flex:none; width:42px; height:42px; max-width:none; max-height:none; margin:0; object-fit:contain; background:transparent; filter:none; }
+.brand .brand-name { display:block; min-width:0; font-family:system-ui,sans-serif; font-size:1.125rem; font-weight:750; line-height:1.15; letter-spacing:-.04em; color:inherit; }
+.brand b { font-weight:450; }
