@@ -48,7 +48,7 @@ with sync_playwright() as p:
      for width in [320,390,1440]:
       page.set_viewport_size({'width':width,'height':1000})
       for theme in ['light','dark']:
-       page.select_option('#home-theme',theme)
+       page.select_option('#home-theme',theme);page.wait_for_timeout(250)
        assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),f'overflow {width} {locale} {theme}'
        for selector in ['#event-language','#buyHero','#description-listen']:
         assert page.locator(selector).is_visible()
@@ -110,6 +110,18 @@ with sync_playwright() as p:
     assert not errors,errors
    finally:context.close()
   run(route+' errors preserve source',error)
+  def missing_core(route=route):
+   context,page,requests,errors=page_for(browser,'en-US')
+   context.route('**/assets/public-i18n.js*',lambda r:r.fulfill(content_type='text/javascript',body='// unavailable core fixture'))
+   try:
+    page.goto(f'{ORIGIN}/{route}/?evento=PREVIEW-EVENT&scenario=fallback-fields');page.locator('#app').wait_for(state='visible')
+    assert page.locator('#eventName').inner_text()=='Evento'
+    assert page.locator('#event-language').is_hidden()
+    assert page.locator('#buyHero').get_attribute('href').endswith('evento=PREVIEW-EVENT')
+    assert not errors,errors
+    assert not requests,requests
+   finally:context.close()
+  run(route+' absent core falls back without blocking event',missing_core)
  def continuity():
   context,page,requests,errors=page_for(browser,'en-US')
   try:
@@ -127,7 +139,9 @@ with sync_playwright() as p:
    page.locator('#shareHero').click();page.locator('#copyLinkAction').click()
    assert page.evaluate('window.__clipboard')==ORIGIN+'/evento-v2/?evento=PREVIEW-EVENT'
    page.go_back();page.locator('#app').wait_for(state='visible')
-   assert page.locator('#event-language').input_value()=='zh-Hans'
+   print("CONTINUITY_BACK",page.evaluate("({locale:CTPublicI18n.getLocale(),stored:localStorage.getItem('ct-home-locale'),seed:sessionStorage.getItem('__fixtureLocaleSeeded'),selected:document.getElementById('event-language').value,url:location.href})"))
+   page.wait_for_function("document.getElementById('event-language').value==='zh-Hans'",timeout=5000)
+   assert page.locator('#event-language').input_value()=='zh-Hans',page.evaluate("({locale:CTPublicI18n.getLocale(),stored:localStorage.getItem('ct-home-locale'),seed:sessionStorage.getItem('__fixtureLocaleSeeded'),url:location.href})")
    assert not errors,errors
    assert not requests,requests
   finally:context.close()

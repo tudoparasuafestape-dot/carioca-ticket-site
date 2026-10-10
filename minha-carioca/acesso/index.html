@@ -1,6 +1,5 @@
 <!doctype html>
 
-  function officialPurchaseLink(raw){try{var u=new URL(String(raw||''),location.href),p=String(u.searchParams.get('pedido')||'').trim(),t=String(u.searchParams.get('token')||'').trim();if(p&&t)return '/minha-carioca/?pedido='+encodeURIComponent(p)+'&token='+encodeURIComponent(t)}catch(_){}return '#'}
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -84,7 +83,11 @@
       .account-head{display:grid}.account-head h1{font-size:32px}.logout{width:max-content}
       .password-grid{grid-template-columns:1fr}.purchase-bottom{align-items:flex-end}
     }
-  </style>
+  
+.public-brand-wordmark { display:inline-flex; flex:none; align-items:center; justify-content:center; width:96px; height:72px; min-width:44px; min-height:44px; overflow:hidden; background:transparent; padding:0; }
+.public-brand-wordmark img { display:block; flex:none; width:164px; height:110px; max-width:none; max-height:none; margin:0; object-fit:contain; object-position:center; background:transparent; }
+.public-brand-wordmark:focus-visible { outline:3px solid #f1c56f; outline-offset:4px; }
+</style>
 </head>
 <body>
   <iframe
@@ -96,7 +99,7 @@
 
   <div class="wrap">
     <div class="top">
-      <a href="/" aria-label="Voltar para a home"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a>
+      <a href="/" aria-label="Voltar para a home" class="public-brand-wordmark"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a>
       <a class="back" href="/">← Voltar aos eventos</a>
     </div>
 
@@ -115,6 +118,7 @@
 <script>
 (function(){
   'use strict';
+  function officialPurchaseLink(raw){try{var u=new URL(String(raw||''),location.href),p=String(u.searchParams.get('pedido')||'').trim(),t=String(u.searchParams.get('token')||'').trim();if(p&&t)return '/minha-carioca/?pedido='+encodeURIComponent(p)+'&token='+encodeURIComponent(t)}catch(_){}return '#'}
 
   var app=document.getElementById('app');
   var pending={};
@@ -485,3 +489,4 @@
 </script>
 </body>
 </html>
+

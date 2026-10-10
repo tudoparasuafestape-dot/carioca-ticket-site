@@ -1,0 +1,18 @@
+const fs=require('node:fs'),cp=require('node:child_process'),assert=require('node:assert/strict');
+// Preserve the approved catalog release as well as the public-brand markup.
+const base='a555b3acdfa94490d33475b09404de38d07062d2';
+const pages=['index.html','anuncie/index.html','como-funciona/index.html','ajuda/index.html','sobre/index.html','termos/index.html','privacidade/index.html','cancelamento-reembolso/index.html'];
+for(const path of pages){
+ const now=fs.readFileSync(path,'utf8');
+ const local='../logo-light-home-base/'+path;
+ const old=fs.existsSync(local)?fs.readFileSync(local,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'});
+ // The logo suite must not roll back later approved script-order/version changes.
+ const oldFooter='<a class="footer-home-link" href="/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></a>';
+ const newFooter='<a class="footer-home-link" href="/" aria-label="Carioca Ticket"><img src="/assets/carioca-ticket-simbolo.png" alt="" width="42" height="42"><span>Carioca <b>Ticket</b></span></a>';
+ // Exact cache keys for the approved WhatsApp share enhancement; retain all other comparisons.
+ const normalize=s=>s.replace('/assets/public-share.js?v=20261009-card-share1','/assets/public-share.js?v=20261010-whatsapp1').replace('/assets/public-share.css?v=20261009-share1','/assets/public-share.css?v=20261010-whatsapp1').replace(newFooter,oldFooter).replace(/<a class="(ad-brand|brand)" href="\/" aria-label="Carioca Ticket"><img src="\/assets\/carioca-ticket-simbolo.png" alt="" width="42" height="42"><span class="brand-name">Carioca <b>Ticket<\/b><\/span><\/a>/g,(_,cls)=>'<a class="'+cls+'" href="/"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket" width="200" height="72"></a>').replace(/((?:home|advertise|producer-guide|public-logo-links)\.css)\?v=[^"']*/g,'$1').trim();
+ assert.equal(normalize(now),normalize(old),path+' preserves all markup, scripts, links, alt text and commercial copy');
+}
+assert.equal(fs.readFileSync('assets/advertise.js','utf8').includes('"annualPrice": "R$ 149 por mês"'),true);
+console.log('Public brand contract: only approved brand signatures and stylesheet versions change; other markup and official image bytes remain intact.');
+

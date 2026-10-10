@@ -14,3 +14,8 @@
 .ct-event .ticket-top>div{min-width:0;overflow-wrap:anywhere}
 .ct-event .share-menu{max-height:calc(100dvh - 32px);overflow:auto}
 .ct-event .event-language-control{flex-wrap:wrap}
+
+.ct-event .event-language-control[hidden]{display:none}
+/* Grid items must shrink when the original event name is long or text is enlarged. */
+.ct-event .event-copy,.ct-event .hero-grid>*,.ct-event .content-grid>*{min-width:0}
+.ct-event #eventName,.ct-event #highlight,.ct-event .meta-card strong{overflow-wrap:anywhere}

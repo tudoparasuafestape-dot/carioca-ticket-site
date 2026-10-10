@@ -639,11 +639,14 @@
     document.querySelectorAll('[data-event-i18n-alt],[data-event-i18n-title],[data-event-i18n-content]').forEach(function(node){
       ['alt','title','content'].forEach(function(attribute){var source=node.getAttribute('data-event-i18n-'+attribute);if(source)node.setAttribute(attribute,text(source));});
     });
-    var select=document.getElementById('event-language');if(select)select.value=core.getLocale();
+    var select=document.getElementById('event-language');if(select){select.value=core.getLocale();select.closest('.event-language-control').hidden=false;}
     var notice=document.getElementById('producer-language-notice');if(notice)notice.hidden=core.getLocale()==='pt-BR';
   }
   window.CTEventI18n=Object.freeze({text:text,has:has,apply:apply});
   document.addEventListener('ct:public-language',apply);
+  // Browsers can restore form controls after DOMContentLoaded on Back/Forward.
+  // The stored/core locale is authoritative; never persist a restored select value.
+  window.addEventListener('pageshow',function(){window.setTimeout(apply,0);});
   document.addEventListener('DOMContentLoaded',function(){
     var select=document.getElementById('event-language');
     if(select)select.addEventListener('change',function(){core.setLocale(select.value);});

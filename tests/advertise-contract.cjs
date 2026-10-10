@@ -44,3 +44,9 @@ assert.ok(!/\b\d+%|desconto|garantia de|milhares/i.test(html.replace(/<[^>]*>/g,
 assert.ok(html.includes('href="/"') && html.includes('id="whatsapp-note"'));
 for(const plan of plans) assert.ok(html.includes(`id="ad-tab-${plan}"`) && html.includes(`id="ad-panel-${plan}"`));
 console.log('Advertising contracts passed: four localized plans, six commercial CTAs, approved monthly prices, commitments and computed totals, no checkout or network logic.');
+
+const css = fs.readFileSync('assets/advertise.css', 'utf8');
+assert.match(css, /\.ct-advertise \.ad-brand \{[^}]*background:transparent;/);
+assert.equal((html.match(/class="ad-brand" href="\/"/g) || []).length, 2);
+assert.equal((html.match(/src="\/assets\/carioca-ticket-simbolo.png" alt=""/g) || []).length, 2);
+

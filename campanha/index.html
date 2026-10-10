@@ -19,11 +19,16 @@
 .ticket{border:1px solid rgba(85,199,137,.34);background:rgba(85,199,137,.07);border-radius:14px;padding:14px;margin-top:10px}.ticket b{display:block}.ticket small{display:block;color:var(--muted);margin-top:3px}.ticketActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.ticketActions a,.ticketActions button{min-height:42px;border:1px solid var(--line);background:#0d1117;color:var(--text);border-radius:11px;text-decoration:none;font-weight:850;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0 10px}
 .footer{text-align:center;color:#68717d;font-size:10px;margin-top:22px;line-height:1.6}.hidden{display:none!important}.loading{position:fixed;inset:0;background:rgba(5,7,10,.74);display:none;place-items:center;z-index:40}.loading.show{display:grid}.loader{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px 20px;color:var(--muted);font-size:12px}
 @media(max-width:540px){.wrap{width:min(100% - 20px,760px);padding-top:20px}.hero{padding:20px}.ticketActions{grid-template-columns:1fr}}
+
+.public-brand-wordmark { display:inline-flex; flex:none; align-items:center; justify-content:center; width:96px; height:72px; min-width:44px; min-height:44px; overflow:hidden; background:transparent; padding:0; }
+.public-brand-wordmark img { display:block; flex:none; width:164px; height:110px; max-width:none; max-height:none; margin:0; object-fit:contain; object-position:center; background:transparent; }
+.public-brand-wordmark:focus-visible { outline:3px solid #f1c56f; outline-offset:4px; }
+ .public-brand-wordmark { display:flex; margin:0 auto 18px; }
 </style>
 </head>
 <body>
 <div class="wrap">
-<img class="logo" src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket">
+<span class="public-brand-wordmark"><img src="/assets/carioca-ticket-logo.png" alt="Carioca Ticket"></span>
 <section id="hero" class="hero">
   <div class="ey">Campanha promocional</div>
   <h1 id="campaignName">Carregando campanha...</h1>

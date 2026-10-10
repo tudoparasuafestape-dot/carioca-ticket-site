@@ -179,6 +179,9 @@
       width:100%;min-height:52px;border-radius:15px;padding:0 15px;display:flex;align-items:center;gap:11px;
       border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.055);color:#fff;font-weight:900;cursor:pointer;text-align:left
     }
+    .share-option[hidden]{display:none}
+    a.share-option{text-decoration:none}
+    .share-option:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
     .share-option:hover{background:rgba(217,166,46,.11);border-color:rgba(255,214,109,.35)}
     .share-option small{display:block;color:#aeb5bf;font-weight:600;margin-top:2px}
     .trust{
@@ -274,7 +277,13 @@
   <link rel="stylesheet" href="/assets/event-directions.css?v=20261009-1">
   <link rel="stylesheet" href="/assets/event-i18n.css?v=20261009-1">
   <script src="/assets/event-directions.js?v=20261009-1"></script>
+  <link rel="stylesheet" href="/assets/event-uber.css?v=20261010-1">
+  <script src="/assets/event-ride-destinations.js?v=20261010-3"></script>
+  <script src="/assets/event-uber.js?v=20261010-1"></script>
+  <link rel="stylesheet" href="/assets/event-map-preview.css?v=20261010-1">
+  <script src="/assets/event-map-preview.js?v=20261010-1"></script>
   <script src="/assets/event-description-speech.js?v=20261009" defer></script>
+  <script src="/assets/public-share.js?v=20261010-whatsapp1"></script>
   <script src="/pwa-register.js" defer></script>
 </head>
 <body class="ct-event">
@@ -412,7 +421,7 @@
         </div>
       </a>
       <div class="top-actions">
-        <label class="event-language-control" for="event-language"><span data-public-i18n="event.Idioma">Idioma</span>
+        <label class="event-language-control" hidden for="event-language"><span data-public-i18n="event.Idioma">Idioma</span>
           <select id="event-language" aria-label="Idioma" data-public-i18n-aria-label="event.Idioma">
             <option value="pt-BR" lang="pt-BR">Português</option>
             <option value="en-US" lang="en-US">English</option>
@@ -516,11 +525,14 @@
               <label for="directions-address" data-public-i18n="event.Local e endereço informados pela organização">Local e endereço informados pela organização</label>
               <textarea id="directions-address" rows="3" readonly aria-describedby="directions-help"></textarea>
               <div class="directions-actions">
+                <a id="directions-uber" hidden target="_self" rel="noreferrer" aria-describedby="directions-uber-note"><span class="uber-wordmark" aria-hidden="true">Uber</span><span id="directions-uber-label">Ir de Uber</span><span aria-hidden="true">↗</span></a>
                 <a id="directions-map" target="_blank" rel="noopener noreferrer" aria-label="Abrir no Google Maps (nova aba)" data-public-i18n-aria-label="event.Abrir no Google Maps (nova aba)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span data-public-i18n="event.Abrir no Google Maps">Abrir no Google Maps</span><span aria-hidden="true">↗</span></a>
                 <button id="directions-copy" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></svg><span data-public-i18n="event.Copiar endereço">Copiar endereço</span></button>
               </div>
+              <p id="directions-uber-note" hidden></p>
               <p id="directions-help" data-public-i18n="event.Confira o destino antes de sair. Para usar Uber ou 99, copie o endereço e cole no aplicativo.">Confira o destino antes de sair. Para usar Uber ou 99, copie o endereço e cole no aplicativo.</p>
               <p id="directions-status" role="status" aria-live="polite" aria-atomic="true"></p>
+              <div id="directions-map-preview" hidden></div>
             </div>
           </article>
 
@@ -594,6 +606,7 @@
         <span>↗</span>
         <span><span data-public-i18n="event.Compartilhar…">Compartilhar…</span><small data-public-i18n="event.WhatsApp, Instagram e outros apps">WhatsApp, Instagram e outros apps</small></span>
       </button>
+      <a id="shareWhatsAppAction" class="share-option ct-whatsapp-share" hidden>Compartilhar no WhatsApp</a>
       <button id="copyLinkAction" class="share-option" type="button">
         <span>🔗</span>
         <span><span data-public-i18n="event.Copiar link">Copiar link</span><small data-public-i18n="event.Ideal para colar no Story ou em uma mensagem">Ideal para colar no Story ou em uma mensagem</small></span>
@@ -612,15 +625,16 @@
       var state={eventoId:'',data:null,shareToastTimer:null};
       var $=function(id){return document.getElementById(id);};
       var tr=function(source,values){return window.CTEventI18n ? window.CTEventI18n.text(source,values) : source;};
+      var locale=function(){return window.CTPublicI18n ? window.CTPublicI18n.getLocale() : 'pt-BR';};
       var errorSource='';
       function display(id,value,fallback){
         var node=$(id);
         node.textContent=value||tr(fallback);
-        node.lang=value?'pt-BR':(window.CTPublicI18n ? window.CTPublicI18n.getLocale() : 'pt-BR');
+        node.lang=value?'pt-BR':locale();
       }
       document.addEventListener('ct:public-language',function(){
         if(state.data)render(state.data);
-        if(errorSource){$('errorText').textContent=tr(errorSource);$('errorText').lang=window.CTEventI18n&&window.CTEventI18n.has(errorSource)?window.CTPublicI18n.getLocale():'pt-BR';}
+        if(errorSource){$('errorText').textContent=tr(errorSource);$('errorText').lang=window.CTEventI18n&&window.CTEventI18n.has(errorSource)?locale():'pt-BR';}
       });
 
       function esc(v){
@@ -701,7 +715,8 @@
       $('shareMenu').addEventListener('keydown',function(event){
         if(event.key==='Escape'){event.preventDefault();fecharMenuCompartilhamento();}
         if(event.key==='Tab'){
-          var buttons=Array.prototype.slice.call($('shareMenu').querySelectorAll('button:not([disabled])'));
+          var buttons=Array.prototype.slice.call($('shareMenu').querySelectorAll('button:not([disabled]),a[href]'));
+          buttons=buttons.filter(function(node){return !node.hidden;});
           var first=buttons[0],last=buttons[buttons.length-1];
           if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
           else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
@@ -746,6 +761,7 @@
       }
 
       function configurarCompartilhamento(){
+        if(window.CTPublicShare)window.CTPublicShare.eventWhatsApp($('shareWhatsAppAction'),state.data&&state.data.evento,state.eventoId,fecharMenuCompartilhamento);
         var url=linkCanonicoEvento();
 
         ['shareHero','shareMobile'].forEach(function(id){
@@ -773,12 +789,14 @@
       }
 
       function showError(msg,retryable){
+        if(window.CTEventUber)window.CTEventUber.clear();
+        if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('loading').classList.add('hidden');
         $('app').classList.add('hidden');
         $('mobileBuy').classList.add('hidden');
         errorSource=msg||'Não foi possível carregar este evento.';
         $('errorText').textContent=tr(errorSource);
-        $('errorText').lang=window.CTEventI18n&&window.CTEventI18n.has(errorSource)?window.CTPublicI18n.getLocale():'pt-BR';
+        $('errorText').lang=window.CTEventI18n&&window.CTEventI18n.has(errorSource)?locale():'pt-BR';
         $('errorBox').classList.remove('hidden');
         $('retryEventLoad').classList.toggle('hidden',retryable!==true);
       }
@@ -796,6 +814,8 @@
         display('venue',[e.local,e.endereco].filter(Boolean).join(' · '),'A confirmar');
         display('city',[e.cidade,e.uf].filter(Boolean).join(' / '),'A confirmar');
         if(window.CTEventDirections)window.CTEventDirections.render(e);
+        if(window.CTEventUber)window.CTEventUber.render(e,state.eventoId);
+        if(window.CTEventMapPreview)window.CTEventMapPreview.renderPublicDirections();
         display('producer',v.realizacao,'Produção do evento');
         display('category',v.categoria,'Evento Carioca Ticket');
         display('highlight',v.destaque,'Uma experiência para viver.');
@@ -822,7 +842,7 @@
           tickets.push(
             '<div class="ticket">'+
               '<div class="ticket-top">'+
-                '<div><h3 lang="pt-BR">'+esc(t.nome)+'</h3><p lang="'+(t.descricao?'pt-BR':window.CTPublicI18n.getLocale())+'">'+esc(t.descricao||tr('Ingresso para este evento.'))+'</p></div>'+
+                '<div><h3 lang="pt-BR">'+esc(t.nome)+'</h3><p lang="'+(t.descricao?'pt-BR':locale())+'">'+esc(t.descricao||tr('Ingresso para este evento.'))+'</p></div>'+
                 '<div class="ticket-price"><small>'+esc(tr('a partir de'))+'</small><strong>'+(menor===null?esc(tr('Consulte')):money(menor))+'</strong></div>'+
               '</div>'+
               '<div class="lots">'+lots+'</div>'+
@@ -832,7 +852,7 @@
         $('tickets').innerHTML=tickets.join('')||'<p>'+esc(tr('Nenhum ingresso disponível neste momento.'))+'</p>';
 
         document.querySelector('title').removeAttribute('data-public-i18n');
-        document.querySelector('title').lang=e.nome?'pt-BR':window.CTPublicI18n.getLocale();
+        document.querySelector('title').lang=e.nome?'pt-BR':locale();
         document.title=(e.nome?e.nome+' · ':'')+'Carioca Ticket';
         $('loading').classList.add('hidden');
         $('app').classList.remove('hidden');
@@ -868,6 +888,8 @@
       function load(){
         if(loadRunning)return;
         loadRunning=true;
+        if(window.CTEventUber)window.CTEventUber.clear();
+        if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('errorBox').classList.add('hidden');
         $('retryEventLoad').classList.add('hidden');
         $('loading').classList.remove('hidden');
@@ -916,6 +938,7 @@
   <script src="/assets/ct-analytics.js?v=20261008-recovery" defer></script>
 </body>
 </html>
+
 
 
 

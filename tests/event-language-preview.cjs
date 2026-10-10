@@ -21,6 +21,7 @@ HTMLFormElement.prototype.submit = function () {
       !['ctEventoPublicoCarregarPROD','ctEventosPublicosListarPROD'].includes(method)) throw new Error('Blocked in synthetic preview');
   window.__previewCalls=(window.__previewCalls||0)+1;
   const result = method === 'ctEventosPublicosListarPROD' ? ${JSON.stringify({ sucesso: true, eventos: events })} : ${JSON.stringify(fixture)};
+  if(new URL(location.href).searchParams.get('scenario') === 'fallback-fields') { result.evento.nome=''; result.tipos[0].descricao=''; }
   if(new URL(location.href).searchParams.get('scenario') === 'failure') { result.sucesso=false;result.mensagem='Mensagem original da organização'; }
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'no-cover') {
     result.visual.capaUrl = '';
@@ -58,7 +59,7 @@ module.exports = http.createServer((req, res) => {
     html = html.replace(/(<body[^>]*>)/, '$1<aside id="preview-notice" style="padding:8px 16px;background:#ffd66d;color:#171717;text-align:center;font:13px system-ui">Prévia local · dados sintéticos · compras e destinos externos bloqueados</aside>');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(public-i18n\.js|event-i18n\.(?:js|css)|home-location\.(?:js|css)|event-directions\.(?:js|css)|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-share\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(public-i18n\.js|event-i18n\.(?:js|css)|home-location\.(?:js|css)|event-(?:directions|map-preview|uber)\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-share\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/plain', 'Destination blocked in synthetic preview');
   const file = path.join(root, url.pathname.slice(1));
   const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';

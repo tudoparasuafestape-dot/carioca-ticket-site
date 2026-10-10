@@ -1,0 +1,6 @@
+.ct-event .directions-actions #directions-uber{background:#111;color:#fff;border-color:#767676;text-decoration:none;gap:10px;box-shadow:0 2px 0 rgba(0,0,0,.16)}
+.ct-event .directions-actions #directions-uber:hover{background:#292929;border-color:#aaa}
+.ct-event #directions-uber .uber-wordmark{font:500 16px/1 system-ui,sans-serif;letter-spacing:-.7px;border-right:1px solid #777;padding-right:10px}
+.ct-event #directions-uber-note{font-size:13px;line-height:1.5;color:var(--event-muted);margin:0 0 12px}
+.ct-event #directions-uber[hidden],.ct-event #directions-uber-note[hidden]{display:none!important}
+@media(forced-colors:active){.ct-event .directions-actions #directions-uber{background:ButtonFace;color:ButtonText;border-color:ButtonText;box-shadow:none}}

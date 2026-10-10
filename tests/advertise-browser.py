@@ -5,10 +5,10 @@ from urllib.parse import urlsplit,parse_qs
 import json,os,re,subprocess
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'test-results/advertise';OUT.mkdir(parents=True,exist_ok=True)
 ORIGIN='http://127.0.0.1:4197';checks=[];blocked=[];errors=[];baseline=False
-BASE='2f68945b70ff6c5e6612f334f35524795c17a2c5'
+BASE='7f86913bc3089eaf02632dc74c4743c937dac4d1'
 basefiles={}
 for path in ['anuncie/index.html','assets/advertise.css','assets/advertise.js']:
- local=ROOT.parent/'advertise-prices-base'/path
+ local=ROOT.parent/'advertise-logo-blend-base'/path
  basefiles['/'+path]=local.read_bytes() if local.is_file() else subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT)
 copies=json.loads(re.search(r'var dictionaries = ([\s\S]*?);\n  var select',(ROOT/'assets/advertise.js').read_text())[1])
 plans=['monthly','quarterly','halfYear','annual']
@@ -44,9 +44,11 @@ with sync_playwright() as pw:
  baseline=True
  before_heights={}
  for width in [320,390,768,1440]:
-  page.set_viewport_size({'width':width,'height':1000});page.goto(ORIGIN+'/anuncie/');page.select_option('#home-theme','dark')
-  before_heights[width]=page.locator('header').bounding_box()['height']
-  page.screenshot(path=str(OUT/f'before-{width}-dark.png'),full_page=True)
+  for theme in ['light','dark']:
+   page.set_viewport_size({'width':width,'height':1000});page.goto(ORIGIN+'/anuncie/');page.select_option('#home-theme',theme)
+   before_heights[width]=page.locator('header').bounding_box()['height']
+   page.screenshot(path=str(OUT/f'before-{width}-{theme}.png'),full_page=True)
+   page.locator('footer').screenshot(path=str(OUT/f'footer-before-{width}-{theme}.png'))
  baseline=False
  for width in [320,390,768,1440]:
   for scale in [100,150]:
@@ -61,9 +63,26 @@ with sync_playwright() as pw:
      assert page.locator('[data-ad-text]').evaluate_all('(nodes)=>nodes.every(n=>n.textContent.trim()&&n.lang===document.documentElement.lang)')
      for selector in ['#home-theme','#advertise-language']:
       b=page.locator(selector).bounding_box();assert b['width']>=44 and b['height']>=44
+     logo_box=page.locator('header .ad-brand').bounding_box();prefs_box=page.locator('.ad-preferences').bounding_box()
+     assert logo_box['y']+logo_box['height']<=prefs_box['y']+1 or logo_box['x']+logo_box['width']+8<=prefs_box['x'],(case,'brand/control collision')
+     assert page.locator('header .ad-brand').evaluate('e=>e.scrollWidth<=e.clientWidth+1'),(case,'brand text overflow')
+     for selector in ['#home-theme','#advertise-language']:
+      fits=page.locator(selector).evaluate('e=>{const s=getComputedStyle(e),c=document.createElement("canvas").getContext("2d");c.font=s.font;return c.measureText(e.selectedOptions[0].text).width+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)+24<=e.clientWidth}')
+      assert fits,(case,selector,'selected label clipped')
      page.evaluate('scrollTo(0,0)')
      page.locator('header').screenshot(path=str(OUT/f'header-{width}-{scale}-{theme}-{locale}.png'))
-     if scale==100 and width in [320,390]:assert page.locator('header').bounding_box()['height'] <= before_heights[width]
+     for brand in page.locator('.ad-brand').all():
+      assert brand.get_attribute('href')=='/'
+      assert brand.evaluate('e=>getComputedStyle(e).backgroundColor')=='rgba(0, 0, 0, 0)'
+      assert brand.locator('img').evaluate('e=>e.complete && e.naturalWidth>0')
+      box=brand.bounding_box();assert box['width']>=44 and box['height']>=44
+     if locale=='pt-BR':
+      page.locator('footer').screenshot(path=str(OUT/f'footer-after-{width}-{scale}-{theme}.png'))
+      if scale==100:
+       page.locator('header .ad-brand').screenshot(path=str(OUT/f'header-logo-{width}-{theme}.png'))
+       page.locator('footer .ad-brand').screenshot(path=str(OUT/f'footer-logo-{width}-{theme}.png'))
+     # Two deliberate compact rows preserve the full brand and select labels on narrow screens.
+     if scale==100 and width in [320,390]:assert page.locator('header').bounding_box()['height'] <= 144
      for plan in plans:
       tab=page.locator('#ad-tab-'+plan);tab.click();tab,panel=selected(page,plan)
       assert tab.get_attribute('aria-controls')==panel.get_attribute('id')
@@ -80,7 +99,13 @@ with sync_playwright() as pw:
        panel.screenshot(path=str(OUT/f'plan-{plan}-{theme}-{locale}.png'))
       no_overflow(page,case+[plan])
      if locale=='pt-BR' and ((width in [320,390] and theme=='dark') or (width==1440 and scale==100)):
-      page.evaluate('scrollTo(0,0)');page.screenshot(path=str(OUT/f'after-{width}-{scale}-{theme}.png'),full_page=True)
+      logo_box=page.locator('header .ad-brand').bounding_box();prefs_box=page.locator('.ad-preferences').bounding_box()
+     assert logo_box['y']+logo_box['height']<=prefs_box['y']+1 or logo_box['x']+logo_box['width']+8<=prefs_box['x'],(case,'brand/control collision')
+     assert page.locator('header .ad-brand').evaluate('e=>e.scrollWidth<=e.clientWidth+1'),(case,'brand text overflow')
+     for selector in ['#home-theme','#advertise-language']:
+      fits=page.locator(selector).evaluate('e=>{const s=getComputedStyle(e),c=document.createElement("canvas").getContext("2d");c.font=s.font;return c.measureText(e.selectedOptions[0].text).width+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)+24<=e.clientWidth}')
+      assert fits,(case,selector,'selected label clipped')
+     page.evaluate('scrollTo(0,0)');page.screenshot(path=str(OUT/f'after-{width}-{scale}-{theme}.png'),full_page=True)
      checks.append(case)
  # Keyboard roving focus; wrapping arrows, Home/End, repeated clicks and panel Tab order.
  page.goto(ORIGIN+'/anuncie/');page.set_viewport_size({'width':320,'height':1000});page.locator('#ad-tab-monthly').focus()
@@ -117,9 +142,11 @@ with sync_playwright() as pw:
   assert panel.locator('[data-ad-text="'+plan+'Price"]').inner_text()==copies['pt-BR'][plan+'Price']
   assert panel.locator('[data-ad-text="'+plan+'Billing"]').inner_text()==copies['pt-BR'][plan+'Billing']
  u=urlsplit(page.locator('[data-proposal="quarterly"]').get_attribute('href'));assert 'Trimestral (3 meses)' in parse_qs(u.query)['text'][0]
+ assert page.locator('footer .ad-brand').evaluate('e=>getComputedStyle(e).backgroundColor')=='rgba(0, 0, 0, 0)'
  no_overflow(page,'no-JS');page.screenshot(path=str(OUT/'noscript-320.png'),full_page=True);context.close()
  context=browser.new_context();context.route('**/*',route);context.add_init_script("Object.defineProperty(window,'localStorage',{get(){throw new Error('disabled')}})");page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.goto(ORIGIN+'/anuncie/');page.select_option('#advertise-language','es');page.select_option('#home-theme','light');page.locator('#ad-tab-quarterly').click();selected(page,'quarterly');assert page.locator('html').get_attribute('lang')=='es';assert page.locator('html').get_attribute('data-home-theme')=='light';context.close();browser.close()
 assert not errors,errors
 assert not blocked,blocked
 (OUT/'results.json').write_text(json.dumps({'matrix':checks,'planChecks':len(checks)*4,'keyboard':True,'history':True,'noScript':True,'blockedStorage':True,'storageSynchronization':True,'beforeHeaderHeights':before_heights,'externalRequests':blocked,'errors':errors},indent=2))
 print(f'{len(checks)} responsive/font/theme/language cases and {len(checks)*4} plan panels passed; keyboard, history, no-JS and storage passed.')
+
