@@ -6,9 +6,10 @@ const { events, cover } = require('./fixtures/home-stage1.cjs');
 const root = path.resolve(__dirname, '..');
 const port = Number(process.env.CT_EVENT_PREVIEW_PORT || 42979);
 const origin = `http://127.0.0.1:${port}`;
+// Location fields match the confirmed public PROD EVENTOS row 1002; all sale/content data remain synthetic.
 const fixture = {
   sucesso: true,
-  evento: { id: 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD', nome: 'Encontro de música — demonstração', data: '20/12/2030', horario: '18h às 22h', local: 'Vevets Recepções', endereco: 'Rua Arenópolis, 82', cidade: 'Jaboatão dos Guararapes', uf: 'PE' },
+  evento: { id: 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD', nome: 'Encontro de música — demonstração', data: '20/12/2030', horario: '18h às 22h', local: 'Vevets Recepções', endereco: 'Rua Arenópolis, 82 - Candeias', cidade: 'Jaboatão dos Guararapes', uf: 'PE' },
   visual: { capaUrl: '/__fixture/music.svg', categoria: 'Música · fixture', realizacao: 'Equipe de demonstração', destaque: 'Uma noite para celebrar a música.', descricaoCurta: 'Evento fictício para revisar a página pública.', descricaoCompleta: 'Venha celebrar a música com a gente.\n\nOs portões abrem às dezoito horas. O espaço terá apresentações e uma área de convivência.\n\nEsta é uma demonstração com dados sintéticos, sem venda ou emissão de ingressos.', observacoes: 'Dados sintéticos. Nenhuma compra está disponível nesta prévia.' },
   menorPreco: 'R$ 35,00',
   tipos: [{ nome: 'Entrada — demonstração', descricao: 'Acesso fictício para revisão.', lotes: [{ nome: 'Lote de demonstração', precoNumero: 35, preco: 'R$ 35,00' }] }]
@@ -22,6 +23,7 @@ HTMLFormElement.prototype.submit = function () {
   const result = method === 'ctEventosPublicosListarPROD' ? ${JSON.stringify({ sucesso: true, eventos: events })} : ${JSON.stringify(fixture)};
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'unknown') result.evento.id = 'UNKNOWN-EVENT';
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'changed') result.evento.endereco = 'Outra rua, 9';
+  if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'old-fixture') result.evento.endereco = 'Rua Arenópolis, 82';
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'no-cover') {
     result.visual.capaUrl = '';
     result.visual.posterUrl = '';

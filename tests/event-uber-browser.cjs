@@ -2,7 +2,7 @@ const {chromium}=require('@playwright/test'),fs=require('node:fs'),assert=requir
 const server=require('./event-uber-preview-server.cjs');
 const origin='http://127.0.0.1:42979',ID='EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
 const out='test-results/event-uber';fs.mkdirSync(out,{recursive:true});const report=[];
-const event={id:ID,local:'Vevets Recepções',endereco:'Rua Arenópolis, 82',cidade:'Jaboatão dos Guararapes',uf:'PE'};
+const event={id:ID,local:'Vevets Recepções',endereco:'Rua Arenópolis, 82 - Candeias',cidade:'Jaboatão dos Guararapes',uf:'PE'};
 const expected={'pt-BR':'Ir de Uber','en-US':'Go with Uber',es:'Ir con Uber','zh-Hans':'乘坐 Uber'};
 (async()=>{const browser=await chromium.launch();try{
  for(const route of ['evento','evento-v2'])for(const locale of Object.keys(expected)){
@@ -34,7 +34,7 @@ const expected={'pt-BR':'Ir de Uber','en-US':'Go with Uber',es:'Ir con Uber','zh
   await page.evaluate(()=>CTEventUber.clear());await page.evaluate(()=>dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));assert(await link.isHidden());
   assert.deepEqual(errors,[]);assert(!external.some(x=>x.includes('uber.com')));report.push({route,locale,passed:true,blockedExternal:[...new Set(external)]});await context.close();
  }
- for(const scenario of ['unknown','changed']){
+ for(const scenario of ['unknown','changed','old-fixture']){
   const context=await browser.newContext({serviceWorkers:'block'});await context.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());const page=await context.newPage();
   await page.goto(`${origin}/evento/?evento=${ID}&scenario=${scenario}`);await page.locator('#app').waitFor({state:'visible'});assert(await page.locator('#directions-uber').isHidden());assert.equal(await page.locator('#directions-uber').getAttribute('href'),null);await context.close();
  }
