@@ -23,7 +23,7 @@ def page_for(browser,locale='pt-BR',blocked=False):
   else:blocked_requests.append(r.request.url);r.abort()
  context.route('**/*',route)
  page=context.new_page();page.add_init_script(SPEECH)
- page.add_init_script("if(!sessionStorage.getItem('__fixtureLocaleSeeded')){try{localStorage.setItem('ct-home-locale',"+json.dumps(locale)+");}catch(e){}sessionStorage.setItem('__fixtureLocaleSeeded','1');}")
+ page.add_init_script("if(window===window.top&&!sessionStorage.getItem('__fixtureLocaleSeeded')){try{localStorage.setItem('ct-home-locale',"+json.dumps(locale)+");}catch(e){}sessionStorage.setItem('__fixtureLocaleSeeded','1');}")
  if blocked:page.add_init_script("Object.defineProperty(window,'localStorage',{get(){throw new Error('blocked storage');}});")
  errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  return context,page,blocked_requests,errors
