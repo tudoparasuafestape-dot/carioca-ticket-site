@@ -484,7 +484,7 @@
         var methods=el.payActionPanel.querySelector('.payment-methods');
         var step=el.payActionPanel.querySelector('.step strong');
         if(methods)methods.classList.toggle('hidden',gratuito);
-        if(step)step.textContent=gratuito?'Emitir ingresso gratuito':'Como deseja pagar?';
+        if(step)checkoutUiWrite(step,gratuito?'Emitir ingresso gratuito':'Como deseja pagar?');
         el.couponBox.classList.toggle('hidden',gratuito);
         if(gratuito){
           checkoutUiWrite(el.payButton,'Emitir ingresso gratuito');

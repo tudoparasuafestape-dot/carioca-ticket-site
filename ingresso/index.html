@@ -314,7 +314,7 @@
             '<a class="action" href="https://cariocaticket.com.br/?v=20260920-0035#todos-eventos" data-checkout-text="Ver eventos">Ver eventos</a>'+
           '</div>';
 
-        if(window.CTCheckoutLanguage){if(!seg.mensagem)checkoutUiWrite(view.querySelector('.security-note'),autoriza?'Este ingresso é individual e permite somente uma entrada.':'Este ingresso não autoriza entrada neste momento.');window.CTCheckoutLanguage.apply(view);}
+        if(window.CTCheckoutLanguage){if(!t.status)checkoutUiWrite(view.querySelector('.status'),'● Ingresso válido');if(!seg.mensagem)checkoutUiWrite(view.querySelector('.security-note'),autoriza?'Este ingresso é individual e permite somente uma entrada.':'Este ingresso não autoriza entrada neste momento.');window.CTCheckoutLanguage.apply(view);}
         var shareUrl=location.origin+location.pathname+
           '?v=20260919-2332&codigo='+encodeURIComponent(codigo)+
           '&sig='+encodeURIComponent(sig);

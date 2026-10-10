@@ -1084,5 +1084,10 @@ window.CTCheckoutTranslations={
     "en-US": "PIX copied",
     "es": "PIX copiado",
     "zh-Hans": "PIX 已复制"
+  },
+  "● Ingresso válido": {
+    "en-US": "● Valid ticket",
+    "es": "● Entrada válida",
+    "zh-Hans": "● 有效门票"
   }
 };

@@ -174,12 +174,12 @@ function fixture(locale='pt-BR',valid=true,core=true){
  document.createElement=tag=>{const e=original(tag);if(tag==='form')e.submit=()=>{submissions++};return e};
  for(const asset of [...(core?['public-i18n.js']:[]),'checkout-translations.js','checkout-language.js'])vm.runInContext(fs.readFileSync(path.join(ROOT,'assets',asset),'utf8'),context);
  for(const script of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi))if(!/\bsrc\s*=/.test(script[1]))vm.runInContext(script[2],context);
- return {sandbox,document,events,timers,get submissions(){return submissions},get printed(){return printed},respond(){
+ return {sandbox,document,events,timers,get submissions(){return submissions},get printed(){return printed},respond(status="VÁLIDO"){
  const form=document.querySelector('form');assert(form);
  const fields=Object.fromEntries(form.children.map(n=>[n.name,n.value]));
  assert.equal(fields.ctMinhaCariocaAction,'consultarIngressoSeguro');assert.equal(fields.codigo,'CT-LOCAL-123');assert.equal(fields.sig,'abcdefghijklmnop12345678');
  events.message.forEach(fn=>fn({data:{ctMinhaCariocaPost:true,id:fields.ctMinhaCariocaRequestId,ok:true,resultado:{sucesso:true,
- ingresso:{nome:'Participante Local',tipo:'Tipo original',lote:'Lote original',codigo:'CT-LOCAL-123',qrUrl:'https://qr.invalid/synthetic',status:'VÁLIDO'},
+ ingresso:{nome:'Participante Local',tipo:'Tipo original',lote:'Lote original',codigo:'CT-LOCAL-123',qrUrl:'https://qr.invalid/synthetic',status:status},
  evento:{nome:'Evento Original',data:'10/10/2026',horario:'20h',local:'Local Original',cidade:'Recife',uf:'PE'},
  seguranca:{autorizaEntrada:true,mensagem:'Instrução original revisada no backend.'}}}}));
  }};
@@ -199,4 +199,9 @@ for(const locale of ['pt-BR','en-US','es','zh-Hans']){
 }
 const invalid=fixture('en-US',false);assert.equal(invalid.submissions,0);assert.equal(invalid.document.getElementById('mensagem').textContent,'Unable to open this ticket.');passed++;
 const absent=fixture('en-US',true,false);absent.respond();assert.equal(absent.submissions,1);assert.equal(absent.document.getElementById('save-pdf').textContent,'📄 Salvar em PDF');passed++;
+for(const locale of ['pt-BR','en-US','es','zh-Hans']){
+ const f=fixture(locale);f.respond('');const status=f.document.querySelector('.status');
+ for(const target of [locale,'en-US','es','zh-Hans','pt-BR']){f.sandbox.CTPublicI18n.setLocale(target);assert.equal(status.textContent,target==='pt-BR'?'● Ingresso válido':f.sandbox.CTCheckoutTranslations['● Ingresso válido'][target]);assert.equal(f.submissions,1);}
+ const original=fixture(locale);original.respond('VÁLIDO ORIGINAL');for(const target of ['en-US','es','zh-Hans','pt-BR']){original.sandbox.CTPublicI18n.setLocale(target);assert.equal(original.document.querySelector('.status').textContent,'● VÁLIDO ORIGINAL');assert.equal(original.submissions,1);}passed++;
+}
 console.log('PASS '+passed+' ticket-language VM cases; synthetic signed links, zero network. Print invocation only; browser print layout unverified.');

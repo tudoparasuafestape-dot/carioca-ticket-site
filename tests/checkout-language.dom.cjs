@@ -121,6 +121,8 @@ class Element {
   append(...children) { children.forEach(c => this.appendChild(c)); }
   remove() { if (this.parentNode) this.parentNode.children = this.parentNode.children.filter(c => c !== this); this.parentNode = null; }
   querySelectorAll(selector) {
+    if(selector.includes(','))return [...new Set(selector.split(',').flatMap(s=>this.querySelectorAll(s.trim())))];
+    if(selector.includes(' ')){const [first,...rest]=selector.trim().split(/\s+/);return [...new Set(this.querySelectorAll(first).flatMap(node=>node.querySelectorAll(rest.join(' '))))];}
     const matches = element => {
       if (selector.startsWith('#')) return element.id === selector.slice(1);
       if (selector.startsWith('.')) return element.classList.contains(selector.slice(1));
@@ -128,7 +130,6 @@ class Element {
       if (/^[\w-]+$/.test(selector)) return element.tagName === selector.toUpperCase();
       throw new Error('Unsupported selector in the harness: ' + selector);
     };
-    if(selector.includes(','))return [...new Set(selector.split(',').flatMap(s=>this.querySelectorAll(s.trim())))];
     const result = [];
     const visit = element => { for (const child of element.children) { if (matches(child)) result.push(child); visit(child); } };
     visit(this); return result;
@@ -763,6 +764,20 @@ for(const known of [true,false])test('language actual coupon condition '+(known?
  const actual=f.element('couponMessage').textContent;
  assert.equal(actual,known?'Coupon applied! You saved '+money(10)+'. Promotional ticket: admission only. The official event cup is not included.':'Cupom aplicado! Você ganhou '+money(10)+' de desconto. '+unknown);
  for(const locale of ['zh-Hans','es','en-US']){f.sandbox.CTPublicI18n.setLocale(locale);if(!known)assert.equal(f.element('couponMessage').textContent,actual);}
+ f.finish();
+});
+
+if(process.env.CT_LOCALE_ROUTE==='checkout-v2')for(const locale of ['pt-BR','en-US','es','zh-Hans'])test('language free and paid step '+locale,()=>{
+ const f=fixture();f.sandbox.CTPublicI18n.setLocale(locale);
+ for(const index of [2,0,2]){
+  f.select(index);f.settle();
+  const key=index===2?'Emitir ingresso gratuito':'Como deseja pagar?';
+  const step=f.element('payActionPanel').querySelector('.step strong');
+  assert.equal(step.textContent,locale==='pt-BR'?key:f.sandbox.CTCheckoutTranslations[key][locale]);
+  const calls=f.state.calls.length,summary=f.element('summaryPrice').textContent;
+  for(const target of ['en-US','zh-Hans','es',locale]){f.sandbox.CTPublicI18n.setLocale(target);assert.equal(step.textContent,target==='pt-BR'?key:f.sandbox.CTCheckoutTranslations[key][target]);}
+  assert.equal(f.state.calls.length,calls);assert.equal(f.element('summaryPrice').textContent,summary);assert.equal(f.state.payments.length,0);
+ }
  f.finish();
 });
 
