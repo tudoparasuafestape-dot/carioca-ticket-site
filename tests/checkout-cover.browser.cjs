@@ -13,6 +13,7 @@ async function run(browser, routePath, mobile) {
   const context = await browser.newContext({ viewport: { width: mobile ? 320 : 1365, height: 900 }, serviceWorkers: 'block' });
   const page = await context.newPage(), errors = [], unexpected = [], images = [], held = new Map();
   page.on('pageerror', e => errors.push(e.message));
+  page.setDefaultTimeout(10000);
   await context.routeWebSocket('**/*', socket => { unexpected.push('websocket'); socket.close(); });
   await context.route('**/*', async route => {
     const req = route.request(), url = new URL(req.url());
@@ -41,11 +42,11 @@ async function run(browser, routePath, mobile) {
       const fields = new URLSearchParams(req.postData() || '');
       assert.equal(fields.get('ctMinhaCariocaAction'), 'publicRpc');
       assert.equal(fields.get('metodo'), 'ctCheckoutPublicoCarregarEventoPROD', 'No payment/order RPC allowed');
-      assert.deepEqual(JSON.parse(fields.get('argsJson')), [EVENT]);
+      assert.deepEqual(JSON.parse(fields.get('argsJson')), routePath === '/checkout-v2/' ? [EVENT, ''] : [EVENT]);
       const catalog = { sucesso: true, evento: { id: EVENT, nome: 'Próximo evento sintético' }, visual: { posterUrl: ORIGIN + '/fixture/poster.png' }, identidadeCliente: { emailObrigatorio: false }, tipos: [{ id: 'LOCAL-TYPE', nome: 'Ingresso sintético', lotes: [] }] };
       const response = JSON.stringify({ ctMinhaCariocaPost: true, id: fields.get('ctMinhaCariocaRequestId'), ok: true, resultado: catalog }).replace(/</g, '\\u003c');
       return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><script>window.top.postMessage(' + response + ',"*")</script>' });
-    } catch (error) { unexpected.push(error.message); await route.abort('blockedbyclient'); }
+    } catch (error) { unexpected.push(error.message); console.error('Blocked fixture request:', req.method(), url.origin + url.pathname, error.message); await route.abort('blockedbyclient'); }
   });
   const render = visual => page.evaluate(visual => window.__fixtureRenderCover(visual), visual);
   async function shown(file) {
