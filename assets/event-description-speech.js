@@ -16,6 +16,15 @@
   var watchdog = null;
   var chunks = [];
   var index = 0;
+  var statusMessage = '';
+
+  function text(source) {
+    return window.CTEventI18n && typeof window.CTEventI18n.text === 'function' ? window.CTEventI18n.text(source) : source;
+  }
+  function descriptionLanguage() {
+    // Producer content keeps its own language when the surrounding UI changes.
+    return (description.getAttribute('lang') || 'pt-BR').trim().replace(/_/g, '-') || 'pt-BR';
+  }
 
   // A template is inert: description markup never becomes live page content.
   function cleanText(value) {
@@ -52,10 +61,14 @@
   function update(message) {
     controls.dataset.state = state;
     listen.disabled = !voice || (active() && state !== 'paused') || !cleanText(description.textContent);
-    listen.textContent = state === 'paused' ? 'Continuar descrição' : 'Ouvir descrição';
+    listen.textContent = text(state === 'paused' ? 'Continuar descrição' : 'Ouvir descrição');
+    pause.textContent = text('Pausar');
+    stop.textContent = text('Parar');
+    controls.setAttribute('aria-label', text('Leitura da descrição'));
     pause.disabled = state !== 'playing';
     stop.disabled = !active();
-    if (message) status.textContent = message;
+    if (message) statusMessage = message;
+    if (statusMessage) status.textContent = text(statusMessage);
   }
   function cancel(nextState, message) {
     generation += 1; // Ignore late end/error events from a cancelled utterance.
@@ -84,11 +97,15 @@
     }
     var voices = [];
     try { voices = synth.getVoices(); } catch (_) { /* Treat blocked engines as unavailable. */ }
-    var portuguese = voices.filter(function (item) { return item.localService === true && /^pt(?:[-_]|$)/i.test(item.lang); });
-    voice = portuguese.find(function (item) { return /^pt[-_]BR$/i.test(item.lang); }) || portuguese[0] || null;
+    var language = descriptionLanguage().toLowerCase();
+    var baseLanguage = language.split('-')[0];
+    var matching = voices.filter(function (item) {
+      return item.localService === true && String(item.lang || '').toLowerCase().replace(/_/g, '-').split('-')[0] === baseLanguage;
+    });
+    voice = matching.find(function (item) { return String(item.lang).toLowerCase().replace(/_/g, '-') === language; }) || matching[0] || null;
     state = voice ? 'idle' : 'unavailable';
-    update(voice ? 'Leitura com voz local em português. Use Ouvir descrição para começar.' :
-      'Nenhuma voz local em português está disponível. Verifique as vozes do dispositivo ou leia a descrição abaixo.');
+    update(voice ? 'Leitura com voz local no idioma da descrição. Use Ouvir descrição para começar.' :
+      'Nenhuma voz local compatível com o idioma da descrição está disponível. Verifique as vozes do dispositivo ou leia a descrição abaixo.');
   }
   function speakNext(token) {
     if (token !== generation) return;
@@ -100,7 +117,7 @@
     }
     var utterance = new SpeechSynthesisUtterance(chunks[index]);
     current = utterance; // Retain it while the browser speaks.
-    utterance.lang = voice.lang;
+    utterance.lang = descriptionLanguage();
     utterance.voice = voice;
     utterance.rate = 1;
     function valid() { return token === generation && current === utterance; }
@@ -178,11 +195,17 @@
   function leave() { if (active()) cancel('idle', 'Leitura parada.'); }
   window.addEventListener('pagehide', leave);
   window.addEventListener('popstate', leave);
-  // Re-rendering or switching event must never keep reading the old description.
-  new MutationObserver(function () {
-    if (active()) cancel('idle', 'A descrição mudou. Use Ouvir descrição para ouvir o texto atualizado.');
+  document.addEventListener('ct:public-language', function () {
+    if (active()) cancel('idle', 'Leitura parada.');
     else update();
-  }).observe(description, { childList: true, characterData: true, subtree: true });
+  });
+  // Re-rendering or switching event must never keep reading the old description.
+  new MutationObserver(function (mutations) {
+    if (active()) cancel('idle', 'A descrição mudou. Use Ouvir descrição para ouvir o texto atualizado.');
+    if (mutations.some(function (mutation) { return mutation.type === 'attributes' && mutation.target === description; })) refreshVoices();
+    else update();
+  }).observe(description, { attributes: true, attributeFilter: ['lang'], childList: true, characterData: true, subtree: true });
   if (supported && synth.addEventListener) synth.addEventListener('voiceschanged', refreshVoices);
   refreshVoices();
 }());
+
