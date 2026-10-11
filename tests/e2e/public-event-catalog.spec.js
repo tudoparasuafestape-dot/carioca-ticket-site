@@ -62,7 +62,10 @@ test('a single public catalog appears early, with complete covers and validated 
     if (event !== rows[0]) await page.locator('#event-rail-next').click();
     await expect(card).not.toHaveAttribute('inert', '');
     await expect(card.getByRole('heading')).toHaveText(event.nome);
-    await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
+    if(event.id===RODA){
+      await expect(card).toContainText('Vendas antecipadas encerradas. Ingressos disponíveis na portaria por R$30.');
+      await expect(card.locator('a[href^="/checkout/"]')).toHaveCount(0);
+    }else await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
     await expect(card.getByRole('link', { name: 'Ver evento', exact: true })).toHaveAttribute('href', '/evento/?evento=' + event.id);
   }
   await page.locator('#event-rail-previous').click();
@@ -73,7 +76,7 @@ test('a single public catalog appears early, with complete covers and validated 
   // Search, share and explicit rotation controls remain above a cover visible in the first viewport.
   expect(cover.y).toBeLessThan(page.viewportSize().height - 160);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await expect(page.locator('.catalog-card')).not.toContainText(['R$']);
+  await expect(page.locator('[data-event-id="'+ERA+'"]')).not.toContainText('R$');
   await expect(page.locator('#producerPortalCta')).toHaveAttribute('href', '/produtor/');
   await expect(page.locator('#partnerProgramCta')).toHaveAttribute('href', '/parceiro/programa/');
   expect(state.calls).toHaveLength(1);
