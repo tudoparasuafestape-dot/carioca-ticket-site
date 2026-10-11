@@ -1,0 +1,35 @@
+name: Scanner session regression
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'fix/**']
+permissions:
+  contents: read
+jobs:
+  scanner-session:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check scanner syntax
+        run: node --check checkin/checkin.js
+      - name: Synthetic scanner sessions (no network)
+        run: node tests/scanner-session.runtime.cjs checkin/checkin.js
+      - name: Install isolated browser test dependencies
+        run: |
+          npm install --prefix .scanner-test-runtime --no-save --no-audit --no-fund playwright@1.55.0
+          node .scanner-test-runtime/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Mobile, landscape and desktop browser regression (network blocked)
+        env:
+          NODE_PATH: .scanner-test-runtime/node_modules
+        run: node tests/scanner-session.browser.cjs checkin/checkin.js
+      - name: Keep synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scanner-session
+          path: test-results/scanner-*
