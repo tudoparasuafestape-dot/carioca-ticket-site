@@ -890,6 +890,90 @@ test.describe('Links das cortesias já emitidas no histórico',()=>{
   });
 });
 
+test.describe('Apresentação das cortesias em todos os eventos',()=>{
+  test.skip(!BRANCH_MODE,'Somente branch local com ingressos e RPCs sintéticos.');
+
+  const cases=[
+    {event:'EVT-APRESENTACAO-A',sales:1,capacity:1,names:['Pessoa Teste'],type:'Individual',lot:'Pré-venda'},
+    {event:'EVT-APRESENTACAO-B',sales:3,capacity:1,names:['Pessoa Teste','Pessoa Teste - Venda 2/3 - Acesso 1/1','Pessoa Teste - Venda 3/3 - Acesso 1/1'],type:'Individual',lot:'Lote promocional'},
+    {event:'EVT-APRESENTACAO-A',sales:1,capacity:2,names:['Pessoa Teste','Pessoa Teste - Acesso 2/2'],type:'Dupla',lot:'Segundo lote'},
+    {event:'EVT-APRESENTACAO-B',sales:2,capacity:2,names:['Pessoa Teste','Pessoa Teste - Venda 1/2 - Acesso 2/2','Pessoa Teste - Venda 2/2 - Acesso 1/2','Pessoa Teste - Venda 2/2 - Acesso 2/2'],type:'Mesa para dois',lot:'Lote especial'}
+  ];
+  for(const sample of cases)test(`${sample.event}: ${sample.sales} unidade(s) de ${sample.type} mantém uma entrada por código`,async({page},testInfo)=>{
+    await mockClipboard(page);
+    const codes=sample.names.map((_,index)=>'CT-DISPLAY-'+(index+1));
+    const response={sucesso:true,idempotente:false,cortesiaId:'CRT-DISPLAY',eventoId:sample.event,
+      quantidadeVendas:sample.sales,quantidadeAcessos:codes.length,mensagem:'Cortesia emitida com sucesso.',
+      ingressos:codes.map((codigo,index)=>({id:String(index+1),codigo,nome:sample.names[index],tipo:sample.type,loteNome:sample.lot,link:ticketUrl(codigo)}))};
+    const original=JSON.stringify(response);
+    const state=fixture({catalogs:{'PROD-E2E':catalog('PROD-E2E',[{id:'EVT-APRESENTACAO-A'},{id:'EVT-APRESENTACAO-B'}])},onRequest:({method,args})=>{
+      if(method===LOAD)return {...eventData(args[1]),
+        tipos:[{id:'TIPO-DISPLAY',nome:sample.type,capacidadePorVenda:sample.capacity}],
+        lotes:[{id:'LOTE-DISPLAY',tipoId:'TIPO-DISPLAY',nome:sample.lot,precoNumero:40}],
+        recentes:state.issued&&args[1]===sample.event?[{...baseData(fixture({issued:true})).recentes[0],cortesiaId:'CRT-DISPLAY',destinatarioNome:'Pessoa Teste',tipoNome:sample.type,loteNome:sample.lot,quantidadeAcessos:codes.length,quantidadeVendas:sample.sales,codigos:codes}]:[]};
+      if(method===ISSUE){
+        expect(args[1]).toBe(sample.event);expect(args[2].nome).toBe('Pessoa Teste');
+        expect(args[2].quantidadeVendas).toBe(sample.sales);expect(args[2].tipoId).toBe('TIPO-DISPLAY');expect(args[2].loteId).toBe('LOTE-DISPLAY');
+        expect(args[2]).not.toHaveProperty('participantes');state.issued=true;return response;
+      }
+    }});
+    await openCourtesy(page,state,'?evento='+sample.event);await ready(page);
+    await page.locator('#name').fill('Pessoa Teste');await page.locator('#whatsapp').fill('81999990000');
+    await page.locator('#quantity').fill(String(sample.sales));await page.locator('#reason').fill('Fixture sintética de apresentação');
+    await expect(page.locator('#accessCount')).toHaveText(String(codes.length));
+    await page.locator('#issueButton').click();
+    await expect(page.locator('#resultTickets .ticket-result')).toHaveCount(codes.length);await ready(page);
+    await expect(page.locator('#resultTickets .message')).toHaveText(codes.length===1?'Cortesia emitida com sucesso.':codes.length+' cortesias emitidas com sucesso.');
+    for(const [index,code] of codes.entries()){
+      const block=page.locator('[data-issued-code="'+code+'"]');
+      const label=codes.length===1?'Cortesia':`Cortesia ${index+1} de ${codes.length}`;
+      await expect(block.locator('b')).toHaveText('Pessoa Teste');
+      for(const card of [block,historyTicket(page,code)]){
+        await expect(card.locator('.courtesy-label')).toHaveText(label);
+        await expect(card.locator('.ticket-code')).toHaveText('Código: '+code);
+        await expect(card.locator('.ticket-entry')).toHaveText('1 entrada por ingresso');
+      }
+      await expect(block).toContainText(sample.type+' · '+sample.lot);
+      await expect(block.getByRole('link',{name:'Abrir ingresso'})).toHaveAttribute('href',ticketUrl(code));
+      await block.getByRole('button',{name:'Copiar link'}).click();
+    }
+    expect(await page.evaluate(()=>window.copiedLinks)).toEqual(codes.map(code=>ticketUrl(code)));
+    expect(JSON.stringify(response)).toBe(original);
+    expect(calls(state,ISSUE)).toHaveLength(1);expect(calls(state,CONSULT)).toHaveLength(0);
+    expect(state.calls.filter(c=>[SAVE,CANCEL].includes(c.method))).toHaveLength(0);
+    if(codes.length===3){
+      await page.locator('#resultTickets').scrollIntoViewIfNeeded();
+      const screenshot=testInfo.outputPath('cortesias-apresentacao.png');
+      await page.locator('#resultTickets').screenshot({path:screenshot});
+      await testInfo.attach('cortesias-apresentacao.png',{path:screenshot,contentType:'image/png'});
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    }
+    await page.locator('#eventSelect').selectOption(sample.event==='EVT-APRESENTACAO-A'?'EVT-APRESENTACAO-B':'EVT-APRESENTACAO-A');await ready(page);
+    await expect(page.locator('#resultTickets')).toBeEmpty();await expect(page.locator('#historyRows [data-history-code]')).toHaveCount(0);
+  });
+
+  test('preserva nome legítimo com sufixo e não remove padrões de outro participante',async({page})=>{
+    const base='Maria - Venda 2/3 - Acesso 1/1';
+    const names=[base,base+' - Venda 2/5 - Acesso 1/1','Outra Pessoa - Venda 3/5 - Acesso 1/1',base+' - Venda 5/5 - Acesso 1/1',base+' - Venda 5/5 - Acesso 1/1 Neto'];
+    const state=fixture({onRequest:({method})=>method===ISSUE?{sucesso:true,idempotente:false,quantidadeVendas:5,quantidadeAcessos:5,ingressos:names.map((nome,i)=>({codigo:'CT-NAME-'+i,nome,tipo:'Individual',loteNome:'Lote único'}))}:undefined});
+    await openCourtesy(page,state);await ready(page);
+    await page.locator('#name').fill(base);await page.locator('#whatsapp').fill('81999990000');await page.locator('#quantity').fill('5');await page.locator('#reason').fill('Fixture sintética');
+    await page.locator('#issueButton').click();
+    await expect(page.locator('#resultTickets b')).toHaveText([base,base,names[2],names[3],names[4]]);
+    await expect(page.locator('#historyRows')).not.toContainText(base);
+  });
+
+  for(const idempotent of [false,true])test(`não infere nomes com ${idempotent?'retorno idempotente':'quantidades inconsistentes'}`,async({page})=>{
+    const count=idempotent?2:3;
+    const names=['Pessoa Teste','Pessoa Teste - Venda 2/'+count+' - Acesso 1/1'];
+    const state=fixture({onRequest:({method})=>method===ISSUE?{sucesso:true,idempotente:idempotent,quantidadeVendas:count,quantidadeAcessos:count,ingressos:names.map((nome,i)=>({codigo:'CT-SAFE-'+i,nome}))}:undefined});
+    await openCourtesy(page,state);await ready(page);
+    await page.locator('#name').fill('Pessoa Teste');await page.locator('#whatsapp').fill('81999990000');await page.locator('#quantity').fill('3');await page.locator('#reason').fill('Fixture sintética');
+    await page.locator('#issueButton').click();await expect(page.locator('#resultTickets b')).toHaveText(names);
+    if(idempotent)await expect(page.locator('#resultTickets .message')).toHaveText('Estas cortesias já haviam sido emitidas. Nenhum novo ingresso foi criado.');
+  });
+});
+
 test.describe('WhatsApp do destinatário da cortesia',()=>{
   test.skip(!BRANCH_MODE,'Somente mocks; não abre conversas nem envia mensagens reais.');
 
