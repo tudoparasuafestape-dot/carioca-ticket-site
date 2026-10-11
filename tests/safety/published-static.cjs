@@ -6,7 +6,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const assert = require('node:assert/strict');
-const ROUTES = Object.freeze(['/', '/evento/', '/evento-v2/', '/checkout/', '/checkout-v2/', '/produtor-v2/',
+const ROUTES = Object.freeze(['/', '/evento/', '/evento-v2/', '/checkout/', '/checkout-v2/', '/roda-de-samba/',
+  '/assets/advance-sales.js', '/assets/public-event-catalog.js', '/produtor-v2/',
   '/parceiro/programa/', '/parceiro/ativar/', '/minha-carioca/conta/',
   '/central/', '/produtor/', '/produtor/solicitar/', '/produtor/solicitacoes/', '/parceiro/', '/parceiro/admin/',
   '/fornecedor/', '/acessos/', '/cupons/', '/cupons/admin/', '/checkin/', '/consulta/', '/vendas/', '/bar/',

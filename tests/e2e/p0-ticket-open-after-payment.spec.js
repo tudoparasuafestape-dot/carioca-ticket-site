@@ -13,7 +13,7 @@ const MOCK_CONTRACT = {
 };
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
-const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
+const { EVENT: EVENT_ID } = require('../fixtures/public-canary.cjs');
 const PEDIDO_ID = 'PED-P0-INGRESSO-ABERTURA';
 const TOKEN = 'TOKEN-P0-INGRESSO-ABERTURA';
 const CODIGO = 'CT-P0-LINK-001';

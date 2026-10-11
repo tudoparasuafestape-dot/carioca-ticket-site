@@ -148,13 +148,21 @@ test('search submitted while loading applies to the eventual response and clears
   expect(state.calls).toHaveLength(1);
 });
 
-test('missing and broken images preserve titles and purchase links', async ({ page }) => {
+test('missing and broken images preserve titles, open sales and the samba closure', async ({ page }) => {
   await fixture(page, { result: { sucesso: true, eventos: [rows[1], { ...rows[0], visual: { capaUrl: '/missing-cover.jpg' } }] } });
   await expect(page.locator('.catalog-card')).toHaveCount(2);
   await expect(page.locator('.catalog-image-fallback')).toHaveText(['Capa indisponível', 'Capa indisponível']);
-  await expect(page.locator('.catalog-actions .btn-primary')).toHaveCount(2);
+  await expect(page.locator('.catalog-actions .btn-primary')).toHaveCount(1);
+  const era = page.locator('[data-event-id="'+ERA+'"]');
+  await expect(era.getByRole('heading')).toHaveText(rows[1].nome);
+  await expect(era.getByRole('link', { name: /^Comprar ingresso:/ })).toHaveAttribute('href', '/checkout/?evento=' + ERA);
   await page.locator('#event-rail-next').click();
-  await expect(page.locator('.catalog-card').nth(1).getByRole('link', { name: /^Comprar ingresso:/ })).toBeVisible();
+  const samba = page.locator('[data-event-id="'+RODA+'"]');
+  await expect(samba.getByRole('heading')).toHaveText(rows[0].nome);
+  await expect(samba).toContainText('Vendas antecipadas encerradas. Ingressos disponíveis na portaria por R$30.');
+  await expect(samba.locator('a[href^="/checkout/"]')).toHaveCount(0);
+  await expect(samba.getByRole('link', { name: 'Ver evento', exact: true })).toBeVisible();
+  await expect(samba.getByRole('link', { name: 'Ver evento', exact: true })).toHaveAttribute('href', '/evento/?evento=' + RODA);
   await expect(page.locator('#catalog-retry')).toBeHidden();
 });
 

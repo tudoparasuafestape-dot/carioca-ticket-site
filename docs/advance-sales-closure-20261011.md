@@ -62,3 +62,31 @@ Revisar junto ao PR backend na mesma branch. A proteção autoritativa fica em
 `ctCheckoutPixPublicoIniciarPROD`; a UI isolada não garante encerramento contra
 abas antigas. Esta entrega não é uma afirmação de encerramento já publicado.
 Não altera gate, lotes, emissão, check-in, Caixa Pix ou o outro evento.
+
+## Correções do CI após revisão
+
+A fixture de acessibilidade passou a servir exatamente `/assets/advance-sales.js`;
+a verificação de recursos HTTP continua exigindo zero erros, e a prévia continua
+negando escritas, checkout e destinos externos.
+
+O caso `checkout-v2-es-320` de idioma foi reproduzido com atraso sintético de
+2 segundos na resposta de pagamento. O teste contava o pedido enviado antes de
+a resposta chegar e avançava o relógio antes de o polling existir. Agora a
+resposta fica explicitamente retida, o teste verifica que o painel pendente
+ainda não apareceu, libera a resposta e espera esse painel antes de trocar
+idiomas e avançar os mesmos 16 segundos. O mesmo atraso passa com a correção.
+Um controle negativo que desativa `startPolling` apenas no HTML da fixture
+continua falhando em `pending polling still active`. O código de produção do
+polling não foi alterado e nenhuma asserção funcional foi removida.
+
+Os consumidores da fixture de venda aberta importam seu ID sintético comum,
+inclusive canários, comprador, cupom e P0 pós-pagamento. Os testes específicos
+de encerramento continuam usando o ID real do samba; check-in e operação
+existente também preservam suas fixtures do samba. O fallback de capa verifica
+explicitamente o aviso sem compra no samba e a compra disponível do ERA BEAUTY.
+
+O comparador estático publicado inclui agora o helper de encerramento, o
+catálogo e `/roda-de-samba/`. Ele faz somente GET de arquivos, compara hashes,
+não executa JavaScript, não segue redirecionamentos e não faz RPC. Sua execução
+contra produção fica para a publicação autorizada, respeitando as restrições
+de acesso do ambiente.

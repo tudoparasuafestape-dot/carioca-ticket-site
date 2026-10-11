@@ -1,6 +1,6 @@
 const { test, expect } = require('./helpers/public-isolated.cjs');
 
-const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
+const { EVENT: EVENT_ID } = require('../fixtures/public-canary.cjs');
 
 async function expectFirstParty(page, pathname) {
   await expect.poll(() => {

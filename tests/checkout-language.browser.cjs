@@ -99,7 +99,7 @@ async function shot(f, routePath, mobile, stage) {
   for(const routePath of ['/checkout/','/checkout-v2/'])for(const locale of ['pt-BR','en-US','es','zh-Hans'])for(const width of [320,390,1440]){
    const name=routePath.replaceAll('/','')+'-'+locale+'-'+width;let f;
    try{
-    const options={locale,clock:true,method:width===390?'CREDIT_CARD':'PIX'};
+    const options={locale,clock:true,holdPayment:true,method:width===390?'CREDIT_CARD':'PIX'};
     f=await fixture(browser,routePath,width<1000,options);await f.page.setViewportSize({width,height:900});
     await f.page.clock.pauseAt(new Date(await f.page.evaluate(()=>Date.now()+60000)));await f.fill();
     const values=await f.page.locator('#buyerPanel input').evaluateAll(nodes=>nodes.map(n=>[n.id,n.value,n.checked]));
@@ -123,12 +123,24 @@ async function shot(f, routePath, mobile, stage) {
     }
     for(let i=0;i<2;i++){await f.open();await f.page.keyboard.press('Escape');await f.page.locator('#checkoutLeaveDialog').waitFor({state:'hidden'});assert(await f.page.locator('#checkoutHome').evaluate(e=>document.activeElement===e));}
     await f.page.locator('#payButton').click();await until(()=>f.state.payments.length===1,'one synthetic payment');
+    // A sent request is not a rendered pending order. Hold and release the
+    // synthetic response explicitly, then observe the UI before advancing its
+    // clock. Otherwise transport scheduling can race the polling assertion.
+    await until(()=>typeof f.state.release==='function','synthetic response held');
+    const pendingPanel=options.method==='CREDIT_CARD'?'#cardPanel':'#pixPanel';
+    assert.equal(await f.page.locator(pendingPanel).isVisible(),false,'no pending UI before response');
+    f.state.release();
+    await f.page.locator(pendingPanel).waitFor({state:'visible'});
+    await f.page.locator('#loading').waitFor({state:'hidden'});
     assert.equal(await f.page.evaluate(()=>localStorage.getItem('ct-public-privacy-v1')),null,'synthetic purchase did not require privacy choice');
     await f.page.evaluate(()=>document.querySelectorAll('[data-previous-size]').forEach(n=>{n.style.fontSize=n.dataset.previousSize;delete n.dataset.previousSize;}));
     const submitted=JSON.stringify(f.state.payments);const polls=f.state.polls;
     for(const target of ['es','pt-BR',locale])await f.page.locator('#checkoutLanguage').selectOption(target);
     assert.equal(JSON.stringify(f.state.payments),submitted);assert.equal(f.state.polls,polls);
-    await f.page.clock.runFor(16000);assert(f.state.polls>polls,'pending polling still active');assert.equal(f.state.payments.length,1);
+    await f.page.clock.runFor(16000);
+    // Let already-scheduled bridge requests reach the Node fixture; do not
+    // advance the browser clock further or relax the polling requirement.
+    await until(()=>f.state.polls>polls,'pending polling still active');assert.equal(f.state.payments.length,1);
     await f.finish();f=null;results.push({name,passed:true});
    }catch(error){results.push({name,passed:false,error:error.stack});if(f){await f.page.screenshot({path:path.join(evidence,name+'-failure.png'),fullPage:true}).catch(()=>{});await f.context.close();}}
   }
