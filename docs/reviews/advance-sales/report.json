@@ -1,0 +1,278 @@
+[
+  {
+    "name": "catalog keeps both events; only Samba closed desktop",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctEventosPublicosListarPROD"
+    ]
+  },
+  {
+    "name": "/evento/ message, map, Uber, Waze, locale desktop",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctEventoPublicoCarregarPROD"
+    ]
+  },
+  {
+    "name": "/evento-v2/ message, map, Uber, Waze, locale desktop",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctEventoPublicoCarregarPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ fresh checkout makes no request/key desktop",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ ERA still buys (mock only) desktop",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 1,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctPoliticaComercialPreviewPublicoPROD",
+      "ctCheckoutPixPublicoIniciarPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ fresh checkout makes no request/key desktop",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ ERA still buys (mock only) desktop",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 1,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoIniciarPROD"
+    ]
+  },
+  {
+    "name": "catalog keeps both events; only Samba closed mobile",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctEventosPublicosListarPROD"
+    ]
+  },
+  {
+    "name": "/evento/ message, map, Uber, Waze, locale mobile",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctEventoPublicoCarregarPROD"
+    ]
+  },
+  {
+    "name": "/evento-v2/ message, map, Uber, Waze, locale mobile",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctEventoPublicoCarregarPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ fresh checkout makes no request/key mobile",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ ERA still buys (mock only) mobile",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 1,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctPoliticaComercialPreviewPublicoPROD",
+      "ctCheckoutPixPublicoIniciarPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ fresh checkout makes no request/key mobile",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ ERA still buys (mock only) mobile",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 1,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoIniciarPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ preserves pending recovery/refresh PIX",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD",
+      "ctCheckoutPixPublicoReconciliarPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ lost-response retry reuses saved key PIX",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 1,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoIniciarPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ preserves pending recovery/refresh CREDIT_CARD",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD",
+      "ctCheckoutPixPublicoReconciliarPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ lost-response retry reuses saved key CREDIT_CARD",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 1,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoIniciarPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ preserves pending recovery/refresh PIX",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD",
+      "ctCheckoutPixPublicoReconciliarPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ lost-response retry reuses saved key PIX",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 1,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoIniciarPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ preserves pending recovery/refresh CREDIT_CARD",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD",
+      "ctCheckoutPixPublicoReconciliarPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ lost-response retry reuses saved key CREDIT_CARD",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 1,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoIniciarPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ existing order CONCLUIDO",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ existing order EXPIRADO",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD"
+    ]
+  },
+  {
+    "name": "/checkout/ existing order CANCELADO",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ existing order CONCLUIDO",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ existing order EXPIRADO",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD"
+    ]
+  },
+  {
+    "name": "/checkout-v2/ existing order CANCELADO",
+    "status": "PASS",
+    "forwarded": 0,
+    "payments": 0,
+    "rpcs": [
+      "ctCheckoutPublicoCarregarEventoPROD",
+      "ctCheckoutPixPublicoConsultarPROD"
+    ]
+  }
+]
