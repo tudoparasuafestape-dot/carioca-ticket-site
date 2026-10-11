@@ -371,9 +371,10 @@ if (checkinManifest) {
 const checkinRuntime = read('checkin/checkin.js');
 if (checkinRuntime) {
   for (const required of [
-    "VERSAO: '2.3.1'",
+    "VERSAO: '2.3.2'",
     'TEMPO_TIMEOUT_API_MS: 20000',
-    "titulo:\n        'Falha na comunicação'",
+    "'Falha na comunicação'",
+    "'CONFIRMAÇÃO SEM RESPOSTA'",
     "PREFIXO_VALIDACAO_SEM_ENTRADA: 'CT_VALIDAR_SEM_ENTRADA:'"
   ]) {
     if (!checkinRuntime.includes(required)) {

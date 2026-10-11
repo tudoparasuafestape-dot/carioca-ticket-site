@@ -2,7 +2,7 @@ const CONFIG = {
   STORAGE_API_URL: 'carioca_ticket_api_url',
   STORAGE_CREDENCIAL_SESSION: 'ct_checkin_operacional_credencial_v1',
   API_URL_OFICIAL: 'https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec',
-  VERSAO: '2.3.1',
+  VERSAO: '2.3.2',
   PREFIXO_VALIDACAO_SEM_ENTRADA: 'CT_VALIDAR_SEM_ENTRADA:',
   TEMPO_BLOQUEIO_LEITURA_MS: 2600,
   TEMPO_TELA_SUCESSO_MS: 4000,
@@ -14,6 +14,10 @@ const CONFIG = {
 let leitorQr = null;
 let cameraAtiva = false;
 let processando = false;
+let resultadoAberto = false;
+let cameraPausada = false;
+let codigoUltimaLeitura = '';
+const confirmacoesSemResposta = new Set();
 let ultimoCodigo = '';
 let ultimoCodigoEm = 0;
 let temporizadorTela = null;
@@ -478,6 +482,7 @@ async function testarConexao() {
 
 
 async function iniciarCamera() {
+  if (processando || resultadoAberto || cameraAtiva) return;
   if (!obterApiUrl()) {
     abrirConfiguracao();
     return;
@@ -551,6 +556,7 @@ async function iniciarCamera() {
     );
 
     cameraAtiva = true;
+    if (processando || resultadoAberto) pausarLeitura();
 
     el('btnIniciar')
       .classList
@@ -651,6 +657,7 @@ async function pararCamera() {
   } finally {
     leitorQr = null;
     cameraAtiva = false;
+    cameraPausada = false;
 
     restaurarBotoesCamera();
 
@@ -677,33 +684,42 @@ function restaurarBotoesCamera() {
 }
 
 
+function pausarLeitura() {
+  if (!leitorQr || !cameraAtiva || cameraPausada) return;
+  try {
+    leitorQr.pause(true);
+    cameraPausada = true;
+  } catch (_) {
+    // The processing/result guards still block callbacks if pause is unavailable.
+  }
+}
+
+function retomarLeitura() {
+  if (!leitorQr || !cameraAtiva || !cameraPausada) return;
+  try {
+    leitorQr.resume();
+    cameraPausada = false;
+  } catch (_) {
+    el('statusCamera').textContent =
+      'Não foi possível retomar. Pare e inicie a câmera novamente.';
+  }
+}
+
 function aoLerQrCode(texto) {
-  const codigo =
-    extrairCodigo(texto);
-
-  if (!codigo) {
-    return;
-  }
-
-  const agora =
-    Date.now();
-
-  if (
-    codigo === ultimoCodigo &&
-    agora - ultimoCodigoEm <
-      CONFIG.TEMPO_BLOQUEIO_LEITURA_MS
-  ) {
-    return;
-  }
-
+  if (processando || resultadoAberto) return;
+  const codigo = extrairCodigo(texto);
+  if (!codigo || codigo === codigoUltimaLeitura) return;
+  const agora = Date.now();
+  if (codigo === ultimoCodigo &&
+      agora - ultimoCodigoEm < CONFIG.TEMPO_BLOQUEIO_LEITURA_MS) return;
+  codigoUltimaLeitura = codigo;
   ultimoCodigo = codigo;
   ultimoCodigoEm = agora;
-
   validarIngresso(codigo);
 }
 
-
 function validarCodigoManual() {
+  if (processando || resultadoAberto) return;
   const codigo =
     extrairCodigo(
       el('codigoManual').value
@@ -728,7 +744,7 @@ function validarCodigoManual() {
 async function validarIngresso(
   codigo
 ) {
-  if (processando) {
+  if (processando || resultadoAberto) {
     return;
   }
 
@@ -770,6 +786,9 @@ async function validarIngresso(
   }
 
   processando = true;
+  codigoUltimaLeitura = codigo;
+  pausarLeitura();
+  let confirmacaoSemRetorno = false;
 
   el('btnValidar').disabled =
     true;
@@ -805,12 +824,23 @@ async function validarIngresso(
       resposta.sucesso === true &&
       resposta.podeConfirmarEntrada === true
     ) {
+      if (confirmacoesSemResposta.has(codigo)) {
+        mostrarTelaResultado({
+          tipo: 'aviso',
+          titulo: 'CONFIRMAÇÃO SEM RESPOSTA',
+          mensagem: 'A confirmação anterior ainda precisa ser conferida pela portaria. Esta consulta não registrou outra entrada.',
+          codigo: codigo,
+          nome: resposta.nome || ''
+        });
+        return;
+      }
       const confirmarEntrada =
         await confirmarEntradaProfissional(
           resposta
         );
 
       if (confirmarEntrada === true) {
+        confirmacaoSemRetorno = true;
         resposta =
           await chamarApiJsonp(
             apiUrl,
@@ -821,6 +851,7 @@ async function validarIngresso(
               credencial: credencialCheckin
             }
           );
+        confirmacaoSemRetorno = false;
       } else {
         resposta = {
           sucesso: true,
@@ -940,13 +971,15 @@ async function validarIngresso(
       '';
 
   } catch (erro) {
+    if (confirmacaoSemRetorno) confirmacoesSemResposta.add(codigo);
     mostrarTelaResultado({
-      tipo: 'erro',
-      titulo:
-        'Falha na comunicação',
-      mensagem:
-        erro.message ||
-        'Não foi possível consultar a planilha.',
+      tipo: confirmacaoSemRetorno ? 'aviso' : 'erro',
+      titulo: confirmacaoSemRetorno
+        ? 'CONFIRMAÇÃO SEM RESPOSTA'
+        : 'Falha na comunicação',
+      mensagem: confirmacaoSemRetorno
+        ? 'A entrada pode ter sido registrada. Confira o código e o horário com a portaria antes de liberar a pessoa. Não repita a confirmação nem use outro ingresso para compensar.'
+        : (erro.message || 'Não foi possível consultar a planilha.'),
       codigo: codigo
     });
 
@@ -960,18 +993,9 @@ async function validarIngresso(
     );
 
   } finally {
-    setTimeout(
-      function() {
-        processando = false;
-
-        el('btnValidar').disabled =
-          false;
-
-        el('btnValidar').textContent =
-          'Validar código';
-      },
-      CONFIG.TEMPO_BLOQUEIO_LEITURA_MS
-    );
+    processando = false;
+    el('btnValidar').textContent = 'Validar código';
+    // Only the explicit result close can rearm the reader.
   }
 }
 
@@ -991,9 +1015,9 @@ function criarConfirmacaoEntradaProfissional() {
     );
 
   style.textContent =
-    '.ct-confirmacao{position:fixed;inset:0;z-index:99999;display:none;align-items:flex-end;justify-content:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}' +
+    '.ct-confirmacao{position:fixed;inset:0;z-index:99999;display:none;overflow-y:auto;align-items:flex-start;justify-content:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}' +
     '.ct-confirmacao.ativa{display:flex}' +
-    '.ct-confirmacao-card{width:min(560px,100%);background:#11161d;border:1px solid rgba(232,179,75,.28);border-radius:24px;padding:22px;box-shadow:0 24px 90px rgba(0,0,0,.62);color:#fff}' +
+    '.ct-confirmacao-card{margin:auto 0 0;width:min(560px,100%);background:#11161d;border:1px solid rgba(232,179,75,.28);border-radius:24px;padding:22px;box-shadow:0 24px 90px rgba(0,0,0,.62);color:#fff}' +
     '.ct-confirmacao-marca{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#e8b34b;font-weight:900}' +
     '.ct-confirmacao h2{margin:8px 0 8px;font-size:24px;line-height:1.1}' +
     '.ct-confirmacao p{margin:0;color:#b7bec8;line-height:1.5}' +
@@ -1180,6 +1204,9 @@ function confirmarEntradaProfissional(
 function mostrarTelaResultado(
   dados
 ) {
+  resultadoAberto = true;
+  pausarLeitura();
+  el('btnValidar').disabled = true;
   limparTemporizadoresTela();
 
   const tela =
@@ -1286,67 +1313,10 @@ function criarDadoTela(
 }
 
 
-function iniciarContagemResultado(
-  tipo
-) {
-  let segundos =
-    tipo === 'sucesso'
-      ? Math.ceil(
-          CONFIG.TEMPO_TELA_SUCESSO_MS /
-          1000
-        )
-      : (
-          tipo === 'aviso'
-            ? Math.ceil(
-                CONFIG.TEMPO_TELA_AVISO_MS /
-                1000
-              )
-            : Math.ceil(
-                CONFIG.TEMPO_TELA_ERRO_MS /
-                1000
-              )
-        );
-
-  atualizarTextoContagem(
-    segundos
-  );
-
-  temporizadorContagem =
-    setInterval(
-      function() {
-        segundos--;
-
-        atualizarTextoContagem(
-          segundos
-        );
-
-        if (
-          segundos <= 0
-        ) {
-          clearInterval(
-            temporizadorContagem
-          );
-        }
-      },
-      1000
-    );
-
-  const tempoTotal =
-    tipo === 'sucesso'
-      ? CONFIG.TEMPO_TELA_SUCESSO_MS
-      : (
-          tipo === 'aviso'
-            ? CONFIG.TEMPO_TELA_AVISO_MS
-            : CONFIG.TEMPO_TELA_ERRO_MS
-        );
-
-  temporizadorTela =
-    setTimeout(
-      fecharTelaResultado,
-      tempoTotal
-    );
+function iniciarContagemResultado() {
+  el('telaResultadoContagem').textContent =
+    'Retire o QR Code da câmera e toque em Continuar check-in. Para consultar o mesmo ingresso, use o código manual.';
 }
-
 
 function atualizarTextoContagem(
   segundos
@@ -1364,6 +1334,8 @@ function atualizarTextoContagem(
 
 
 function fecharTelaResultado() {
+  if (processando || !resultadoAberto) return;
+  resultadoAberto = false;
   limparTemporizadoresTela();
 
   const tela =
@@ -1381,20 +1353,14 @@ function fecharTelaResultado() {
       'resultado-aberto'
     );
 
-  setTimeout(
-    function() {
-      tela.className =
-        'tela-resultado';
-    },
-    220
-  );
+  tela.className = 'tela-resultado';
 
   limparResultadoPequeno();
 
-  ultimoCodigo = '';
-  ultimoCodigoEm = 0;
-
-  el('codigoManual').focus();
+  // Keep the last QR blocked even if it is still in front of the camera.
+  el('btnValidar').disabled = !credencialCheckin || !obterEventoIdContextoCheckin();
+  if (!cameraAtiva) el('codigoManual').focus();
+  retomarLeitura();
 }
 
 
