@@ -27,7 +27,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
 .private-note{border:1px solid rgba(232,179,75,.25);background:rgba(232,179,75,.07);border-radius:12px;padding:12px;color:#f3dfb1;font-size:11px;line-height:1.5;margin-bottom:12px}
 .summaryline{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.summaryline:last-child{border:0}.summaryline span{color:var(--muted)}.summaryline b{word-break:break-word;text-align:right}
 .reconcile.ok{color:var(--ok)}.reconcile.bad{color:var(--bad)}
-.ticket-result{border:1px solid var(--line);background:var(--card2);border-radius:13px;padding:12px;margin-top:9px}.ticket-result b{display:block;font-size:12px}.ticket-result small{color:var(--muted)}.ticket-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.ticket-actions a,.ticket-actions button{min-height:36px}
+.ticket-result{border:1px solid var(--line);background:var(--card2);border-radius:13px;padding:12px;margin-top:9px;overflow-wrap:anywhere}.ticket-result b{display:block;font-size:12px}.ticket-result small{color:var(--muted)}.courtesy-label{display:block;color:var(--gold2);font-size:11px;font-weight:850;margin-bottom:5px}.ticket-code,.ticket-entry{display:block;margin-top:5px}.ticket-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.ticket-actions a,.ticket-actions button{min-height:36px}
 .tablewrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}.tablewrap table{width:100%;border-collapse:collapse;min-width:960px}.tablewrap th,.tablewrap td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:11px;vertical-align:top}.tablewrap th{color:var(--muted);text-transform:uppercase;font-size:9px}.tag{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:4px 7px;font-size:9px;font-weight:850}.tag.ok{color:#baf0d1;border-color:#285d41}.tag.cancel{color:#ffc0c0;border-color:#643038}.rowactions{display:flex;gap:5px;flex-wrap:wrap}
 .loading{position:fixed;inset:0;z-index:40;background:rgba(6,8,11,.74);display:none;place-items:center}.loading.show{display:grid}.loader{border:1px solid var(--line);background:var(--card);padding:18px 22px;border-radius:15px;color:var(--muted);font-size:12px}
 .history-ticket{margin-top:10px;max-width:340px;overflow-wrap:anywhere}.history-ticket .btn{min-height:44px;display:inline-flex;align-items:center}.history-ticket input{width:100%;margin-top:8px}.history-ticket [role=status]{display:block;margin-top:6px}
@@ -397,7 +397,8 @@ function renderHistory(data){
   var rows=Array.isArray(data.recentes)?data.recentes:[];
   $('historyRows').innerHTML=rows.map(function(x){
     var active=String(x.status||'').toUpperCase()==='EMITIDA'||String(x.status||'').toUpperCase()==='RECONCILIACAO_PENDENTE';
-    var links=(x.codigos||[]).map(function(c){return '<div class="history-ticket" data-history-code="'+esc(c)+'"><code>'+esc(c)+'</code>'+(active?'<div class="ticket-actions"><button class="btn" data-history-action="open" type="button">Abrir ingresso</button><button class="btn" data-history-action="copy" type="button">Copiar link</button><button class="btn" data-history-action="share" type="button">Compartilhar</button></div><small role="status" aria-live="polite"></small>':'<small>Ingresso indisponível para compartilhamento.</small>')+'</div>'}).join('');
+    var codes=x.codigos||[];
+    var links=codes.map(function(c,index){return '<div class="history-ticket" data-history-code="'+esc(c)+'">'+courtesyTicketDetails(c,index,codes.length)+(active?'<div class="ticket-actions"><button class="btn" data-history-action="open" type="button">Abrir ingresso</button><button class="btn" data-history-action="copy" type="button">Copiar link</button><button class="btn" data-history-action="share" type="button">Compartilhar</button></div><small role="status" aria-live="polite"></small>':'<small>Ingresso indisponível para compartilhamento.</small>')+'</div>'}).join('');
     return '<tr>'+
       '<td><b>'+esc(x.destinatarioNome)+'</b><br><small>'+esc(x.whatsappMascara||'')+'</small></td>'+
       '<td>'+esc(x.tipoNome)+'<br><small>'+esc(x.loteNome||'')+'</small><br>'+links+'</td>'+
@@ -497,12 +498,36 @@ function issuePayload(){
     convidadoId:guest
   };
 }
-function renderIssued(r){
+function courtesyTicketDetails(code,index,total){
+  return '<span class="courtesy-label">'+(total>1?'Cortesia '+(index+1)+' de '+total:'Cortesia')+'</span><small class="ticket-code">Código: <code>'+esc(code||'')+'</code></small><small class="ticket-entry">1 entrada por ingresso</small>';
+}
+function courtesyDisplayName(ticket,index,result,payload){
+  var name=String(ticket.nome||''),base=String(payload&&payload.nome||'');
+  var list=Array.isArray(result.ingressos)?result.ingressos:[];
+  var sales=Number(result.quantidadeVendas),accesses=Number(result.quantidadeAcessos),capacity=accesses/sales;
+  // CTEmissao.obterParticipanteDoAcessoCTEmissao_ preserves the first name;
+  // criarNomeParticipanteCTEmissao_ generates these exact positional suffixes.
+  // Only this form's fresh issue has a known payload without named companions.
+  // Never strip a pattern from an arbitrary persisted name or an idempotent retry.
+  if(result.idempotente!==false||(payload&&payload.participantes&&payload.participantes.length)||!base||!index||!list[0]||list[0].nome!==base||
+    !Number.isInteger(sales)||sales<1||!Number.isInteger(capacity)||capacity<1||accesses!==list.length)return name||'Participante';
+  var sale=Math.floor(index/capacity)+1,access=index%capacity+1;
+  var generated=base+(sales>1?' - Venda '+sale+'/'+sales:'')+' - Acesso '+access+'/'+capacity;
+  return name===generated?base:(name||'Participante');
+}
+function courtesyIssueMessage(result){
+  var count=Number(result.quantidadeAcessos);
+  if(!Number.isInteger(count)||count<1)count=Array.isArray(result.ingressos)?result.ingressos.length:0;
+  if(result.idempotente===true)return (count>1?'Estas cortesias já haviam sido emitidas.':'Esta cortesia já havia sido emitida.')+' Nenhum novo ingresso foi criado.';
+  if(count>1)return count+' cortesias emitidas com sucesso.';
+  return count===1?'Cortesia emitida com sucesso.':String(result.mensagem||'Emissão de cortesia concluída.');
+}
+function renderIssued(r,payload){
   state.issuedContext={producerId:String(state.produtor.id),eventId:eventId(state.evento)};
   var list=Array.isArray(r.ingressos)?r.ingressos:[];
-  $('resultTickets').innerHTML='<div class="message show ok" style="margin-top:12px">'+esc(r.mensagem||'Cortesia emitida.')+'</div>'+list.map(function(t){
+  $('resultTickets').innerHTML='<div class="message show ok" style="margin-top:12px">'+esc(courtesyIssueMessage(r))+'</div>'+list.map(function(t,index){
     t=Object.assign({},t,{link:officialTicketUrl(t.link,String(t.codigo||''))});
-    return '<div class="ticket-result" data-issued-code="'+esc(t.codigo||'')+'"><b>'+esc(t.nome||'Participante')+' · '+esc(t.codigo||'')+'</b><small>'+esc(t.tipo||'')+' · '+esc(t.loteNome||'')+'</small><div class="ticket-actions">'+
+    return '<div class="ticket-result" data-issued-code="'+esc(t.codigo||'')+'"><b>'+esc(courtesyDisplayName(t,index,r,payload))+'</b>'+courtesyTicketDetails(t.codigo,index,list.length)+'<small>'+[t.tipo,t.loteNome].filter(Boolean).map(esc).join(' · ')+'</small><div class="ticket-actions">'+
       (officialTicketUrl(t.link)!=='#'?'<a class="btn gold" href="'+esc(officialTicketUrl(t.link))+'" target="_blank" rel="noopener">Abrir ingresso</a><button class="btn" data-copy="'+esc(officialTicketUrl(t.link))+'" type="button">Copiar link</button><span data-issued-share></span>':'<span>Link seguro indisponível.</span>')+
       '</div><small role="status" aria-live="polite"></small></div>';
   }).join('');
@@ -520,7 +545,7 @@ async function issue(){
     var eventId=String(state.evento.id||state.evento.eventoId||'');
     var r=await rpc('ctCortesiasEmitirPROD',[state.session.token,eventId,payload]);
     if(!r||r.sucesso!==true)throw new Error('Não foi possível emitir a cortesia.');
-    renderIssued(r);
+    renderIssued(r,payload);
     state.issueKey=null;
     await load(true);
   }catch(e){message(e.message||String(e),'error')}
