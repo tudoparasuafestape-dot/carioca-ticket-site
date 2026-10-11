@@ -115,6 +115,7 @@
 <script src="/assets/checkout-language.js"></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
+  <script src="/assets/advance-sales.js?v=20261011-1"></script>
 </head>
 <body>
 <div id="checkoutLanguageControl" class="checkout-language" hidden><label for="checkoutLanguage" data-checkout-text="Idioma">Idioma</label><select id="checkoutLanguage"><option value="pt-BR" lang="pt-BR">Português</option><option value="en-US" lang="en-US">English</option><option value="es" lang="es">Español</option><option value="zh-Hans" lang="zh-Hans">简体中文</option></select><p id="checkoutOriginalNotice" hidden data-checkout-text="Os nomes e textos cadastrados pelo produtor permanecem no idioma original.">Os nomes e textos cadastrados pelo produtor permanecem no idioma original.</p></div>
@@ -567,6 +568,29 @@
         return q;
       }
 
+      function advanceSalesClosed(){return !!(window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventId));}
+      function savedIdempotency(method){
+        try{return String(localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+state.eventId+'_'+method)||'').trim();}catch(e){return '';}
+      }
+      function renderAdvanceSalesNotice(){
+        if(!advanceSalesClosed())return;
+        var notice=document.getElementById('advanceSalesNotice');
+        if(!notice){
+          notice=document.createElement('p');notice.id='advanceSalesNotice';notice.className='status info';
+          notice.lang='pt-BR';notice.setAttribute('role','status');
+          el.eventDescription.parentNode.appendChild(notice);
+        }
+        notice.textContent=window.CTAdvanceSales.message;
+        updatePaymentMethodUI();
+        if(!state.order&&!savedIdempotency('PIX')&&!savedIdempotency('CREDIT_CARD')){
+          el.salePanel.classList.add('hidden');el.buyerPanel.classList.add('hidden');el.payActionPanel.classList.add('hidden');
+        }else if(!state.order){
+          // A saved key can represent a committed order whose response was lost.
+          // Only the server can decide whether it is a retry; never mint a new key.
+          notice.textContent+=' Para recuperar um pedido já iniciado, repita os mesmos dados e a mesma forma de pagamento.';
+        }
+      }
+
       function storageKey(){return 'CT_CHECKOUT_RECOVERY_'+state.eventId;}
 
       /*
@@ -720,6 +744,7 @@
               return;
             }
             registrarAcessoCampanha();
+            renderAdvanceSalesNotice();
             var recovery=readRecovery();
             if(recovery&&recovery.pedidoId&&recovery.token){
               recoverOrder(recovery);
@@ -1147,6 +1172,8 @@
 
 
       function getOrCreateIdempotency(){
+        if(advanceSalesClosed())return savedIdempotency(state.paymentMethod);
+
         try{
           var existente=String(localStorage.getItem(idempotencyStorageKey())||'').trim();
           if(existente)return existente;
@@ -1194,6 +1221,10 @@
           return;
         }
 
+        state.paymentMethod=el.paymentCard.checked?'CREDIT_CARD':'PIX';
+        if(advanceSalesClosed()&&!savedIdempotency(state.paymentMethod)){
+          modal('Vendas antecipadas encerradas',window.CTAdvanceSales.message);return;
+        }
         var err=validate();
         if(err){modal('Revise seus dados',err);return;}
 
@@ -1266,6 +1297,11 @@
           checkoutUiWrite(el.payButton,'Gerar PIX e reservar ingresso');
           checkoutUiWrite(el.payHelp,'A venda e o ingresso só são criados depois que o Asaas confirma o recebimento do PIX.');
         }
+        if(advanceSalesClosed()){
+          checkoutUiWrite(el.payButton,'Recuperar pedido anterior');
+          el.payButton.disabled=!savedIdempotency(state.paymentMethod);
+          checkoutUiWrite(el.payHelp,'Use os mesmos dados do pedido já iniciado. Novos pedidos antecipados estão encerrados.');
+        }
       }
 
       function friendlyError(error){
@@ -1277,6 +1313,7 @@
         if(m.indexOf('CT_CUPONS_PAUSADO')>=0)return 'Esta campanha está temporariamente pausada.';
         if(m.indexOf('CT_CUPONS_EXPIRADO')>=0)return 'Este cupom expirou.';
         if(m.indexOf('CT_CUPONS_ESGOTADO')>=0)return 'Esta promoção atingiu o limite disponível.';
+        if(m.indexOf('CT_CHECKOUT_ANTECIPADOS_ENCERRADOS')>=0)return window.CTAdvanceSales.message;
         if(m.indexOf('CT_CUPONS_')>=0)return 'O cupom não pôde ser aplicado. Revise a promoção e tente novamente.';
         if(m.indexOf('CT_CHECKOUT_DESCONTO_NAO_PODE_ZERAR_INGRESSO_PAGO')>=0)return 'Este ingresso é originalmente pago e não pode ser convertido em gratuito por desconto. Para gratuidade, o produtor deve usar o fluxo de cortesia.';
         if(m.indexOf('CT_CHECKOUT_GRATUITO_SOMENTE_PRECO_OFICIAL_ZERO')>=0)return 'A emissão gratuita só é permitida para ingresso ou lote oficialmente configurado com valor R$ 0,00.';
@@ -1293,7 +1330,7 @@
           .withSuccessHandler(function(res){
             setLoading(false);
             if(!res||res.sucesso!==true||res.encontrado===false||!res.pedido){
-              clearRecovery();return;
+              clearRecovery();renderAdvanceSalesNotice();return;
             }
             state.order=res.pedido;renderOrder(res);
           })
@@ -1367,6 +1404,7 @@
           stopPolling();stopExpiry();stopTicketReadyRefresh();clearRecovery();clearIdempotency();
           el.pixPanel.classList.add('hidden');el.cardPanel.classList.add('hidden');
           el.salePanel.classList.remove('hidden');el.buyerPanel.classList.remove('hidden');el.payActionPanel.classList.remove('hidden');
+          if(advanceSalesClosed()){showClosed(window.CTAdvanceSales.message);return;}
           modal('Pedido encerrado',status==='EXPIRADO'?'O tempo de reserva terminou. Você pode gerar um novo pedido.':'Este pedido não está mais disponível. Você pode tentar novamente.');
           loadCatalog();return;
         }

@@ -335,7 +335,7 @@ test('integrated current home loads its local assets and shares theme with both 
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
   await expect(page.locator('.catalog-card').first()).toBeVisible();
-  for (const resource of ['/assets/home-event-rail.js', '/assets/public-share.js', '/assets/public-share.css']) {
+  for (const resource of ['/assets/advance-sales.js', '/assets/home-event-rail.js', '/assets/public-share.js', '/assets/public-share.css']) {
     const response = await page.request.get(resource);
     expect(response.status()).toBe(200);
   }

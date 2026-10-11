@@ -287,6 +287,7 @@
   <script src="/pwa-register.js" defer></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
+  <script src="/assets/advance-sales.js?v=20261011-1"></script>
 </head>
 <body class="ct-event">
 <script>
@@ -858,6 +859,17 @@
           );
         });
         $('tickets').innerHTML=tickets.join('')||'<p>'+esc(tr('Nenhum ingresso disponível neste momento.'))+'</p>';
+
+        if(window.CTAdvanceSales && window.CTAdvanceSales.closed(state.eventoId)){
+          var notice=window.CTAdvanceSales.message;
+          ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){
+            var link=$(id);link.removeAttribute('data-public-i18n');link.lang='pt-BR';
+            link.textContent='Ingressos na portaria · R$30';link.href='#tickets';
+          });
+          $('startingPrice').textContent='R$30 na portaria';$('startingPrice').lang='pt-BR';
+          $('tickets').textContent=notice;$('tickets').lang='pt-BR';
+          $('highlight').textContent=notice;$('highlight').lang='pt-BR';
+        }
 
         document.querySelector('title').removeAttribute('data-public-i18n');
         document.querySelector('title').lang=e.nome?'pt-BR':locale();

@@ -113,7 +113,10 @@
       var more = node('a', 'event-secondary', tr('viewEvent', 'Ver evento'));
       more.dataset.i18n = 'viewEvent';
       more.href = detail;
-      actions.append(buy, more);
+      if(window.CTAdvanceSales && window.CTAdvanceSales.closed(event.id)){
+        body.appendChild(original(node('p', 'catalog-description', window.CTAdvanceSales.message)));
+        actions.append(more);
+      }else actions.append(buy, more);
       body.appendChild(actions);
       article.append(cover, body);
       return article;

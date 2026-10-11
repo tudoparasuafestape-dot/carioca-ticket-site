@@ -1,0 +1,32 @@
+name: Advance sales closure (offline browser)
+on:
+  pull_request:
+    paths:
+      - 'assets/advance-sales.js'
+      - 'assets/public-event-catalog.js'
+      - 'index.html'
+      - 'evento/**'
+      - 'evento-v2/**'
+      - 'checkout/**'
+      - 'checkout-v2/**'
+      - 'tests/advance-sales-closure.browser.cjs'
+      - '.github/workflows/advance-sales-closure.yml'
+permissions:
+  contents: read
+jobs:
+  isolated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/advance-sales-closure.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: advance-sales-offline-evidence
+          path: test-results/advance-sales/

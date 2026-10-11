@@ -6,6 +6,9 @@ for(const route of paths){
  const path=route+'/index.html';let source=fs.existsSync('../public-brand-audit-base/'+path)?fs.readFileSync('../public-brand-audit-base/'+path,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'});const current=fs.readFileSync(path,'utf8').replace(/  <link rel="stylesheet" href="\/assets\/public-privacy.css\?v=20261010-1">\n/g,'').replace(/  <script src="\/assets\/public-privacy.js\?v=20261010-1" defer><\/script>\n/g,'');
  // Approved explicit WhatsApp enhancement changes only the public share cache keys.
  if(route==='parceiro/programa')source=source.replace('/assets/public-share.js?v=20261009-card-share1','/assets/public-share.js?v=20261010-whatsapp1').replace('/assets/public-share.css?v=20261009-share1','/assets/public-share.css?v=20261010-whatsapp1');
+ // Authorized event-specific closure changes this copy only; keep redirect,
+ // navigation, scripts, accessible brand and CSS under the existing assertions.
+ if(route==='roda-de-samba')source=source.replace('Abrindo a página oficial de vendas…','Vendas antecipadas encerradas. Ingressos disponíveis na portaria por R$30.').replace('Acessar venda de ingressos','Ver informações do evento');
  // A later public-markup repair relocates this exact preexisting helper into the script.
  // Normalize only that approved movement; every other script byte remains protected.
  if(['minha-carioca/login','minha-carioca/acesso'].includes(route)){

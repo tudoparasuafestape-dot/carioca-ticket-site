@@ -2,7 +2,8 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const EVENT = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
+// Generic open-sales journey; real Samba closure has its own isolated suite.
+const EVENT = 'EVT-LOCAL-PUBLIC-CANARY';
 const PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zs3sAAAAASUVORK5CYII=';
 function catalog() {
   return { sucesso: true, evento: { id: EVENT, nome: 'Roda de Samba Estilo Carioca', data: '11/10/2026', horario: '15h',

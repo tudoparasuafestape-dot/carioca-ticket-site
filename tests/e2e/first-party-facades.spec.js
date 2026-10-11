@@ -27,7 +27,7 @@ const MOCK_CONTRACT = {
 };
 
 const BRANCH_MODE = process.env.CT_BRANCH_MODE === '1';
-const EVENT_ID = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
+const { EVENT: EVENT_ID } = require('../fixtures/public-canary.cjs');
 
 const ONE_PIXEL_PNG =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zs3sAAAAASUVORK5CYII=';
