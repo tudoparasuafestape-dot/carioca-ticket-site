@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#050607">
   <title data-public-i18n="event.Evento | Carioca Ticket">Evento | Carioca Ticket</title>
   <script src="/assets/public-i18n.js?v=20261009-event"></script>
-  <script src="/assets/event-i18n.js?v=20261009-1"></script>
+  <script src="/assets/event-i18n.js?v=20261012-support1"></script>
   <script src="/assets/home-theme.js?v=20261009-dark-default" ></script>
   <style>
     :root{
@@ -562,6 +562,7 @@
   <section id="errorBox" class="error hidden">
     <h2 data-public-i18n="event.Evento indisponível">Evento indisponível</h2>
     <p id="errorText" style="color:#aeb4bd;line-height:1.6"></p>
+    <p id="errorReference" class="hidden" style="color:#aeb4bd;font-size:14px"><span data-public-i18n="event.Referência para suporte">Referência para suporte</span>: <strong id="errorReferenceCode"></strong></p>
     <button id="retryEventLoad" data-event-load-retry class="cta hidden" type="button" style="font:inherit;cursor:pointer" data-public-i18n="event.Tentar novamente">Tentar novamente</button>
   </section>
 
@@ -809,7 +810,7 @@
         if(backdrop)backdrop.onclick=fecharMenuCompartilhamento;
       }
 
-      function showError(msg,retryable){
+      function showError(msg,retryable,reference){
         if(window.CTEventUber)window.CTEventUber.clear();
         if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('loading').classList.add('hidden');
@@ -820,6 +821,11 @@
         $('errorText').lang=window.CTEventI18n&&window.CTEventI18n.has(errorSource)?locale():'pt-BR';
         $('errorBox').classList.remove('hidden');
         $('retryEventLoad').classList.toggle('hidden',retryable!==true);
+        // A bounded support reference makes mobile screenshots actionable.
+        // Never expose server messages, request IDs, URLs or event/customer data.
+        var safeReference=/^E0[0-3]$/.test(reference||'')?reference:'';
+        $('errorReferenceCode').textContent=safeReference;
+        $('errorReference').classList.toggle('hidden',!safeReference);
       }
 
       function render(res,languageOnly){
@@ -934,6 +940,8 @@
         if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('errorBox').classList.add('hidden');
         $('retryEventLoad').classList.add('hidden');
+        $('errorReference').classList.add('hidden');
+        $('errorReferenceCode').textContent='';
         $('loading').classList.remove('hidden');
         google.script.url.getLocation(function(loc){
           state.eventoId=String((loc.parameter&&loc.parameter.evento)||'').trim();
@@ -973,7 +981,8 @@
                 code:code,elapsedMs:Number(error&&error.elapsedMs)||0,
                 online:navigator.onLine,visibility:document.visibilityState
               });
-              showError('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.',true);
+              var reference={CT_PUBLIC_RPC_TIMEOUT:'E01',CT_PUBLIC_RPC_REMOTE_ERROR:'E02',CT_PUBLIC_RPC_SUBMIT_ERROR:'E03'}[code]||'E00';
+              showError('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.',true,reference);
             })
             .ctEventoPublicoCarregarPROD(state.eventoId);
         });
