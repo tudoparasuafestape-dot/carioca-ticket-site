@@ -21,7 +21,7 @@ const SIG = 'abcdefghijklmnopQRSTUVWX1234_-AB';
 
 function catalogo() {
   return {
-    sucesso: true,
+    sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z',
     evento: {
       id: EVENT_ID,
       nome: 'Roda de Samba Estilo Carioca',

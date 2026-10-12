@@ -1089,5 +1089,25 @@ window.CTCheckoutTranslations={
     "en-US": "● Valid ticket",
     "es": "● Entrada válida",
     "zh-Hans": "● 有效门票"
+  },
+  "Tentar novamente": {
+    "en-US": "Try again",
+    "es": "Intentar de nuevo",
+    "zh-Hans": "重试"
+  },
+  "Minhas compras": {
+    "en-US": "My purchases",
+    "es": "Mis compras",
+    "zh-Hans": "我的购买记录"
+  },
+  "Não foi possível recuperar o pedido agora. Tente novamente.": {
+    "en-US": "We couldn't recover the order right now. Try again.",
+    "es": "No se pudo recuperar el pedido ahora. Inténtalo de nuevo.",
+    "zh-Hans": "暂时无法恢复订单，请重试。"
+  },
+  "Ainda não foi possível confirmar o resultado da tentativa anterior. Consulte Minhas compras antes de tentar uma nova compra.": {
+    "en-US": "The result of your previous attempt hasn't been confirmed yet. Check My purchases before attempting a new purchase.",
+    "es": "Todavía no se pudo confirmar el resultado del intento anterior. Consulta Mis compras antes de intentar una nueva compra.",
+    "zh-Hans": "上一次尝试的结果尚未确认。再次购买前，请先查看“我的购买记录”。"
   }
 };

@@ -2,6 +2,7 @@ name: Home stage 1 (isolated fixtures)
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'index.html'
       - 'assets/home*'
       - 'assets/public-share.*'

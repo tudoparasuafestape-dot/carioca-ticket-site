@@ -13,7 +13,7 @@ const amount = n => Number(n).toLocaleString('pt-BR', { style: 'currency', curre
 const round = n => Math.round(n * 100) / 100;
 
 function catalog(eventId) {
-  return { sucesso: true, evento: { id: eventId, nome: 'ERA BEAUTY | Local fixture' },
+  return { sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z', evento: { id: eventId, nome: 'ERA BEAUTY | Local fixture' },
     visual: {}, identidadeCliente: { emailObrigatorio: false },
     tipos: [87, 120, 0].map((price, i) => ({ id: 'TYPE-' + i, nome: i === 1 ? 'VIP' : 'Individual', capacidadePorVenda: 1,
       lotes: [{ id: 'LOT-' + i, nome: 'Lote local', preco: amount(price), precoNumero: price, quantidadeLimitada: false }] })) };
@@ -47,6 +47,8 @@ async function createFixture(browser, options = {}) {
     if (url.origin === ORIGIN) {
       if (url.pathname === '/checkout/' || url.pathname === '/checkout/index.html')
         return route.fulfill({ contentType: 'text/html; charset=utf-8', body: fs.readFileSync(path.join(ROOT, 'checkout/index.html'), 'utf8') });
+      if (url.pathname === '/assets/public-catalog-clock.js')
+        return route.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(ROOT, 'assets/public-catalog-clock.js'), 'utf8') });
       if (url.pathname === '/assets/checkout-commercial-policy.js')
         return route.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(ROOT, 'assets/checkout-commercial-policy.js'), 'utf8') });
       return route.fulfill({ status: 200, contentType: 'application/javascript', body: '' });

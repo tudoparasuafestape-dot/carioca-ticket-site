@@ -45,13 +45,13 @@ function observedHtml() {
   // This anchor distinguishes the initial failure handler from campaign handlers.
   insertAfter('.withFailureHandler(function(error){', mark('failure-start'));
   insertAfter('function render(res,languageOnly){', mark('render-start'));
-  insertAfter('} catch (err) {', 'window.__loadingHarness.renderCaught(err);');
+  insertAfter('              }catch(error){', 'window.__loadingHarness.renderCaught(error);');
   insertAfter('function registrarAcessoCampanha(){', mark('campaign-start'));
   insertAfter("$('mobileBuy').classList.remove('hidden');", mark('render-complete'));
   insertAfter('function showError(msg,retryable,reference){', mark('show-error'));
   insertAfter("$('errorBox').classList.remove('hidden');", mark('show-error-complete'));
   // Resource policy belongs to this synthetic document, not to the product file.
-  const policy = "default-src 'none'; script-src 'unsafe-inline'; " +
+  const policy = "default-src 'none'; script-src 'unsafe-inline' http://127.0.0.1/assets/public-catalog-clock.js; " +
     "style-src 'unsafe-inline'; img-src data:; connect-src 'none'; " +
     "form-action 'none'; frame-src 'none'; base-uri 'none'";
   insertAfter('<head>', `<meta http-equiv="Content-Security-Policy" content="${policy}">`);
@@ -122,7 +122,7 @@ function installObservation() {
 
 function resultFixture() {
   return {
-    sucesso: true,
+    sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z',
     evento: { id: 'EVT-HARNESS', nome: 'Evento sintético', data: '01/01/2030' },
     visual: { capaUrl: '', posterUrl: '', descricaoCurta: 'Fixture local' },
     menorPreco: 'R$ 10,00',
@@ -165,6 +165,10 @@ async function isolated(t, action) {
           request.isNavigationRequest() && network.documentsFulfilled === 0) {
         network.documentsFulfilled++;
         return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: observedHtml() });
+      }
+      const resource = new URL(request.url());
+      if (request.method() === 'GET' && resource.origin === 'http://127.0.0.1' && resource.pathname === '/assets/public-catalog-clock.js') {
+        return route.fulfill({ contentType: 'text/javascript', body: fs.readFileSync(path.resolve(__dirname, '../../assets/public-catalog-clock.js'), 'utf8') });
       }
       network.blocked++;
       await route.abort('blockedbyclient');

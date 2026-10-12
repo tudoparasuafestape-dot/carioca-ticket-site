@@ -34,7 +34,7 @@ const TICKET_SIG = 'abcdefghijklmnopqrstuvwx12345678';
 
 function eventFixture() {
   return {
-    sucesso: true,
+    sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z',
     evento: {
       id: EVENT_ID,
       nome: 'Roda de Samba Estilo Carioca',
@@ -81,7 +81,7 @@ function eventFixture() {
 function checkoutFixture() {
   const base=eventFixture();
   return {
-    sucesso: true,
+    sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z',
     evento: base.evento,
     visual: { descricaoCurta: base.visual.descricaoCurta, capaUrl: '' },
     tipos: base.tipos,

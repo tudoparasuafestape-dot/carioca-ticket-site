@@ -1,4 +1,4 @@
-/* Temporal catalog lease. Candidate foundation: pages do not load this file yet. */
+/* Shared monotonic catalog lease. Requires the backend temporalVersion:1 contract. */
 (function (root, factory) {
   'use strict';
   var api = factory();

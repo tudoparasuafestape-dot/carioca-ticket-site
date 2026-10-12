@@ -14,7 +14,7 @@ const ORDER = 'ORDER-SYNTHETIC', TOKEN = 'TOKEN-SYNTHETIC', KEY = 'KEY-SYNTHETIC
 const OUT = process.env.CT_EVIDENCE_DIR || 'test-results/advance-sales';
 const report = [];
 function catalog(id) {
-  return { sucesso: true, evento: { id, nome: id === SAMBA ? 'Roda de Samba Estilo Carioca' : 'ERA BEAUTY', data: '11/10/2026', horario: '15h',
+  return { sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z', evento: { id, nome: id === SAMBA ? 'Roda de Samba Estilo Carioca' : 'ERA BEAUTY', data: '11/10/2026', horario: '15h',
     ...(id === SAMBA ? { local: 'Vevets Recepções', endereco: 'Rua Arenópolis, 82 - Candeias', cidade: 'Jaboatão dos Guararapes', uf: 'PE' } : { local: 'SEBRAE PE', endereco: 'Rua Tabajaras, 360 - Ilha do Retiro', cidade: 'Recife', uf: 'PE' }) },
     visual: { descricaoCurta: 'Evento sintético para teste isolado', categoria: 'Música' }, menorPreco: 'R$ 25,00', identidadeCliente: { emailObrigatorio: false },
     tipos: [{ id: 'LOCAL-TYPE', nome: 'Individual', capacidadePorVenda: 1, lotes: [{ id: 'LOCAL-LOT', nome: 'Pré-venda', preco: 'R$ 25,00', precoNumero: 25, quantidadeLimitada: false }] }] };
@@ -114,10 +114,16 @@ async function fixture(browser, route, mobile, options = {}) {
       if (method === 'PIX') assert.equal(await f.page.locator('#pixCode').inputValue(), 'PIX-SYNTHETIC-NOT-PAYABLE');
       else assert.equal(await f.page.locator('#cardPaymentLink').getAttribute('href'), 'https://example.invalid/synthetic-payment');
       await f.close(route + ' preserves pending recovery/refresh ' + method);
-      const retry = await fixture(browser, route, false, { method, retry: true }); await retry.fill();
-      await retry.page.locator('#payButton').click(); await retry.page.locator(method === 'PIX' ? '#pixPanel' : '#cardPanel').waitFor({ state: 'visible' });
-      assert.equal(retry.payments.length, 1); assert.equal(retry.payments[0].idempotenciaChave, KEY);
-      await retry.close(route + ' lost-response retry reuses saved key ' + method);
+      // A saved key without a confirmed order is now explicitly recovery-pending.
+      const retry = await fixture(browser, route, false, { method, retry: true });
+      await retry.page.locator('#catalogRecoveryAction').waitFor({state:'visible'});
+      assert.equal(await retry.page.locator('#catalogRecoveryAction').getAttribute('href'),'/minha-carioca/conta/');
+      await retry.page.locator('#payButton').evaluate(el=>el.click());
+      assert.equal(retry.payments.length,0,'Unknown result cannot authorize another creation request');
+      assert.equal(await retry.page.evaluate(key=>localStorage.getItem(key),'CT_CHECKOUT_IDEMPOTENCY_'+SAMBA+'_'+method),KEY);
+      assert.equal(await retry.page.locator('#paymentPix').isDisabled(),true);
+      assert.equal(await retry.page.locator('#paymentCard').isDisabled(),true);
+      await retry.close(route + ' lost-response key preserved with explicit recovery ' + method);
     }
     for (const route of ['/checkout/', '/checkout-v2/']) for (const status of ['CONCLUIDO', 'EXPIRADO', 'CANCELADO']) {
       const f = await fixture(browser, route, false, { recover: true, status });

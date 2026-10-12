@@ -2,6 +2,7 @@ name: Public privacy controls (isolated)
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'assets/public-privacy.*'
       - 'assets/ct-analytics.js'
       - 'assets/event-map-preview.*'

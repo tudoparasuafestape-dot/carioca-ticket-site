@@ -2,6 +2,7 @@ name: Dark default and advertising CTA isolated
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'index.html'
       - 'anuncie/index.html'
       - 'evento/index.html'

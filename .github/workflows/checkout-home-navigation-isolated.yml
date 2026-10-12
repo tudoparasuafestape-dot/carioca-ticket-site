@@ -2,6 +2,7 @@ name: Checkout home navigation (isolated fixtures)
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'checkout/index.html'
       - 'checkout-v2/index.html'
       - 'assets/checkout-home-navigation.*'

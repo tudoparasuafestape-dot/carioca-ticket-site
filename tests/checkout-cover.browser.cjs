@@ -8,7 +8,7 @@ const ROOT = path.resolve(__dirname, '..'), ORIGIN = 'http://127.0.0.1:4183';
 const EVENT = 'NEW-COVER-2026 & próximo';
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zs3sAAAAASUVORK5CYII=', 'base64');
 const ENDPOINTS = new Set(['https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec', 'https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec']);
-const ASSETS = new Set(['/assets/advance-sales.js','/assets/public-privacy.js','/assets/public-privacy.css','/assets/public-i18n.js','/assets/checkout-language.js','/assets/checkout-language.css','/assets/checkout-translations.js','/assets/checkout-home-navigation.css', '/assets/checkout-home-navigation.js', '/assets/checkout-commercial-policy.js']);
+const ASSETS = new Set(['/assets/public-catalog-clock.js','/assets/advance-sales.js','/assets/public-privacy.js','/assets/public-privacy.css','/assets/public-i18n.js','/assets/checkout-language.js','/assets/checkout-language.css','/assets/checkout-translations.js','/assets/checkout-home-navigation.css', '/assets/checkout-home-navigation.js', '/assets/checkout-commercial-policy.js']);
 async function run(browser, routePath, mobile) {
   const context = await browser.newContext({ viewport: { width: mobile ? 320 : 1365, height: 900 }, serviceWorkers: 'block' });
   const page = await context.newPage(), errors = [], unexpected = [], images = [], held = new Map();
@@ -43,7 +43,7 @@ async function run(browser, routePath, mobile) {
       assert.equal(fields.get('ctMinhaCariocaAction'), 'publicRpc');
       assert.equal(fields.get('metodo'), 'ctCheckoutPublicoCarregarEventoPROD', 'No payment/order RPC allowed');
       assert.deepEqual(JSON.parse(fields.get('argsJson')), routePath === '/checkout-v2/' ? [EVENT, ''] : [EVENT]);
-      const catalog = { sucesso: true, evento: { id: EVENT, nome: 'Próximo evento sintético' }, visual: { posterUrl: ORIGIN + '/fixture/poster.png' }, identidadeCliente: { emailObrigatorio: false }, tipos: [{ id: 'LOCAL-TYPE', nome: 'Ingresso sintético', lotes: [] }] };
+      const catalog = { sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z', evento: { id: EVENT, nome: 'Próximo evento sintético' }, visual: { posterUrl: ORIGIN + '/fixture/poster.png' }, identidadeCliente: { emailObrigatorio: false }, tipos: [{ id: 'LOCAL-TYPE', nome: 'Ingresso sintético', lotes: [] }] };
       const response = JSON.stringify({ ctMinhaCariocaPost: true, id: fields.get('ctMinhaCariocaRequestId'), ok: true, resultado: catalog }).replace(/</g, '\\u003c');
       return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><script>window.top.postMessage(' + response + ',"*")</script>' });
     } catch (error) { unexpected.push(error.message); console.error('Blocked fixture request:', req.method(), url.origin + url.pathname, error.message); await route.abort('blockedbyclient'); }

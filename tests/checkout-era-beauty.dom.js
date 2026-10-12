@@ -26,7 +26,7 @@ const round = n => Math.round(n * 100) / 100;
 const clone = value => structuredClone(value);
 
 class Clock {
-  constructor() { this.now = START; this.nextId = 1; this.jobs = new Map(); }
+  constructor() { this.now = START; this.elapsed = 0; this.nextId = 1; this.jobs = new Map(); }
   timeout(fn, delay = 0, ...args) {
     const id = this.nextId++;
     this.jobs.set(id, { id, at: this.now + Math.max(0, Number(delay) || 0), fn, args });
@@ -45,11 +45,13 @@ class Clock {
       const job = [...this.jobs.values()].filter(j => j.at <= end).sort((a, b) => a.at - b.at || a.id - b.id)[0];
       if (!job) break;
       assert(remaining-- > 0, 'Timer loop exceeded the harness safety bound');
+      this.elapsed += Math.max(0, job.at - this.now);
       this.now = job.at;
       this.jobs.delete(job.id);
       if (job.interval) this.jobs.set(job.id, { ...job, at: job.at + job.interval });
       job.fn(...job.args);
     }
+    this.elapsed += Math.max(0, end - this.now);
     this.now = end;
   }
 }
@@ -113,6 +115,14 @@ class Element {
     else if (name === 'value') this.value = '';
     else if (name === 'disabled' || name === 'checked') this[name] = false;
     else if (!name.startsWith('data-') && !name.startsWith('aria-')) delete this[name];
+  }
+  get firstChild() { return this.children[0] || null; }
+  insertBefore(child, reference) {
+    if (reference == null) return this.appendChild(child);
+    const index = this.children.indexOf(reference);
+    assert(index >= 0, 'insertBefore requires an existing reference child');
+    if (child.parentNode) child.remove();
+    child.parentNode = this; this.children.splice(this.children.indexOf(reference), 0, child); return child;
   }
   appendChild(child) { child.parentNode = this; this.children.push(child); return child; }
   append(...children) { children.forEach(c => this.appendChild(c)); }
@@ -178,7 +188,7 @@ class Document extends Element {
 }
 
 function catalog(eventId) {
-  return { sucesso: true, evento: { id: eventId, nome: 'ERA BEAUTY | LOCAL TEST FIXTURE' },
+  return { sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z', evento: { id: eventId, nome: 'ERA BEAUTY | LOCAL TEST FIXTURE' },
     visual: {}, identidadeCliente: { emailObrigatorio: false },
     tipos: [87, 120, 0].map((price, i) => ({ id: 'TYPE-' + i, nome: i === 1 ? 'VIP' : 'Individual', capacidadePorVenda: 1,
       lotes: [{ id: 'LOT-' + i, nome: 'Lote local', preco: money(price), precoNumero: price, quantidadeLimitada: false }] })) };
@@ -207,7 +217,7 @@ function fixture(options = {}) {
   class FakeDate extends Date { constructor(...args) { super(...(args.length ? args : [clock.now])); } static now() { return clock.now; } }
   const windowListeners = new Map();
   const sandbox = {
-    document, console, URL, URLSearchParams, Date: FakeDate,
+    document, console, URL, URLSearchParams, Date: FakeDate, performance: { now: () => clock.elapsed },
     location: { href: url.href, origin: url.origin, search: url.search, hash: '', pathname: url.pathname },
     localStorage: options.localStorage || new Storage(), sessionStorage: new Storage(),
     navigator: { userAgent: 'LOCAL_VM_TEST', clipboard: { writeText: () => forbidden('clipboard write') } },
@@ -259,6 +269,7 @@ function fixture(options = {}) {
     } });
   }
 
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'assets/public-catalog-clock.js'), 'utf8'), context, { filename: 'assets/public-catalog-clock.js', timeout: 1000 });
   if (!options.noPolicy) vm.runInContext(POLICY, context, { filename: 'assets/checkout-commercial-policy.js', timeout: 1000 });
   const scripts = [...HTML.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(match => !/\bsrc\s*=/.test(match[1]));
   assert.equal(scripts.length, 2, 'Revisit harness integration if inline script topology changes');
@@ -509,18 +520,64 @@ test('100% coupon on a paid catalog lot still requires an authoritative revision
   assert.equal(f.state.previews.length, 2); f.finish();
 });
 
-test('repeated payment handlers deduplicate while pending; failed retry preserves idempotency', () => {
-  const f = fixture({ pay: () => PENDING }); f.select(); f.settle();
-  // Direct handler invocation checks the state guard in addition to DOM disabled.
+// CT_PC_REVISAO_DIVERGENTE has no audited pre-creation provenance. Its old
+// retry expectation is deliberately replaced by fail-closed unknown-result handling.
+test('repeated handlers deduplicate and unproven commercial rejection stays pending', () => {
+  const f = fixture({ pay: () => PENDING }); f.select(); f.settle(); f.total(95.7);
   f.element('payButton').onclick(); f.element('payButton').onclick(); f.clock.tick(0);
   assert.equal(f.state.payments.length, 1); assert.equal(f.element('payButton').disabled, true);
-  const payment = f.pending(PAYMENT)[0]; payment.reject('CT_PC_REVISAO_DIVERGENTE');
-  assert.equal(f.element('payButton').disabled, false); assert.equal(f.element('typeSelect').value, 'TYPE-0');
-  assert.equal(f.element('lotSelect').value, 'LOT-0'); assert.equal(f.element('buyerName').value, 'Comprador de Teste Local');
-  assert.match(f.element('modalText').textContent, /condição comercial/); f.closeModal(); f.settle(); f.total(95.7);
-  f.click('payButton'); assert.equal(f.state.payments.length, 2);
-  assert.equal(f.state.payments[0].idempotenciaChave, f.state.payments[1].idempotenciaChave);
-  f.pending(PAYMENT)[0].resolve({ sucesso: false }); f.finish();
+  const key = f.state.payments[0].idempotenciaChave;
+  f.pending(PAYMENT)[0].reject('CT_PC_REVISAO_DIVERGENTE');
+  assert.equal(f.element('payButton').disabled, true);
+  assert.equal(f.element('typeSelect').value, 'TYPE-0');
+  assert.equal(f.element('lotSelect').value, 'LOT-0');
+  assert.equal(f.element('buyerName').value, 'Comprador de Teste Local');
+  assert.match(f.element('modalText').textContent, /condição comercial/);
+  assert.equal(f.element('catalogRecoveryAction').hidden, false);
+  assert.equal(f.element('catalogRecoveryAction').href, '/minha-carioca/conta/');
+  f.closeModal(); f.element('payButton').onclick(); f.clock.tick(0);
+  assert.equal(f.state.payments.length, 1, 'Unknown rejection must not produce a second creation');
+  assert.equal(f.sandbox.localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+ERA+'_PIX'), key);
+  f.method('CREDIT_CARD'); f.settle(); f.element('payButton').onclick(); f.clock.tick(0);
+  assert.equal(f.state.payments.length, 1);
+  assert.equal(f.sandbox.localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+ERA+'_CREDIT_CARD'), null);
+  f.finish();
+});
+
+// A proven rejection is permission to reconsent once in the current context,
+// never proof that a later attempt also failed before order creation.
+for (const outcome of ['unsuccessful response', 'transport timeout']) test('PRECO_ATUALIZADO proof is consumed before retry; later '+outcome+' blocks all further creation', () => {
+  const storage = new Storage();
+  const f = fixture({
+    localStorage: storage,
+    catalog(eventId, n) { const response=catalog(eventId); if(n>1)Object.assign(response.tipos[0].lotes[0],{precoNumero:120,preco:money(120)}); return response; },
+    pay(_request,n) { if(n===1)throw new Error(PRICE_CHANGED); return PENDING; }
+  });
+  f.select(); f.settle(); f.click('payButton'); f.settle(); f.closeModal();
+  assert.equal(f.state.payments.length,1); f.total(132);
+  const key=f.state.payments[0].idempotenciaChave;
+  f.click('payButton'); assert.equal(f.state.payments.length,2);
+  assert.equal(f.state.payments[1].idempotenciaChave,key);
+  const second=f.pending(PAYMENT)[0];
+  if(outcome==='transport timeout')second.reject('LOCAL_SYNTHETIC_TRANSPORT_TIMEOUT');
+  else second.resolve({sucesso:false});
+  assert.equal(f.element('catalogRecoveryAction').hidden,false);
+  assert.equal(f.element('payButton').disabled,true);
+  assert.equal(f.element('typeSelect').value,'TYPE-0');
+  assert.equal(f.element('lotSelect').value,'LOT-0');
+  assert.equal(f.element('buyerName').value,'Comprador de Teste Local');
+  f.closeModal(); f.element('payButton').onclick(); f.clock.tick(0);
+  assert.equal(f.state.payments.length,2,'Prior rejection cannot authorize a third creation');
+  f.method('CREDIT_CARD'); f.settle(); f.element('payButton').onclick(); f.clock.tick(0);
+  assert.equal(f.state.payments.length,2);
+  assert.equal(storage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+ERA+'_PIX'),key);
+  assert.equal(storage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+ERA+'_CREDIT_CARD'),null);
+  f.finish();
+  const reload=fixture({localStorage:storage});
+  assert.equal(reload.element('catalogRecoveryAction').hidden,false);
+  reload.element('payButton').onclick(); reload.clock.tick(0);
+  assert.equal(reload.state.payments.length,0); assert.equal(reload.state.catalogs.length,0);
+  assert.equal(storage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+ERA+'_PIX'),key); reload.finish();
 });
 
 for (const count of [1, 2]) test('PRECO_ATUALIZADO reloads 87 to 120, restores buyer/selection/quantity ' + count + ', and requires explicit retry', () => {
@@ -585,23 +642,37 @@ for (const failure of ['unsuccessful response', 'RPC error']) test('PRECO_ATUALI
   assert(!f.visible('feeSummary')); assert.notEqual(f.element('summaryPrice').textContent, money(95.7)); f.finish();
 });
 
-test('unsuccessful payment response permits explicit retry with same key', () => {
+// Contract change approved 2026-10-12: a response without an authoritative
+// order/rejection cannot prove the first attempt did not commit. Preserve its
+// key and require explicit account recovery, rather than a second creation RPC.
+test('unconfirmed payment response preserves key and blocks explicit recreation', () => {
   const f = fixture(); f.select(); f.settle(); f.click('payButton');
-  assert.equal(f.element('payButton').disabled, false); f.closeModal(); f.click('payButton');
-  assert.equal(f.state.payments.length, 2); assert.equal(f.state.payments[0].idempotenciaChave, f.state.payments[1].idempotenciaChave); f.finish();
+  const key=f.state.payments[0].idempotenciaChave;
+  assert.equal(f.element('payButton').disabled,true);
+  assert.equal(f.element('catalogRecoveryAction').hidden,false);
+  assert.equal(f.element('catalogRecoveryAction').href,'/minha-carioca/conta/');
+  f.closeModal(); f.element('payButton').onclick(); f.clock.tick(0);
+  assert.equal(f.state.payments.length,1,'Even direct handler cannot recreate an unknown payment');
+  assert.equal(f.sandbox.localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+ERA+'_PIX'),key); f.finish();
 });
 
-test('payment method uses a separate persistent idempotency key', () => {
-  const f = fixture(); f.select(); f.settle(); f.click('payButton'); f.closeModal();
-  const pixKey = f.state.payments[0].idempotenciaChave; f.method('CREDIT_CARD'); f.settle(); f.click('payButton');
-  const cardKey = f.state.payments[1].idempotenciaChave; assert.notEqual(pixKey, cardKey);
-  f.closeModal(); f.method('PIX'); f.settle(); f.click('payButton'); assert.equal(f.state.payments[2].idempotenciaChave, pixKey); f.finish();
+test('unconfirmed result blocks payment-method changes and new keys', () => {
+  const f=fixture();f.select();f.settle();f.click('payButton');f.closeModal();
+  const key=f.state.payments[0].idempotenciaChave;
+  f.method('CREDIT_CARD');f.settle();f.element('payButton').onclick();f.clock.tick(0);
+  assert.equal(f.state.payments.length,1);
+  assert.equal(f.sandbox.localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+ERA+'_CREDIT_CARD'),null);
+  assert.equal(f.sandbox.localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+ERA+'_PIX'),key);
+  assert.equal(f.element('paymentPix').disabled,true);assert.equal(f.element('paymentCard').disabled,true);f.finish();
 });
 
-test('idempotency key survives reload through mocked local storage', () => {
-  const storage = new Storage(); const first = fixture({ localStorage: storage }); first.select(); first.settle(); first.click('payButton'); first.finish();
-  const second = fixture({ localStorage: storage }); second.select(); second.settle(); second.click('payButton');
-  assert.equal(first.state.payments[0].idempotenciaChave, second.state.payments[0].idempotenciaChave); second.finish();
+test('unconfirmed idempotency survives reload without replay or replacement', () => {
+  const storage=new Storage();const first=fixture({localStorage:storage});first.select();first.settle();first.click('payButton');first.finish();
+  const key=first.state.payments[0].idempotenciaChave;
+  const second=fixture({localStorage:storage});second.element('payButton').onclick();second.clock.tick(0);
+  assert.equal(second.state.payments.length,0);assert.equal(second.state.catalogs.length,0);
+  assert.equal(second.element('catalogRecoveryAction').hidden,false);
+  assert.equal(storage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+ERA+'_PIX'),key);second.finish();
 });
 
 test('ERA catalog policy flag cannot disable the authoritative quote gate', () => {
@@ -626,10 +697,16 @@ test('non-ERA coupon retains legacy direct-render behavior and no revision', () 
   assert(!('politicaSubtotalVisto' in f.state.payments[0])); assert(!('politicaTotalVisto' in f.state.payments[0])); f.finish();
 });
 
-test('non-ERA delayed coupon keeps its established response behavior', () => {
+// Deliberate regression correction: a q1 coupon response must not replace
+// the q2 total. The prior expectation (77) encoded stale financial state.
+test('non-ERA delayed coupon cannot overwrite changed quantity or total', () => {
   const f = fixture({ eventId: LEGACY, coupon: () => PENDING }); f.select(); f.apply(); const old = f.pending(COUPON)[0];
-  f.input('quantity', '2'); old.resolve(coupon(old.request)); f.total(77);
-  assert(f.visible('promoSummary')); assert.equal(f.state.previews.length, 0); f.finish();
+  assert.equal(old.request.quantidade,1);
+  f.input('quantity', '2'); old.resolve(coupon(old.request)); f.total(174);
+  assert.equal(f.element('quantity').value,'2');
+  assert.equal(f.element('typeSelect').value,'TYPE-0'); assert.equal(f.element('lotSelect').value,'LOT-0');
+  assert(!f.visible('promoSummary')); assert.equal(f.state.previews.length,0);
+  assert.equal(f.state.payments.length,0); f.finish();
 });
 
 test('authentic free catalog lot remains zero, no preview and no revision for PIX or card', () => {

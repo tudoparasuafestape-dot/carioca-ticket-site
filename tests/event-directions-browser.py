@@ -11,7 +11,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 ORIGIN = 'http://127.0.0.1:42973'
 EVENT = dict(local='Espaço São João & Arte', endereco='Rua da Música, 120', cidade='Recife', uf='PE')
 DEST = 'Espaço São João & Arte, Rua da Música, 120, Recife, PE, Brasil'
-FIXTURE = dict(sucesso=True, evento=dict(EVENT, nome='Evento de demonstração', data='20/12/2030'), visual={}, tipos=[])
+FIXTURE = dict(temporalVersion=1, temporalEvaluatedAt='2030-01-01T00:00:00.000Z', serverNow='2030-01-01T00:00:00.000Z', nextTransitionAt=None, validUntil='2030-01-01T01:00:00.000Z', sucesso=True, evento=dict(EVENT, nome='Evento de demonstração', data='20/12/2030'), visual={}, tipos=[])
 checks, blocked, errors, map_mocks = [], [], [], []
 PRELUDE = '''HTMLFormElement.prototype.submit = function() {
  const data = new FormData(this);

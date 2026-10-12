@@ -6,7 +6,7 @@ const path = require('node:path');
 const EVENT = 'EVT-LOCAL-PUBLIC-CANARY';
 const PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zs3sAAAAASUVORK5CYII=';
 function catalog() {
-  return { sucesso: true, evento: { id: EVENT, nome: 'Roda de Samba Estilo Carioca', data: '11/10/2026', horario: '15h',
+  return { sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z', evento: { id: EVENT, nome: 'Roda de Samba Estilo Carioca', data: '11/10/2026', horario: '15h',
     local: 'LOCAL SINTETICO', cidade: 'Recife', uf: 'PE' },
     visual: { capaUrl: '', posterUrl: '', midiaTipo: 'IMAGEM', descricaoCurta: 'Fixture isolada', categoria: 'Fixture', realizacao: 'Equipe de teste' },
     menorPreco: 'R$ 25,00',

@@ -3,6 +3,7 @@ name: CT Checkout Commercial Policy Readiness
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'assets/checkout-commercial-policy.js'
       - 'checkout/**'
       - 'produtor/financeiro/index.html'
