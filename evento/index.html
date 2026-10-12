@@ -796,6 +796,7 @@
       }
 
       function showError(msg,retryable,reference){
+        state.temporalNeedsFullRender=true;
         if(window.CTEventUber)window.CTEventUber.clear();
         if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('loading').classList.add('hidden');
@@ -855,7 +856,7 @@
         $('errorReferenceCode').textContent='';
         $('app').classList.remove('hidden');
         $('mobileBuy').classList.remove('hidden');
-        state.temporalInitialRendered=true;
+        state.temporalInitialRendered=true;state.temporalNeedsFullRender=false;
       }
 
 
@@ -1017,16 +1018,22 @@
             .withSuccessHandler(function(res){
               finishEventLoad();
               var validEnvelope=eventLease&&eventLease.accept(res,ticket);
-              if(!res||res.sucesso!==true||!validEnvelope){
+              if(!res||res.sucesso!==true){
+                state.data=null;
+                if(eventLease)eventLease.invalidate('unavailable');
+                showError(res&&res.mensagem?res.mensagem:'Este evento não está disponível no momento.');
+                return;
+              }
+              if(!validEnvelope){
                 if(eventLease)eventLease.invalidate('unavailable');
                 if(availabilityOnly)eventTemporalFailure();
-                else showError(res&&res.mensagem?res.mensagem:'Este evento não está disponível no momento.',true);
+                else showError('Este evento não está disponível no momento.',true);
                 return;
               }
               state.temporalFailed=false;
               var firstRender=!state.temporalInitialRendered;
               try{
-                if(availabilityOnly&&!firstRender)renderCommercial(res);
+                if(availabilityOnly&&!firstRender&&!state.temporalNeedsFullRender)renderCommercial(res);
                 else render(res);
               }catch(error){
                 if(eventLease)eventLease.invalidate('render-failed');

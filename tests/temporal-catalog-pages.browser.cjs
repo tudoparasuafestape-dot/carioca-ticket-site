@@ -53,7 +53,7 @@ async function fixture(browser, route, options = {}) {
   const page = await context.newPage();
   const s = { catalogs: 0, catalogArgs: [], next: 'B', holdCatalog: false, releases: [],
     payments: [], couponCalls: [], campaigns: 0, polls: 0, errors: [], holdCoupon: false,
-    releaseCoupon: null, previews: [], feeReleases: [], releaseInitial: null, holdPayment: false, releasePayment: null, missing: !!options.missing };
+    releaseCoupon: null, previews: [], feeReleases: [], releaseInitial: null, denyCatalog: false, holdPayment: false, releasePayment: null, missing: !!options.missing };
   page.on('pageerror', error => s.errors.push(error.message));
   await page.clock.install({ time: new Date('2030-01-01T00:00:00.000Z') });
   if (options.delayLeaseTimer) await context.addInitScript(() => {
@@ -83,8 +83,10 @@ async function fixture(browser, route, options = {}) {
       s.catalogArgs.push(args); const number = ++s.catalogs;
       if (number === 1 && options.holdInitial) await new Promise(resolve => { s.releaseInitial = resolve; });
       if (number === 1 && options.initialFailure) return {sucesso:false,mensagem:'LOCAL_SYNTHETIC_CATALOG_FAILURE'};
+      if (s.denyCatalog) return {sucesso:false,codigo:'EVENTO_PRIVADO_CONVITE',mensagem:'Acesse pelo convite individual.'};
       if (number > 1 && s.holdCatalog) await new Promise(resolve => s.releases.push(resolve));
       const result = catalog(number === 1 ? 'A' : s.next, number === 1 ? (options.ttl || 60000) : 3600000, event, !!options.policy);
+      if (options.directions) result.evento.endereco='Rua de Teste, 123';
       if (s.missing) for (const key of ['temporalVersion', 'temporalEvaluatedAt', 'serverNow', 'nextTransitionAt', 'validUntil']) delete result[key];
       return result;
     };
@@ -325,7 +327,17 @@ async function retainedForm(f) {
       await fees.page.clock.runFor(500); await delay(100);
       assert.equal(fees.s.previews.length,quoteCount,'stale quantity, payment and retry cannot quote expired lot');
       assert.equal(fees.s.payments.length,0);
-      fees.releaseCatalog(); await until(async()=>!(await fees.page.locator('#typeSelect').isDisabled()),'price catalog recovers');
+      fees.releaseCatalog();
+      try { await until(async()=>!(await fees.page.locator('#typeSelect').isDisabled()),'price catalog recovers'); }
+      catch(error){
+        console.error('SYNTHETIC_PRICE_RECOVERY_DIAGNOSTIC',JSON.stringify({
+          route,catalogs:fees.s.catalogs,errors:fees.s.errors,previews:fees.s.previews.length,payments:fees.s.payments.length,
+          ui:await fees.page.evaluate(()=>Object.fromEntries(['catalogTemporalNotice','typeSelect','lotSelect','payButton','feeSummary'].map(id=>{
+            const el=document.getElementById(id);return[id,el?{text:el.textContent,disabled:!!el.disabled,hidden:el.hidden,className:el.className}:null];
+          })))
+        }));
+        throw error;
+      }
       await fees.close(route+' all quote entry points respect stale catalog');
 
       const delayed=await fixture(browser,route,{eventId:'EVT-23112026-ERA-BEAUTY-EAC4B673',policy:true,holdFee:true,delayLeaseTimer:true,ttl:5000});
@@ -393,6 +405,41 @@ async function retainedForm(f) {
     await retainedForm(privateFlow); await privateFlow.close('private grant and campaign survive catalog transition');
 
     for (const route of ['/evento/','/evento-v2/']) {
+      const gated=await fixture(browser,route,{directions:true,campaign:route.includes('-v2')});
+      const map=gated.page.locator('#directions-map-preview');
+      await map.waitFor({state:'visible'});
+      const address=await gated.page.locator('#directions-address').inputValue();
+      const share=await gated.page.locator('#shareWhatsAppAction').getAttribute('href');
+      assert(share&&share.includes('wa.me'),'initial public share is configured');
+      const visits=route.includes('-v2')?1:0;
+      if(visits)await until(()=>gated.s.campaigns===visits,'initial campaign visit');
+      gated.s.denyCatalog=true;
+      await gated.page.evaluate(()=>dispatchEvent(new Event('focus')));
+      await until(()=>gated.s.catalogs===2,'loaded event is denied on refresh');
+      await gated.page.locator('#errorBox').waitFor({state:'visible'});
+      assert.equal(await gated.page.locator('#app').isVisible(),false);
+      assert.equal(await gated.page.locator('#retryEventLoad').isVisible(),false);
+      assert.equal(await gated.page.locator('#shareWhatsAppAction').getAttribute('href'),null);
+      await gated.page.evaluate(()=>CTPublicI18n.setLocale('en-US'));
+      assert.equal(await gated.page.locator('#app').isVisible(),false,'language change cannot reopen an authoritatively denied event');
+      assert.equal(await gated.page.locator('#errorBox').isVisible(),true);
+      assert.equal(await gated.page.locator('#shareWhatsAppAction').getAttribute('href'),null);
+      await gated.page.evaluate(()=>CTPublicI18n.setLocale('pt-BR'));
+      assert.equal(await gated.page.locator('#app').isVisible(),false);
+      gated.s.denyCatalog=false;
+      await gated.page.evaluate(()=>dispatchEvent(new Event('focus')));
+      await until(()=>gated.s.catalogs===3,'event permitted on later resume');
+      await gated.page.locator('#app').waitFor({state:'visible'});
+      assert.equal(await gated.page.locator('#errorBox').isVisible(),false);
+      assert.equal(await gated.page.locator('#retryEventLoad').isVisible(),false);
+      assert.equal(await gated.page.locator('#errorReference').isVisible(),false);
+      assert.equal(await map.isVisible(),true);
+      assert.equal(await gated.page.locator('#directions-address').inputValue(),address);
+      assert.equal(await gated.page.locator('#shareWhatsAppAction').getAttribute('href'),share);
+      assert.equal(gated.s.campaigns,visits,'gate recovery is not a second campaign visit');
+      assert.equal(gated.s.payments.length,0);
+      await gated.close(route+' loaded event gate denial and later permission restore view, directions and share');
+
       const failed=await fixture(browser,route,{initialFailure:true});
       await failed.page.locator('#errorBox').waitFor({state:'visible'});
       await failed.page.evaluate(()=>dispatchEvent(new Event('focus')));

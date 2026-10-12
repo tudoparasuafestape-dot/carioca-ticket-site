@@ -672,8 +672,7 @@
         state.couponSeq=(state.couponSeq||0)+1;state.couponBusy=false;
         el.couponApply.disabled=false;checkoutUiWrite(el.couponApply,'APLICAR');
         clearCoupon(true);
-        ++state.feeSeq;if(state.feeTimer){clearTimeout(state.feeTimer);state.feeTimer=null;}
-        state.feeBusy=false;state.feeReady=false;state.feeRevision='';state.feePreview=null;
+        invalidateFee('Validando disponibilidade e lotes.');
         el.payButton.disabled=true;el.typeSelect.disabled=true;el.lotSelect.disabled=true;
         checkoutUiWrite(catalogNotice,'Validando disponibilidade e lotes.');
         catalogRetry.hidden=true;
