@@ -343,7 +343,7 @@
         <article class="metric blue">
           <small>Vendas elegíveis</small>
           <strong id="metricBase">R$ 0,00</strong>
-          <div class="note">Base líquida considerada pelo motor comercial</div>
+          <div class="note">Base registrada das vendas elegíveis</div>
         </article>
         <article class="metric gold">
           <small>Comissão a receber</small>
@@ -353,7 +353,7 @@
         <article class="metric green">
           <small>Comissão paga</small>
           <strong id="metricPaid">R$ 0,00</strong>
-          <div class="note">Valores marcados como pagos</div>
+          <div id="paidReviewNote" class="note">Valores marcados como pagos</div>
         </article>
       </section>
 
@@ -373,6 +373,7 @@
           <div>
             <h3>Comissões recentes</h3>
             <div class="section-desc">Cancelamentos e estornos ficam separados do valor válido.</div>
+            <div id="repassePolicy" class="section-desc">A receber não significa disponível para repasse. A data de elegibilidade está em definição; não há pagamento automático.</div>
           </div>
           <span id="validCommissionBadge" class="badge pending">R$ 0,00 válido</span>
         </div>
@@ -757,7 +758,17 @@ window.CTParceiroFirebase = Object.freeze({
     el.metricBase.textContent=resumo.baseElegivel||money(resumo.baseElegivelNumero);
     el.metricReceive.textContent=resumo.comissaoAReceber||money(resumo.comissaoAReceberNumero);
     el.metricPaid.textContent=resumo.comissaoPaga||money(resumo.comissaoPagaNumero);
-    el.metricRate.textContent='Regra-base: '+formatNumero(p.percentualBase)+'%';
+    document.getElementById('paidReviewNote').textContent=Number(resumo.comissaoPagaEmAnaliseNumero||0)>0
+      ? 'Valores marcados como pagos; '+money(resumo.comissaoPagaEmAnaliseNumero)+' com venda revertida em análise.'
+      : 'Valores marcados como pagos';
+    var capacidade=r.capacidadesComissao||{};
+    el.metricRate.textContent=capacidade.nominalPersistido===true&&capacidade.baseVersao==='INGRESSOS_NOMINAIS_V1'
+      ? 'Novas comissões: '+formatNumero(p.percentualBase)+'% do nominal, sem taxas ou juros'
+      : 'Percentual-base: '+formatNumero(p.percentualBase)+'%. Consulte a base registrada em cada lançamento.';
+    var repasse=r.politicaRepasse||{};
+    document.getElementById('repassePolicy').textContent=repasse.diasUteisAposEvento
+      ? 'Regra de elegibilidade: '+formatNumero(repasse.diasUteisAposEvento)+' dias úteis após o evento, no mesmo prazo do produtor. A data exata depende da definição do calendário de feriados e da data-base. A receber não significa disponível; não há pagamento automático.'
+      : 'A receber não significa disponível para repasse. A data de elegibilidade está em definição; não há pagamento automático.';
     el.validCommissionBadge.textContent=(resumo.totalValido||money(resumo.totalValidoNumero))+' válido';
 
     renderProdutores(r.produtores||[]);
@@ -815,6 +826,8 @@ window.CTParceiroFirebase = Object.freeze({
     lista.forEach(function(item){
       var status=String(item.status||'').toUpperCase();
       var cls=status==='PAGA'?'paid':(status==='A_RECEBER'?'pending':'cancel');
+      var revisao=item.reversaoStatus==='PENDENTE_ANALISE'
+        ? '<div class="producer-meta">Venda revertida; comissão paga em análise. Sem compensação automática.</div>':'';
       html+='<tr>'+
         '<td>'+esc(item.criadoEm||'—')+'</td>'+
         '<td><strong>'+esc(item.produtorNome||item.produtorId||'—')+'</strong></td>'+
@@ -822,7 +835,7 @@ window.CTParceiroFirebase = Object.freeze({
         '<td>'+esc(item.base||money(item.baseNumero))+'</td>'+
         '<td>'+esc(formatNumero(item.percentual))+'%</td>'+
         '<td><strong>'+esc(item.comissao||money(item.comissaoNumero))+'</strong></td>'+
-        '<td><span class="badge '+cls+'">'+esc(status||'—')+'</span></td>'+
+        '<td><span class="badge '+cls+'">'+esc(status||'—')+'</span>'+revisao+'</td>'+
       '</tr>';
     });
 

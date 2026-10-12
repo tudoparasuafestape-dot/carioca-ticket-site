@@ -1,0 +1,33 @@
+name: Parceiro CT - Ativacao offline
+on:
+  pull_request:
+    paths:
+      - 'parceiro/ativar/index.html'
+      - 'parceiro/index.html'
+      - 'tests/partner-activation-offline.cjs'
+      - 'tests/partner-panel-offline.cjs'
+      - '.github/workflows/ct-parceiro-ativacao-offline.yml'
+permissions:
+  contents: read
+jobs:
+  browser-mocks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: mkdir -p test-results
+      - run: node tests/partner-activation-offline.cjs
+        env:
+          CT_BASE_URL: http://127.0.0.1:4173
+      - run: node tests/partner-panel-offline.cjs
+        env:
+          CT_BASE_URL: http://127.0.0.1:4173
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parceiro-ativacao-mobile
+          path: test-results/partner-*-mobile.png
