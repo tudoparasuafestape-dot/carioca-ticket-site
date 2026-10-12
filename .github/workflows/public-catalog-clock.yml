@@ -1,0 +1,22 @@
+name: Temporal catalog lease (offline unit)
+on:
+  pull_request:
+    paths:
+      - 'assets/public-catalog-clock.js'
+      - 'tests/public-catalog-clock.test.cjs'
+      - '.github/workflows/public-catalog-clock.yml'
+permissions:
+  contents: read
+jobs:
+  lease-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax and synthetic monotonic clock tests
+        run: |
+          node --check assets/public-catalog-clock.js
+          node --test tests/public-catalog-clock.test.cjs
