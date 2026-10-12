@@ -44,11 +44,11 @@ function observedHtml() {
   insertAfter('.withSuccessHandler(function(res){', mark('success-start'));
   // This anchor distinguishes the initial failure handler from campaign handlers.
   insertAfter('.withFailureHandler(function(error){', mark('failure-start'));
-  insertAfter('function render(res){', mark('render-start'));
+  insertAfter('function render(res,languageOnly){', mark('render-start'));
   insertAfter('} catch (err) {', 'window.__loadingHarness.renderCaught(err);');
   insertAfter('function registrarAcessoCampanha(){', mark('campaign-start'));
   insertAfter("$('mobileBuy').classList.remove('hidden');", mark('render-complete'));
-  insertAfter('function showError(msg,retryable){', mark('show-error'));
+  insertAfter('function showError(msg,retryable,reference){', mark('show-error'));
   insertAfter("$('errorBox').classList.remove('hidden');", mark('show-error-complete'));
   // Resource policy belongs to this synthetic document, not to the product file.
   const policy = "default-src 'none'; script-src 'unsafe-inline'; " +

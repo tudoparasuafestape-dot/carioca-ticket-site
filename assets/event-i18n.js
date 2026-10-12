@@ -4,6 +4,11 @@
   var core=window.CTPublicI18n;
   if(!core)return;
   var translations = {
+  "Referência para suporte": [
+    "Support reference",
+    "Referencia de soporte",
+    "支持参考代码"
+  ],
   "Evento | Carioca Ticket": [
     "Event | Carioca Ticket",
     "Evento | Carioca Ticket",

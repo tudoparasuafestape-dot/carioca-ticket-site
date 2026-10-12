@@ -5,7 +5,9 @@ on:
       - 'evento/index.html'
       - 'evento-v2/index.html'
       - 'assets/ct-analytics.js'
+      - 'assets/event-i18n.js'
       - 'tests/evento-transport-runtime.cjs'
+      - 'tests/e2e/evento-v2-loading-harness.spec.js'
       - '.github/workflows/event-load-recovery.yml'
       - 'package.json'
 jobs:
@@ -27,3 +29,6 @@ jobs:
         env:
           CT_TEST_BROWSER: ${{ matrix.browser }}
         run: node --test tests/evento-transport-runtime.cjs
+      - name: Exercise loading and render error recovery
+        if: matrix.browser == 'chromium'
+        run: node --test tests/e2e/evento-v2-loading-harness.spec.js

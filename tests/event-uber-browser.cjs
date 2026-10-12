@@ -50,5 +50,39 @@ const expected={'pt-BR':'Ir de Uber','en-US':'Go with Uber',es:'Ir con Uber','zh
   const context=await browser.newContext({serviceWorkers:'block'});await context.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());const page=await context.newPage();
   await page.goto(`${origin}/evento/?evento=${ID}&scenario=${scenario}`);await page.locator('#app').waitFor({state:'visible'});assert(await page.locator('#directions-uber').isHidden());assert.equal(await page.locator('#directions-uber').getAttribute('href'),null);await context.close();
  }
- console.log('PASS: Uber controls on both templates, 4 languages, 4 widths, light/dark, copy preservation, focus, unknown/changed payloads, stale clearing, zero Uber requests');
+ for(const route of ['evento','evento-v2']){
+  const context=await browser.newContext({serviceWorkers:'block',permissions:[]});
+  await context.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());
+  const page=await context.newPage();
+  await page.goto(`${origin}/${route}/?evento=${ID}`);await page.locator('#app').waitFor({state:'visible'});
+  assert(await page.locator('#directions-uber').isVisible());
+  // Hold only the local fixture response. Exercise the actual load, message
+  // handler and showError; never replace any product cleanup implementation.
+  await page.evaluate(()=>{
+   HTMLFormElement.prototype.submit=function(){
+    const fields=new FormData(this);
+    if(fields.get('ctMinhaCariocaAction')!=='publicRpc'||fields.get('metodo')!=='ctEventoPublicoCarregarPROD')throw Error('Unexpected synthetic request');
+    window.heldPublicRead=fields.get('ctMinhaCariocaRequestId');
+   };
+   document.getElementById('retryEventLoad').click();
+  });
+  assert.equal(await page.locator('#directions-uber').getAttribute('href'),null,'load clears old destination');
+  // Deliberately seed a stale destination while the request is pending to
+  // prove error cleanup independently of the cleanup at the start of load.
+  await page.evaluate(({event,ID})=>{CTEventDirections.render(event);CTEventUber.render(event,ID);},{event,ID});
+  assert(await page.locator('#directions-uber').getAttribute('href'));
+  await page.evaluate(()=>window.dispatchEvent(new MessageEvent('message',{
+   origin:'https://script.google.com',data:{ctMinhaCariocaPost:true,id:window.heldPublicRead,ok:false,erro:'SYNTHETIC_PRIVATE_ERROR'}
+  })));
+  await page.locator('#errorBox').waitFor({state:'visible'});
+  assert.equal(await page.locator('#errorReferenceCode').textContent(),'E02');
+  assert.doesNotMatch(await page.locator('#errorBox').textContent(),/SYNTHETIC_PRIVATE_ERROR/);
+  for(const id of ['directions-uber','directions-waze'])assert.equal(await page.locator('#'+id).getAttribute('href'),null,'showError removes destination href');
+  await page.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));document.dispatchEvent(new Event('ct:public-language'));});
+  for(const id of ['directions-uber','directions-waze']){
+   assert(await page.locator('#'+id).isHidden());assert.equal(await page.locator('#'+id).getAttribute('href'),null,'stale destination cannot revive');
+  }
+  report.push({route,scenario:'actual-error-handler-clears-stale-destinations',passed:true});await context.close();
+ }
+ console.log('PASS: Uber controls on both templates, 4 languages, 4 widths, light/dark, copy preservation, focus, unknown/changed payloads, actual error-handler cleanup, zero Uber requests');
 }finally{fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));await browser.close();server.close();}})().catch(e=>{console.error(e);server.close();process.exitCode=1});
