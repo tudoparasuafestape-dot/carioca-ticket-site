@@ -58,11 +58,11 @@ try{for(const viewport of [{width:1365,height:900},{width:390,height:844},{width
  const publicUrl=origin+'/cortesia/convite/#'+link.split('#')[1];await page.goto(publicUrl);await wait(page,'#registration');
  const second=await f.context.newPage();await second.goto(publicUrl);await wait(second,'#registration');
  assert.equal(await page.locator('#available').textContent(),'3');
- f.lose();await fill(page,'João',"D’Ávila");await wait(page,'#retryNote');assert.equal(h.tickets.getLastRow(),2);
+ f.lose();await fill(page,'João',"D’Ávila");await page.waitForFunction(()=>document.querySelector('#message').classList.contains('error'));await wait(page,'#retryNote');assert.equal(h.tickets.getLastRow(),2);
  await page.reload();await wait(page,'#retryNote');assert.equal(await page.locator('#firstName').inputValue(),'João');
- await page.locator('#submit').click();await wait(page,'.ticket');assert.equal(h.tickets.getLastRow(),2,'retry after lost response issued twice');
+ await page.locator('#submit').click();await page.locator('.ticket').filter({hasText:'João'}).waitFor({state:'visible'});assert.equal(h.tickets.getLastRow(),2,'retry after lost response issued twice');
  assert.equal(await page.locator('#available').textContent(),'2');
- await fill(second,'Maria','dos Santos','81999990002');await wait(second,'.ticket');
+ await fill(second,'Maria','dos Santos','81999990002');await second.locator('.ticket').filter({hasText:'Maria'}).waitFor({state:'visible'});
  await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.ticket').length===2);
  assert.equal(await page.locator('#available').textContent(),'1');
  const other=await fixture(browser,viewport,h);await other.page.goto(publicUrl);await wait(other.page,'#registration');
@@ -70,7 +70,7 @@ try{for(const viewport of [{width:1365,height:900},{width:390,height:844},{width
  assert.equal(await other.page.locator('#available').textContent(),'1');await other.close();
  // A second tab shares receipts but has an independent pending attempt; no phone list in public API.
  await second.reload();await wait(second,'#registration');
- await fill(second,'Ana','Silva','81999990003');await wait(second,'.ticket');
+ await fill(second,'Ana','Silva','81999990003');await second.locator('.ticket').filter({hasText:'Ana'}).waitFor({state:'visible'});
  await page.locator('#refresh').click();await page.waitForFunction(()=>document.getElementById('available').textContent==='0');
  assert.equal(h.tickets.getLastRow(),4);assert.equal(new Set(h.tickets.rows.slice(1).map(r=>r[4])).size,3);
  assert.equal(await visible(page,'#registration'),false);
