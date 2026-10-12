@@ -39,7 +39,7 @@ async function createFixture(browser, options = {}) {
   const context = await browser.newContext({ viewport: options.mobile ? { width: 390, height: 844 } : { width: 1365, height: 900 },
     isMobile: !!options.mobile, hasTouch: !!options.mobile, serviceWorkers: 'block' });
   const page = await context.newPage();
-  const state = { previews: [], coupons: [], payments: [], errors: [], unexpected: [], eventId: options.eventId || ERA };
+  const state = { catalogs: 0, previews: [], coupons: [], payments: [], errors: [], unexpected: [], eventId: options.eventId || ERA };
   page.on('pageerror', error => state.errors.push(error.message));
   await page.addInitScript(() => { const now = Date.now.bind(Date); window.__clockOffset = 0; Date.now = () => now() + window.__clockOffset; });
   await context.route('**/*', async route => {
@@ -62,7 +62,7 @@ async function createFixture(browser, options = {}) {
     let result, error = '';
     try {
       assert.equal(params.get('ctMinhaCariocaAction'), 'publicRpc');
-      if (method === 'ctCheckoutPublicoCarregarEventoPROD') result = catalog(state.eventId);
+      if (method === 'ctCheckoutPublicoCarregarEventoPROD') { state.catalogs++; result = catalog(state.eventId); }
       else if (method === 'ctPoliticaComercialPreviewPublicoPROD') {
         state.previews.push(args[0]);
         result = options.preview ? await options.preview(args[0], state.previews.length) : quote(args[0]);
@@ -162,13 +162,32 @@ async function createFixture(browser, options = {}) {
       await until(() => f.state.coupons.length === 1, 'coupon in flight'); await f.page.locator('#quantity').fill('2'); await f.page.locator('#paymentCard').check(); await f.total(191.4); await delay(900);
       await f.total(191.4); assert(!(await f.page.locator('#promoSummary').isVisible())); assert.equal(f.state.previews.at(-1).cupomCodigo, ''); await f.finish();
     });
-    await test('repeated payment clicks and failed retry retain same idempotency', async () => {
+    // Approved unknown-result contract: this code has no audited pre-order
+    // provenance. Preserve the attempt; do not retry, change method or mint a key.
+    await test('repeated clicks deduplicate and unknown rejection blocks recreation across reload', async () => {
       const f = await createFixture(browser, { async pay() { await delay(250); throw new Error('CT_PC_REVISAO_DIVERGENTE'); } });
       await f.select(); await f.total(95.7); await f.page.evaluate(() => { document.querySelector('#payButton').click(); document.querySelector('#payButton').click(); });
       await until(() => f.state.payments.length === 1, 'one mock request'); await f.page.locator('#modalBg.open').waitFor({ state: 'visible' });
-      assert.equal(f.state.payments.length, 1); assert.equal(await f.page.locator('#typeSelect').inputValue(), 'TYPE-0');
-      await f.closeModal(); await f.total(95.7); await f.page.locator('#payButton').click(); await until(() => f.state.payments.length === 2, 'retry mock request');
-      assert.equal(f.state.payments[0].idempotenciaChave, f.state.payments[1].idempotenciaChave); await delay(300); await f.finish();
+      const key=f.state.payments[0].idempotenciaChave;
+      assert.equal(f.state.payments.length,1); assert.equal(await f.page.locator('#typeSelect').inputValue(),'TYPE-0');
+      assert.equal(await f.page.locator('#lotSelect').inputValue(),'LOT-0');
+      assert.equal(await f.page.locator('#buyerName').inputValue(),'Comprador de Teste Local');
+      assert.equal(await f.page.locator('#payButton').isDisabled(),true);
+      assert.equal(await f.page.locator('#catalogRecoveryAction').getAttribute('href'),'/minha-carioca/conta/');
+      await f.closeModal();
+      await f.page.evaluate(()=>{
+        const card=document.querySelector('#paymentCard');card.checked=true;card.dispatchEvent(new Event('change',{bubbles:true}));
+        document.querySelector('#payButton').onclick();
+      });
+      await delay(300); assert.equal(f.state.payments.length,1,'Unknown error cannot authorize another creation');
+      assert.equal(await f.page.evaluate(event=>localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+event+'_PIX'),ERA),key);
+      assert.equal(await f.page.evaluate(event=>localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+event+'_CREDIT_CARD'),ERA),null);
+      const reads=f.state.catalogs;
+      await f.page.reload(); await f.page.locator('#catalogRecoveryAction').waitFor({state:'visible'});
+      await f.page.evaluate(()=>document.querySelector('#payButton').onclick()); await delay(100);
+      assert.equal(f.state.payments.length,1); assert.equal(f.state.catalogs,reads);
+      assert.equal(await f.page.evaluate(event=>localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+event+'_PIX'),ERA),key);
+      await f.finish();
     });
     await test('legacy non-canary unchanged: no preview required and no revision field', async () => {
       const f = await createFixture(browser, { eventId: LEGACY }); await f.select(); await f.total(87);

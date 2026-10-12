@@ -125,6 +125,49 @@ async function fixture(browser, route, options = {}) {
     };
   }
   const guard = await installIsolatedNetwork(context, { root: ROOT, origin: ORIGIN, ...f, auditMocks: true });
+  if(options.traceClock) {
+    // Observation only: execute the exact checked-in helper, then delegate every
+    // call/return to it. The wrapper does not change time, leases or envelopes.
+    const helperUrl=ORIGIN+'/assets/public-catalog-clock.js?v=20261012-temporal1';
+    const observation=`
+;(function(){
+  const real=window.CTPublicCatalogClock, log=[];
+  window.__temporalClockTrace=log;
+  const record=entry=>log.push(Object.assign({at:performance.now()},entry));
+  window.CTPublicCatalogClock=Object.freeze(Object.assign({},real,{create(options){
+    const original=options||{}, forwarded=Object.assign({},original);
+    forwarded.onExpire=function(reason){
+      record({operation:'onExpire',reason});
+      if(original.onExpire)return original.onExpire.apply(this,arguments);
+    };
+    const clock=real.create(forwarded), observed=Object.assign({},clock);
+    observed.begin=function(){
+      const result=clock.begin.apply(clock,arguments);
+      record({operation:'begin',sequence:result&&result.sequence,startedAt:result&&result.startedAt});
+      return result;
+    };
+    observed.accept=function(envelope,ticket){
+      const result=clock.accept.apply(clock,arguments);
+      record({operation:'accept',sequence:ticket&&ticket.sequence,result,
+        envelope:{temporalVersion:envelope&&envelope.temporalVersion,
+        temporalEvaluatedAt:envelope&&envelope.temporalEvaluatedAt,
+        serverNow:envelope&&envelope.serverNow,nextTransitionAt:envelope&&envelope.nextTransitionAt,
+        validUntil:envelope&&envelope.validUntil}});
+      return result;
+    };
+    observed.invalidate=function(reason){
+      const result=clock.invalidate.apply(clock,arguments);
+      record({operation:'invalidate',reason});return result;
+    };
+    return Object.freeze(observed);
+  }}));
+}());
+`;
+    await mockRoute(context,{resources:[helperUrl]},route=>route.fulfill({
+      contentType:'application/javascript',
+      body:fs.readFileSync(path.join(ROOT,'assets/public-catalog-clock.js'),'utf8')+observation
+    }));
+  }
   if(options.recoveryFailure) {
     let rejected=false;
     await mockRoute(context, {rpc:{publicRpc:['ctCheckoutPixPublicoConsultarPROD']}}, async route=>{
@@ -315,7 +358,7 @@ async function retainedForm(f) {
       assert.equal(await lost.page.evaluate(event=>localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_'+event+'_CREDIT_CARD'),EVENT),null);
       await lost.close(route+' lost response, expired lot and reload never create a second payment');
 
-      const fees=await fixture(browser,route,{eventId:'EVT-23112026-ERA-BEAUTY-EAC4B673',policy:true});
+      const fees=await fixture(browser,route,{eventId:'EVT-23112026-ERA-BEAUTY-EAC4B673',policy:true,traceClock:true});
       await fees.fill(); await until(()=>fees.s.previews.length>=1,'initial price preview'); fees.s.holdCatalog=true;
       await fees.advance(); await until(()=>fees.s.catalogs===2,'price preview lease expires');
       const quoteCount=fees.s.previews.length;
@@ -332,6 +375,7 @@ async function retainedForm(f) {
       catch(error){
         console.error('SYNTHETIC_PRICE_RECOVERY_DIAGNOSTIC',JSON.stringify({
           route,catalogs:fees.s.catalogs,errors:fees.s.errors,previews:fees.s.previews.length,payments:fees.s.payments.length,
+          clock:await fees.page.evaluate(()=>window.__temporalClockTrace||[]),
           ui:await fees.page.evaluate(()=>Object.fromEntries(['catalogTemporalNotice','typeSelect','lotSelect','payButton','feeSummary'].map(id=>{
             const el=document.getElementById(id);return[id,el?{text:el.textContent,disabled:!!el.disabled,hidden:el.hidden,className:el.className}:null];
           })))
