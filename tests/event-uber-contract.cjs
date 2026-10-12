@@ -33,7 +33,7 @@ for(const route of ['evento','evento-v2']){
  assert.equal((html.match(/id="directions-uber"/g)||[]).length,1);
  assert.match(html,/id="directions-uber" hidden target="_self" rel="noreferrer"/);
  assert.match(html,/CTEventUber\.render\(e,state\.eventoId\)/);
- assert.match(html,/function showError\(msg,retryable\)\{\s*if\(window.CTEventUber\)window.CTEventUber.clear\(\)/);
+ assert.match(html,/function showError\(msg,retryable,reference\)\{\s*if\(window.CTEventUber\)window.CTEventUber.clear\(\)/);
  assert.match(html,/event-ride-destinations\.js\?v=20261010-3/);
  assert(html.indexOf('event-ride-destinations.js')<html.indexOf('event-uber.js'));
 }

@@ -95,5 +95,19 @@ Não foram substituídas regras do produto por mocks para conseguir esses passes
 O workflow de transporte executa Chromium/WebKit e inclui o harness em Chromium.
 WebKit no Windows não é Safari/iOS nem o Instagram físico.
 
+O primeiro CI do PR218 concluiu 12 runs com sucesso e uma falha no contrato
+textual de Uber: ele ainda exigia `showError(msg,retryable)`, embora a função
+agora receba `reference` e preserve `CTEventUber.clear()` como primeira ação.
+A expectativa foi atualizada para a assinatura exata de três argumentos,
+mantendo a exigência de limpeza. Um teste adicional em cada rota exercita o
+handler real de erro com um destino antigo inserido durante uma leitura
+sintética pendente. Ele confirma E02 sem mensagem privada, remoção dos hrefs
+Uber/Waze e ausência de reaparecimento após `pageshow` e troca de idioma.
+Contrato Uber, suíte de navegador Uber e contrato Waze passaram localmente.
+No Windows, a verificação dos bytes fixados do SVG Waze exigiu apenas restaurar
+LF no arquivo local; o hash esperado e o conteúdo versionado não foram alterados.
+Não houve nova alteração no produto para corrigir esse CI. Os checks do novo
+commit precisam concluir antes de considerar a revisão validada.
+
 Esta branch é para revisão. Merge, main, deploy e rollback dependem de aprovação
 específica posterior. A correção da causa real continua pendente.
