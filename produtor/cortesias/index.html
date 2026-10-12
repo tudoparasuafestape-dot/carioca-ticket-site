@@ -556,6 +556,7 @@ function renderIssued(r,payload){
   resetIssuedShares();
 }
 function inviteKey(){var b=new Uint8Array(32);crypto.getRandomValues(b);return Array.from(b,function(x){return x.toString(16).padStart(2,'0')}).join('')}
+function inviteError(e){var code=String(e.message||e).replace('CT_CONVITE_',''),messages={LOTE_INDISPONIVEL:'O lote escolhido não está disponível agora. Selecione outro lote.',COTA_EXCEDIDA:'A quantidade ultrapassa a cota de cortesias disponível.',CAPACIDADE_TIPO:'O ingresso escolhido não tem vagas suficientes para esta reserva.',CAPACIDADE_LOTE:'O lote escolhido não tem vagas suficientes para esta reserva.',TIPO_INDIVIDUAL_OBRIGATORIO:'Selecione um tipo com uma entrada por ingresso.',TIPO_LOTE_DIVERGENTE:'O tipo e o lote precisam pertencer ao evento selecionado.',EVENTO_INDISPONIVEL:'O evento não está disponível para novos convites.',EVENTO_ENCERRADO:'O evento já foi encerrado.',EVENTO_EXIGE_CONVIDADO_AUTORIZADO:'Este evento exige convidado autorizado. Use a emissão manual.',DATA_EVENTO_INVALIDA:'Confira a data do evento antes de gerar o convite.',QUANTIDADE_OU_VALIDADE_INVALIDA:'Informe 1 a 20 vagas e uma validade de até 7 dias.',AUTORIZACAO_INDISPONIVEL:'Sua autorização para este evento precisa ser conferida.',REPETICAO_DIVERGENTE:'Há uma tentativa anterior com outros dados. Reabra a aba original para recuperá-la.'};return messages[code]||'A operação ainda não foi confirmada. Tente novamente para recuperar o mesmo convite.'}
 function inviteStorage(){return 'CTCI:producer:'+String(state.session&&state.session.token)+':'+eventId(state.evento)}
 function inviteJob(){try{return JSON.parse(sessionStorage.getItem(inviteStorage())||'null')}catch(_){return null}}
 function inviteUrl(raw){try{var u=new URL(raw);if(u.origin==='https://cariocaticket.com.br'&&u.pathname==='/cortesia/convite/'&&/^#[a-f0-9]{64}$/.test(u.hash)&&!u.search&&!u.username&&!u.password)return u.href}catch(_){}return ''}
@@ -590,7 +591,7 @@ async function createInvite(){
     message('Convite criado. Copie ou compartilhe o link abaixo.','ok');
   }catch(e){
     if(/^CT_CONVITE_(QUANTIDADE_OU_VALIDADE_INVALIDA|COTA_EXCEDIDA|CAPACIDADE_TIPO|CAPACIDADE_LOTE|TIPO_INDIVIDUAL_OBRIGATORIO|TIPO_LOTE_DIVERGENTE|LOTE_INDISPONIVEL|EVENTO_EXIGE_CONVIDADO_AUTORIZADO|EVENTO_ENCERRADO|DATA_EVENTO_INVALIDA|EVENTO_INDISPONIVEL)$/.test(String(e.message)))sessionStorage.removeItem(inviteStorage());
-    message(e.message||String(e),'error');renderInvites(state.data);
+    message(inviteError(e),'error');renderInvites(state.data);
   }finally{state.mutationBusy=false;syncControls()}
 }
 async function revokeInvite(id){

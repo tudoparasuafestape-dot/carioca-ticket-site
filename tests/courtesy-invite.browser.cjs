@@ -84,7 +84,7 @@ try{for(const viewport of [{width:1365,height:900},{width:390,height:844},{width
 const future=await fixture(browser,{width:390,height:844});
 await future.page.addInitScript(()=>sessionStorage.setItem('CT_PORTAL_PRODUTOR_PROD_SESSION_V1',JSON.stringify({token:'SESSION-SYNTH',expiraEm:'2099-01-01T00:00:00Z'})));
 future.h.lot.dentroDoPeriodo=false;await future.page.goto(origin+'/produtor/cortesias/');await wait(future.page,'#content');await future.page.locator('#createInvite').click();
-await future.page.waitForFunction(()=>document.getElementById('message').textContent.includes('LOTE_INDISPONIVEL'));
+await future.page.waitForFunction(()=>document.getElementById('message').textContent.includes('lote escolhido não está disponível'));
 assert.equal(await future.page.locator('#inviteLot').isEnabled(),true);assert.equal(future.h.sheets.has('CT_CORTESIA_CONVITES'),false);
 future.h.lot.dentroDoPeriodo=true;await future.page.locator('#createInvite').click();await wait(future.page,'[data-invite-id]');await future.close();console.log('PASS future lot can be corrected without stuck pending creation');
 for(const mode of ['revoked','expired','private','invalid-name','invalid-phone','missing-token']){
