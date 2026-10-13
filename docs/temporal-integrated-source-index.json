@@ -1,0 +1,494 @@
+{
+  "repository": "tudoparasuafestape-dot/carioca-ticket-site",
+  "base_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+  "pr220_commit": "b3d36a135065cfaf0154fc83530c836c5cbedc9a",
+  "scope": "Partial local materialization for offline validation. Any later authorized commit must overlay only reviewed changed paths on the complete base tree, preserving all other base files. Deployment readiness is not established; no workflow, deployment or production RPC is included.",
+  "required_backend": "temporalVersion:1 root envelope on list, detail and checkout catalogs, with PR299-compatible event-end denial for new sales. Existing-order replay and payment TTL remain backend-authoritative.",
+  "runtime_changes": [
+    "evento/index.html",
+    "evento-v2/index.html",
+    "checkout/index.html",
+    "checkout-v2/index.html",
+    "assets/checkout-translations.js"
+  ],
+  "clock_query_version": "20261013-event-expiry1",
+  "entrypoint_dependencies": {
+    "index.html": [
+      "assets/advance-sales.js",
+      "assets/ct-analytics.js",
+      "assets/home-advertisements.js",
+      "assets/home-controls.js",
+      "assets/home-event-rail.js",
+      "assets/home-i18n.js",
+      "assets/home-install.js",
+      "assets/home-location.js",
+      "assets/home-navigation.js",
+      "assets/home-theme.js",
+      "assets/home.css",
+      "assets/public-catalog-clock.js",
+      "assets/public-event-catalog.js",
+      "assets/public-i18n.js",
+      "assets/public-privacy.css",
+      "assets/public-privacy.js",
+      "assets/public-share.css",
+      "assets/public-share.js",
+      "pwa-register.js"
+    ],
+    "eventos-v2/index.html": [
+      "assets/ct-analytics.js",
+      "assets/era-approved-visual.css",
+      "assets/era-approved-visual.js"
+    ],
+    "evento/index.html": [
+      "assets/advance-sales.js",
+      "assets/ct-analytics.js",
+      "assets/event-accessibility.css",
+      "assets/event-description-speech.js",
+      "assets/event-directions.css",
+      "assets/event-directions.js",
+      "assets/event-i18n.css",
+      "assets/event-i18n.js",
+      "assets/event-map-preview.css",
+      "assets/event-map-preview.js",
+      "assets/event-ride-destinations.js",
+      "assets/event-uber.css",
+      "assets/event-uber.js",
+      "assets/home-theme.js",
+      "assets/public-catalog-clock.js",
+      "assets/public-i18n.js",
+      "assets/public-privacy.css",
+      "assets/public-privacy.js",
+      "assets/public-share.js",
+      "pwa-register.js"
+    ],
+    "evento-v2/index.html": [
+      "assets/advance-sales.js",
+      "assets/ct-analytics.js",
+      "assets/event-accessibility.css",
+      "assets/event-description-speech.js",
+      "assets/event-directions.css",
+      "assets/event-directions.js",
+      "assets/event-i18n.css",
+      "assets/event-i18n.js",
+      "assets/event-map-preview.css",
+      "assets/event-map-preview.js",
+      "assets/event-ride-destinations.js",
+      "assets/event-uber.css",
+      "assets/event-uber.js",
+      "assets/home-theme.js",
+      "assets/public-catalog-clock.js",
+      "assets/public-i18n.js",
+      "assets/public-privacy.css",
+      "assets/public-privacy.js",
+      "assets/public-share.js"
+    ],
+    "checkout/index.html": [
+      "assets/advance-sales.js",
+      "assets/checkout-commercial-policy.js",
+      "assets/checkout-home-navigation.css",
+      "assets/checkout-home-navigation.js",
+      "assets/checkout-language.css",
+      "assets/checkout-language.js",
+      "assets/checkout-translations.js",
+      "assets/ct-analytics.js",
+      "assets/public-catalog-clock.js",
+      "assets/public-i18n.js",
+      "assets/public-privacy.css",
+      "assets/public-privacy.js",
+      "pwa-register.js"
+    ],
+    "checkout-v2/index.html": [
+      "assets/advance-sales.js",
+      "assets/checkout-home-navigation.css",
+      "assets/checkout-home-navigation.js",
+      "assets/checkout-language.css",
+      "assets/checkout-language.js",
+      "assets/checkout-translations.js",
+      "assets/ct-analytics.js",
+      "assets/public-catalog-clock.js",
+      "assets/public-i18n.js",
+      "assets/public-privacy.css",
+      "assets/public-privacy.js"
+    ]
+  },
+  "preserved_base_blobs": {
+    "assets/public-catalog-clock.js": "7bc0b9f160f966d796c97c596178e67c36123d34",
+    "assets/public-event-catalog.js": "d60b2b496fb18e8a26ca7983c1ab204b3fa2df28",
+    "assets/home-event-rail.js": "0f9e316b553352a4d7d2d9e675245b0759a9e7e1",
+    "index.html": "f379d00a9bab490d1aceb400f5d15cf7b9101808",
+    "eventos-v2/index.html": "9c38947163b73b6276a468a9944935f3a200a820",
+    "assets/public-privacy.js": "cd7d4f380a12ddeb800e559fa0381c8ff6c1b6c3",
+    "assets/public-privacy.css": "1ee957485004c83222074fabf6008891c48dcd10",
+    "assets/ct-analytics.js": "06aed93f9b18204f9d6a1a0eaf9392eba03133b3",
+    "assets/advance-sales.js": "2a2ffb26d5fa9c3855c9edb1b2b3c54baf1325ac",
+    "assets/checkout-commercial-policy.js": "caf90920d0902a85b7ca08a6843ad2a815b0c015"
+  },
+  "transport_sha256": {
+    "evento": "c0bc6fadb642ef7f82bf0bc022c0068d63bc12aa843982ece516db6c1e97d0a0",
+    "evento-v2": "c0bc6fadb642ef7f82bf0bc022c0068d63bc12aa843982ece516db6c1e97d0a0",
+    "checkout": "42e34f0467b327ced73fcae469bccea9c5216356ec2da154f8b5fdfa1b0152a4",
+    "checkout-v2": "4ebb280890203a58092de426bda616333db43ea5e8381a5c1429ca5a207bc846"
+  },
+  "frozen_checkout_functions_sha256": {
+    "checkout": {
+      "startExpiry": "c600f518a0132010d685226b62e26d626a5c5aa1c430acf268a418681c91c4e7",
+      "stopExpiry": "1b9f8479b238b202c36a090c82363e8fa0158d760a571c1f301928695e352a88",
+      "startPolling": "76fd0c3fa5fee8b3c4c43c1cdb39b87c4f671342757f909b3dc2e0a16c227f61",
+      "stopPolling": "caa042866a1309c2483b0706b7a53d9b312bfca001b3b20a33f5d6f9c879631b",
+      "storageKey": "75bdd1e8ff5fe5da191bf7511e8aa9abc620497539653a4cd9a31c8ac67b9282",
+      "idempotencyStorageKey": "66c44bd4a7bd80b35cef4b49ed66e902e7e9f35a7a357a60769de3524a70b736",
+      "saveRecovery": "d1b115121773010432d672dd2f3b5ecd8e21009e8252b5252dde593ced60a67d",
+      "readRecovery": "40960a1a6e8ac600678703fc66b3a195c61a1f487b8774738051e20d9f17d812",
+      "clearRecovery": "7f33469e17ad5ed0d1fb88b109d30577301dc2cda3425efa0cc388a2f38d7d80",
+      "getOrCreateIdempotency": "fa73846d111fb1bae0eca211faf7ed3727fbdf3d19a19dbc159ec5ddd53f5518",
+      "clearIdempotency": "92a8e04f62fab672b9e6733fccae3f56a87b62ff868faaaab0505d30ed6654cb",
+      "officialTicketLink": "2b527d0193ccdb4b7ed2952f217c77cbe74839d9ca5f17ad04271deb4044310c"
+    },
+    "checkout-v2": {
+      "startExpiry": "c600f518a0132010d685226b62e26d626a5c5aa1c430acf268a418681c91c4e7",
+      "stopExpiry": "1b9f8479b238b202c36a090c82363e8fa0158d760a571c1f301928695e352a88",
+      "startPolling": "4316d7a9c3b3a9f67cc843206fc6090166f6c74d64d331315813a8372ff2a00b",
+      "stopPolling": "caa042866a1309c2483b0706b7a53d9b312bfca001b3b20a33f5d6f9c879631b",
+      "storageKey": "75bdd1e8ff5fe5da191bf7511e8aa9abc620497539653a4cd9a31c8ac67b9282",
+      "idempotencyStorageKey": "64c7eed14e5879d12cde482b19a9988bd48a34095a8c0e21129fa16e3bfc5fc9",
+      "saveRecovery": "d1b115121773010432d672dd2f3b5ecd8e21009e8252b5252dde593ced60a67d",
+      "readRecovery": "40960a1a6e8ac600678703fc66b3a195c61a1f487b8774738051e20d9f17d812",
+      "clearRecovery": "7f33469e17ad5ed0d1fb88b109d30577301dc2cda3425efa0cc388a2f38d7d80",
+      "getOrCreateIdempotency": "fa73846d111fb1bae0eca211faf7ed3727fbdf3d19a19dbc159ec5ddd53f5518",
+      "clearIdempotency": "92a8e04f62fab672b9e6733fccae3f56a87b62ff868faaaab0505d30ed6654cb",
+      "officialTicketLink": "2b527d0193ccdb4b7ed2952f217c77cbe74839d9ca5f17ad04271deb4044310c"
+    }
+  },
+  "source_files": [
+    {
+      "path": "assets/public-catalog-clock.js",
+      "base_blob_sha1": "7bc0b9f160f966d796c97c596178e67c36123d34",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "7bc0b9f160f966d796c97c596178e67c36123d34"
+    },
+    {
+      "path": "assets/public-event-catalog.js",
+      "base_blob_sha1": "d60b2b496fb18e8a26ca7983c1ab204b3fa2df28",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "d60b2b496fb18e8a26ca7983c1ab204b3fa2df28"
+    },
+    {
+      "path": "assets/home-event-rail.js",
+      "base_blob_sha1": "0f9e316b553352a4d7d2d9e675245b0759a9e7e1",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "0f9e316b553352a4d7d2d9e675245b0759a9e7e1"
+    },
+    {
+      "path": "index.html",
+      "base_blob_sha1": "f379d00a9bab490d1aceb400f5d15cf7b9101808",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "f379d00a9bab490d1aceb400f5d15cf7b9101808"
+    },
+    {
+      "path": "eventos-v2/index.html",
+      "base_blob_sha1": "9c38947163b73b6276a468a9944935f3a200a820",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "9c38947163b73b6276a468a9944935f3a200a820"
+    },
+    {
+      "path": "README.md",
+      "base_blob_sha1": "36dcdb6dcff1bb92106e4699e95231ffd32c39f9",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "36dcdb6dcff1bb92106e4699e95231ffd32c39f9"
+    },
+    {
+      "path": "package.json",
+      "base_blob_sha1": "6f008841f76af9b5f26dfd088748060957ae5968",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "6f008841f76af9b5f26dfd088748060957ae5968"
+    },
+    {
+      "path": "tests/helpers/catalog-offline-dom.mjs",
+      "base_blob_sha1": "46ed44fc8e6dd0aa4788c7b4e61cf25f499f7414",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "46ed44fc8e6dd0aa4788c7b4e61cf25f499f7414"
+    },
+    {
+      "path": "tests/public-catalog-clock.test.cjs",
+      "base_blob_sha1": "362e607257b744e7b0593687392f698b1e5ec622",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "362e607257b744e7b0593687392f698b1e5ec622"
+    },
+    {
+      "path": "tests/public-event-expiry.browser.mjs",
+      "base_blob_sha1": "0676af35c930c77ae188b34b7b5c43739a3bedab",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "0676af35c930c77ae188b34b7b5c43739a3bedab"
+    },
+    {
+      "path": "tests/public-event-expiry.mjs",
+      "base_blob_sha1": "1fe6fe36ccc51a7abb5d769b6be026c5c26c52a1",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "1fe6fe36ccc51a7abb5d769b6be026c5c26c52a1"
+    },
+    {
+      "path": "evento/index.html",
+      "base_blob_sha1": "264eff4583fd154cbfa7731dff93a65222ad3df5",
+      "import_commit": "b3d36a135065cfaf0154fc83530c836c5cbedc9a",
+      "import_blob_sha1": "b0197abf9a0a2102a2f504c7eba8f9bfe2783df5"
+    },
+    {
+      "path": "evento-v2/index.html",
+      "base_blob_sha1": "a30290269be58c375d02d92fe3cdf5761bb26596",
+      "import_commit": "b3d36a135065cfaf0154fc83530c836c5cbedc9a",
+      "import_blob_sha1": "1d7b1def03ed53435e81d079b3b1d14d0ab0c303"
+    },
+    {
+      "path": "checkout/index.html",
+      "base_blob_sha1": "0d11d569f56ca6835b01e00ddf1c10cefa9bd52c",
+      "import_commit": "b3d36a135065cfaf0154fc83530c836c5cbedc9a",
+      "import_blob_sha1": "5aa1b4fe3797ddc4838e7064808f5225008f4223"
+    },
+    {
+      "path": "checkout-v2/index.html",
+      "base_blob_sha1": "34669d2c0876d43bdddf5a953562b84d7fd1822c",
+      "import_commit": "b3d36a135065cfaf0154fc83530c836c5cbedc9a",
+      "import_blob_sha1": "4f4b359b984b2e3ebf3b91b3039d17aca46eeb88"
+    },
+    {
+      "path": "assets/checkout-translations.js",
+      "base_blob_sha1": "e5d19d0bf95e0d17f39b2d53487897bc81efcbf3",
+      "import_commit": "b3d36a135065cfaf0154fc83530c836c5cbedc9a",
+      "import_blob_sha1": "480daad1f32e29c20858f50dedf2ef0b2d5560a5"
+    },
+    {
+      "path": "assets/checkout-commercial-policy.js",
+      "base_blob_sha1": "caf90920d0902a85b7ca08a6843ad2a815b0c015",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "caf90920d0902a85b7ca08a6843ad2a815b0c015"
+    },
+    {
+      "path": "tests/contracts.mjs",
+      "base_blob_sha1": "13b2ab0696c87e3895dc6e2d4cbce0bce66dc657",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "13b2ab0696c87e3895dc6e2d4cbce0bce66dc657"
+    },
+    {
+      "path": "tests/eventos-privados-v1.mjs",
+      "base_blob_sha1": "7e53a2cb0b1d53879fa1fe495d86befa968a1c7d",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "7e53a2cb0b1d53879fa1fe495d86befa968a1c7d"
+    },
+    {
+      "path": "assets/home-theme.js",
+      "base_blob_sha1": "98545339ca51049fa2edff131478c485770ae8ec",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "98545339ca51049fa2edff131478c485770ae8ec"
+    },
+    {
+      "path": "assets/home.css",
+      "base_blob_sha1": "dc725ba453e5b4b3dd02f965e92b5c80c85ce399",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "dc725ba453e5b4b3dd02f965e92b5c80c85ce399"
+    },
+    {
+      "path": "pwa-register.js",
+      "base_blob_sha1": "5bf3e88911cc8342c0cd9d541ce314e605ecf3ad",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "5bf3e88911cc8342c0cd9d541ce314e605ecf3ad"
+    },
+    {
+      "path": "assets/home-install.js",
+      "base_blob_sha1": "e0179bcfb5f775386d1f86e2fedba6ba141c0db3",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "e0179bcfb5f775386d1f86e2fedba6ba141c0db3"
+    },
+    {
+      "path": "assets/public-share.css",
+      "base_blob_sha1": "4485ba19a4ca459198f7436670940175270975c6",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "4485ba19a4ca459198f7436670940175270975c6"
+    },
+    {
+      "path": "assets/public-privacy.css",
+      "base_blob_sha1": "1ee957485004c83222074fabf6008891c48dcd10",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "1ee957485004c83222074fabf6008891c48dcd10"
+    },
+    {
+      "path": "assets/public-privacy.js",
+      "base_blob_sha1": "cd7d4f380a12ddeb800e559fa0381c8ff6c1b6c3",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "cd7d4f380a12ddeb800e559fa0381c8ff6c1b6c3"
+    },
+    {
+      "path": "assets/advance-sales.js",
+      "base_blob_sha1": "2a2ffb26d5fa9c3855c9edb1b2b3c54baf1325ac",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "2a2ffb26d5fa9c3855c9edb1b2b3c54baf1325ac"
+    },
+    {
+      "path": "assets/public-i18n.js",
+      "base_blob_sha1": "ab38aaa0cbd700ec2ee59e5ec988e704a8f0173b",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "ab38aaa0cbd700ec2ee59e5ec988e704a8f0173b"
+    },
+    {
+      "path": "assets/home-i18n.js",
+      "base_blob_sha1": "240925256d8966362e00277f014bdc079f9438f4",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "240925256d8966362e00277f014bdc079f9438f4"
+    },
+    {
+      "path": "assets/home-controls.js",
+      "base_blob_sha1": "983849c26496d531e8ad2894c08f23cff40e71e8",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "983849c26496d531e8ad2894c08f23cff40e71e8"
+    },
+    {
+      "path": "assets/home-location.js",
+      "base_blob_sha1": "6aa7fab2dec3022f94f5bb64931e2d2d9afde76b",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "6aa7fab2dec3022f94f5bb64931e2d2d9afde76b"
+    },
+    {
+      "path": "assets/home-advertisements.js",
+      "base_blob_sha1": "760b9e64c9572f1d02a2133ea4b17337e6321a71",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "760b9e64c9572f1d02a2133ea4b17337e6321a71"
+    },
+    {
+      "path": "assets/home-navigation.js",
+      "base_blob_sha1": "4b8e7cf9056f7b68254ae39dc386b2bf236199ea",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "4b8e7cf9056f7b68254ae39dc386b2bf236199ea"
+    },
+    {
+      "path": "assets/public-share.js",
+      "base_blob_sha1": "4b12d59e87f73229806b28ddd3cc16c074039629",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "4b12d59e87f73229806b28ddd3cc16c074039629"
+    },
+    {
+      "path": "assets/ct-analytics.js",
+      "base_blob_sha1": "06aed93f9b18204f9d6a1a0eaf9392eba03133b3",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "06aed93f9b18204f9d6a1a0eaf9392eba03133b3"
+    },
+    {
+      "path": "assets/era-approved-visual.css",
+      "base_blob_sha1": "43fc1d40bd4909856bded5bb2b3bf8f232a9093d",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "43fc1d40bd4909856bded5bb2b3bf8f232a9093d"
+    },
+    {
+      "path": "assets/era-approved-visual.js",
+      "base_blob_sha1": "b6b25e31f0b79537de325ba45cd5a19fcf97901f",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "b6b25e31f0b79537de325ba45cd5a19fcf97901f"
+    },
+    {
+      "path": "assets/event-i18n.js",
+      "base_blob_sha1": "b7add6a16dd960360cce2798f941b52e2261f970",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "b7add6a16dd960360cce2798f941b52e2261f970"
+    },
+    {
+      "path": "assets/event-accessibility.css",
+      "base_blob_sha1": "9856c746986cd98e3edb047282fe5e3cdfd28472",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "9856c746986cd98e3edb047282fe5e3cdfd28472"
+    },
+    {
+      "path": "assets/event-directions.css",
+      "base_blob_sha1": "cb24ff5ee32542db2ce640e0526aff48c1faa346",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "cb24ff5ee32542db2ce640e0526aff48c1faa346"
+    },
+    {
+      "path": "assets/event-i18n.css",
+      "base_blob_sha1": "27ba6f524e08b36deae43ff1f063d4884c69455c",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "27ba6f524e08b36deae43ff1f063d4884c69455c"
+    },
+    {
+      "path": "assets/event-directions.js",
+      "base_blob_sha1": "5a9f98846978d71b4117d01e0d4669750102a62a",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "5a9f98846978d71b4117d01e0d4669750102a62a"
+    },
+    {
+      "path": "assets/event-uber.css",
+      "base_blob_sha1": "8a7700455b7155ce4f25fb28c572082f48608445",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "8a7700455b7155ce4f25fb28c572082f48608445"
+    },
+    {
+      "path": "assets/event-ride-destinations.js",
+      "base_blob_sha1": "332dfc43a87fdae5d8c3ff2f4142bbb3abc6a7da",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "332dfc43a87fdae5d8c3ff2f4142bbb3abc6a7da"
+    },
+    {
+      "path": "assets/event-uber.js",
+      "base_blob_sha1": "c575f5c0027cf8bbba386c15de4dc2a8174be9bd",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "c575f5c0027cf8bbba386c15de4dc2a8174be9bd"
+    },
+    {
+      "path": "assets/event-map-preview.css",
+      "base_blob_sha1": "8adc0a3fe58bbe25b085fcff119fc24611120160",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "8adc0a3fe58bbe25b085fcff119fc24611120160"
+    },
+    {
+      "path": "assets/event-map-preview.js",
+      "base_blob_sha1": "b0c4b967698b36aaf3571470e6400fa87e1a7df1",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "b0c4b967698b36aaf3571470e6400fa87e1a7df1"
+    },
+    {
+      "path": "assets/event-description-speech.js",
+      "base_blob_sha1": "fec516cc39cc5029f3560bcab41709fc2901f232",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "fec516cc39cc5029f3560bcab41709fc2901f232"
+    },
+    {
+      "path": "assets/checkout-home-navigation.css",
+      "base_blob_sha1": "d617410eb8e8b9bfa80d290c822ad8864843b495",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "d617410eb8e8b9bfa80d290c822ad8864843b495"
+    },
+    {
+      "path": "assets/checkout-home-navigation.js",
+      "base_blob_sha1": "e24e7b5e46c6a75eb0552c416331598a5d3f9bcd",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "e24e7b5e46c6a75eb0552c416331598a5d3f9bcd"
+    },
+    {
+      "path": "assets/checkout-language.css",
+      "base_blob_sha1": "966757a74beb732a35f267593bf3a94a9d2bf4c5",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "966757a74beb732a35f267593bf3a94a9d2bf4c5"
+    },
+    {
+      "path": "assets/checkout-language.js",
+      "base_blob_sha1": "ee4f7984a36fb8f5cc12b3fef874683a750b16e1",
+      "import_commit": "ccaefcee980b47e1e589e5a05ecb4c95595d529f",
+      "import_blob_sha1": "ee4f7984a36fb8f5cc12b3fef874683a750b16e1"
+    },
+    {
+      "path": "tests/checkout-language.dom.cjs",
+      "base_blob_sha1": "5fd562afcd7d89d04b83afebd677dbd8023a073c",
+      "import_commit": "b3d36a135065cfaf0154fc83530c836c5cbedc9a",
+      "import_blob_sha1": "b71fb4c4dff93bbfee0feae63a32c5a182ff6d47"
+    },
+    {
+      "path": "tests/checkout-era-beauty.dom.js",
+      "base_blob_sha1": "c227751f9c91f43fbffb2b806798e81d3c8d745f",
+      "import_commit": "b3d36a135065cfaf0154fc83530c836c5cbedc9a",
+      "import_blob_sha1": "cbac8017ded04f0c6ae4236be76a0508f5f7355a"
+    }
+  ],
+  "browser_regression_dependencies_not_bundled": [
+    "PR220 browser mock envelopes and fixture route changes",
+    "PR220 isolated workflow allowlist entries for public-catalog-clock.js",
+    "Remaining protected pages and icon assets needed by npm run test:contracts",
+    "Native Chromium launch and the real offline browser test suites"
+  ]
+}
