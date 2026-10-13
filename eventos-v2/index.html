@@ -1266,6 +1266,7 @@
               id="campoData"
               class="campo"
               type="date"
+            required
             >
 
           </div>
@@ -1284,6 +1285,7 @@
               id="campoHorarioInicio"
               class="campo"
               type="time"
+            required
             >
 
           </div>
@@ -1302,10 +1304,21 @@
               id="campoHorarioFim"
               class="campo"
               type="time"
+            required
             >
 
           </div>
 
+
+          <div class="campo-grupo">
+            <label class="campo-label" for="campoDataFim">Data de término *</label>
+            <input id="campoDataFim" class="campo" type="date" required>
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label" for="campoFusoHorario">Fuso horário IANA *</label>
+            <input id="campoFusoHorario" class="campo" type="text" placeholder="Ex.: America/Recife" required>
+            <small>Informe a data final explicitamente, inclusive quando terminar após a meia-noite.</small>
+          </div>
 
           <div class="campo-grupo">
 
@@ -2936,6 +2949,9 @@
             'campoHorarioFim'
           ),
 
+        dataFim: obterValor('campoDataFim'),
+        fusoHorario: obterValor('campoFusoHorario'),
+
         local:
           obterValor(
             'campoLocal'
@@ -3014,6 +3030,11 @@
         comissionadoReferencia:
           ''
       };
+
+      if (!dados.data || !dados.horarioInicio || !dados.dataFim || !dados.horarioFim || !dados.fusoHorario) {
+        mostrarMensagemCadastro('Informe início e término completos, com as duas datas, horários e fuso IANA.', false);
+        return;
+      }
 
       if (!dados.produtorId) {
         mostrarMensagemCadastro(
@@ -3158,6 +3179,8 @@
         'campoData',
         'campoHorarioInicio',
         'campoHorarioFim',
+        'campoDataFim',
+        'campoFusoHorario',
         'campoLocal',
         'campoEndereco',
         'campoCidade',
