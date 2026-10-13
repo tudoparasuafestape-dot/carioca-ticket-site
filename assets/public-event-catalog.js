@@ -1,6 +1,10 @@
 (function () {
   'use strict';
 
+  var Clock = window.CTPublicCatalogClock;
+  var expirationHandler = function () {}, resumeHandler = function () {};
+  var lease = Clock && Clock.create({ onExpire: function (reason) { expirationHandler(reason); } });
+
   // The loader must return the server's public, published catalog only.
   // Never derive eligibility from EVENTOS rows or the administrative active flag.
   function mount(loadCatalog) {
@@ -14,6 +18,8 @@
     var count = document.getElementById('event-count');
     var empty = document.getElementById('no-events');
     var events = [], query = '', locationQuery = '', ready = false, requestId = 0, phase = 'loading';
+    var inFlight = null, eventTimer = null, refreshTimer = null, lastAttempt = -Infinity;
+
     // Reuse presentation nodes only within this authoritative response. Nothing
     // is persisted across page visits, retries, new responses or locale changes.
     var cards = new Map(), positions = new Map(), searchText = new Map();
@@ -121,8 +127,68 @@
       article.append(cover, body);
       return article;
     }
+    function validTemporal(event) {
+      var temporal = event.temporal;
+      if (!temporal || !Clock) return false;
+      if (temporal.state === 'LEGADO_SEM_FIM') {
+        return temporal.inicioEm === null && temporal.fimEm === null &&
+          temporal.fusoHorario === null && temporal.temporalVersion === null;
+      }
+      if (temporal.state !== 'TEMPORAL_V1' || temporal.temporalVersion !== 1 ||
+          typeof temporal.fusoHorario !== 'string' || (temporal.fusoHorario !== 'UTC' &&
+          !/^[A-Za-z_]+(?:\/[A-Za-z0-9_+\-]+)+$/.test(temporal.fusoHorario))) return false;
+      var start = Clock.instant(temporal.inicioEm), end = Clock.instant(temporal.fimEm);
+      return Number.isFinite(start) && Number.isFinite(end) && end > start;
+    }
+    function survives(event) {
+      return validTemporal(event) && (event.temporal.state === 'LEGADO_SEM_FIM' ||
+        lease.remainingUntil(event.temporal.fimEm) > 0);
+    }
+    function clearEventTimer() { clearTimeout(eventTimer); eventTimer = null; }
+    function clearView() {
+      clearEventTimer(); ready = false;
+      events = []; cards.clear(); positions.clear(); searchText.clear();
+      grid.replaceChildren();
+      empty.hidden = true; feedback.textContent = '';
+      if (H) H.updateCategories([]);
+    }
+    function unavailable() {
+      clearView(); phase = 'error';
+      status.hidden = false; retry.hidden = false;
+      grid.setAttribute('aria-busy', 'false');
+      count.textContent = tr('unavailable', 'Agenda temporariamente indisponível.');
+      message.textContent = tr('loadError', 'Não foi possível carregar os eventos. Tente novamente.');
+    }
+    function queueRefresh() {
+      if (document.hidden || inFlight || refreshTimer !== null) return;
+      // Even a very short successful lease cannot create a busy retry loop.
+      var elapsed = performance.now() - lastAttempt;
+      var delay = Number.isFinite(elapsed) && elapsed >= 0 ? Math.max(0, 5000 - elapsed) : 5000;
+      refreshTimer = setTimeout(function () { refreshTimer = null; if (!document.hidden) load(true); }, delay);
+    }
+    function prune() {
+      if (!ready || !lease || !lease.isFresh()) return false;
+      var removed = false;
+      events = events.filter(function (event) {
+        if (survives(event)) return true;
+        cards.delete(event.id); searchText.delete(event.id); removed = true;
+        return false;
+      });
+      if (removed) queueRefresh();
+      return ready;
+    }
+    function armEvents() {
+      clearEventTimer();
+      if (!ready || !lease.isFresh()) return;
+      var next = Infinity;
+      events.forEach(function (event) {
+        if (event.temporal.state === 'TEMPORAL_V1') next = Math.min(next, lease.remainingUntil(event.temporal.fimEm));
+      });
+      if (Number.isFinite(next)) eventTimer = setTimeout(function () { eventTimer = null; render(); }, Math.min(Math.max(0, next), 2147483647));
+    }
     function render() {
-      if (!ready) return;
+      if (!prune()) return;
+
       var filtered = events.filter(function (event) {
         var visual = event.visual || {};
         if (query && !searchText.has(event.id)) searchText.set(event.id, normalize([event.nome, event.data, event.horario, event.local, event.cidade, event.uf, visual.categoria, I && I.categoryLabel ? I.categoryLabel(visual.categoria).text : '', visual.descricaoCurta].filter(Boolean).join(' ')));
@@ -146,50 +212,99 @@
       status.hidden = !!events.length;
       if (!events.length) message.textContent = tr('emptyCatalog', 'Nenhum evento disponível no momento. Volte em breve para conferir a agenda.');
       if (H) H.updateCategories(events);
+      armEvents();
     }
-    async function load() {
+    async function load(preserve) {
+      clearTimeout(refreshTimer); refreshTimer = null;
       var current = ++requestId;
-      ready = false; phase = 'loading';
-      events = []; cards.clear(); positions.clear(); searchText.clear();
-      grid.replaceChildren();
+      if (inFlight) inFlight.cancel();
+      inFlight = null;
+      if (!lease) { unavailable(); return; }
+      if (document.hidden) { unavailable(); return; }
+      var keepView = preserve === true && ready && lease.isFresh();
+      if (!keepView) {
+        clearView(); phase = 'loading';
+        status.hidden = false; retry.hidden = true;
+        count.textContent = tr('consulting', 'Consultando a agenda…');
+        message.textContent = tr('loading', 'Carregando eventos…');
+      }
       grid.setAttribute('aria-busy', 'true');
-      status.hidden = false;
-      retry.hidden = true;
-      empty.hidden = true;
-      feedback.textContent = '';
-      count.textContent = tr('consulting', 'Consultando a agenda…');
-      message.textContent = tr('loading', 'Carregando eventos…');
-      var timer;
+      var timer, request;
       try {
+        lastAttempt = performance.now();
+        request = inFlight = loadCatalog();
         var result = await Promise.race([
-          Promise.resolve().then(loadCatalog),
+          request.promise,
           new Promise(function (_, reject) { timer = setTimeout(function () { reject(new Error('CATALOG_TIMEOUT')); }, 20000); })
         ]);
         if (current !== requestId) return;
         if (!result || result.sucesso !== true || !Array.isArray(result.eventos)) throw new Error('CATALOG_INVALID');
+        if (!lease.accept(result, request.ticket)) throw new Error('CATALOG_CLOCK_INVALID');
         var seen = new Set();
-        events = result.eventos.map(function (event) {
+        var nextEvents = result.eventos.map(function (event) {
           if (!event || !text(event.id) || !text(event.nome)) throw new Error('CATALOG_INVALID_EVENT');
           return event;
         }).filter(function (event) {
           if (seen.has(event.id)) return false;
           seen.add(event.id);
-          return true;
+          return survives(event);
         });
+        if (!lease.isFresh()) throw new Error('CATALOG_EXPIRED');
+        // No persisted catalog or legacy fallback can bypass a fresh envelope.
+        events = nextEvents; cards.clear(); positions.clear(); searchText.clear();
         events.forEach(function (event, index) { positions.set(event.id, index); });
-        ready = true; phase = 'ready';
+        inFlight = null;
+        ready = true; phase = 'ready'; retry.hidden = true;
         render();
       } catch (_) {
         if (current !== requestId) return;
-        phase = 'error';
-        count.textContent = tr('unavailable', 'Agenda temporariamente indisponível.');
-        message.textContent = tr('loadError', 'Não foi possível carregar os eventos. Tente novamente.');
-        retry.hidden = false;
+        lease.invalidate('request-failed');
+        unavailable();
       } finally {
         clearTimeout(timer);
-        if (current === requestId) grid.setAttribute('aria-busy', 'false');
+        if (request) request.cancel();
+        if (current === requestId) {
+          inFlight = null;
+          grid.setAttribute('aria-busy', 'false');
+        }
       }
     }
+    expirationHandler = function (reason) {
+      unavailable();
+      if (reason === 'expired') queueRefresh();
+    };
+    resumeHandler = function (reason) {
+      // A monotonic clock may pause during device sleep. Never extrapolate a
+      // pre-suspension lease, even if performance.now() barely advanced.
+      ++requestId;
+      if (inFlight) inFlight.cancel();
+      inFlight = null;
+      clearTimeout(refreshTimer); refreshTimer = null;
+      if (initialRequest) initialRequest.cancel();
+      initialRequest = null;
+      if (lease) lease.invalidate(reason);
+      unavailable();
+      if (!document.hidden && reason !== 'pagehide') queueRefresh();
+    };
+    // A delayed timer must not leave an expired detail, checkout or share CTA
+    // activatable. Recheck before the default action or bubbling share handler.
+    function guardAction(event) {
+      var target = event.target && event.target.closest ? event.target.closest('.catalog-card') : null;
+      if (!target || !grid.contains(target)) return;
+      var id = target.dataset.eventId;
+      var allowed = ready && lease && lease.isFresh() && events.some(function (item) { return item.id === id && survives(item); });
+      if (!allowed) {
+        event.preventDefault(); event.stopImmediatePropagation();
+        if (ready) render();
+      }
+    }
+    grid.addEventListener('click', guardAction, true);
+    grid.addEventListener('auxclick', guardAction, true);
+    grid.addEventListener('contextmenu', guardAction, true);
+    grid.addEventListener('dragstart', guardAction, true);
+    grid.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') guardAction(event);
+    }, true);
     document.getElementById('event-search-form').addEventListener('submit', function (event) {
       event.preventDefault();
       query = normalize(input.value);
@@ -215,7 +330,8 @@
   // Reuse the public POST/iframe bridge used by /evento/ and /checkout/.
   // This adapter exposes one read-only method and sends no session credentials.
   function loadPublicEvents() {
-    return new Promise(function (resolve, reject) {
+    var abort = function () {};
+    var promise = new Promise(function (resolve, reject) {
       var app = 'https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
       var id = 'CTCATALOG-' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
       var frame = document.createElement('iframe');
@@ -238,6 +354,7 @@
         window.removeEventListener('message', receive);
         frame.remove(); form.remove();
       }
+      abort = function () { cleanup(); reject(new Error('CATALOG_CANCELLED')); };
       function receive(event) {
         if (event.origin !== 'https://script.google.com' && !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(event.origin)) return;
         // Apps Script may post from its nested sandbox, as in the existing public bridge.
@@ -253,21 +370,37 @@
       document.body.append(frame, form);
       try { form.submit(); } catch (error) { cleanup(); reject(error); }
     });
+    return { promise: promise, cancel: function () { abort(); } };
   }
-  // This defer script is first in the document. Start the same public request
-  // while optional presentation modules download, then mount once they have
-  // initialized. A handled early rejection is still delivered to the normal
-  // retry UI; every later load creates a fresh request.
-  var initialRequest = loadPublicEvents();
-  initialRequest.catch(function () {});
+  function requestCatalog() {
+    var ticket = lease.begin();
+    var request = loadPublicEvents();
+    request.ticket = ticket;
+    return request;
+  }
+  // Begin after the shared clock, before optional presentation scripts. Capture
+  // the ticket before POST so network time AND deferred mounting spend the lease.
+  var initialRequest = null;
+  resumeHandler = function (reason) {
+    if (lease) lease.invalidate(reason);
+    if (initialRequest) initialRequest.cancel();
+    initialRequest = null;
+  };
+  window.addEventListener('focus', function () { resumeHandler('focus'); });
+  window.addEventListener('pageshow', function (event) { if (event.persisted) resumeHandler('pageshow'); });
+  window.addEventListener('pagehide', function () { resumeHandler('pagehide'); });
+  document.addEventListener('visibilitychange', function () { resumeHandler(document.hidden ? 'hidden' : 'visible'); });
+  if (lease && !document.hidden) {
+    initialRequest = requestCatalog();
+    initialRequest.promise.catch(function () {});
+  }
   function initialize() {
     mount(function () {
       var request = initialRequest;
       initialRequest = null;
-      return request || loadPublicEvents();
+      return request || requestCatalog();
     });
   }
   if (document.readyState === 'complete') initialize();
   else document.addEventListener('DOMContentLoaded', initialize, { once: true });
 }());
-
