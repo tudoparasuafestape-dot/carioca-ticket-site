@@ -79,7 +79,7 @@
         <div class="loader"></div>
       </div>
       <div id="gateDenied" class="hidden">
-        <h2>Acesso restrito</h2>
+        <h2 id="gateTitle">Acesso restrito</h2>
         <p id="gateMessage">Entre no Portal do Produtor para acessar a Central Mobile.</p>
         <div class="actions">
           <a class="btn" href="/produtor/">Entrar no Portal do Produtor</a>
@@ -177,15 +177,35 @@ var APP='https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzB
 var STORAGE='CT_PORTAL_PRODUTOR_PROD_SESSION_V1';
 var EVENT_KEY='CT_CENTRAL_EVENTO_OFICIAL_V1';
 var pending={};
-var state={token:'',context:null,event:null,checkinBusy:false};
+var state={token:'',context:null,event:null,checkinBusy:false,generation:0,loggingOut:false,handoffAttempted:false};
 
 var gate=document.getElementById('gate');
 var gateLoading=document.getElementById('gateLoading');
 var gateDenied=document.getElementById('gateDenied');
+var gateTitle=document.getElementById('gateTitle');
 var gateMessage=document.getElementById('gateMessage');
 var central=document.getElementById('central');
 var eventSelect=document.getElementById('eventSelect');
 var eventInfo=document.getElementById('eventInfo');
+
+function takePending(id){
+  var p=pending[id];if(!p)return null;
+  delete pending[id];clearTimeout(p.timer);
+  try{p.frame.remove();p.form.remove()}catch(_){}
+  return p;
+}
+
+function finishRequest(id,result){
+  var p=takePending(id);
+  if(p&&p.generation===state.generation)p.done(result);
+}
+
+function resetAccess(){
+  state.generation++;
+  Object.keys(pending).forEach(takePending);
+  state.token='';state.context=null;state.event=null;state.checkinBusy=false;
+  gate.classList.remove('hidden');central.classList.add('hidden');
+}
 
 function post(action,data,done){
   var id='CTCENTRAL-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
@@ -196,22 +216,20 @@ function post(action,data,done){
   add('ctMinhaCariocaAction',action);add('ctMinhaCariocaRequestId',id);
   Object.keys(data||{}).forEach(function(k){add(k,data[k])});
   document.body.append(frame,form);
-  pending[id]={frame:frame,form:form,done:done};
+  pending[id]={frame:frame,form:form,done:done,generation:state.generation};
   pending[id].timer=setTimeout(function(){
-    var p=pending[id];if(!p)return;delete pending[id];
-    try{p.frame.remove();p.form.remove()}catch(_){}
-    done({ok:false,erro:'A validação demorou mais do que o esperado.'});
+    finishRequest(id,{ok:false,erro:'A validação demorou mais do que o esperado.'});
   },25000);
-  form.submit();
+  try{form.submit()}catch(_){
+    finishRequest(id,{ok:false,erro:'Não foi possível enviar a solicitação.'});
+  }
 }
 
 window.addEventListener('message',function(ev){
   if(ev.origin!=='https://script.google.com'&&!/\.googleusercontent\.com$/.test(ev.origin||''))return;
   var p=ev.data;
   if(!p||p.ctMinhaCariocaPost!==true||!p.id||!pending[p.id])return;
-  var ctx=pending[p.id];delete pending[p.id];clearTimeout(ctx.timer);
-  try{ctx.frame.remove();ctx.form.remove()}catch(_){}
-  ctx.done(p);
+  finishRequest(p.id,p);
 });
 
 function saveSession(token,expiraEm){
@@ -244,30 +262,46 @@ function handoffFromHash(){
   try{return String(new URLSearchParams(h).get('ct_handoff')||'').trim()}catch(_){return ''}
 }
 
-function deny(msg){
+function deny(msg,title){
   gate.classList.remove('hidden');central.classList.add('hidden');
   gateLoading.classList.add('hidden');gateDenied.classList.remove('hidden');
+  gateTitle.textContent=title||'Acesso restrito';
   gateMessage.textContent=msg||'Entre no Portal do Produtor para acessar a Central Mobile.';
+}
+
+function completeAccessResponse(env){
+  var r=env&&env.resultado;
+  return env&&env.ok===true&&r&&typeof r==='object'&&!Array.isArray(r)&&
+    typeof r.autenticado==='boolean'&&typeof r.autorizado==='boolean';
 }
 
 function restore(token){
   post('centralRestaurarSessao',{token:token},function(env){
     var r=env&&env.resultado;
-    if(!env||env.ok!==true||!r||r.autenticado!==true||r.autorizado!==true){
-      clearSession();deny((r&&r.mensagem)||env&&env.erro||'Sua sessão não está autorizada para a Central Mobile.');return;
+    if(!completeAccessResponse(env)){
+      deny('Não foi possível validar seu acesso agora. Tente novamente.','Validação indisponível');return;
+    }
+    if(r.autenticado!==true||r.autorizado!==true){
+      clearSession();deny(r.mensagem||'Sua sessão não está autorizada para a Central Mobile.');return;
     }
     state.token=token;state.context=r;render(r);
   });
 }
 
 function start(){
+  if(state.loggingOut)return;
+  resetAccess();
   gateLoading.classList.remove('hidden');gateDenied.classList.add('hidden');
-  var handoff=handoffFromHash();
+  var handoff=state.handoffAttempted?'':handoffFromHash();
   if(handoff){
+    state.handoffAttempted=true;
     history.replaceState(null,'',location.pathname+location.search);
     post('centralConsumirHandoff',{handoff:handoff},function(env){
       var r=env&&env.resultado;
-      if(!env||env.ok!==true||!r||r.autenticado!==true||r.autorizado!==true||!r.token){
+      if(!completeAccessResponse(env)){
+        deny('Não foi possível confirmar esse acesso. Volte ao Portal do Produtor e abra a Central novamente.','Validação indisponível');return;
+      }
+      if(r.autenticado!==true||r.autorizado!==true||typeof r.token!=='string'||!r.token.trim()){
         deny('O acesso seguro expirou ou já foi utilizado. Volte ao Portal do Produtor e abra a Central novamente.');return;
       }
       state.token=String(r.token);saveSession(state.token,r.expiraEm||'');restore(state.token);
@@ -461,7 +495,9 @@ eventSelect.addEventListener('change',applyEvent);
 document.getElementById('mCheckin').addEventListener('click',openSecureCheckin);
 document.getElementById('retry').addEventListener('click',start);
 document.getElementById('logout').addEventListener('click',function(){
-  var token=state.token;clearSession();state.token='';state.context=null;state.event=null;
+  if(state.loggingOut)return;
+  var token=state.token;state.loggingOut=true;resetAccess();clearSession();
+  deny('Você saiu da Central Mobile.');
   post('centralLogout',{token:token},function(){location.replace('/produtor/')});
   setTimeout(function(){location.replace('/produtor/')},1200);
 });
