@@ -137,9 +137,10 @@
         <div class="field"><label for="lotPrice">Preço de venda do lote (R$) *</label><input id="lotPrice" type="number" min="0" step="0.01" value="0" required></div>
         <div class="field"><label for="lotQuantity">Quantidade disponível no lote *</label><input id="lotQuantity" type="number" min="0" step="1" value="0" required></div>
       </div>
+      <p id="lotTimeZone" class="help" role="status">O fuso será confirmado ao abrir o formulário.</p>
       <div class="grid2">
-        <div class="field"><label for="lotStart">Início das vendas</label><input id="lotStart" type="datetime-local"></div>
-        <div class="field"><label for="lotEnd">Fim das vendas</label><input id="lotEnd" type="datetime-local"></div>
+        <div class="field"><label for="lotStart">Início das vendas</label><input id="lotStart" type="datetime-local" step="1" aria-describedby="lotTimeZone"></div>
+        <div class="field"><label for="lotEnd">Fim das vendas</label><input id="lotEnd" type="datetime-local" step="1" aria-describedby="lotTimeZone"></div>
       </div>
       <div class="grid2">
         <div class="field"><label for="lotStatus">Status *</label><select id="lotStatus"><option value="ATIVO">ATIVO</option><option value="INATIVO">INATIVO</option><option value="ENCERRADO">ENCERRADO</option></select></div>
@@ -161,6 +162,7 @@ var eventId=String(new URLSearchParams(location.search).get('evento')||'').trim(
 var token='';
 var data={tipos:[],lotes:[],resumo:{}};
 var saving=false, loadingConfig=false, configReady=false;
+var contextoTemporalLoteAberto=null;
 
 function formBusy(form,busy){
   form.setAttribute('aria-busy',String(busy));
@@ -282,6 +284,74 @@ function openType(id){
   document.getElementById('typeFeedback').textContent='';
   document.getElementById('typeDialog').showModal();
 }
+function ctLoteContextoTemporal_(fonte, eventoId) {
+  fonte = fonte || {};
+  var contrato = typeof fonte.contratoTemporal === 'string' ? fonte.contratoTemporal :
+    (fonte.temporal && fonte.temporal.state);
+  return Object.freeze({
+    contratoTemporal: contrato,
+    eventoId: typeof eventoId === 'string' ? eventoId : '',
+    fusoHorarioVista: typeof fonte.fusoHorarioVista === 'string' ? fonte.fusoHorarioVista : '',
+    revisaoTemporalVista: typeof fonte.revisaoTemporalVista === 'string' ? fonte.revisaoTemporalVista : '',
+    inicioArmazenadoInvalido: Object.prototype.hasOwnProperty.call(fonte, 'dataInicioFormulario') && typeof fonte.dataInicioFormulario !== 'string',
+    fimArmazenadoInvalido: Object.prototype.hasOwnProperty.call(fonte, 'dataFimFormulario') && typeof fonte.dataFimFormulario !== 'string'
+  });
+}
+function ctLoteContextoValido_(contexto) {
+  return contexto && contexto.eventoId &&
+    (contexto.contratoTemporal === 'TEMPORAL_V1' || contexto.contratoTemporal === 'LEGADO_SEM_FIM') &&
+    (contexto.fusoHorarioVista === 'UTC' || contexto.fusoHorarioVista === 'America/Sao_Paulo') &&
+    typeof contexto.revisaoTemporalVista === 'string' && contexto.revisaoTemporalVista !== '';
+}
+function ctLoteConfigurarPeriodo_(fonte, eventoId, inicioId, fimId, ajudaId) {
+  var contexto = ctLoteContextoTemporal_(fonte, eventoId);
+  var canonico = contexto.contratoTemporal === 'TEMPORAL_V1';
+  [inicioId, fimId].forEach(function(id) {
+    var campo = document.getElementById(id);
+    campo.required = canonico;
+    if (canonico) {
+      campo.min = '2000-01-01T00:00:00';
+      campo.max = '2100-12-31T23:59:59';
+    } else {
+      campo.removeAttribute('min');
+      campo.removeAttribute('max');
+    }
+  });
+  document.getElementById(ajudaId).textContent = ctLoteContextoValido_(contexto) ?
+    'Fuso horário: ' + contexto.fusoHorarioVista + '. ' + (canonico ?
+      'Início e fim são obrigatórios. Datas de 2000 a 2100.' :
+      'Evento legado: campos vazios permanecem intencionais.') +
+    ((contexto.inicioArmazenadoInvalido || contexto.fimArmazenadoInvalido) ?
+      ' Há uma data armazenada inválida. Informe uma data válida para corrigi-la; ela não será apagada como campo vazio.' : '') :
+    'Não foi possível confirmar o fuso deste formulário. Atualize a lista antes de salvar.';
+  return contexto;
+}
+function ctLoteErroPeriodo_(inicio, fim, contexto) {
+  if (!ctLoteContextoValido_(contexto)) return 'Atualize a lista para confirmar o fuso e a versão do evento antes de salvar.';
+  var canonico = contexto.contratoTemporal === 'TEMPORAL_V1';
+  if (typeof inicio !== 'string' || typeof fim !== 'string') return 'Informe datas e horários válidos para o período de venda.';
+  if ((contexto.inicioArmazenadoInvalido && !inicio) || (contexto.fimArmazenadoInvalido && !fim)) return 'Há uma data armazenada inválida. Corrija a data antes de salvar; deixar o campo vazio não apaga esse dado.';
+  if (canonico && (!inicio || !fim)) return 'Informe início e fim das vendas para este evento.';
+  function valido(texto) {
+    if (texto === '') return !canonico;
+    var partes = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(texto);
+    if (!partes) return false;
+    var ano = Number(partes[1]), mes = Number(partes[2]), dia = Number(partes[3]);
+    var bissexto = ano % 4 === 0 && (ano % 100 !== 0 || ano % 400 === 0);
+    var dias = [31,bissexto ? 29 : 28,31,30,31,30,31,31,30,31,30,31];
+    return ano >= (canonico ? 2000 : 1) && ano <= (canonico ? 2100 : 9999) &&
+      mes >= 1 && mes <= 12 && dia >= 1 && dia <= dias[mes - 1] &&
+      Number(partes[4]) <= 23 && Number(partes[5]) <= 59 && Number(partes[6] || 0) <= 59;
+  }
+  if (!valido(inicio) || !valido(fim)) return 'Informe datas e horários válidos para o período de venda.';
+  var completa = function(texto) { return texto.length === 16 ? texto + ':00' : texto; };
+  if (inicio && fim && completa(fim) <= completa(inicio)) {
+    return 'O fim das vendas deve ser posterior ao início.';
+  }
+  // O servidor confirma a revisão e resolve cada horário no fuso exibido.
+  return '';
+}
+
 function openLot(id){
   if(saving||loadingConfig||!configReady)return;
   if(!data.tipos.length){toast('Cadastre primeiro um tipo de ingresso.',true);return}
@@ -298,6 +368,7 @@ function openLot(id){
   document.getElementById('lotStatus').value=l?String(l.status||'ATIVO').toUpperCase():'ATIVO';
   document.getElementById('lotOrder').value=l?Number(l.ordem||0):Math.max(1,data.lotes.length+1);
   document.getElementById('lotFeedback').textContent='';
+  contextoTemporalLoteAberto=ctLoteConfigurarPeriodo_(l||data.evento,eventId,'lotStart','lotEnd','lotTimeZone');
   document.getElementById('lotDialog').showModal();
 }
 async function saveType(e){
@@ -310,8 +381,10 @@ async function saveType(e){
 async function saveLot(e){
   e.preventDefault();
   if(saving)return;
+  var payload={id:document.getElementById('lotId').value,tipoId:document.getElementById('lotType').value,nome:document.getElementById('lotName').value,preco:document.getElementById('lotPrice').value,quantidade:document.getElementById('lotQuantity').value,dataInicio:document.getElementById('lotStart').value,dataFim:document.getElementById('lotEnd').value,status:document.getElementById('lotStatus').value,ordem:document.getElementById('lotOrder').value,fusoHorarioVista:contextoTemporalLoteAberto&&contextoTemporalLoteAberto.fusoHorarioVista,revisaoTemporalVista:contextoTemporalLoteAberto&&contextoTemporalLoteAberto.revisaoTemporalVista};
+  var erroPeriodo=ctLoteErroPeriodo_(payload.dataInicio,payload.dataFim,contextoTemporalLoteAberto);
+  if(erroPeriodo){document.getElementById('lotFeedback').textContent=erroPeriodo;toast(erroPeriodo,true);return}
   saving=true;formBusy(document.getElementById('lotForm'),true);document.getElementById('lotFeedback').textContent='Salvando...';
-  var payload={id:document.getElementById('lotId').value,tipoId:document.getElementById('lotType').value,nome:document.getElementById('lotName').value,preco:document.getElementById('lotPrice').value,quantidade:document.getElementById('lotQuantity').value,dataInicio:document.getElementById('lotStart').value,dataFim:document.getElementById('lotEnd').value,status:document.getElementById('lotStatus').value,ordem:document.getElementById('lotOrder').value};
   try{var r=await rpc('ctIngressosConfigSalvarLotePROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar lote.');document.getElementById('lotDialog').close();toast(r.mensagem||'Lote salvo.');if(!await load())toast('Lote salvo. Não foi possível atualizar a lista. Use Atualizar configuração.',true)}catch(err){document.getElementById('lotFeedback').textContent=humanError(err.message);toast(err.message,true)}finally{saving=false;formBusy(document.getElementById('lotForm'),false)}
 }
 async function toggleType(id){
