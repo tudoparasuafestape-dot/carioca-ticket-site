@@ -21,8 +21,8 @@ for(const [id,point] of Object.entries(registry)){
  }
  for(const type of ['pageshow','storage']){listeners[type]({key:'ct-home-locale'});assert.equal(waze.attrs.href,raw);checks++;}
  delete context.window.CTPublicI18n;context.window.localStorage={getItem(){throw Error('disabled storage')}};listeners.pageshow();assert.equal(waze.attrs.lang,'pt-BR');checks++;
- // Only the approved source is used; untrusted payload pins and map center cannot override it.
- assert.equal(api.buildWazeUrl({...event,latitude:20,longitude:40,mapaUrl:'https://maps.example/?ll=10,20',destinoTransporte:{latitude:20,longitude:40}},id),raw);checks++;
+ // A present malformed contract revokes legacy fallback; loose payload pins cannot override it.
+ assert.equal(api.buildWazeUrl({...event,latitude:20,longitude:40,mapaUrl:'https://maps.example/?ll=10,20',destinoTransporte:{latitude:20,longitude:40}},id),'');checks++;
  for(const invalid of [null,{}, {...event,id:'OTHER'}, {...event,id:'__proto__'}, {...event,local:'Other'}, {...event,endereco:'Other'}, {...event,cidade:'Other'}, {...event,uf:'XX'}, {...event,endereco:''}]){api.render(event,id);api.render(invalid,id);absent();assert.equal(api.buildWazeUrl(invalid,id),'');}
  api.render(event,id);api.render(event,'OTHER');absent();
  for(const patch of [{approved:false},{revision:''},{latitude:NaN},{latitude:Infinity},{latitude:91},{longitude:-181},{latitude:'-8'},{latitude:0,longitude:0},{addressLine1:''},{addressLine2:'x'.repeat(501)}]){
@@ -44,7 +44,7 @@ for(const route of ['evento','evento-v2']){
  assert.match(html,/id="directions-waze-note" hidden/);
  assert.match(html,/<img class="waze-mark" src="\/assets\/waze-mark\.svg" width="28" height="26" alt="" aria-hidden="true"><span id="directions-waze-label">/);
  assert.equal((html.match(/class="waze-mark"/g)||[]).length,1);
- assert.match(html,/event-uber\.js\?v=20261010-4/);assert.match(html,/event-uber\.css\?v=20261010-5/);checks++;
+ assert.match(html,/event-uber\.js\?v=20261010-universal1/);assert.match(html,/event-uber\.css\?v=20261010-5/);checks++;
 }
 console.log(`PASS: ${checks} Waze synthetic groups; exact Uber destination, URL encoding, 4 locales, stale state, no destination, invalid coordinates, future registry record, both templates. Zero network/navigation.`);
 

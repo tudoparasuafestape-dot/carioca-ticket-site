@@ -80,6 +80,7 @@
     clearTimeout(current.timer);
     if (current.observer) current.observer.disconnect();
     current.frame.onload = current.frame.onerror = null;
+    current.frame.removeAttribute('src');
     if (current.link) {
       var hadFocus = document.activeElement === current.link;
       current.linkLabel.textContent = current.linkText;
@@ -150,12 +151,13 @@
     };
     function start() {
       if (current !== state || state.started || (!state.oneTime && !mapsAllowed())) return;
+      var hadFocus = document.activeElement === once;
       state.started = true;
       viewport.hidden=false;
       if (state.observer) state.observer.disconnect();
       state.message = 'Carregando mapa do Google…';
       translate();
-      if(document.activeElement===once){status.tabIndex=-1;status.focus({preventScroll:true});}
+      if(hadFocus){status.tabIndex=-1;status.focus({preventScroll:true});}
       state.timer = setTimeout(function () {
         if (current !== state) return;
         host.setAttribute('data-map-fallback', 'timeout');
@@ -220,8 +222,10 @@
     if (details && !details.hidden && address && link) {
       try {
         var target = new URL(link.href);
-        if (target.origin === 'https://www.google.com' && target.pathname === '/maps/dir/' &&
-            target.searchParams.get('destination') === address.value) destination = address.value;
+        var verified = window.CTEventDirections && typeof window.CTEventDirections.getMapDestination === 'function'
+          ? window.CTEventDirections.getMapDestination() : address.value;
+        if (verified && target.origin === 'https://www.google.com' && target.pathname === '/maps/dir/' &&
+            target.searchParams.get('destination') === verified) destination = verified;
       } catch (_) {}
     }
     render(host, destination);

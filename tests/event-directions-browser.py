@@ -16,9 +16,13 @@ checks, blocked, errors, map_mocks = [], [], [], []
 PRELUDE = '''HTMLFormElement.prototype.submit = function() {
  const data = new FormData(this);
  if (data.get('metodo') !== 'ctEventoPublicoCarregarPROD') throw new Error('Unexpected RPC');
+ const args = JSON.parse(data.get('argsJson') || '[]');
+ if (!['SYNTHETIC', 'SECOND'].includes(args[0])) throw new Error('Unexpected synthetic event');
+ const result = FIXTURE;
+ result.evento.id = args[0];
  window.fixtureRpcCount = (window.fixtureRpcCount || 0) + 1;
  setTimeout(() => window.dispatchEvent(new MessageEvent('message', {
- origin: 'https://script.google.com', data: {ctMinhaCariocaPost:true, id:data.get('ctMinhaCariocaRequestId'), ok:true, resultado:FIXTURE}
+ origin: 'https://script.google.com', data: {ctMinhaCariocaPost:true, id:data.get('ctMinhaCariocaRequestId'), ok:true, resultado:result}
  })), 0);
 };
 Object.defineProperty(navigator, 'clipboard', {configurable:true, value:{writeText:async text => {window.copied=text; window.copyCount=(window.copyCount||0)+1;}}});
@@ -50,8 +54,8 @@ def route(r):
     return r.fulfill(status=204, body='')
 
 with sync_playwright() as pw:
-    browser = pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH'), headless=True, args=['--no-sandbox'])
-    context = browser.new_context(service_workers='block')
+    browser = pw.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH'), headless=True, proxy=dict(server='http://127.0.0.1:9', bypass='<-loopback>'), args=['--disable-background-networking', '--disable-quic', '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1'])
+    context = browser.new_context(service_workers='block', offline=True, permissions=[])
     context.route('**/*', route)
     context.add_init_script(PRELUDE)
     page = context.new_page()
