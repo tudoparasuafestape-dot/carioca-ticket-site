@@ -123,6 +123,7 @@
 <script src="/assets/checkout-language.js"></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
+  <script src="/assets/public-catalog-clock.js?v=20261012-temporal1"></script>
   <script src="/assets/advance-sales.js?v=20261011-1"></script>
 </head>
 <body>
@@ -603,54 +604,180 @@
         });
       }
 
-      function loadCatalog(refreshEraSelection){
-        var previous=refreshEraSelection?{
+
+      // Backend temporal contract is mandatory for a genuinely new sale.
+      var catalogRequest=0,catalogLoading=false,catalogRefreshTimer=null,catalogRefreshWanted=false,catalogRecovering=false;
+      var catalogLease=window.CTPublicCatalogClock&&window.CTPublicCatalogClock.create({onExpire:function(reason){
+        temporalStale();if(reason==='expired')scheduleCatalogRefresh();
+      }});
+      var catalogNotice=document.createElement('p');
+      catalogNotice.id='catalogTemporalNotice';catalogNotice.setAttribute('role','status');
+      var catalogRetry=document.createElement('button');
+      catalogRetry.id='catalogTemporalRetry';catalogRetry.type='button';
+      checkoutUiWrite(catalogRetry,'Tentar novamente');catalogRetry.hidden=true;
+      el.salePanel.insertBefore(catalogRetry,el.salePanel.firstChild);
+      el.salePanel.insertBefore(catalogNotice,el.salePanel.firstChild);
+      catalogRetry.onclick=function(){var recovery=readRecovery();if(recovery&&recovery.pedidoId&&recovery.token)recoverOrder(recovery);else scheduleCatalogRefresh();};
+
+      var recoveryAction=document.createElement('a');
+      recoveryAction.id='catalogRecoveryAction';recoveryAction.href='/minha-carioca/conta/';
+      checkoutUiWrite(recoveryAction,'Minhas compras');recoveryAction.hidden=true;
+      el.salePanel.insertBefore(recoveryAction,el.salePanel.firstChild);
+      function unknownPaymentAttempt(){
+        if(state.busy||catalogRecovering||readRecovery()||state.successRendered)return false;
+        var status=String(state.order&&state.order.status||'').toUpperCase();
+        if(state.order&&['EXPIRADO','CANCELADO','FALHA'].indexOf(status)<0)return false;
+        var selectedMethod=(el.paymentCard.checked?'CREDIT_CARD':'PIX');
+        return ['PIX','CREDIT_CARD','GRATUITO'].some(function(method){
+          var key=savedIdempotency(method),rejected=state.temporalRejectedAttempt;
+          // Only this tab's correlated, authoritative pre-order rejection can
+          // permit a revalidated retry of the same method and the same key.
+          return !!key&&!(rejected&&rejected.method===method&&rejected.key===key&&selectedMethod===method);
+        });
+      }
+      function showRecoveryPending(){
+        if(state.busy||catalogRecovering||readRecovery())return false;
+        if(!unknownPaymentAttempt()&&!state.temporalRecoveryPending)return false;
+        state.temporalRecoveryPending=true;
+        state.couponSeq=(state.couponSeq||0)+1;++state.feeSeq;
+        if(state.feeTimer){clearTimeout(state.feeTimer);state.feeTimer=null;}
+        el.payButton.disabled=true;
+        el.typeSelect.disabled=true;el.lotSelect.disabled=true;el.quantity.disabled=true;
+        el.paymentPix.disabled=true;el.paymentCard.disabled=true;el.couponApply.disabled=true;
+        catalogRetry.hidden=true;recoveryAction.hidden=false;
+        checkoutUiWrite(catalogNotice,'Ainda não foi possível confirmar o resultado da tentativa anterior. Consulte Minhas compras antes de tentar uma nova compra.');
+        setLoading(false);
+        return true;
+      }
+      function knownPaymentResult(){
+        state.temporalRecoveryPending=false;state.temporalRejectedAttempt=null;
+        recoveryAction.hidden=true;
+        catalogNotice.textContent='';
+        el.quantity.disabled=false;el.paymentPix.disabled=false;el.paymentCard.disabled=false;
+        el.couponApply.disabled=false;
+      }
+
+      function temporalRecoveryFailure(){
+        checkoutUiWrite(catalogNotice,'Não foi possível recuperar o pedido agora. Tente novamente.');
+        catalogRetry.hidden=false;catalogRetry.disabled=false;
+      }
+      function orderOwnsCheckout(){
+        var status=String(state.order&&state.order.status||'').toUpperCase();
+        return state.busy||catalogRecovering||state.temporalRecoveryPending||state.successRendered||!!readRecovery()||
+          !!state.order&&['EXPIRADO','CANCELADO','FALHA'].indexOf(status)<0;
+      }
+      function temporalStale(){
+        if(showRecoveryPending()||orderOwnsCheckout())return;
+        if(state.promotion&&state.promotion.cupom)state.temporalCoupon=state.promotion.cupom.codigo;
+        state.couponSeq=(state.couponSeq||0)+1;state.couponBusy=false;
+        el.couponApply.disabled=false;checkoutUiWrite(el.couponApply,'APLICAR');
+        clearCoupon(true);
+        invalidateFee('Validando disponibilidade e lotes.');
+        el.payButton.disabled=true;el.typeSelect.disabled=true;el.lotSelect.disabled=true;
+        checkoutUiWrite(catalogNotice,'Validando disponibilidade e lotes.');
+        catalogRetry.hidden=true;
+      }
+      function temporalFailure(){
+        if(orderOwnsCheckout())return;
+        temporalStale();
+        checkoutUiWrite(catalogNotice,'Não foi possível carregar a venda online agora. Tente novamente mais tarde.');
+        catalogRetry.hidden=false;
+      }
+      function scheduleCatalogRefresh(){
+        if(showRecoveryPending()||document.visibilityState==='hidden')return;
+        if(orderOwnsCheckout()||!state.eventId)return;
+        if(catalogLoading){catalogRefreshWanted=true;return;}
+        if(catalogRefreshTimer!==null)return;
+        catalogRefreshTimer=setTimeout(function(){
+          catalogRefreshTimer=null;
+          if(!orderOwnsCheckout())loadCatalog(false,true);
+        },50);
+      }
+      function finishCatalogRequest(){
+        catalogLoading=false;
+        if(catalogRefreshWanted){catalogRefreshWanted=false;scheduleCatalogRefresh();}
+      }
+      function loadCatalog(refreshEraSelection,availabilityOnly){
+        if(showRecoveryPending())return;
+        if(catalogLoading){catalogRefreshWanted=true;return;}
+        if(availabilityOnly&&(orderOwnsCheckout()))return;
+        var previous={
           type:state.type&&state.type.id,lot:state.lot&&state.lot.id,
-          coupon:state.promotion&&state.promotion.cupom&&state.promotion.cupom.codigo,
-          participants:participants()
-        }:null;
-        if(previous){clearCoupon(true);invalidateFee('Confirmando preço atualizado...');}
-        setLoading(true,'Carregando evento...','Validando disponibilidade e lotes.');
+          coupon:state.temporalCoupon||(state.promotion&&state.promotion.cupom&&state.promotion.cupom.codigo)
+        };
+        var request=++catalogRequest;
+        var ticket=catalogLease&&catalogLease.begin();
+        catalogLoading=true;
+        if(availabilityOnly)temporalStale();
+        else setLoading(true,'Carregando evento...','Validando disponibilidade e lotes.');
+        function recoveryOrFailure(){
+          var recovery=readRecovery();
+          if(!state.temporalInitialRendered&&recovery&&recovery.pedidoId&&recovery.token){recoverOrder(recovery);return;}
+          if(!availabilityOnly&&!orderOwnsCheckout())setLoading(false);
+          if(refreshEraSelection&&!orderOwnsCheckout())showClosed('Não foi possível carregar a venda online agora. Tente novamente mais tarde.');
+          temporalFailure();
+        }
         google.script.run
           .withSuccessHandler(function(res){
-            if(!res||res.sucesso!==true){
-              showClosed(res&&res.mensagem?res.mensagem:'As vendas online deste evento não estão disponíveis.');
-              return;
+            if(request!==catalogRequest)return;
+            finishCatalogRequest();
+            if(availabilityOnly&&(orderOwnsCheckout()))return;
+            var validEnvelope=catalogLease&&catalogLease.accept(res,ticket);
+            if(!res||res.sucesso!==true||!validEnvelope){
+              if(catalogLease)catalogLease.invalidate('unavailable');
+              recoveryOrFailure();return;
             }
             state.catalog=res;
-            // This canary requires an authoritative quote even if catalog metadata is missing.
-            // The browser never supplies a fee rate or decides the amount to charge.
             state.politicaComercialAtiva=state.eventId==='EVT-23112026-ERA-BEAUTY-EAC4B673';
-            try {
-              renderCatalog();
-              if(previous){
-                el.typeSelect.value=previous.type||'';onType();
-                el.lotSelect.value=previous.lot||'';onLot();
-                el.participants.querySelectorAll('.participant').forEach(function(box,index){
-                  var saved=previous.participants[index];
-                  if(saved){box.querySelector('[data-name]').value=saved.nome;box.querySelector('[data-phone]').value=saved.whatsapp;}
+            var firstRender=!state.temporalInitialRendered;
+            try{
+              if(availabilityOnly&&!firstRender){
+                el.typeSelect.innerHTML='<option value="">Selecione</option>';
+                (res.tipos||[]).forEach(function(t){
+                  var option=document.createElement('option');option.value=t.id;option.textContent=t.nome;
+                  el.typeSelect.appendChild(option);
                 });
-                if(previous.coupon&&state.type&&state.lot){
-                  el.couponCode.value=previous.coupon;applyCoupon();
-                }
+              }else{renderCatalog();state.temporalInitialRendered=true;}
+              el.typeSelect.disabled=false;
+              el.typeSelect.value=previous.type||'';
+              onType();
+              el.lotSelect.value=previous.lot||'';
+              onLot();
+              if(previous.coupon&&state.type&&state.lot&&!state.couponBusy){
+                el.couponCode.value=previous.coupon;applyCoupon();
               }
-            } catch (err) {
-              showClosed('Não foi possível exibir os ingressos agora. Tente novamente em alguns instantes.');
-              return;
+              state.temporalCoupon='';
+              catalogNotice.textContent='';
+              catalogRetry.hidden=true;
+              if(!(res.tipos||[]).some(function(t){return(t.lotes||[]).length;}))
+                checkoutUiWrite(catalogNotice,'Não há ingressos disponíveis para venda online neste momento.');
+              el.payButton.disabled=!catalogLease.isFresh();
+              if(window.CTCheckoutLanguage)window.CTCheckoutLanguage.apply(el.salePanel);
+            }catch(error){if(catalogLease)catalogLease.invalidate('render-failed');recoveryOrFailure();return;}
+            if(firstRender){
+              
+              renderAdvanceSalesNotice();
+              var recovery=readRecovery();
+              if(recovery&&recovery.pedidoId&&recovery.token)recoverOrder(recovery);
+              else setLoading(false);
             }
-            renderAdvanceSalesNotice();
-            var recovery=readRecovery();
-            if(recovery&&recovery.pedidoId&&recovery.token){
-              recoverOrder(recovery);
-            }else{
-              setLoading(false);
-            }
+            if(!availabilityOnly&&!catalogRecovering)setLoading(false);
           })
           .withFailureHandler(function(){
-            showClosed('Não foi possível carregar a venda online agora. Tente novamente mais tarde.');
+            if(request!==catalogRequest)return;
+            finishCatalogRequest();if(catalogLease)catalogLease.invalidate('unavailable');recoveryOrFailure();
           })
           .ctCheckoutPublicoCarregarEventoPROD(state.eventId);
       }
+      function resumeCatalog(){
+        if(document.visibilityState==='hidden'||orderOwnsCheckout())return;
+        if(catalogLease)catalogLease.invalidate('resume');
+        temporalStale();scheduleCatalogRefresh();
+      }
+      window.addEventListener('focus',resumeCatalog);
+      window.addEventListener('pageshow',function(event){if(event.persisted)resumeCatalog();});
+      window.addEventListener('online',resumeCatalog);
+      document.addEventListener('visibilitychange',resumeCatalog);
 
       function showClosed(message){
         setLoading(false);
@@ -711,7 +838,7 @@
         });
 
         if(!(state.catalog.tipos||[]).length){
-          showClosed('Não há ingressos disponíveis para venda online neste momento.');
+          checkoutUiWrite(catalogNotice,'Não há ingressos disponíveis para venda online neste momento.');
           return;
         }
       }
@@ -745,7 +872,7 @@
       }
 
       function clearCoupon(silent){
-        if(state.politicaComercialAtiva){
+        {
           state.couponSeq++;
           state.couponBusy=false;el.couponApply.disabled=false;checkoutUiWrite(el.couponApply,'APLICAR');
         }
@@ -769,6 +896,8 @@
       }
 
       function applyCoupon(){
+        if(state.temporalRecoveryPending)return;
+        if(!catalogLease||!catalogLease.isFresh()){temporalStale();scheduleCatalogRefresh();return;}
         if(state.couponBusy||(state.politicaComercialAtiva&&state.busy))return;
         var codigo=String(el.couponCode.value||'').trim();
         var atual=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'';
@@ -786,7 +915,9 @@
         if(state.politicaComercialAtiva)invalidateFee('Validando cupom e total...');
         google.script.run
           .withSuccessHandler(function(res){
-            if(state.politicaComercialAtiva&&(couponSeq!==state.couponSeq||couponSelection!==selectionKey()))return;
+            if(state.temporalRecoveryPending)return;
+        if(!catalogLease||!catalogLease.isFresh()){temporalStale();scheduleCatalogRefresh();return;}
+            if(couponSeq!==state.couponSeq||couponSelection!==selectionKey())return;
             state.couponBusy=false;el.couponApply.disabled=false;checkoutUiWrite(el.couponApply,'APLICAR');
             if(!res||res.sucesso!==true||res.valido!==true){
               state.promotion=null;el.promoSummary.classList.add('hidden');
@@ -803,7 +934,7 @@
             else renderPromotion();
           })
           .withFailureHandler(function(){
-            if(state.politicaComercialAtiva&&(couponSeq!==state.couponSeq||couponSelection!==selectionKey()))return;
+            if(couponSeq!==state.couponSeq||couponSelection!==selectionKey())return;
             state.couponBusy=false;el.couponApply.disabled=false;checkoutUiWrite(el.couponApply,'APLICAR');
             state.promotion=null;el.promoSummary.classList.add('hidden');
             el.couponMessage.className='coupon-msg err';checkoutUiWrite(el.couponMessage,'Não foi possível validar o cupom agora.');
@@ -820,12 +951,14 @@
       }
 
       function updateSummary(){
+        if(state.temporalRecoveryPending)return;
+        if(!catalogLease||!catalogLease.isFresh()){temporalStale();scheduleCatalogRefresh();return;}
         var q=quantity();
         el.quantity.value=q;
         if(!state.type||!state.lot){
           invalidateFee('');
           el.summary.classList.add('hidden');
-          el.participants.innerHTML='';
+          // Preserve participant fields while an expired lot awaits a replacement.
           return;
         }
 
@@ -903,6 +1036,8 @@
       }
 
       function atualizarTaxa(valorIngressos,precoUnitario,quantidadeVendas){
+        if(state.temporalRecoveryPending)return;
+        if(!catalogLease||!catalogLease.isFresh()){temporalStale();scheduleCatalogRefresh();return;}
         invalidateFee('');
         if(state.politicaComercialAtiva&&!officialPriceValid()){
           feeUnavailable();
@@ -935,6 +1070,8 @@
           state.feeTimer=null;
           google.script.run
             .withSuccessHandler(function(res){
+              if(state.temporalRecoveryPending)return;
+        if(!catalogLease||!catalogLease.isFresh()){temporalStale();scheduleCatalogRefresh();return;}
               if(seq!==state.feeSeq||selection!==quoteSelectionKey())return;
               var helper=window.CTCheckoutCommercialPolicy;
               if(!helper||!helper.validQuote(res,valorIngressos)){
@@ -1054,6 +1191,11 @@
 
       function createPayment(){
         if(state.busy)return;
+        if(showRecoveryPending())return;
+        if(!catalogLease||!catalogLease.isFresh()){
+          temporalStale();scheduleCatalogRefresh();
+          modal('Confirmando o total','Aguarde a atualização do valor final antes de continuar para o pagamento.');return;
+        }
         state.paymentMethod=el.paymentCard.checked?'CREDIT_CARD':'PIX';
         if(advanceSalesClosed()&&!savedIdempotency(state.paymentMethod)){
           modal('Vendas antecipadas encerradas',window.CTAdvanceSales.message);return;
@@ -1081,6 +1223,9 @@
           cartao?'Reservando seus ingressos e criando o pagamento seguro.':'Reservando seus ingressos com segurança.'
         );
 
+        // A pre-order rejection proves only the preceding call, never this new submission.
+        state.temporalRejectedAttempt=null;
+        var attemptMethod=state.paymentMethod;
         var payload={
           eventoId:state.eventId,
           tipoId:state.type.id,
@@ -1106,29 +1251,35 @@
           .withSuccessHandler(function(res){
             state.busy=false;el.payButton.disabled=false;setLoading(false);
             if(!res||res.sucesso!==true||!res.pedido){
+              showRecoveryPending();
               modal(
                 'Não foi possível iniciar o pagamento',
                 'Tente novamente. Se o problema persistir, entre em contato com o atendimento.'
               );
               return;
             }
-            state.order=res.pedido;state.queryToken=String(res.consultaToken||'');
+            state.order=res.pedido;state.queryToken=String(res.consultaToken||'');knownPaymentResult();
             saveRecovery();
             renderOrder(res);
           })
           .withFailureHandler(function(error){
             state.busy=false;el.payButton.disabled=false;setLoading(false);
             modal('Não foi possível iniciar o pagamento',friendlyError(error));
-            if(state.politicaComercialAtiva){
-              var message=String(error&&error.message?error.message:error||'');
-              if(message.indexOf('CT_POLITICA_COMERCIAL_PRECO_ATUALIZADO')>=0)loadCatalog(true);
-              else updateSummary();
-            }else loadCatalog();
+            var message=String(error&&error.message?error.message:error||'');
+            var rejectedBeforeOrder=message.trim().replace(/^Error:\s*/,'')==='CT_POLITICA_COMERCIAL_PRECO_ATUALIZADO';
+            if(rejectedBeforeOrder&&!state.temporalRecoveryPending&&
+              savedIdempotency(attemptMethod)===payload.idempotenciaChave){
+              state.temporalRejectedAttempt={method:attemptMethod,key:payload.idempotenciaChave};
+              if(catalogLease)catalogLease.invalidate('price-rejected');
+              loadCatalog(true);return;
+            }
+            showRecoveryPending();
           })
           .ctCheckoutPixPublicoIniciarPROD(payload);
       }
 
       function updatePaymentMethodUI(){
+        if(showRecoveryPending())return;
         state.paymentMethod=el.paymentCard.checked?'CREDIT_CARD':'PIX';
         if(state.paymentMethod==='CREDIT_CARD'){
           checkoutUiWrite(el.payButton,'Continuar para pagamento com cartão');
@@ -1161,17 +1312,21 @@
       }
 
       function recoverOrder(rec){
+        if(catalogRecovering)return;
+        catalogRecovering=true;catalogRetry.disabled=true;
         setLoading(true,'Recuperando pedido...','Consultando seu pagamento sem criar uma nova cobrança.');
         state.queryToken=String(rec.token||'');
         google.script.run
           .withSuccessHandler(function(res){
-            setLoading(false);
+            catalogRecovering=false;catalogRetry.disabled=false;setLoading(false);
             if(!res||res.sucesso!==true||res.encontrado===false||!res.pedido){
-              clearRecovery();renderAdvanceSalesNotice();return;
+              clearRecovery();renderAdvanceSalesNotice();
+              if(!catalogLease||!catalogLease.isFresh()){temporalFailure();scheduleCatalogRefresh();}
+              return;
             }
-            state.order=res.pedido;renderOrder(res);
+            state.order=res.pedido;knownPaymentResult();renderOrder(res);
           })
-          .withFailureHandler(function(){setLoading(false);})
+          .withFailureHandler(function(){catalogRecovering=false;setLoading(false);temporalRecoveryFailure();})
           .ctCheckoutPixPublicoConsultarPROD(String(rec.pedidoId||''),state.queryToken);
       }
 
@@ -1477,7 +1632,7 @@
             state.busy=false;
             el.refreshButton.disabled=false;checkoutUiWrite(el.refreshButton,'Atualizar pagamento');
             el.cardRefreshButton.disabled=false;checkoutUiWrite(el.cardRefreshButton,'Atualizar pagamento');
-            if(res&&res.sucesso===true&&res.pedido){state.order=res.pedido;renderOrder(res);}
+            if(res&&res.sucesso===true&&res.pedido){state.order=res.pedido;knownPaymentResult();renderOrder(res);}
           })
           .withFailureHandler(function(){
             state.busy=false;

@@ -2,6 +2,7 @@ name: Checkout and ticket language (isolated)
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'checkout/index.html'
       - 'checkout-v2/index.html'
       - 'ingresso/index.html'

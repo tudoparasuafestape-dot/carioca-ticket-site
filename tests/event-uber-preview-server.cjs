@@ -8,7 +8,7 @@ const port = Number(process.env.CT_EVENT_PREVIEW_PORT || 42979);
 const origin = `http://127.0.0.1:${port}`;
 // Location fields match the confirmed public PROD EVENTOS row 1002; all sale/content data remain synthetic.
 const fixture = {
-  sucesso: true,
+  sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z',
   evento: { id: 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD', nome: 'Encontro de música — demonstração', data: '20/12/2030', horario: '18h às 22h', local: 'Vevets Recepções', endereco: 'Rua Arenópolis, 82 - Candeias', cidade: 'Jaboatão dos Guararapes', uf: 'PE' },
   visual: { capaUrl: '/__fixture/music.svg', categoria: 'Música · fixture', realizacao: 'Equipe de demonstração', destaque: 'Uma noite para celebrar a música.', descricaoCurta: 'Evento fictício para revisar a página pública.', descricaoCompleta: 'Venha celebrar a música com a gente.\n\nOs portões abrem às dezoito horas. O espaço terá apresentações e uma área de convivência.\n\nEsta é uma demonstração com dados sintéticos, sem venda ou emissão de ingressos.', observacoes: 'Dados sintéticos. Nenhuma compra está disponível nesta prévia.' },
   menorPreco: 'R$ 35,00',
@@ -61,7 +61,7 @@ module.exports = http.createServer((req, res) => {
     html = html.replace(/(<body[^>]*>)/, '$1<aside id="preview-notice" style="padding:8px 16px;background:#ffd66d;color:#171717;text-align:center;font:13px system-ui">Prévia local · dados sintéticos · compras e destinos externos bloqueados</aside>');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(waze-mark\.svg|home-location\.(?:js|css)|event-(?:directions|map-preview|uber|ride-destinations)\.(?:js|css)|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-share\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(public-catalog-clock\.js|waze-mark\.svg|home-location\.(?:js|css)|event-(?:directions|map-preview|uber|ride-destinations)\.(?:js|css)|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-share\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/plain', 'Destination blocked in synthetic preview');
   const file = path.join(root, url.pathname.slice(1));
   const type = file.endsWith('.svg') ? 'image/svg+xml' : file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';

@@ -2,6 +2,7 @@ name: Public event language (isolated)
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'evento/**'
       - 'evento-v2/**'
       - 'assets/event-*.js'

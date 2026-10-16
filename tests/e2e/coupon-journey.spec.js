@@ -36,7 +36,7 @@ const CODE='30ANOSSEMRAZAO';
 
 function catalog(){
   return {
-    sucesso:true,
+    sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z',
     evento:{id:EVENT,nome:'Roda de Samba Estilo Carioca',data:'11/10/2026',horario:'15h às 22h',local:'Vevets Recepções',cidade:'Jaboatão dos Guararapes',uf:'PE'},
     visual:{descricaoCurta:'30 anos da Banda Sem Razão.',capaUrl:''},
     tipos:[

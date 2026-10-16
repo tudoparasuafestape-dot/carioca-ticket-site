@@ -2,6 +2,7 @@ name: Event directions isolated
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'assets/event-map-preview.*'
       - 'evento/index.html'
       - 'evento-v2/index.html'

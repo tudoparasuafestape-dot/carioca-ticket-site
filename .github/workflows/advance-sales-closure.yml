@@ -2,6 +2,7 @@ name: Advance sales closure (offline browser)
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'assets/advance-sales.js'
       - 'assets/public-event-catalog.js'
       - 'index.html'

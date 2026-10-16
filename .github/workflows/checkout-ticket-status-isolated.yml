@@ -2,6 +2,7 @@ name: Checkout ticket access (isolated)
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'checkout/index.html'
       - 'checkout-v2/index.html'
       - 'tests/checkout-ticket-status*'

@@ -6,7 +6,9 @@ const words={'pt-BR':'Mapa fornecido pelo Google','en-US':'Map provided by Googl
 (async()=>{const browser=await chromium.launch();try{
 for(const routeName of ['evento','evento-v2'])for(const locale of locales){
  const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block',permissions:[]});
- await context.addInitScript(l=>{localStorage.setItem('ct-public-privacy-v1',JSON.stringify({version:1,analytics:false,maps:true}));localStorage.setItem('ct-home-locale',l);Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.copied=value;}}});},locale);
+ // Seed only the document: a resumed catalog RPC creates same-origin about:blank frames.
+ // Re-seeding those frames would overwrite the user's later language selection.
+ await context.addInitScript(l=>{if(window!==window.top)return;localStorage.setItem('ct-public-privacy-v1',JSON.stringify({version:1,analytics:false,maps:true}));localStorage.setItem('ct-home-locale',l);Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.copied=value;}}});},locale);
  let provider=[],blocked=[],errors=[];
  await context.route('**/*',r=>{const u=new URL(r.request().url());if(u.origin===origin)return r.continue();if(u.hostname==='maps.google.com'&&u.pathname==='/maps'){provider.push(u);return r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><p>Mapa fictício: apenas teste de interface</p>'});}blocked.push(u.origin);return r.abort();});
  const page=await context.newPage();page.on('pageerror',e=>errors.push(String(e)));

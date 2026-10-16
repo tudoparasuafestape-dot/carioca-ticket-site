@@ -2,6 +2,7 @@ name: Event load recovery (isolated)
 on:
   pull_request:
     paths:
+      - 'assets/public-catalog-clock.js'
       - 'evento/index.html'
       - 'evento-v2/index.html'
       - 'assets/ct-analytics.js'

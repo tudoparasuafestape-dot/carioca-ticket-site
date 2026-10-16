@@ -33,7 +33,16 @@ for(const route of ['evento','evento-v2']){
  assert.equal((html.match(/id="directions-uber"/g)||[]).length,1);
  assert.match(html,/id="directions-uber" hidden target="_self" rel="noreferrer"/);
  assert.match(html,/CTEventUber\.render\(e,state\.eventoId\)/);
- assert.match(html,/function showError\(msg,retryable,reference\)\{\s*if\(window.CTEventUber\)window.CTEventUber.clear\(\)/);
+ // A local rerender flag may precede cleanup; no branch/return may bypass it.
+ // Keep the exact availability guard and require cleanup before showing error UI.
+ const start=html.indexOf('function showError(msg,retryable,reference){');
+ const end=html.indexOf('function render(',start);
+ assert(start>=0&&end>start,'error handler boundaries');
+ const handler=html.slice(start,end);
+ assert.match(handler,/^function showError\(msg,retryable,reference\)\{\s*(?:state\.temporalNeedsFullRender=true;\s*)?if\(window\.CTEventUber\)window\.CTEventUber\.clear\(\);/);
+ const cleanup=handler.indexOf('window.CTEventUber.clear();');
+ const display=handler.indexOf("$('errorBox').classList.remove('hidden')");
+ assert(display>cleanup,'stale Uber destination is cleared before error UI');
  assert.match(html,/event-ride-destinations\.js\?v=20261010-3/);
  assert(html.indexOf('event-ride-destinations.js')<html.indexOf('event-uber.js'));
 }

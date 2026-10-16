@@ -13,7 +13,7 @@ const baseline = process.env.CT_TEST_BASELINE === '1';
 const engine = process.env.CT_TEST_BROWSER || 'chromium';
 const host = 'https://cariocaticket.com.br';
 const errorText = 'Não foi possível carregar o evento agora. Tente novamente em alguns instantes.';
-const fixture = id => ({sucesso:true, evento:{id,nome:'Evento de teste',data:'01/01/2030'},
+const fixture = id => ({sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z', evento:{id,nome:'Evento de teste',data:'01/01/2030'},
   visual:{descricaoCurta:'Fixture isolada'},menorPreco:'R$ 10,00',
   tipos:[{nome:'Ingresso de teste',lotes:[{nome:'Lote de teste',precoNumero:10,preco:'R$ 10,00'}]}]});
 let browser;
@@ -42,6 +42,8 @@ async function isolated(routeName, run, {analytics=false, submitThrows=false, ev
       return route.fulfill({contentType:'text/html',body:'<!doctype html><iframe src="'+url+'"></iframe>'});
     if(request.method()==='GET' && bridgeReplies.has(request.url()))
       return route.fulfill({contentType:'text/html; charset=utf-8',body:bridgeReplies.get(request.url())});
+    if(request.method()==='GET' && u.origin===pageOrigin && u.pathname==='/assets/public-catalog-clock.js')
+      return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/public-catalog-clock.js'),'utf8')});
     if(i18n && request.method()==='GET' && u.origin===pageOrigin && ['/assets/public-i18n.js','/assets/event-i18n.js'].includes(u.pathname))
       return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,u.pathname),'utf8')});
     if(request.method()==='GET' && u.origin===host && u.pathname==='/blank-test')

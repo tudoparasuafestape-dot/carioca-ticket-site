@@ -22,7 +22,7 @@ async function prepare(page, surface, locale) {
     if (surface !== 'home' && surface !== 'card') HTMLFormElement.prototype.submit = function () {
       const fields = new FormData(this);
       if (fields.get('metodo') !== 'ctEventoPublicoCarregarPROD') return;
-      setTimeout(() => dispatchEvent(new MessageEvent('message', { origin:'https://script.google.com', data:{ctMinhaCariocaPost:true,id:fields.get('ctMinhaCariocaRequestId'),ok:true,resultado:{sucesso:true,evento:eventData,visual:{},tipos:[]}} })), 0);
+      setTimeout(() => dispatchEvent(new MessageEvent('message', { origin:'https://script.google.com', data:{ctMinhaCariocaPost:true,id:fields.get('ctMinhaCariocaRequestId'),ok:true,resultado:{sucesso: true, temporalVersion: 1, temporalEvaluatedAt: '2030-01-01T00:00:00.000Z', serverNow: '2030-01-01T00:00:00.000Z', nextTransitionAt: null, validUntil: '2030-01-01T01:00:00.000Z',evento:eventData,visual:{},tipos:[]}} })), 0);
     };
   }, {locale,eventData,surface});
   if (surface === 'home' || surface === 'card') {
