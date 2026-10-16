@@ -1150,6 +1150,7 @@
           class="modal-fechar"
           value="cancel"
           type="submit"
+          formnovalidate
         >
           ✕
         </button>
@@ -1259,13 +1260,16 @@
               class="campo-label"
               for="campoData"
             >
-              Data *
+              Data de início *
             </label>
 
             <input
               id="campoData"
               class="campo"
               type="date"
+              min="2000-01-01"
+              max="2100-12-31"
+              required
             >
 
           </div>
@@ -1277,13 +1281,33 @@
               class="campo-label"
               for="campoHorarioInicio"
             >
-              Início
+              Horário de início *
             </label>
 
             <input
               id="campoHorarioInicio"
               class="campo"
               type="time"
+              step="1"
+              required
+            >
+
+          </div>
+
+
+          <div class="campo-grupo">
+
+            <label class="campo-label" for="campoDataFim">
+              Data de término *
+            </label>
+
+            <input
+              id="campoDataFim"
+              class="campo"
+              type="date"
+              min="2000-01-01"
+              max="2100-12-31"
+              required
             >
 
           </div>
@@ -1295,14 +1319,35 @@
               class="campo-label"
               for="campoHorarioFim"
             >
-              Término
+              Horário de término *
             </label>
 
             <input
               id="campoHorarioFim"
               class="campo"
               type="time"
+              step="1"
+              required
             >
+
+          </div>
+
+
+          <div class="campo-grupo largo">
+
+            <label class="campo-label" for="campoFusoHorario">
+              Fuso horário do evento *
+            </label>
+
+            <select id="campoFusoHorario" class="campo" required aria-describedby="ajudaPeriodoEvento">
+              <option value="America/Sao_Paulo" selected>America/Sao_Paulo (Brasília)</option>
+              <option value="UTC">UTC</option>
+            </select>
+
+            <small id="ajudaPeriodoEvento" style="display:block;margin-top:6px;color:#777;line-height:1.45">
+              Datas de 2000 a 2100. Informe também a data de término, inclusive para eventos
+              que passam da meia-noite. Os horários serão interpretados no fuso escolhido.
+            </small>
 
           </div>
 
@@ -1495,6 +1540,7 @@
             class="botao botao-secundario"
             value="cancel"
             type="submit"
+            formnovalidate
           >
             Cancelar
           </button>
@@ -2914,6 +2960,39 @@
     }
 
 
+    function validarPeriodoNovoEvento_(dados) {
+      if (!dados.data || !dados.horarioInicio || !dados.dataFim || !dados.horarioFim) {
+        return 'Informe as datas e os horários de início e término.';
+      }
+      function dataValida(texto) {
+        if (typeof texto !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(texto)) return false;
+        const partes = texto.split('-').map(Number);
+        const ano = partes[0], mes = partes[1], dia = partes[2];
+        const bissexto = ano % 4 === 0 && (ano % 100 !== 0 || ano % 400 === 0);
+        const dias = [31, bissexto ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        return ano >= 2000 && ano <= 2100 && mes >= 1 && mes <= 12 && dia >= 1 && dia <= dias[mes - 1];
+      }
+      if (!dataValida(dados.data) || !dataValida(dados.dataFim)) {
+        return 'Informe datas válidas entre 2000 e 2100.';
+      }
+      const horaValida = valor => typeof valor === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(valor);
+      if (!horaValida(dados.horarioInicio) || !horaValida(dados.horarioFim)) {
+        return 'Informe horários válidos de início e término.';
+      }
+      if (dados.fusoHorario !== 'America/Sao_Paulo' && dados.fusoHorario !== 'UTC') {
+        return 'Selecione o fuso horário do evento.';
+      }
+      const completa = hora => hora.length === 5 ? hora + ':00' : hora;
+      const inicio = dados.data + 'T' + completa(dados.horarioInicio);
+      const fim = dados.dataFim + 'T' + completa(dados.horarioFim);
+      if (fim <= inicio) {
+        return 'O término deve ser posterior ao início. Se passar da meia-noite, informe a data de término correspondente.';
+      }
+      // O servidor confirma o fuso e rejeita horários inexistentes ou ambíguos.
+      return '';
+    }
+
+
     function salvarNovoEvento() {
       const dados = {
         nome:
@@ -2922,19 +3001,19 @@
           ),
 
         data:
-          obterValor(
-            'campoData'
-          ),
+          document.getElementById('campoData').value,
 
         horarioInicio:
-          obterValor(
-            'campoHorarioInicio'
-          ),
+          document.getElementById('campoHorarioInicio').value,
+
+        dataFim:
+          document.getElementById('campoDataFim').value,
 
         horarioFim:
-          obterValor(
-            'campoHorarioFim'
-          ),
+          document.getElementById('campoHorarioFim').value,
+
+        fusoHorario:
+          document.getElementById('campoFusoHorario').value,
 
         local:
           obterValor(
@@ -3031,11 +3110,9 @@
         return;
       }
 
-      if (!dados.data) {
-        mostrarMensagemCadastro(
-          'Informe a data do evento.',
-          false
-        );
+      const erroPeriodo = validarPeriodoNovoEvento_(dados);
+      if (erroPeriodo) {
+        mostrarMensagemCadastro(erroPeriodo, false);
         return;
       }
 
@@ -3156,6 +3233,7 @@
       [
         'campoNome',
         'campoData',
+        'campoDataFim',
         'campoHorarioInicio',
         'campoHorarioFim',
         'campoLocal',
@@ -3174,6 +3252,8 @@
               '';
         }
       );
+
+      document.getElementById('campoFusoHorario').value = 'America/Sao_Paulo';
 
       document
         .getElementById(
