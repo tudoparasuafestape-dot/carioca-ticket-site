@@ -3,6 +3,10 @@
   // Interface copy and curated category labels only. Producer names, places and descriptions stay original.
   var dictionaries = {
   "pt-BR": {
+    "demoLabel": "DEMONSTRAÇÃO",
+    "demoTitle": "Conheça um evento demonstrativo",
+    "demoCopy": "Explore uma página de exemplo, com informações, mapa e Waze. Sem data marcada, venda ou emissão de ingressos.",
+    "demoOpen": "Explorar demonstração",
     "menuLabel": "Menu",
     "theme": "Tema",
     "mode": "Modo",
@@ -177,6 +181,10 @@
     "installDismiss": "Agora não"
   },
   "en-US": {
+    "demoLabel": "DEMONSTRATION",
+    "demoTitle": "Explore a demonstration event",
+    "demoCopy": "Explore a sample page with information, a map and Waze. No scheduled event, ticket sales or ticket issuance.",
+    "demoOpen": "Explore demonstration",
     "menuLabel": "Menu",
     "theme": "Theme",
     "mode": "Mode",
@@ -351,6 +359,10 @@
     "installDismiss": "Not now"
   },
   "es": {
+    "demoLabel": "DEMOSTRACIÓN",
+    "demoTitle": "Conoce un evento de demostración",
+    "demoCopy": "Explora una página de ejemplo con información, mapa y Waze. Sin fecha programada, venta ni emisión de entradas.",
+    "demoOpen": "Explorar demostración",
     "menuLabel": "Menú",
     "theme": "Tema",
     "mode": "Modo",
@@ -525,6 +537,10 @@
     "installDismiss": "Ahora no"
   },
   "zh-Hans": {
+    "demoLabel": "演示",
+    "demoTitle": "了解活动演示页面",
+    "demoCopy": "浏览包含活动信息、地图和 Waze 的示例页面。本页面不安排活动、不售票，也不出票。",
+    "demoOpen": "浏览演示",
     "menuLabel": "菜单",
     "theme": "主题",
     "mode": "模式",

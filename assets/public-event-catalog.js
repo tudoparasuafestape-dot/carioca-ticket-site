@@ -1,6 +1,13 @@
 (function () {
   'use strict';
 
+  // Presentation-only exceptions: ended Samba and ERA moved off this showcase.
+  // Direct links, order recovery and sales policy remain unchanged.
+  var hiddenCatalogEventIds = new Set([
+    'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD',
+    'EVT-23112026-ERA-BEAUTY-EAC4B673'
+  ]);
+
   // The loader must return the server's public, published catalog only.
   // Never derive eligibility from EVENTOS rows or the administrative active flag.
   function mount(loadCatalog) {
@@ -172,6 +179,7 @@
           if (!event || !text(event.id) || !text(event.nome)) throw new Error('CATALOG_INVALID_EVENT');
           return event;
         }).filter(function (event) {
+          if (hiddenCatalogEventIds.has(event.id)) return false;
           if (seen.has(event.id)) return false;
           seen.add(event.id);
           return true;
