@@ -81,6 +81,23 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
 
     <div class="grid">
       <div>
+        <section class="card" id="inviteCard">
+          <h2>Enviar convite para preenchimento</h2>
+          <p>Reserve vagas e compartilhe um único link. Cada pessoa informa nome, sobrenome e WhatsApp para gerar seu ingresso individual.</p>
+          <p><strong>Quem possui o link pode consumir as vagas disponíveis.</strong> Não envie em grupos abertos. Nenhuma mensagem é enviada automaticamente.</p>
+          <p id="inviteEligibility" class="private-note hidden">Eventos privados continuam com a emissão manual vinculada ao convidado autorizado.</p>
+          <div class="formgrid">
+            <div class="field"><label for="inviteType">Ingresso individual</label><select id="inviteType"></select></div>
+            <div class="field"><label for="inviteLot">Lote reservado</label><select id="inviteLot"></select></div>
+            <div class="field"><label for="inviteQuantity">Vagas no convite</label><input id="inviteQuantity" type="number" min="1" max="20" step="1" value="3"></div>
+            <div class="field"><label for="inviteDays">Validade</label><select id="inviteDays"><option value="7">Até 7 dias</option><option value="3">Até 3 dias</option><option value="1">Até 1 dia</option></select></div>
+          </div>
+          <p>Máximo de 20 pessoas por convite. Validade limitada ao dia do evento. A reserva usa a cota de cortesias e o estoque do tipo/lote escolhido.</p>
+          <button id="createInvite" class="btn gold" type="button">Gerar link do convite</button>
+          <p id="invitePendingNote" class="hidden">Uma criação ainda precisa ser confirmada. Tente novamente para recuperar o mesmo link.</p>
+          <div id="inviteList"></div>
+          <p class="muted">Reservadas: vagas ainda sem ingresso, incluindo tentativas em processamento. Emitidas: cadastros concluídos. Disponíveis: vagas que ainda aceitam cadastro. Entradas: ingressos com check-in. Revogar libera vagas não usadas e preserva ingressos emitidos.</p>
+        </section>
         <section class="card">
           <h2>Emitir cortesia</h2>
           <p>Selecione o ingresso original. A Carioca Ticket registra a origem como cortesia e preserva o valor nominal apenas para análise gerencial.</p>
@@ -227,9 +244,12 @@ function syncControls(){
   $('loadButton').disabled=blocked||state.catalogStatus==='loading'||state.loadBusy||(!state.evento&&state.catalogStatus==='ready');
   $('loadButton').textContent=state.catalogStatus==='loading'?'Carregando eventos...':state.loadBusy?'Carregando evento...':state.catalogStatus==='error'?'Tentar novamente':'Carregar evento';
   document.querySelectorAll('#content button,#content input,#content select,#content textarea').forEach(function(el){var ticket=el.closest('[data-history-code],[data-issued-code]');el.disabled=blocked||state.loadBusy||!state.data||!!(ticket&&state.historyPending[ticket.dataset.historyCode||ticket.dataset.issuedCode])});
+  if(inviteJob())['inviteType','inviteLot','inviteQuantity','inviteDays'].forEach(function(id){$(id).disabled=true});
+  if(state.data&&state.data.privado&&state.data.privado.privado)$('createInvite').disabled=true;
   loading(blocked);
 }
 function clearEventData(resetForm,preserveIssued){
+  $('inviteList').innerHTML='';$('inviteType').innerHTML='';$('inviteLot').innerHTML='';
   resetHistory();
   state.loadRequest++;
   state.loadBusy=false;
@@ -440,6 +460,7 @@ function render(data,selection){
   if(selection&&selection.type===$('typeSelect').value&&selection.lot===$('lotSelect').value&&selection.guest===$('guestSelect').value&&name===$('name').value&&origin===$('origin').value)state.issueKey=issueKey;
   else clearIssueKey();
   renderHistory(data);
+  renderInvites(data);
   $('guestsLink').href='/produtor/convidados/?evento='+encodeURIComponent(state.evento.id||state.evento.eventoId||'');
 }
 async function load(afterMutation,selection){
@@ -534,6 +555,52 @@ function renderIssued(r,payload){
   document.querySelectorAll('[data-copy]').forEach(function(b){b.onclick=async function(){try{await copy(b.dataset.copy);message('Link do ingresso copiado.','ok')}catch(e){message(e.message||String(e),'error')}}});
   resetIssuedShares();
 }
+function inviteKey(){var b=new Uint8Array(32);crypto.getRandomValues(b);return Array.from(b,function(x){return x.toString(16).padStart(2,'0')}).join('')}
+function inviteError(e){var code=String(e.message||e).replace('CT_CONVITE_',''),messages={LOTE_INDISPONIVEL:'O lote escolhido não está disponível agora. Selecione outro lote.',COTA_EXCEDIDA:'A quantidade ultrapassa a cota de cortesias disponível.',CAPACIDADE_TIPO:'O ingresso escolhido não tem vagas suficientes para esta reserva.',CAPACIDADE_LOTE:'O lote escolhido não tem vagas suficientes para esta reserva.',TIPO_INDIVIDUAL_OBRIGATORIO:'Selecione um tipo com uma entrada por ingresso.',TIPO_LOTE_DIVERGENTE:'O tipo e o lote precisam pertencer ao evento selecionado.',EVENTO_INDISPONIVEL:'O evento não está disponível para novos convites.',EVENTO_ENCERRADO:'O evento já foi encerrado.',EVENTO_EXIGE_CONVIDADO_AUTORIZADO:'Este evento exige convidado autorizado. Use a emissão manual.',DATA_EVENTO_INVALIDA:'Confira a data do evento antes de gerar o convite.',QUANTIDADE_OU_VALIDADE_INVALIDA:'Informe 1 a 20 vagas e uma validade de até 7 dias.',AUTORIZACAO_INDISPONIVEL:'Sua autorização para este evento precisa ser conferida.',REPETICAO_DIVERGENTE:'Há uma tentativa anterior com outros dados. Reabra a aba original para recuperá-la.'};return messages[code]||'A operação ainda não foi confirmada. Tente novamente para recuperar o mesmo convite.'}
+function inviteStorage(){return 'CTCI:producer:'+String(state.session&&state.session.token)+':'+eventId(state.evento)}
+function inviteJob(){try{return JSON.parse(sessionStorage.getItem(inviteStorage())||'null')}catch(_){return null}}
+function inviteUrl(raw){try{var u=new URL(raw);if(u.origin==='https://cariocaticket.com.br'&&u.pathname==='/cortesia/convite/'&&/^#[a-f0-9]{64}$/.test(u.hash)&&!u.search&&!u.username&&!u.password)return u.href}catch(_){}return ''}
+function inviteLots(){var lots=(state.data&&state.data.lotes||[]).filter(function(l){return String(l.tipoId)===$('inviteType').value});$('inviteLot').innerHTML=lots.map(function(l){return '<option value="'+esc(l.id)+'">'+esc(l.nome||l.id)+'</option>'}).join('')}
+function renderInvites(data){
+  var job=inviteJob(),types=(data.tipos||[]).filter(function(t){return Number(t.capacidadePorVenda||1)===1});
+  $('inviteType').innerHTML=types.map(function(t){return '<option value="'+esc(t.id)+'">'+esc(t.nome||t.id)+'</option>'}).join('');
+  if(job)$('inviteType').value=job.tipoId;inviteLots();
+  if(job){$('inviteLot').value=job.loteId;$('inviteQuantity').value=job.quantidade;$('inviteDays').value=job.validadeDias}
+  $('inviteEligibility').classList.toggle('hidden',!(data.privado&&data.privado.privado));
+  $('invitePendingNote').classList.toggle('hidden',!job);
+  var rows=Array.isArray(data.convites)?data.convites:[];
+  $('inviteList').innerHTML=rows.map(function(r){var url=inviteUrl(r.link);return '<div class="ticket-result" data-invite-id="'+esc(r.conviteId)+'"><b>'+Number(r.quantidade)+' vagas · '+esc(r.status)+'</b><p>'+Number(r.reservadas)+' reservadas · '+Number(r.emitidas)+' emitidas · '+Number(r.disponiveis)+' disponíveis · '+Number(r.entradas)+' entradas</p><small>Válido até '+esc(new Date(r.expiraEm).toLocaleString('pt-BR'))+'</small>'+(Number(r.processando)>0?'<p>Há '+Number(r.processando)+' tentativa(s) aguardando confirmação.</p>':'')+(url?'<label>Link do convite<input readonly value="'+esc(url)+'" aria-label="Link do convite" style="width:100%"></label><div class="ticket-actions"><button class="btn" data-invite-copy type="button">Copiar convite</button><a class="btn" href="https://wa.me/?text='+encodeURIComponent('Preencha seu convite de cortesia: '+url)+'" target="_blank" rel="noopener noreferrer">Compartilhar convite no WhatsApp</a></div>':'')+(r.status==='ATIVO'?'<button class="btn" data-invite-revoke type="button">Revogar vagas não usadas</button>':'')+'</div>'}).join('');
+  $('inviteList').querySelectorAll('[data-invite-copy]').forEach(function(b){b.onclick=async function(){if(!historySessionGuard())return;try{await copy(b.closest('[data-invite-id]').querySelector('input').value);message('Link do convite copiado.','ok')}catch(_){message('Selecione e copie o link exibido no campo do convite.','info')}}});
+  $('inviteList').querySelectorAll('[data-invite-revoke]').forEach(function(b){b.onclick=function(){revokeInvite(b.closest('[data-invite-id]').dataset.inviteId)}});
+}
+async function createInvite(){
+  if(state.mutationBusy||state.loadBusy||!state.data||!historySessionGuard())return;
+  if(state.data.privado&&state.data.privado.privado){message('Este evento exige convidado autorizado. Utilize a emissão manual.','error');return}
+  var id=eventId(state.evento),job=inviteJob();
+  if(!job){
+    job={tipoId:$('inviteType').value,loteId:$('inviteLot').value,quantidade:Number($('inviteQuantity').value),validadeDias:Number($('inviteDays').value),chaveIdempotencia:inviteKey()};
+    if(!job.tipoId||!job.loteId||!Number.isInteger(job.quantidade)||job.quantidade<1||job.quantidade>20){message('Selecione ingresso individual, lote e uma quantidade de 1 a 20.','error');return}
+    try{sessionStorage.setItem(inviteStorage(),JSON.stringify(job))}catch(_){message('Permita o armazenamento da sessão para gerar o link com segurança.','error');return}
+  }
+  state.mutationBusy=true;syncControls();
+  try{
+    var r=await rpc('ctCortesiaConviteCriarPROD',[state.session.token,id,job]);
+    if(!r||r.sucesso!==true||!r.convite||!inviteUrl(r.link))throw new Error('A criação ainda não foi confirmada. Tente novamente para recuperar o mesmo link.');
+    sessionStorage.removeItem(inviteStorage());
+    var list=state.data.convites||[];state.data.convites=[Object.assign({},r.convite,{link:r.link})].concat(list.filter(function(x){return x.conviteId!==r.convite.conviteId}));renderInvites(state.data);
+    message('Convite criado. Copie ou compartilhe o link abaixo.','ok');
+  }catch(e){
+    if(/^CT_CONVITE_(QUANTIDADE_OU_VALIDADE_INVALIDA|COTA_EXCEDIDA|CAPACIDADE_TIPO|CAPACIDADE_LOTE|TIPO_INDIVIDUAL_OBRIGATORIO|TIPO_LOTE_DIVERGENTE|LOTE_INDISPONIVEL|EVENTO_EXIGE_CONVIDADO_AUTORIZADO|EVENTO_ENCERRADO|DATA_EVENTO_INVALIDA|EVENTO_INDISPONIVEL)$/.test(String(e.message)))sessionStorage.removeItem(inviteStorage());
+    message(inviteError(e),'error');renderInvites(state.data);
+  }finally{state.mutationBusy=false;syncControls()}
+}
+async function revokeInvite(id){
+  if(state.mutationBusy||state.loadBusy||!historySessionGuard())return;
+  if(!confirm('Revogar as vagas não usadas deste convite? Os ingressos já emitidos continuam válidos.'))return;
+  state.mutationBusy=true;syncControls();
+  try{var r=await rpc('ctCortesiaConviteRevogarPROD',[state.session.token,eventId(state.evento),id]);if(!r||r.sucesso!==true)throw new Error('Revogação não confirmada. Atualize e tente novamente.');await load(true);message('Convite revogado. Ingressos já emitidos foram preservados.','ok')}
+  catch(e){message(e.message||String(e),'error')}finally{state.mutationBusy=false;syncControls()}
+}
 async function issue(){
   if(state.mutationBusy||state.loadBusy||!state.evento||!state.data)return;
   var payload;
@@ -602,6 +669,7 @@ $('eventSelect').onchange=function(){
 $('loadButton').onclick=function(){if(state.catalogStatus==='error')loadCatalog();else load()};
 $('refreshButton').onclick=function(){if(!state.bootBusy&&!state.loadBusy){if(state.produtor)loadCatalog();else boot()}};
 $('saveLimitButton').onclick=saveLimit;$('issueButton').onclick=issue;$('typeSelect').onchange=function(){clearIssueKey();lotForType()};$('lotSelect').onchange=function(){clearIssueKey();preview()};$('quantity').oninput=function(){clearIssueKey();preview()};$('guestSelect').onchange=applyGuest;
+$('createInvite').onclick=createInvite;$('inviteType').onchange=inviteLots;
 ['name','whatsapp','reason','origin'].forEach(function(id){$(id).addEventListener('input',clearIssueKey);$(id).addEventListener('change',clearIssueKey)});
 boot();
 }());
