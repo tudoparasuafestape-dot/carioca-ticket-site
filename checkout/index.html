@@ -123,7 +123,7 @@
 <script src="/assets/checkout-language.js"></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
-  <script src="/assets/advance-sales.js?v=20261011-1"></script>
+  <script src="/assets/advance-sales.js?v=20261016-encerrado1"></script>
 </head>
 <body>
 <div id="checkoutLanguageControl" class="checkout-language" hidden><label for="checkoutLanguage" data-checkout-text="Idioma">Idioma</label><select id="checkoutLanguage"><option value="pt-BR" lang="pt-BR">Português</option><option value="en-US" lang="en-US">English</option><option value="es" lang="es">Español</option><option value="zh-Hans" lang="zh-Hans">简体中文</option></select><p id="checkoutOriginalNotice" hidden data-checkout-text="Os nomes e textos cadastrados pelo produtor permanecem no idioma original.">Os nomes e textos cadastrados pelo produtor permanecem no idioma original.</p></div>
@@ -523,6 +523,7 @@
       }
       function renderAdvanceSalesNotice(){
         if(!advanceSalesClosed())return;
+        el.eventDescription.textContent='Evento encerrado em 11/10/2026.';el.eventDescription.lang='pt-BR';
         var notice=document.getElementById('advanceSalesNotice');
         if(!notice){
           notice=document.createElement('p');notice.id='advanceSalesNotice';notice.className='status info';
@@ -1056,7 +1057,7 @@
         if(state.busy)return;
         state.paymentMethod=el.paymentCard.checked?'CREDIT_CARD':'PIX';
         if(advanceSalesClosed()&&!savedIdempotency(state.paymentMethod)){
-          modal('Vendas antecipadas encerradas',window.CTAdvanceSales.message);return;
+          modal('Evento encerrado',window.CTAdvanceSales.message);return;
         }
         var err=validate();
         if(err){modal('Revise seus dados',err);return;}

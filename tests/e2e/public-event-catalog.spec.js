@@ -6,7 +6,7 @@ const ROOT = path.resolve(__dirname, '../..');
 const ORIGIN = 'http://ct-catalog.test';
 const ERA = 'EVT-23112026-ERA-BEAUTY-EAC4B673';
 const RODA = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
-const rows = [
+const publicRows = [
   { id: RODA, nome: 'Roda de Samba Estilo Carioca', data: '11/10/2026', horario: '15h às 22h',
     local: 'Vevets Recepções', cidade: 'Jaboatão dos Guararapes', uf: 'PE',
     visual: { capaUrl: '/assets/roda-samba-30-anos.webp', categoria: 'Samba & pagode' } },
@@ -14,6 +14,12 @@ const rows = [
   { id: ERA, nome: 'ERA BEAUTY', visual: { categoria: 'Beleza',
     descricaoCurta: 'Encontro de mulheres empreendedoras da área da beleza.' } }
 ];
+// Keep cover/search/rail coverage using a separate fixture with the same date,
+// name and category: only the two exact hidden IDs should disappear.
+const endedSamba = publicRows[0];
+const offsiteEra = publicRows[1];
+const BEAUTY = 'SYNTHETIC-BEAUTY';
+const rows = [{ ...endedSamba, id: 'SYNTHETIC-SAMBA' }, { ...offsiteEra, id: BEAUTY }];
 
 async function fixture(page, options = {}) {
   const state = { calls: [], errors: [], attempts: 0, release: null };
@@ -41,7 +47,7 @@ async function fixture(page, options = {}) {
     if (options.delay && state.attempts === 1) await new Promise(resolve => { state.release = resolve; });
     const result = typeof options.result === 'function' ? options.result(state.attempts) : options.result;
     const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: true,
-      resultado: result === undefined ? { sucesso: true, eventos: rows } : result };
+      resultado: result === undefined ? { sucesso: true, eventos: [endedSamba, offsiteEra, ...rows] } : result };
     // Apps Script can post from a nested sandbox, not only the form target window.
     const inner = '<script>window.top.postMessage(' + JSON.stringify(payload).replace(/</g, '\\u003c') + ', "*")</script>';
     return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<iframe srcdoc="' + inner.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></iframe>' });
@@ -53,6 +59,7 @@ async function fixture(page, options = {}) {
 test('a single public catalog appears early, with complete covers and validated routes', async ({ page }, testInfo) => {
   const state = await fixture(page);
   await expect(page.locator('.catalog-card')).toHaveCount(2);
+  await expect(page.locator('[data-event-id="' + RODA + '"]')).toHaveCount(0);
   await expect(page.locator('#event-count')).toHaveText('2 eventos disponíveis para compra.');
   await expect(page.locator('#events-grid')).toHaveAttribute('aria-busy', 'false');
   await expect(page.locator('#catalog-status')).toBeHidden();
@@ -62,10 +69,7 @@ test('a single public catalog appears early, with complete covers and validated 
     if (event !== rows[0]) await page.locator('#event-rail-next').click();
     await expect(card).not.toHaveAttribute('inert', '');
     await expect(card.getByRole('heading')).toHaveText(event.nome);
-    if(event.id===RODA){
-      await expect(card).toContainText('Vendas antecipadas encerradas. Ingressos disponíveis na portaria por R$30.');
-      await expect(card.locator('a[href^="/checkout/"]')).toHaveCount(0);
-    }else await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
+    await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
     await expect(card.getByRole('link', { name: 'Ver evento', exact: true })).toHaveAttribute('href', '/evento/?evento=' + event.id);
   }
   await page.locator('#event-rail-previous').click();
@@ -76,7 +80,7 @@ test('a single public catalog appears early, with complete covers and validated 
   // Search, share and explicit rotation controls remain above a cover visible in the first viewport.
   expect(cover.y).toBeLessThan(page.viewportSize().height - 160);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await expect(page.locator('[data-event-id="'+ERA+'"]')).not.toContainText('R$');
+  await expect(page.locator('[data-event-id="'+BEAUTY+'"]')).not.toContainText('R$');
   await expect(page.locator('#producerPortalCta')).toHaveAttribute('href', '/produtor/');
   await expect(page.locator('#partnerProgramCta')).toHaveAttribute('href', '/parceiro/programa/');
   expect(state.calls).toHaveLength(1);
@@ -148,21 +152,21 @@ test('search submitted while loading applies to the eventual response and clears
   expect(state.calls).toHaveLength(1);
 });
 
-test('missing and broken images preserve titles, open sales and the samba closure', async ({ page }) => {
-  await fixture(page, { result: { sucesso: true, eventos: [rows[1], { ...rows[0], visual: { capaUrl: '/missing-cover.jpg' } }] } });
+test('missing and broken images preserve other titles and sales links', async ({ page }) => {
+  await fixture(page, { result: { sucesso: true, eventos: [endedSamba, offsiteEra, rows[1], { ...rows[0], visual: { capaUrl: '/missing-cover.jpg' } }] } });
   await expect(page.locator('.catalog-card')).toHaveCount(2);
   await expect(page.locator('.catalog-image-fallback')).toHaveText(['Capa indisponível', 'Capa indisponível']);
-  await expect(page.locator('.catalog-actions .btn-primary')).toHaveCount(1);
-  const era = page.locator('[data-event-id="'+ERA+'"]');
+  await expect(page.locator('.catalog-actions .btn-primary')).toHaveCount(2);
+  const era = page.locator('[data-event-id="'+BEAUTY+'"]');
   await expect(era.getByRole('heading')).toHaveText(rows[1].nome);
-  await expect(era.getByRole('link', { name: /^Comprar ingresso:/ })).toHaveAttribute('href', '/checkout/?evento=' + ERA);
+  await expect(era.getByRole('link', { name: /^Comprar ingresso:/ })).toHaveAttribute('href', '/checkout/?evento=' + BEAUTY);
   await page.locator('#event-rail-next').click();
-  const samba = page.locator('[data-event-id="'+RODA+'"]');
-  await expect(samba.getByRole('heading')).toHaveText(rows[0].nome);
-  await expect(samba).toContainText('Vendas antecipadas encerradas. Ingressos disponíveis na portaria por R$30.');
-  await expect(samba.locator('a[href^="/checkout/"]')).toHaveCount(0);
-  await expect(samba.getByRole('link', { name: 'Ver evento', exact: true })).toBeVisible();
-  await expect(samba.getByRole('link', { name: 'Ver evento', exact: true })).toHaveAttribute('href', '/evento/?evento=' + RODA);
+  const other = page.locator('[data-event-id="'+rows[0].id+'"]');
+  await expect(other.getByRole('heading')).toHaveText(rows[0].nome);
+  await expect(other.getByRole('link', { name: /^Comprar ingresso:/ })).toHaveAttribute('href', '/checkout/?evento=' + rows[0].id);
+  await expect(other.getByRole('link', { name: 'Ver evento', exact: true })).toBeVisible();
+  await expect(other.getByRole('link', { name: 'Ver evento', exact: true })).toHaveAttribute('href', '/evento/?evento=' + rows[0].id);
+  await expect(page.locator('[data-event-id="'+RODA+'"]')).toHaveCount(0);
   await expect(page.locator('#catalog-retry')).toBeHidden();
 });
 
@@ -175,7 +179,7 @@ test('empty catalog is different from a search with no matches', async ({ page }
 });
 
 test('API error shows a retry and no stale hard-coded events', async ({ page }) => {
-  const state = await fixture(page, { result: attempt => attempt === 1 ? { sucesso: false } : { sucesso: true, eventos: [rows[1]] } });
+  const state = await fixture(page, { result: attempt => attempt === 1 ? { sucesso: false } : { sucesso: true, eventos: [endedSamba, offsiteEra, rows[1]] } });
   await expect(page.locator('#catalog-status')).toContainText('Não foi possível carregar os eventos');
   await expect(page.locator('.catalog-card')).toHaveCount(0);
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
@@ -212,4 +216,94 @@ test('new public IDs render without allowlists; unsafe content stays text and im
   await expect(page.locator('.catalog-description')).toHaveText('Informação válida • Negócios');
   await expect(page.locator('.catalog-card img')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Comprar ingresso: ' + event.nome })).toHaveAttribute('href', '/checkout/?evento=' + encodeURIComponent(event.id));
+});
+
+async function expectCatalogIds(page, ids) {
+  await expect(page.locator('#events-grid')).toHaveAttribute('aria-busy', 'false');
+  await expect.poll(() => page.locator('.catalog-card').evaluateAll(cards => cards.map(card => card.dataset.eventId))).toEqual(ids);
+  for (const id of [RODA, ERA]) {
+    await expect(page.locator('#events-grid [data-event-id="' + id + '"], #events-grid a[href*="' + id + '"]')).toHaveCount(0);
+  }
+  const missing = await page.locator('#events-grid [aria-labelledby], #events-grid [aria-describedby]').evaluateAll(nodes =>
+    nodes.flatMap(node => ['aria-labelledby', 'aria-describedby'].flatMap(attr =>
+      (node.getAttribute(attr) || '').split(/\s+/).filter(id => id && !document.getElementById(id)))));
+  expect(missing).toEqual([]);
+}
+
+test('hidden IDs never enter search, categories, carousel or translated cards', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const ended = { ...endedSamba, nome: 'Evento encerrado exclusivo', visual: { categoria: 'Categoria encerrada exclusiva' } };
+  const state = await fixture(page, { result: { sucesso: true, eventos: [ended, offsiteEra, ...rows, ended, offsiteEra, rows[1]] } });
+  await expectCatalogIds(page, rows.map(event => event.id));
+  await expect(page.locator('#category-choices')).not.toContainText('Categoria encerrada exclusiva');
+  await page.locator('#event-rail-next').click();
+  await expect(page.locator('.catalog-card:not([inert])')).toHaveAttribute('data-event-id', BEAUTY);
+  await expect(page.locator('#event-rail-position')).toHaveText(await page.evaluate(() => CTHome.t('railPosition', { n: 2, total: 2 })));
+  await page.getByRole('searchbox').fill(ended.nome);
+  await page.locator('#event-search-form').dispatchEvent('submit');
+  await expectCatalogIds(page, []);
+  await expect(page.locator('#no-events')).toBeVisible();
+  await expect(page.locator('#event-rail-controls')).toBeHidden();
+  await page.locator('#clear-event-search').click();
+  await page.locator('#category-choices button').filter({ hasText: 'Beleza' }).click();
+  await expectCatalogIds(page, [BEAUTY]);
+  await page.locator('#category-choices button[data-i18n="allCategories"]').click();
+  for (const locale of ['en-US', 'es', 'zh-Hans', 'pt-BR']) {
+    await page.locator('#home-language').selectOption(locale, { force: true });
+    await expectCatalogIds(page, rows.map(event => event.id));
+    await expect(page.locator('#category-choices')).not.toContainText('Categoria encerrada exclusiva');
+  }
+  expect(state.calls).toHaveLength(1);
+  expect(state.errors).toEqual([]);
+});
+
+test('hidden-only response and retry remain empty with a separate demonstration entry', async ({ page }, testInfo) => {
+  const state = await fixture(page, { result: attempt => ({ sucesso: true, eventos: attempt === 1 ? [endedSamba, offsiteEra, ...rows] : [endedSamba, offsiteEra, endedSamba] }) });
+  await expectCatalogIds(page, rows.map(event => event.id));
+  // Exercise the existing reload handler after success to invalidate cached nodes.
+  await page.locator('#catalog-retry').evaluate(button => button.click());
+  await expectCatalogIds(page, []);
+  for (const locale of ['pt-BR', 'en-US', 'es', 'zh-Hans']) {
+    await page.locator('#home-language').selectOption(locale, { force: true });
+    await expect(page.locator('#catalog-status')).toBeVisible();
+    await expect(page.locator('#catalog-status-message')).toHaveText(await page.evaluate(() => CTHome.t('emptyCatalog')));
+    await expect(page.locator('#catalog-retry')).toBeHidden();
+    await expect(page.locator('#no-events')).toBeHidden();
+    await expect(page.locator('#collections')).toBeHidden();
+    await expect(page.locator('#category-choices button:not([data-i18n="allCategories"])')).toHaveCount(0);
+    await expect(page.locator('#event-rail-controls')).toBeHidden();
+    await expect(page.locator('#event-rail-position')).toHaveText('');
+    await expectCatalogIds(page, []);
+    await expect(page.locator('#event-demonstration')).toBeVisible();
+    await expect(page.locator('#event-demonstration a')).toHaveAttribute('href', '/demonstracao/roda-de-samba/');
+    await expect(page.locator('#event-demonstration .demo-home-label')).toHaveText(await page.evaluate(() => CTHome.t('demoLabel')));
+    await expect(page.locator('#events-grid #event-demonstration')).toHaveCount(0);
+  }
+  await page.reload();
+  await expectCatalogIds(page, []);
+  await expect(page.locator('#catalog-retry')).toBeHidden();
+  await page.locator('#home-language').selectOption('pt-BR', { force: true });
+  for (const theme of ['dark', 'light']) {
+    await page.locator('#home-theme').selectOption(theme);
+    const colors = await page.locator('#event-demonstration').evaluate(section => ({
+      text: getComputedStyle(section.querySelector('.demo-home-label')).color,
+      background: getComputedStyle(section).backgroundColor
+    }));
+    const luminance = color => color.match(/[\d.]+/g).slice(0, 3).map(Number).map(n => n / 255).map(n => n <= .04045 ? n / 12.92 : ((n + .055) / 1.055) ** 2.4).reduce((sum, n, i) => sum + n * [.2126, .7152, .0722][i], 0);
+    const levels = [luminance(colors.text), luminance(colors.background)].sort((a, b) => a - b);
+    expect((levels[1] + .05) / (levels[0] + .05)).toBeGreaterThanOrEqual(4.5);
+    await page.locator('#event-demonstration').screenshot({ path: testInfo.outputPath('home-demo-' + theme + '.png') });
+  }
+  expect(state.calls).toHaveLength(3);
+  expect(state.errors).toEqual([]);
+});
+
+for (const event of [endedSamba, offsiteEra]) test('single hidden ID produces a valid empty catalog: ' + event.id, async ({ page }) => {
+  const state = await fixture(page, { result: { sucesso: true, eventos: [event] } });
+  await expectCatalogIds(page, []);
+  await expect(page.locator('#catalog-status-message')).toHaveText(await page.evaluate(() => CTHome.t('emptyCatalog')));
+  await expect(page.locator('#catalog-retry')).toBeHidden();
+  await expect(page.locator('#event-count')).toHaveText(await page.evaluate(() => CTHome.t('availableMany', { n: 0 })));
+  await expect(page.locator('#event-demonstration')).toBeVisible();
+  expect(state.errors).toEqual([]);
 });

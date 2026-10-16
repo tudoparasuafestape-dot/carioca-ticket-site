@@ -263,7 +263,7 @@
   <script src="/assets/public-share.js?v=20261010-whatsapp1"></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
-  <script src="/assets/advance-sales.js?v=20261011-1"></script>
+  <script src="/assets/advance-sales.js?v=20261016-encerrado1"></script>
 </head>
 <body class="ct-event">
 <script>
@@ -752,6 +752,8 @@
         var titulo=(e.nome||tr('Evento'))+' · Carioca Ticket';
         var texto=tr('Confira {event}{details} na Carioca Ticket.',{event:e.nome||tr('este evento'),details:detalhes?' — '+detalhes:''});
 
+        if(window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId)){titulo+=' — Evento encerrado';texto='Evento encerrado. Informações de referência da Roda de Samba Estilo Carioca.';}
+
         fecharMenuCompartilhamento();
 
         if(navigator.share){
@@ -783,7 +785,9 @@
       }
 
       function configurarCompartilhamento(){
-        if(window.CTPublicShare)window.CTPublicShare.eventWhatsApp($('shareWhatsAppAction'),state.data&&state.data.evento,state.eventoId,fecharMenuCompartilhamento);
+        var shareEvent=state.data&&state.data.evento;
+        if(shareEvent&&window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId))shareEvent=Object.assign({},shareEvent,{nome:shareEvent.nome+' — Evento encerrado'});
+        if(window.CTPublicShare)window.CTPublicShare.eventWhatsApp($('shareWhatsAppAction'),shareEvent,state.eventoId,fecharMenuCompartilhamento);
         var url=linkCanonicoEvento();
 
         ['shareHero','shareMobile'].forEach(function(id){
@@ -892,11 +896,29 @@
           var notice=window.CTAdvanceSales.message;
           ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){
             var link=$(id);link.removeAttribute('data-public-i18n');link.lang='pt-BR';
-            link.textContent='Ingressos na portaria · R$30';link.href='#tickets';
+            link.textContent='Evento encerrado';link.href='#tickets';
           });
-          $('startingPrice').textContent='R$30 na portaria';$('startingPrice').lang='pt-BR';
+          $('startingPrice').textContent='Evento encerrado';$('startingPrice').lang='pt-BR';
           $('tickets').textContent=notice;$('tickets').lang='pt-BR';
           $('highlight').textContent=notice;$('highlight').lang='pt-BR';
+          // Content for this ended Samba only; preserve account and recovery routes.
+          function endedText(node,value){
+            if(!node)return;
+            node.removeAttribute('data-public-i18n');node.lang='pt-BR';node.textContent=value;
+          }
+          endedText($('startingPrice').previousElementSibling,'Status do evento');
+          endedText($('shortDescription'),'Evento encerrado em 11/10/2026.');
+          endedText($('fallbackEventHighlight'),'Evento encerrado');
+          endedText($('longDescription'),'A edição de 11/10/2026 da Roda de Samba Estilo Carioca foi encerrada. Esta página mantém informações de referência do evento.');
+          endedText($('notes'),'Para consultar ingressos já adquiridos, use Meus ingressos.');
+          endedText($('tickets').parentElement.querySelector('.section-label'),'Status do evento');
+          endedText($('tickets').parentElement.querySelector('h2'),'Evento encerrado');
+          endedText($('notes').parentElement.querySelector('h2'),'Ingressos já adquiridos');
+          ['.closing h3','.side-card h3','.top-security span[data-public-i18n]'].forEach(function(selector){endedText(document.querySelector(selector),'Evento encerrado');});
+          endedText(document.querySelector('.closing small'),'Roda de Samba Estilo Carioca');
+          ['.closing p','.side-card > p'].forEach(function(selector){endedText(document.querySelector(selector),'A consulta aos ingressos já adquiridos continua disponível em Meus ingressos.');});
+          ['.trust','.secure-list','#campaignNotice'].forEach(function(selector){var node=document.querySelector(selector);if(node)node.classList.add('hidden');});
+          var journey=document.querySelector('.journey');if(journey)journey.closest('article').classList.add('hidden');
         }
 
         document.querySelector('title').removeAttribute('data-public-i18n');

@@ -3,12 +3,15 @@ const fs=require('node:fs'),cp=require('node:child_process'),assert=require('nod
 const paths=['convite','minha-carioca','minha-carioca/login','minha-carioca/acesso','parceiro/programa','parceiro/manual','parceiro/conduta','parceiro/regulamento','produtor/solicitar','campanha','roda-de-samba'];
 const base='7f86913bc3089eaf02632dc74c4743c937dac4d1';
 for(const route of paths){
- const path=route+'/index.html';let source=fs.existsSync('../public-brand-audit-base/'+path)?fs.readFileSync('../public-brand-audit-base/'+path,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'});const current=fs.readFileSync(path,'utf8').replace(/  <link rel="stylesheet" href="\/assets\/public-privacy.css\?v=20261010-1">\n/g,'').replace(/  <script src="\/assets\/public-privacy.js\?v=20261010-1" defer><\/script>\n/g,'');
+ const path=route+'/index.html';let source=(fs.existsSync('../public-brand-audit-base/'+path)?fs.readFileSync('../public-brand-audit-base/'+path,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'})).replace(/\r\n/g,'\n');const current=fs.readFileSync(path,'utf8').replace(/\r\n/g,'\n').replace(/  <link rel="stylesheet" href="\/assets\/public-privacy.css\?v=20261010-1">\n/g,'').replace(/  <script src="\/assets\/public-privacy.js\?v=20261010-1" defer><\/script>\n/g,'');
  // Approved explicit WhatsApp enhancement changes only the public share cache keys.
  if(route==='parceiro/programa')source=source.replace('/assets/public-share.js?v=20261009-card-share1','/assets/public-share.js?v=20261010-whatsapp1').replace('/assets/public-share.css?v=20261009-share1','/assets/public-share.css?v=20261010-whatsapp1');
- // Authorized event-specific closure changes this copy only; keep redirect,
+ // Authorized event-specific closure changes this title/copy only; keep redirect,
  // navigation, scripts, accessible brand and CSS under the existing assertions.
- if(route==='roda-de-samba')source=source.replace('Abrindo a página oficial de vendas…','Vendas antecipadas encerradas. Ingressos disponíveis na portaria por R$30.').replace('Acessar venda de ingressos','Ver informações do evento');
+ if(route==='roda-de-samba')source=source
+  .replace('<title>Roda de Samba Estilo Carioca – 30 anos da Banda Sem Razão | Carioca Ticket</title>','<title>Evento encerrado — Roda de Samba Estilo Carioca | Carioca Ticket</title>')
+  .replace('Abrindo a página oficial de vendas…','Evento encerrado em 11/10/2026.')
+  .replace('Acessar venda de ingressos','Ver informações do evento');
  // A later public-markup repair relocates this exact preexisting helper into the script.
  // Normalize only that approved movement; every other script byte remains protected.
  if(['minha-carioca/login','minha-carioca/acesso'].includes(route)){

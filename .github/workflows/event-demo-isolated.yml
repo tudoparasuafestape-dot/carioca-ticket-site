@@ -1,0 +1,39 @@
+name: Event demonstration (offline browser)
+on:
+  pull_request:
+    paths:
+      - 'demonstracao/**'
+      - 'assets/demo-event.*'
+      - 'assets/public-event-catalog.js'
+      - 'assets/home-i18n.js'
+      - 'index.html'
+      - 'tests/demo-event-isolated.cjs'
+      - 'tests/e2e/public-event-catalog.spec.js'
+      - 'playwright.catalog-isolated.config.cjs'
+      - '.github/workflows/event-demo-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  isolated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Demo and catalog with local fixtures only
+        run: |
+          node --check assets/demo-event.js
+          node tests/demo-event-isolated.cjs
+          npx playwright test --config=playwright.catalog-isolated.config.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: event-demo-offline-evidence
+          path: |
+            test-results/demonstration/
+            test-results/catalog-isolated/
+            test-results/catalog-isolated-results.json
