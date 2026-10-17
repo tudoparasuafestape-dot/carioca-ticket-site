@@ -21,6 +21,8 @@
     var count = document.getElementById('event-count');
     var empty = document.getElementById('no-events');
     var events = [], query = '', locationQuery = '', ready = false, requestId = 0, phase = 'loading';
+    var Clock = window.CTPublicCatalogClock, catalogClock = null, expiryTimer, nextEventEnd = Infinity;
+    var suspended = false;
     // Reuse presentation nodes only within this authoritative response. Nothing
     // is persisted across page visits, retries, new responses or locale changes.
     var cards = new Map(), positions = new Map(), searchText = new Map();
@@ -128,8 +130,38 @@
       article.append(cover, body);
       return article;
     }
+    function authorityExpired() {
+      if (!catalogClock || catalogClock.expired()) return true;
+      if (catalogClock.legacy) return false;
+      var current = catalogClock.now();
+      return !Number.isFinite(current) || current >= nextEventEnd;
+    }
+    function clearAuthority() {
+      clearTimeout(expiryTimer);
+      if (catalogClock) catalogClock.invalidate();
+      catalogClock = null; nextEventEnd = Infinity;
+      ready = false;
+      events = []; cards.clear(); positions.clear(); searchText.clear();
+      grid.replaceChildren();
+      if (H) H.updateCategories(events);
+    }
+    function scheduleExpiry() {
+      clearTimeout(expiryTimer);
+      if (!ready || !catalogClock) return;
+      var remaining = catalogClock.remaining();
+      if (!catalogClock.legacy) remaining = Math.min(remaining, nextEventEnd - catalogClock.now());
+      var current = requestId;
+      expiryTimer = setTimeout(function () {
+        if (current !== requestId || !ready) return;
+        if (authorityExpired()) refresh();
+        else scheduleExpiry();
+      }, Math.max(1, Math.ceil(remaining)));
+    }
     function render() {
       if (!ready) return;
+      // Timers can be delayed in background tabs. Check again synchronously
+      // before any filter, locale change or link activation uses this response.
+      if (authorityExpired()) { refresh(); return; }
       var filtered = events.filter(function (event) {
         var visual = event.visual || {};
         if (query && !searchText.has(event.id)) searchText.set(event.id, normalize([event.nome, event.data, event.horario, event.local, event.cidade, event.uf, visual.categoria, I && I.categoryLabel ? I.categoryLabel(visual.categoria).text : '', visual.descricaoCurta].filter(Boolean).join(' ')));
@@ -156,9 +188,7 @@
     }
     async function load() {
       var current = ++requestId;
-      ready = false; phase = 'loading';
-      events = []; cards.clear(); positions.clear(); searchText.clear();
-      grid.replaceChildren();
+      clearAuthority(); phase = 'loading';
       grid.setAttribute('aria-busy', 'true');
       status.hidden = false;
       retry.hidden = true;
@@ -168,28 +198,41 @@
       message.textContent = tr('loading', 'Carregando eventos…');
       var timer;
       try {
-        var result = await Promise.race([
+        var response = await Promise.race([
           Promise.resolve().then(loadCatalog),
           new Promise(function (_, reject) { timer = setTimeout(function () { reject(new Error('CATALOG_TIMEOUT')); }, 20000); })
         ]);
         if (current !== requestId) return;
-        if (!result || result.sucesso !== true || !Array.isArray(result.eventos)) throw new Error('CATALOG_INVALID');
-        var seen = new Set();
+        var result = response && response.catalog;
+        if (!result || result.sucesso !== true || !Array.isArray(result.eventos) || !Clock) throw new Error('CATALOG_INVALID');
+        var timing = response.timing || {};
+        catalogClock = Clock.create(result, { requestedAt: timing.requestedAt, receivedAt: timing.receivedAt, maxAgeMs: 300000, legacyMaxAgeMs: 300000 });
+        if (!catalogClock.valid || catalogClock.expired()) throw new Error('CATALOG_EXPIRED');
+        var seen = new Set(), ends = new Map();
         events = result.eventos.map(function (event) {
           if (!event || !text(event.id) || !text(event.nome)) throw new Error('CATALOG_INVALID_EVENT');
+          var end = Clock.eventEnd(event);
+          if (Number.isNaN(end) || (!catalogClock.legacy && !event.temporal) || (catalogClock.legacy && end !== null)) throw new Error('CATALOG_INVALID_TEMPORAL');
+          ends.set(event, end);
           return event;
         }).filter(function (event) {
           if (hiddenCatalogEventIds.has(event.id)) return false;
+          var end = ends.get(event);
+          if (end !== null && catalogClock.now() >= end) return false;
           if (seen.has(event.id)) return false;
+          if (end !== null) nextEventEnd = Math.min(nextEventEnd, end);
           seen.add(event.id);
           return true;
         });
         events.forEach(function (event, index) { positions.set(event.id, index); });
         ready = true; phase = 'ready';
         render();
+        scheduleExpiry();
       } catch (_) {
         if (current !== requestId) return;
-        phase = 'error';
+        clearAuthority(); phase = 'error';
+        status.hidden = false;
+        empty.hidden = true; feedback.textContent = '';
         count.textContent = tr('unavailable', 'Agenda temporariamente indisponível.');
         message.textContent = tr('loadError', 'Não foi possível carregar os eventos. Tente novamente.');
         retry.hidden = false;
@@ -198,6 +241,37 @@
         if (current === requestId) grid.setAttribute('aria-busy', 'false');
       }
     }
+    function refresh() {
+      if (suspended || document.hidden || phase === 'loading') return;
+      load();
+    }
+    function suspend() {
+      suspended = true;
+      ++requestId; clearAuthority(); phase = 'stale';
+      grid.setAttribute('aria-busy', 'false');
+      status.hidden = false; retry.hidden = true; empty.hidden = true;
+      count.textContent = tr('consulting', 'Consultando a agenda…');
+      message.textContent = tr('loading', 'Carregando eventos…');
+      feedback.textContent = '';
+    }
+    function resume(event) {
+      // The first native pageshow can follow a fast successful RPC. Keep that
+      // fresh response; only a real resume or lost authority needs another read.
+      var needsRefresh = suspended || (event && event.persisted === true) || phase === 'stale' || phase === 'error' || (ready && authorityExpired());
+      suspended = false;
+      if (needsRefresh) refresh();
+    }
+    window.addEventListener('focus', resume);
+    window.addEventListener('pageshow', resume);
+    window.addEventListener('pagehide', suspend);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) suspend(); else resume(); });
+    function guardActivation(event) {
+      if (ready && !authorityExpired()) return;
+      event.preventDefault(); event.stopImmediatePropagation();
+      refresh();
+    }
+    grid.addEventListener('click', guardActivation, true);
+    grid.addEventListener('auxclick', guardActivation, true);
     document.getElementById('event-search-form').addEventListener('submit', function (event) {
       event.preventDefault();
       query = normalize(input.value);
@@ -224,6 +298,7 @@
   // This adapter exposes one read-only method and sends no session credentials.
   function loadPublicEvents() {
     return new Promise(function (resolve, reject) {
+      var requestedAt = window.CTPublicCatalogClock ? window.CTPublicCatalogClock.sample() : NaN;
       var app = 'https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
       var id = 'CTCATALOG-' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
       var frame = document.createElement('iframe');
@@ -253,7 +328,7 @@
         var payload = event.data;
         if (!payload || payload.ctMinhaCariocaPost !== true || payload.id !== id) return;
         cleanup();
-        if (payload.ok === true) resolve(payload.resultado);
+        if (payload.ok === true) resolve({ catalog: payload.resultado, timing: { requestedAt: requestedAt, receivedAt: window.CTPublicCatalogClock ? window.CTPublicCatalogClock.sample() : NaN } });
         else reject(new Error('CATALOG_RPC_FAILED'));
       }
       var timer = setTimeout(function () { cleanup(); reject(new Error('CATALOG_RPC_TIMEOUT')); }, 18000);
@@ -262,7 +337,7 @@
       try { form.submit(); } catch (error) { cleanup(); reject(error); }
     });
   }
-  // This defer script is first in the document. Start the same public request
+  // After the pure clock helper, start the same public request
   // while optional presentation modules download, then mount once they have
   // initialized. A handled early rejection is still delivered to the normal
   // retry UI; every later load creates a fresh request.

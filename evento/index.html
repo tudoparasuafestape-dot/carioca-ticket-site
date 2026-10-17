@@ -196,6 +196,10 @@
     .section h2{font-size:25px;margin:7px 0 10px;letter-spacing:-.025em}
     .section p{color:#5c626b;line-height:1.7;font-size:14px;margin:0}
     .tickets{display:grid;gap:12px;margin-top:18px}
+    .event-sales-status{margin:14px 0;line-height:1.5}
+    .ct-temporal-ended .closing,.ct-temporal-ended .side-card,.ct-temporal-ended .trust,.ct-temporal-ended .ct-event-purchase-guide{display:none!important}
+    .cta[aria-disabled="true"]{opacity:.6;cursor:not-allowed}
+    .cta[hidden]{display:none!important}
     .ticket{
       padding:17px;border-radius:18px;border:1px solid #e4e5e7;background:linear-gradient(180deg,#fff,#fbfbfa);
     }
@@ -288,6 +292,9 @@
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
   <script src="/assets/advance-sales.js?v=20261016-encerrado1"></script>
+  <link rel="stylesheet" href="/assets/public-lot-status.css?v=20261017-temporal1">
+  <script src="/assets/public-catalog-clock.js?v=20261017-temporal1"></script>
+  <script src="/assets/public-lot-status.js?v=20261017-temporal1"></script>
 </head>
 <body class="ct-event">
 <script>
@@ -517,6 +524,8 @@
           <article class="section">
             <div class="section-label" data-public-i18n="event.Ingressos disponíveis">Ingressos disponíveis</div>
             <h2 data-public-i18n="event.Escolha como você quer viver esse evento">Escolha como você quer viver esse evento</h2>
+            <p id="eventSalesStatus" class="event-sales-status" role="status" aria-live="polite" hidden></p>
+            <button id="retryTemporalEventLoad" class="cta ct-lot-refresh" type="button" hidden></button>
             <div id="tickets" class="tickets"></div>
           </article>
 
@@ -633,6 +642,9 @@
       var tr=function(source,values){return window.CTEventI18n ? window.CTEventI18n.text(source,values) : source;};
       var locale=function(){return window.CTPublicI18n ? window.CTPublicI18n.getLocale() : 'pt-BR';};
       var errorSource='';
+      var catalogClock=null,temporalTimer=null,temporalEnded=false,temporalRefreshing=false,buyUrl='';
+      var loadRunning=false,loadGeneration=0,campaignAccessRegistered=false;
+      var purchaseIds=['buyHero','buySide','buyMobile','buyClosing'];
       function display(id,value,fallback){
         var node=$(id);
         node.textContent=value||tr(fallback);
@@ -799,6 +811,9 @@
       }
 
       function showError(msg,retryable,reference){
+        state.data=null;
+        clearTimeout(temporalTimer);temporalTimer=null;
+        if(catalogClock)catalogClock.invalidate();
         if(window.CTEventUber)window.CTEventUber.clear();
         if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('loading').classList.add('hidden');
@@ -846,7 +861,8 @@
         configurarCompartilhamento();
 
         var buy='/checkout/?evento='+encodeURIComponent(state.eventoId);
-        ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){$(id).href=buy;});
+        buyUrl=buy;
+        purchaseIds.forEach(function(id){$(id).href=buy;});
 
         var tickets=[];
         (res.tipos||[]).forEach(function(t){
@@ -868,7 +884,9 @@
             '</div>'
           );
         });
+        $('tickets').classList.remove('ct-lot-status');
         $('tickets').innerHTML=tickets.join('')||'<p>'+esc(tr('Nenhum ingresso disponível neste momento.'))+'</p>';
+        renderTemporalTickets();
 
         if(window.CTAdvanceSales && window.CTAdvanceSales.closed(state.eventoId)){
           var notice=window.CTAdvanceSales.message;
@@ -899,12 +917,14 @@
           var journey=document.querySelector('.journey');if(journey)journey.closest('article').classList.add('hidden');
         }
 
+        applyTemporalPurchaseState();
         document.querySelector('title').removeAttribute('data-public-i18n');
         document.querySelector('title').lang=e.nome?'pt-BR':locale();
         document.title=(e.nome?e.nome+' · ':'')+'Carioca Ticket';
         $('loading').classList.add('hidden');
         $('app').classList.remove('hidden');
         $('mobileBuy').classList.remove('hidden');
+        errorSource='';
       }
 
       function configurarMidiaPrincipal(v){
@@ -932,18 +952,136 @@
         }
       }
 
-      var loadRunning=false;
-      function load(){
+      function hasTemporalData(res){
+        if(!res)return false;
+        return ['temporalVersion','temporalEvaluatedAt','serverNow','nextTransitionAt','validUntil','lotesVenda'].some(function(key){return Object.prototype.hasOwnProperty.call(res,key);})||!!(res.evento&&res.evento.temporal);
+      }
+
+      function renderTemporalTickets(){
+        if(!hasTemporalData(state.data)||!window.CTPublicLotStatus)return;
+        if(window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId))return;
+        window.CTPublicLotStatus.render($('tickets'),state.data,catalogClock);
+      }
+
+      function temporalText(key){
+        if(window.CTPublicLotStatus)return window.CTPublicLotStatus.text(key);
+        var labels={
+          'pt-BR':{ended:'Este evento já terminou.',unknown:'Atualizando disponibilidade…',refresh:'Atualizar disponibilidade'},
+          'en-US':{ended:'This event has ended.',unknown:'Updating availability…',refresh:'Refresh availability'},
+          es:{ended:'Este evento ya terminó.',unknown:'Actualizando disponibilidad…',refresh:'Actualizar disponibilidad'},
+          'zh-Hans':{ended:'此活动已结束。',unknown:'正在更新可售名额…',refresh:'刷新可售名额'}
+        };
+        return (labels[locale()]||labels['pt-BR'])[key];
+      }
+
+      function temporalView(){
+        var res=state.data;
+        if(!hasTemporalData(res))return null;
+        var view={valid:false,purchasable:false};
+        if(!catalogClock||!window.CTPublicCatalogClock||!window.CTPublicLotStatus)return view;
+        var end=window.CTPublicCatalogClock.eventEnd(res.evento);
+        // A canonical instant needs an authoritative server clock. Display dates
+        // are never used to infer a cutoff or advance the current lot.
+        if(Number.isNaN(end)||(Number.isFinite(end)&&catalogClock.legacy))return view;
+        if(catalogClock.isEnded(res.evento))temporalEnded=true;
+        if(!catalogClock.valid||catalogClock.expired()||temporalEnded)return view;
+        return window.CTPublicLotStatus.present(res,catalogClock);
+      }
+
+      function applyTemporalPurchaseState(){
+        var view=temporalView(),notice=$('eventSalesStatus'),retry=$('retryTemporalEventLoad');
+        // Preserve the separately approved Samba reference-only presentation.
+        if(window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId)){
+          notice.hidden=true;retry.hidden=true;return;
+        }
+        var ended=!!view&&temporalEnded;
+        var allowed=!view||(view.valid&&view.purchasable&&!temporalRefreshing);
+        purchaseIds.forEach(function(id){
+          var link=$(id);link.hidden=ended;
+          if(allowed){link.href=buyUrl;link.removeAttribute('aria-disabled');link.removeAttribute('tabindex');}
+          else{link.removeAttribute('href');link.setAttribute('aria-disabled','true');link.setAttribute('tabindex','-1');}
+        });
+        $('app').classList.toggle('ct-temporal-ended',ended);
+        var journey=document.querySelector('.journey');
+        if(journey)journey.closest('article').classList.add('ct-event-purchase-guide');
+        notice.hidden=!view||(allowed&&!ended);
+        notice.lang=locale();
+        notice.textContent=ended?temporalText('ended'):temporalRefreshing?temporalText('unknown'):view&&!view.valid?tr('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.'):tr('Nenhum ingresso disponível neste momento.');
+        retry.hidden=!view||ended||view.valid||temporalRefreshing;
+        retry.disabled=loadRunning;retry.lang=locale();retry.textContent=temporalText('refresh');
+        if(ended){$('startingPrice').textContent=temporalText('ended');$('startingPrice').lang=locale();}
+      }
+
+      function scheduleTemporalRefresh(){
+        clearTimeout(temporalTimer);temporalTimer=null;
+        if(!hasTemporalData(state.data)||!catalogClock||!catalogClock.valid||catalogClock.legacy||catalogClock.expired())return;
+        var delay=catalogClock.remaining(),end=window.CTPublicCatalogClock.eventEnd(state.data.evento);
+        var now=catalogClock.now();
+        if(Number.isFinite(end)&&end>now)delay=Math.min(delay,end-now);
+        if(!Number.isFinite(delay))return;
+        var data=state.data;
+        temporalTimer=setTimeout(function(){
+          if(data!==state.data)return;
+          if(catalogClock.expired()||catalogClock.isEnded(state.data.evento)){
+            applyTemporalPurchaseState();
+            renderTemporalTickets();
+            load(true);
+          }else scheduleTemporalRefresh();
+        },Math.min(2147483647,Math.max(1,Math.ceil(delay))));
+      }
+
+      function revalidateTemporal(){
+        if(!hasTemporalData(state.data)||!catalogClock)return;
+        if(catalogClock.expired()||(!temporalEnded&&catalogClock.isEnded(state.data.evento))){
+          applyTemporalPurchaseState();
+          load(true);
+        }
+      }
+
+      purchaseIds.forEach(function(id){
+        function guard(event){
+          if(window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId))return;
+          var view=temporalView();
+          if(view&&(!view.valid||!view.purchasable||temporalRefreshing)){
+            event.preventDefault();event.stopImmediatePropagation();
+            applyTemporalPurchaseState();
+            if(!temporalEnded)revalidateTemporal();
+          }
+        }
+        $(id).addEventListener('click',guard,true);
+        $(id).addEventListener('auxclick',guard,true);
+      });
+      window.addEventListener('focus',revalidateTemporal);
+      window.addEventListener('pageshow',revalidateTemporal);
+      document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')revalidateTemporal();});
+      $('retryTemporalEventLoad').addEventListener('click',function(){load(true);});
+
+      function load(refresh){
         if(loadRunning)return;
+        refresh=refresh===true&&!!state.data;
         loadRunning=true;
-        if(window.CTEventUber)window.CTEventUber.clear();
-        if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
+        var generation=++loadGeneration;
+        clearTimeout(temporalTimer);temporalTimer=null;
+        temporalRefreshing=refresh&&hasTemporalData(state.data);
+        if(temporalRefreshing)applyTemporalPurchaseState();
+        if(window.CTEventUber&&!refresh)window.CTEventUber.clear();
+        if(window.CTPublicShare&&!refresh)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('errorBox').classList.add('hidden');
         $('retryEventLoad').classList.add('hidden');
         $('errorReference').classList.add('hidden');
         $('errorReferenceCode').textContent='';
-        $('loading').classList.remove('hidden');
+        if(!refresh)$('loading').classList.remove('hidden');
+        function failed(message,reference){
+          loadRunning=false;temporalRefreshing=false;
+          if(refresh&&hasTemporalData(state.data)){
+            if(catalogClock)catalogClock.invalidate();
+            applyTemporalPurchaseState();
+            renderTemporalTickets();
+            $('loading').classList.add('hidden');
+          }else showError(message,true,reference);
+        }
         google.script.url.getLocation(function(loc){
+          if(generation!==loadGeneration||!loadRunning)return;
           state.eventoId=String((loc.parameter&&loc.parameter.evento)||'').trim();
           if(!state.eventoId){
             loadRunning=false;
@@ -951,22 +1089,38 @@
             return;
           }
 
+          var requestedAt=window.CTPublicCatalogClock?window.CTPublicCatalogClock.sample():NaN;
           google.script.run
             .withSuccessHandler(function(res){
-              loadRunning=false;
+              if(generation!==loadGeneration||!loadRunning)return;
               if(!res||res.sucesso!==true){
-                showError(res&&res.mensagem?res.mensagem:'Este evento não está disponível no momento.');
+                if(refresh&&res&&res.codigo==='EVENTO_ENCERRADO'&&state.data&&(temporalEnded||(catalogClock&&catalogClock.isEnded(state.data.evento)))){
+                  loadRunning=false;temporalRefreshing=false;temporalEnded=true;
+                  applyTemporalPurchaseState();
+                  renderTemporalTickets();
+                  return;
+                }
+                var message=res&&res.mensagem?res.mensagem:'Este evento não está disponível no momento.';
+                var retryable=!res||res.temporario===true;
+                if(retryable)failed(message);
+                else{loadRunning=false;temporalRefreshing=false;showError(message,false);}
                 return;
               }
+              loadRunning=false;temporalRefreshing=false;temporalEnded=false;
+              catalogClock=hasTemporalData(res)&&window.CTPublicCatalogClock?window.CTPublicCatalogClock.create(res,{
+                requestedAt:requestedAt,receivedAt:window.CTPublicCatalogClock.sample(),maxAgeMs:res.lotesVenda!==undefined?15000:300000
+              }):null;
               try {
                 render(res);
+                scheduleTemporalRefresh();
               } catch (err) {
-                showError('Não foi possível exibir este evento agora. Tente novamente em alguns instantes.');
+                if(catalogClock)catalogClock.invalidate();
+                failed('Não foi possível exibir este evento agora. Tente novamente em alguns instantes.');
                 return;
               }
             })
             .withFailureHandler(function(error){
-              loadRunning=false;
+              if(generation!==loadGeneration||!loadRunning)return;
               // Bounded local diagnosis only: no URL, arguments, server message or personal data.
               var code=error&&error.code;
               if(['CT_PUBLIC_RPC_TIMEOUT','CT_PUBLIC_RPC_REMOTE_ERROR','CT_PUBLIC_RPC_SUBMIT_ERROR'].indexOf(code)<0)code='CT_PUBLIC_RPC_ERROR';
@@ -975,7 +1129,7 @@
                 online:navigator.onLine,visibility:document.visibilityState
               });
               var reference={CT_PUBLIC_RPC_TIMEOUT:'E01',CT_PUBLIC_RPC_REMOTE_ERROR:'E02',CT_PUBLIC_RPC_SUBMIT_ERROR:'E03'}[code]||'E00';
-              showError('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.',true,reference);
+              failed('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.',reference);
             })
             .ctEventoPublicoCarregarPROD(state.eventoId);
         });

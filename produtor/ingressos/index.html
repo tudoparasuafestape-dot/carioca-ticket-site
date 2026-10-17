@@ -34,7 +34,7 @@
     .notice{margin:14px 0 0;padding:11px 13px;border-radius:12px;background:#17140c;border:1px solid #54451e;color:#ecd998;font-size:12px;line-height:1.5}
     .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
     .summary article{padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
-    .summary span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800}.summary strong{display:block;font-size:27px;margin-top:6px}
+    .summary span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800}.summary strong{display:block;font-size:27px;margin-top:6px}.summary strong.unknown{font-size:16px;line-height:1.4}
     .section{margin-top:14px;padding:18px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,#10151b,#0a0e12)}
     .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
     .section-head h2{margin:0;font-size:23px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.45}
@@ -85,7 +85,7 @@
     <article><span>Tipos</span><strong id="sumTipos">—</strong></article>
     <article><span>Tipos ativos</span><strong id="sumTiposAtivos">—</strong></article>
     <article><span>Lotes</span><strong id="sumLotes">—</strong></article>
-    <article><span>Lotes ativos</span><strong id="sumLotesAtivos">—</strong></article>
+    <article><span id="sumLotesAtivosLabel">Lotes ativos</span><strong id="sumLotesAtivos">—</strong></article>
   </section>
 
   <section class="section">
@@ -143,9 +143,10 @@
         <div class="field"><label for="lotEnd">Fim das vendas</label><input id="lotEnd" type="datetime-local" step="1" aria-describedby="lotTimeZone"></div>
       </div>
       <div class="grid2">
-        <div class="field"><label for="lotStatus">Status *</label><select id="lotStatus"><option value="ATIVO">ATIVO</option><option value="INATIVO">INATIVO</option><option value="ENCERRADO">ENCERRADO</option></select></div>
+        <div class="field"><label for="lotStatus">Status *</label><select id="lotStatus" aria-describedby="lotStateHelp"><option value="ATIVO">ATIVO</option><option value="INATIVO">INATIVO</option><option value="ENCERRADO">ENCERRADO</option></select></div>
         <div class="field"><label for="lotOrder">Ordem</label><input id="lotOrder" type="number" min="0" step="1" value="1"></div>
       </div>
+      <p id="lotStateHelp" class="help"></p>
       <p id="lotFeedback" role="status" aria-live="polite"></p>
       <div class="modal-actions"><button class="btn secondary" type="button" data-close="lotDialog">Cancelar</button><button class="btn" type="submit">Salvar lote</button></div>
     </div>
@@ -209,13 +210,80 @@ function humanError(msg){
     CT_INGRESSOS_CONFIG_EVENTO_DIVERGENTE:'O evento informado não corresponde ao evento autorizado.',
     CT_INGRESSOS_CONFIG_TIPO_FORA_DO_EVENTO:'Este tipo de ingresso não pertence ao evento selecionado.',
     CT_INGRESSOS_CONFIG_LOTE_FORA_DO_EVENTO:'Este lote não pertence ao evento selecionado.',
-    CT_INGRESSOS_CONFIG_TIPO_COM_LOTES:'Este tipo possui lotes. Desative-o ou ajuste os lotes antes de removê-lo.'
+    CT_INGRESSOS_CONFIG_TIPO_COM_LOTES:'Este tipo possui lotes. Desative-o ou ajuste os lotes antes de removê-lo.',
+    CT_LOTE_ENCERRAMENTO_DEFINITIVO:'Este lote tem encerramento definitivo e não pode ser reativado.',
+    CT_LOTE_VIRADA_HISTORICO_IMUTAVEL:'O tipo e a ordem de um lote encerrado definitivamente não podem ser alterados.',
+    CT_LOTE_COM_PEDIDOS_OU_RESERVAS:'Este lote possui pedidos ou reservas. O tipo de ingresso não pode ser alterado.',
+    CT_LOTE_QUANTIDADE_ABAIXO_DO_ESTOQUE_OCUPADO:'A quantidade não pode ser menor que o total de pedidos e reservas deste lote.'
   };
   return map[msg]||msg;
 }
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function badge(status){status=String(status||'').toUpperCase();var cls=status==='ATIVO'?'active':(status==='ENCERRADO'?'closed':'inactive');return '<span class="badge '+cls+'">'+esc(status||'—')+'</span>'}
+// Effective availability is independent of stored configuration. A partial or
+// unconfirmed projection must never fall back to the stored ATIVO/stock fields.
+function lotHasProjection(l){
+  var own=Object.prototype.hasOwnProperty;
+  return ['estadoEfetivo','disponibilidadeConfirmada','encerramentoDuravel','encerramentoMotivo','disponiveisEfetivos','podeReativar','motivoIndisponibilidadeEfetiva','antecipadoEfetivo'].some(function(key){return own.call(l||{},key)})||
+    own.call(data.resumo||{},'disponibilidadeConfirmada')||own.call(data.resumo||{},'lotesAtivosEfetivos');
+}
+function lotsHaveProjection(){return lotHasProjection({})||data.lotes.some(lotHasProjection)}
+function lotEffectiveState(l){
+  if(l.disponibilidadeConfirmada!==true||['ATIVO','ENCERRADO','PAUSADO','PROXIMO'].indexOf(l.estadoEfetivo)<0)return null;
+  return l.encerramentoDuravel===true?'ENCERRADO':l.estadoEfetivo;
+}
+function effectiveSummaryConfirmed(){
+  var s=data.resumo||{};
+  return s.disponibilidadeConfirmada===true&&typeof s.lotesAtivosEfetivos==='number'&&
+    Number.isInteger(s.lotesAtivosEfetivos)&&s.lotesAtivosEfetivos>=0&&s.lotesAtivosEfetivos<=data.lotes.length&&
+    data.lotes.every(function(l){return !!lotEffectiveState(l)})&&
+    s.lotesAtivosEfetivos===data.lotes.filter(function(l){return lotEffectiveState(l)==='ATIVO'}).length;
+}
+function lotCanReactivate(l){
+  return l.podeReativar===true&&l.encerramentoDuravel!==true&&lotEffectiveState(l)==='PAUSADO'&&
+    String(l.status).toUpperCase()==='INATIVO'&&!l.motivoIndisponibilidadeEfetiva;
+}
+function lotToggleAction(l){
+  var stored=String(l.status).toUpperCase();
+  if(!lotHasProjection(l))return {label:stored==='ATIVO'?'Desativar':'Ativar',next:stored==='ATIVO'?'INATIVO':'ATIVO'};
+  if(l.encerramentoDuravel===true)return {label:'Encerramento definitivo',next:null};
+  var effective=lotEffectiveState(l);
+  if(!effective)return {label:'Disponibilidade não confirmada',next:null};
+  if(effective==='ENCERRADO')return {label:'Lote encerrado',next:null};
+  if(stored==='ATIVO')return {label:'Desativar',next:'INATIVO'};
+  return lotCanReactivate(l)?{label:'Reativar',next:'ATIVO'}:{label:'Reativação indisponível',next:null};
+}
+function lotEffectiveDescription(l){
+  var notes=[],effective=lotEffectiveState(l);
+  if(!effective)notes.push('A disponibilidade não foi confirmada. Atualize a configuração para tentar novamente.');
+  if(l.encerramentoDuravel===true)notes.push('Encerramento definitivo. Este lote não pode ser reativado.');
+  var closures={ESGOTADO:'Encerrado por esgotamento.',PRODUTOR:'Encerrado pelo produtor.',PERIODO:'Período de venda encerrado.'};
+  if((effective==='ENCERRADO'||l.encerramentoDuravel===true)&&Object.prototype.hasOwnProperty.call(closures,l.encerramentoMotivo))notes.push(closures[l.encerramentoMotivo]);
+  var reasons={EVENTO_ENCERRADO:'O evento já terminou. Vendas encerradas.',EVENTO_INATIVO:'O evento está inativo. Vendas pausadas.',CAPACIDADE_EVENTO:'A capacidade disponível do evento não permite novas vendas.',CAPACIDADE_TIPO:'O limite disponível deste tipo de ingresso não permite novas vendas.',RESERVAS_PENDENTES:'Disponibilidade temporariamente ocupada por reservas pendentes.',VERIFICACAO:'Vendas indisponíveis enquanto a disponibilidade é verificada.'};
+  if(effective&&l.motivoIndisponibilidadeEfetiva)notes.push(Object.prototype.hasOwnProperty.call(reasons,l.motivoIndisponibilidadeEfetiva)?reasons[l.motivoIndisponibilidadeEfetiva]:'Vendas indisponíveis no momento.');
+  if(effective==='PROXIMO')notes.push('Próximo lote. A venda ainda não foi liberada.');
+  if(effective==='ATIVO'&&l.antecipadoEfetivo===true)notes.push('Lote liberado antecipadamente.');
+  return notes.join(' ');
+}
+function lotConfigureStatus(l){
+  var projected=!!l&&lotHasProjection(l),select=document.getElementById('lotStatus');
+  select.disabled=projected&&l.encerramentoDuravel===true;
+  Array.from(select.options).forEach(function(option){
+    option.disabled=projected&&((l.encerramentoDuravel===true&&option.value!=='ENCERRADO')||
+      (option.value==='ATIVO'&&String(l.status).toUpperCase()!=='ATIVO'&&!lotCanReactivate(l)));
+  });
+  if(projected&&l.encerramentoDuravel===true)select.value='ENCERRADO';
+  document.getElementById('lotStateHelp').textContent=projected?
+    'Status cadastrado: '+String(l.status||'—')+'. '+lotEffectiveDescription(l)+
+    (String(l.status).toUpperCase()!=='ATIVO'&&!lotCanReactivate(l)&&l.encerramentoDuravel!==true?' A reativação não está autorizada pela disponibilidade atual.':''):'';
+}
+function lotStatusChangeError(l,next){
+  if(!l||!lotHasProjection(l))return '';
+  if(l.encerramentoDuravel===true&&next!=='ENCERRADO')return 'Este lote tem encerramento definitivo e não pode ser reativado.';
+  if(next==='ATIVO'&&String(l.status).toUpperCase()!=='ATIVO'&&!lotCanReactivate(l))return 'Não foi possível confirmar a reativação deste lote. Atualize a configuração.';
+  return '';
+}
 async function load(){
   if(loadingConfig)return false;
   loadingConfig=true;
@@ -226,7 +294,7 @@ async function load(){
     var r=await rpc('ctIngressosConfigCarregarPROD',[token,eventId]);
     if(!r||r.sucesso!==true||!Array.isArray(r.tipos)||!Array.isArray(r.lotes))throw new Error(r&&r.mensagem||'Não foi possível carregar a configuração.');
     data=r;render();configReady=true;
-    document.getElementById('configStatus').textContent='Configuração atualizada.';
+    document.getElementById('configStatus').textContent=lotsHaveProjection()&&!effectiveSummaryConfirmed()?'Configuração atualizada. Disponibilidade dos lotes não confirmada. Atualize para tentar novamente.':'Configuração atualizada.';
     if(document.getElementById('toast').classList.contains('error'))document.getElementById('toast').classList.remove('show');
     return true;
   }catch(e){document.getElementById('configStatus').textContent='Não foi possível atualizar a lista. Use Atualizar configuração para tentar novamente.';toast(e.message,true);return false}
@@ -240,7 +308,10 @@ function render(){
   document.getElementById('sumTipos').textContent=s.tipos||0;
   document.getElementById('sumTiposAtivos').textContent=s.tiposAtivos||0;
   document.getElementById('sumLotes').textContent=s.lotes||0;
-  document.getElementById('sumLotesAtivos').textContent=s.lotesAtivos||0;
+  var projected=lotsHaveProjection(),confirmed=projected&&effectiveSummaryConfirmed();
+  document.getElementById('sumLotesAtivosLabel').textContent=projected?'Lotes atuais':'Lotes ativos';
+  document.getElementById('sumLotesAtivos').textContent=projected?(confirmed?s.lotesAtivosEfetivos:'Não confirmado'):(s.lotesAtivos||0);
+  document.getElementById('sumLotesAtivos').classList.toggle('unknown',projected&&!confirmed);
   renderTypes();renderLots();fillTypeOptions();
 }
 function renderTypes(){
@@ -257,9 +328,15 @@ function renderLots(){
   if(!data.lotes.length){box.innerHTML='<div class="empty"><strong>Nenhum lote cadastrado.</strong><br>Depois de criar um tipo de ingresso, crie o primeiro lote.</div>';return}
   box.innerHTML=data.lotes.map(function(l){
     var period=[l.dataInicio?('Início: '+l.dataInicio):'',l.dataFim?('Fim: '+l.dataFim):''].filter(Boolean).join(' • ')||'Sem período definido';
-    return '<article class="card"><div class="card-head"><div><h3>'+esc(l.nome)+'</h3><div class="sub">'+esc(l.tipoNome||'Tipo')+' • '+esc(period)+'</div></div>'+badge(l.status)+'</div>'+
-      '<div class="metric"><div><span>Preço</span><strong>'+esc(l.preco||money(l.precoNumero))+'</strong></div><div><span>Quantidade</span><strong>'+esc(l.quantidade)+'</strong></div><div><span>Disponíveis</span><strong>'+esc(l.disponiveis)+'</strong></div></div>'+
-      '<div class="actions"><button class="btn secondary" type="button" data-edit-lot="'+esc(l.id)+'">Editar</button><button class="btn secondary" type="button" data-toggle-lot="'+esc(l.id)+'">'+(String(l.status).toUpperCase()==='ATIVO'?'Desativar':'Ativar')+'</button></div></article>';
+    var projected=lotHasProjection(l),effective=projected?lotEffectiveState(l):null,action=lotToggleAction(l);
+    var statusLabel=projected?({ATIVO:'ATUAL',ENCERRADO:'ENCERRADO',PAUSADO:'PAUSADO',PROXIMO:'PRÓXIMO'}[effective]||'NÃO CONFIRMADO'):l.status;
+    var stateBadge=projected?'<span class="badge '+(effective==='ATIVO'?'active':(effective==='ENCERRADO'?'closed':'inactive'))+'" aria-label="Situação efetiva: '+esc(statusLabel)+'">'+esc(statusLabel)+'</span>':badge(l.status);
+    var available=l.disponiveis;
+    if(projected)available=!effective?'Não confirmado':(effective==='ENCERRADO'?0:(typeof l.disponiveisEfetivos==='number'&&Number.isFinite(l.disponiveisEfetivos)&&l.disponiveisEfetivos>=0?l.disponiveisEfetivos:'Não informado'));
+    return '<article class="card"><div class="card-head"><div><h3>'+esc(l.nome)+'</h3><div class="sub">'+esc(l.tipoNome||'Tipo')+' • '+esc(period)+'</div>'+(projected?'<div class="sub">Status cadastrado: '+esc(l.status||'—')+'</div>':'')+'</div>'+stateBadge+'</div>'+
+      (projected?'<p class="help">'+esc(lotEffectiveDescription(l))+'</p>':'')+
+      '<div class="metric"><div><span>Preço</span><strong>'+esc(l.preco||money(l.precoNumero))+'</strong></div><div><span>Quantidade</span><strong>'+esc(l.quantidade)+'</strong></div><div><span>'+(projected?'Saldo do lote':'Disponíveis')+'</span><strong>'+esc(available)+'</strong></div></div>'+
+      '<div class="actions"><button class="btn secondary" type="button" data-edit-lot="'+esc(l.id)+'">Editar</button><button class="btn secondary" type="button" data-toggle-lot="'+esc(l.id)+'"'+(action.next?'':' disabled')+'>'+esc(action.label)+'</button></div></article>';
   }).join('');
 }
 function fillTypeOptions(){
@@ -366,6 +443,7 @@ function openLot(id){
   document.getElementById('lotStart').value=l?(l.dataInicioFormulario||''):'';
   document.getElementById('lotEnd').value=l?(l.dataFimFormulario||''):'';
   document.getElementById('lotStatus').value=l?String(l.status||'ATIVO').toUpperCase():'ATIVO';
+  lotConfigureStatus(l);
   document.getElementById('lotOrder').value=l?Number(l.ordem||0):Math.max(1,data.lotes.length+1);
   document.getElementById('lotFeedback').textContent='';
   contextoTemporalLoteAberto=ctLoteConfigurarPeriodo_(l||data.evento,eventId,'lotStart','lotEnd','lotTimeZone');
@@ -382,10 +460,13 @@ async function saveLot(e){
   e.preventDefault();
   if(saving)return;
   var payload={id:document.getElementById('lotId').value,tipoId:document.getElementById('lotType').value,nome:document.getElementById('lotName').value,preco:document.getElementById('lotPrice').value,quantidade:document.getElementById('lotQuantity').value,dataInicio:document.getElementById('lotStart').value,dataFim:document.getElementById('lotEnd').value,status:document.getElementById('lotStatus').value,ordem:document.getElementById('lotOrder').value,fusoHorarioVista:contextoTemporalLoteAberto&&contextoTemporalLoteAberto.fusoHorarioVista,revisaoTemporalVista:contextoTemporalLoteAberto&&contextoTemporalLoteAberto.revisaoTemporalVista};
+  var loteAtual=data.lotes.find(function(l){return l.id===payload.id});
+  var erroStatus=lotStatusChangeError(loteAtual,payload.status);
+  if(erroStatus){document.getElementById('lotFeedback').textContent=erroStatus;toast(erroStatus,true);return}
   var erroPeriodo=ctLoteErroPeriodo_(payload.dataInicio,payload.dataFim,contextoTemporalLoteAberto);
   if(erroPeriodo){document.getElementById('lotFeedback').textContent=erroPeriodo;toast(erroPeriodo,true);return}
   saving=true;formBusy(document.getElementById('lotForm'),true);document.getElementById('lotFeedback').textContent='Salvando...';
-  try{var r=await rpc('ctIngressosConfigSalvarLotePROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar lote.');document.getElementById('lotDialog').close();toast(r.mensagem||'Lote salvo.');if(!await load())toast('Lote salvo. Não foi possível atualizar a lista. Use Atualizar configuração.',true)}catch(err){document.getElementById('lotFeedback').textContent=humanError(err.message);toast(err.message,true)}finally{saving=false;formBusy(document.getElementById('lotForm'),false)}
+  try{var r=await rpc('ctIngressosConfigSalvarLotePROD',[token,eventId,payload]);if(!r||r.sucesso!==true)throw new Error(r&&r.mensagem||'Falha ao salvar lote.');document.getElementById('lotDialog').close();toast(r.mensagem||'Lote salvo.');if(!await load())toast('Lote salvo. Não foi possível atualizar a lista. Use Atualizar configuração.',true)}catch(err){document.getElementById('lotFeedback').textContent=humanError(err.message);toast(err.message,true)}finally{saving=false;formBusy(document.getElementById('lotForm'),false);lotConfigureStatus(data.lotes.find(function(l){return l.id===payload.id}))}
 }
 async function toggleType(id){
   var t=data.tipos.find(function(x){return x.id===id});if(!t)return;
@@ -395,7 +476,10 @@ async function toggleType(id){
 }
 async function toggleLot(id){
   var l=data.lotes.find(function(x){return x.id===id});if(!l)return;
-  var next=String(l.status).toUpperCase()==='ATIVO'?'INATIVO':'ATIVO';
+  if(saving||loadingConfig||!configReady)return;
+  var action=lotToggleAction(l);
+  if(!action.next){toast(lotEffectiveDescription(l)||'A reativação deste lote não está disponível.',true);return}
+  var next=action.next;
   loading(true,'Atualizando lote...');
   try{var r=await rpc('ctIngressosConfigAlterarStatusLotePROD',[token,eventId,id,next]);toast(r&&r.mensagem||'Status atualizado.');await load()}catch(e){toast(e.message,true)}finally{loading(false)}
 }

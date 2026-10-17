@@ -124,6 +124,9 @@
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
   <script src="/assets/advance-sales.js?v=20261016-encerrado1"></script>
+  <link rel="stylesheet" href="/assets/public-lot-status.css">
+  <script src="/assets/public-catalog-clock.js"></script>
+  <script src="/assets/public-lot-status.js"></script>
 </head>
 <body>
 <div id="checkoutLanguageControl" class="checkout-language" hidden><label for="checkoutLanguage" data-checkout-text="Idioma">Idioma</label><select id="checkoutLanguage"><option value="pt-BR" lang="pt-BR">Português</option><option value="en-US" lang="en-US">English</option><option value="es" lang="es">Español</option><option value="zh-Hans" lang="zh-Hans">简体中文</option></select><p id="checkoutOriginalNotice" hidden data-checkout-text="Os nomes e textos cadastrados pelo produtor permanecem no idioma original.">Os nomes e textos cadastrados pelo produtor permanecem no idioma original.</p></div>
@@ -267,6 +270,7 @@
   </header>
 
   <main class="wrap">
+    <section id="temporalLots" class="panel hidden"><div id="temporalLotList"></div><button id="temporalRefresh" class="secondary ct-lot-refresh" type="button">Atualizar disponibilidade</button><button id="temporalRecover" class="secondary ct-lot-refresh" type="button" hidden>Recuperar pedido iniciado</button></section>
     <section id="salePanel" class="panel">
       <div class="step"><span class="step-num">1</span><strong data-checkout-text="Escolha seu ingresso">Escolha seu ingresso</strong></div>
       <div class="grid2">
@@ -604,7 +608,84 @@
         });
       }
 
+      // Catalog authority expires independently of an already committed order.
+      var catalogRequest=0, catalogClock=null, catalogTimer=null, temporalEnabled=false, catalogLoading=false, catalogSuspended=false;
+      var recoveryRunning=false, recoveryGeneration=0, frozenIntent=null, intentUncertain=false;
+      function temporalText(key){return window.CTPublicLotStatus?window.CTPublicLotStatus.text(key):'Atualizando disponibilidade…';}
+      function temporalView(){return window.CTPublicLotStatus?window.CTPublicLotStatus.present(state.catalog,catalogClock):{valid:false,purchasable:false};}
+      function temporalBlocked(){return temporalEnabled&&(!catalogClock||!temporalView().valid);}
+      function temporalSelectionAllowed(){return !temporalEnabled||(!temporalBlocked()&&window.CTPublicLotStatus.allows(state.catalog,state.type&&state.type.id,state.lot&&state.lot.id,catalogClock));}
+      function temporalUI(){
+        if(!temporalEnabled||state.order)return;
+        var recoveryButton=document.getElementById('temporalRecover');
+        recoveryButton.hidden=!(frozenIntent&&intentUncertain);recoveryButton.disabled=state.busy;recoveryButton.textContent=temporalText('recover');
+        var panel=document.getElementById('temporalLots'), list=document.getElementById('temporalLotList');
+        panel.classList.remove('hidden');
+        document.getElementById('temporalRefresh').textContent=temporalText('refresh');
+        if(window.CTPublicLotStatus&&state.catalog)window.CTPublicLotStatus.render(list,state.catalog,catalogClock);
+        var view=temporalView(), blocked=temporalBlocked();
+        if(view.legacy){list.textContent=blocked?temporalText(catalogClock&&catalogClock.isEnded(state.catalog.evento)?'ended':'unknown'):'';}
+        el.typeSelect.disabled=blocked||!view.purchasable;
+        el.lotSelect.disabled=blocked||!state.type;
+        el.quantity.disabled=blocked;
+        el.payButton.disabled=state.busy||recoveryRunning||intentUncertain||!temporalSelectionAllowed();
+      }
+      function scheduleCatalogRefresh(){
+        clearTimeout(catalogTimer);catalogTimer=null;
+        if(!temporalEnabled||!catalogClock||!catalogClock.valid||catalogClock.expired()||state.order||recoveryRunning)return;
+        var remaining=catalogClock.remaining();
+        var end=window.CTPublicCatalogClock.eventEnd(state.catalog.evento);
+        if(Number.isFinite(end))remaining=Math.min(remaining,end-catalogClock.now());
+        catalogTimer=setTimeout(function(){
+          temporalUI();
+          if(!state.order&&!state.busy)loadCatalog();
+        },Math.max(1,Math.min(2147483647,remaining)));
+      }
+      function acceptTemporalCatalog(res,requestedAt){
+        var C=window.CTPublicCatalogClock;
+        temporalEnabled=!!(Object.prototype.hasOwnProperty.call(res,'lotesVenda')||['temporalVersion','temporalEvaluatedAt','serverNow','nextTransitionAt','validUntil'].some(function(key){return Object.prototype.hasOwnProperty.call(res,key);})||(res.evento&&Object.prototype.hasOwnProperty.call(res.evento,'temporal')));
+        catalogClock=C?C.create(res,{requestedAt:requestedAt,receivedAt:C.sample(),maxAgeMs:res.lotesVenda!==undefined?15000:300000}):null;
+      }
+      function restoreTemporalSelection(previous){
+        if(!temporalEnabled)return;
+        if(previous&&previous.type&&previous.lot&&!temporalBlocked()){
+          var type=(state.catalog.tipos||[]).find(function(t){return t.id===previous.type;});
+          var lot=type&&(type.lotes||[]).find(function(l){return l.id===previous.lot&&Number(l.precoNumero)===previous.price;});
+          if(lot&&window.CTPublicLotStatus.allows(state.catalog,type.id,lot.id,catalogClock)){
+            el.typeSelect.value=type.id;onType();el.lotSelect.value=lot.id;onLot();
+            el.participants.querySelectorAll('.participant').forEach(function(box,index){var item=previous.participants[index];if(item){box.querySelector('[data-name]').value=item.nome;box.querySelector('[data-phone]').value=item.whatsapp;}});
+          }else{state.type=null;state.lot=null;el.typeSelect.value='';el.lotSelect.innerHTML='<option value="">'+(window.CTCheckoutLanguage?window.CTCheckoutLanguage.text('Selecione'):'Selecione')+'</option>';clearCoupon(true);updateSummary();}
+        }
+        temporalUI();scheduleCatalogRefresh();
+      }
+      function catalogUnavailable(message){
+        catalogLoading=false;
+        if(catalogClock)catalogClock.invalidate();
+        clearTimeout(catalogTimer);temporalUI();
+        if(state.order)return;
+        showClosed(message);
+        // Recovery is independent of public catalog eligibility and never creates a charge.
+        var rec=readRecovery();if(rec&&rec.pedidoId&&rec.token)recoverOrder(rec);
+      }
+      function resumeCatalog(){if(state.eventId&&!state.order&&!state.busy&&!recoveryRunning&&(catalogSuspended||(temporalEnabled&&temporalBlocked()))){catalogSuspended=false;loadCatalog();}}
+      window.addEventListener('focus',resumeCatalog);
+      window.addEventListener('pageshow',resumeCatalog);
+      window.addEventListener('pagehide',function(){clearTimeout(catalogTimer);catalogRequest++;catalogLoading=false;catalogSuspended=true;recoveryGeneration++;recoveryRunning=false;if(catalogClock)catalogClock.invalidate();});
+      document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')resumeCatalog();});
+      document.addEventListener('ct:public-language',temporalUI);
+      document.addEventListener('ct:checkout-language',temporalUI);
+      document.getElementById('temporalRecover').onclick=retryFrozenIntent;
+      document.getElementById('temporalRefresh').onclick=function(){if(!state.order&&!state.busy)loadCatalog();};
+
       function loadCatalog(refreshEraSelection){
+        if(state.order||catalogLoading||recoveryRunning)return;
+        catalogLoading=true;
+        var loadToken=++catalogRequest;
+        var requestedAt=window.CTPublicCatalogClock?window.CTPublicCatalogClock.sample():NaN;
+        var previousTemporal=state.catalog?{type:state.type&&state.type.id,lot:state.lot&&state.lot.id,price:Number(state.lot&&state.lot.precoNumero),participants:participants()}:null;
+        clearTimeout(catalogTimer);
+        if(temporalEnabled){if(catalogClock)catalogClock.invalidate();temporalUI();}
+
         var previous=refreshEraSelection?{
           type:state.type&&state.type.id,lot:state.lot&&state.lot.id,
           coupon:state.promotion&&state.promotion.cupom&&state.promotion.cupom.codigo,
@@ -614,11 +695,17 @@
         setLoading(true,'Carregando evento...','Validando disponibilidade e lotes.');
         google.script.run
           .withSuccessHandler(function(res){
+            if(loadToken!==catalogRequest||state.order)return;
+            catalogLoading=false;
             if(!res||res.sucesso!==true){
-              showClosed(res&&res.mensagem?res.mensagem:'As vendas online deste evento não estão disponíveis.');
+              catalogUnavailable(res&&res.mensagem?res.mensagem:'As vendas online deste evento não estão disponíveis.');
               return;
             }
             state.catalog=res;
+            acceptTemporalCatalog(res,requestedAt);
+            if(temporalEnabled&&temporalBlocked()){catalogUnavailable(temporalText('unknown'));return;}
+            if(temporalEnabled){el.closedPanel.classList.add('hidden');el.salePanel.classList.remove('hidden');el.buyerPanel.classList.remove('hidden');el.payActionPanel.classList.remove('hidden');}
+
             // This canary requires an authoritative quote even if catalog metadata is missing.
             // The browser never supplies a fee rate or decides the amount to charge.
             state.politicaComercialAtiva=state.eventId==='EVT-23112026-ERA-BEAUTY-EAC4B673';
@@ -636,9 +723,10 @@
                 }
               }
             } catch (err) {
-              showClosed('Não foi possível exibir os ingressos agora. Tente novamente em alguns instantes.');
+              catalogUnavailable('Não foi possível exibir os ingressos agora. Tente novamente em alguns instantes.');
               return;
             }
+            restoreTemporalSelection(previousTemporal);
             renderAdvanceSalesNotice();
             var recovery=readRecovery();
             if(recovery&&recovery.pedidoId&&recovery.token){
@@ -648,12 +736,15 @@
             }
           })
           .withFailureHandler(function(){
-            showClosed('Não foi possível carregar a venda online agora. Tente novamente mais tarde.');
+            if(loadToken!==catalogRequest||state.order)return;
+            catalogLoading=false;
+            catalogUnavailable('Não foi possível carregar a venda online agora. Tente novamente mais tarde.');
           })
           .ctCheckoutPublicoCarregarEventoPROD(state.eventId);
       }
 
       function showClosed(message){
+        if(state.order)return;
         setLoading(false);
         el.salePanel.classList.add('hidden');
         el.buyerPanel.classList.add('hidden');
@@ -718,6 +809,7 @@
       }
 
       function onType(){
+        if(temporalBlocked()){temporalUI();return;}
         state.type=(state.catalog.tipos||[]).find(function(t){return t.id===el.typeSelect.value;})||null;
         state.lot=null;
         el.lotSelect.innerHTML='<option value="" data-checkout-text="Selecione">Selecione</option>';
@@ -736,6 +828,7 @@
       }
 
       function onLot(){
+        if(temporalBlocked()){temporalUI();return;}
         state.lot=state.type?(state.type.lotes||[]).find(function(l){return l.id===el.lotSelect.value;})||null:null;
         updateSummary();
       }
@@ -770,6 +863,7 @@
       }
 
       function applyCoupon(){
+        if(!temporalSelectionAllowed()){temporalUI();resumeCatalog();return;}
         if(state.couponBusy||(state.politicaComercialAtiva&&state.busy))return;
         var codigo=String(el.couponCode.value||'').trim();
         var atual=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'';
@@ -821,6 +915,7 @@
       }
 
       function updateSummary(){
+        temporalUI();
         var q=quantity();
         el.quantity.value=q;
         if(!state.type||!state.lot){
@@ -997,6 +1092,7 @@
       }
 
       function validate(){
+        if(!temporalSelectionAllowed())return temporalText('choose');
         if(!state.type||!state.lot)return 'Selecione o tipo de ingresso e o lote.';
         var q=quantity();
         var accesses=q*Math.max(1,Number(state.type.capacidadePorVenda||1));
@@ -1054,7 +1150,9 @@
       }
 
       function createPayment(){
-        if(state.busy)return;
+        if(state.busy||state.order||recoveryRunning)return;
+        if(frozenIntent&&intentUncertain){temporalUI();modal('Atenção',temporalText('recoverHelp'));return;}
+        if(!temporalSelectionAllowed()){temporalUI();resumeCatalog();modal('Atenção',temporalText('choose'));return;}
         state.paymentMethod=el.paymentCard.checked?'CREDIT_CARD':'PIX';
         if(advanceSalesClosed()&&!savedIdempotency(state.paymentMethod)){
           modal('Evento encerrado',window.CTAdvanceSales.message);return;
@@ -1103,24 +1201,76 @@
           payload.politicaTotalVisto=state.feePreview.resumo.totalComprador;
         }
 
+        if(temporalEnabled)frozenIntent=JSON.parse(JSON.stringify(payload));
+        intentUncertain=false;
+        sendPaymentPayload(payload);
+      }
+
+      function retryFrozenIntent(){
+        if(!frozenIntent||!intentUncertain||state.busy||state.order||recoveryRunning)return;
+        // Explicit recovery resubmits the exact accepted intent/key in memory.
+        // Never rebuild it from current form data, reprice it, or mint a key.
+        state.busy=true;temporalUI();
+        setLoading(true,'Recuperando pedido...',temporalText('retryOriginal'));
+        sendPaymentPayload(JSON.parse(JSON.stringify(frozenIntent)));
+      }
+
+      function paymentRejectedBeforeCommit(error){
+        // Exact, audited normalization/admission errors only. Provider/network and
+        // unknown failures may follow persistence and must retain the frozen intent.
+        var code=String(error&&(error.codigo||error.message)||error||'').replace(/^Error:\s*/,'').trim();
+        return [
+          'CT_POLITICA_COMERCIAL_PRECO_ATUALIZADO',
+          'CT_CHECKOUT_PRIVADO_GRANT_INVALIDO',
+          'CT_CHECKOUT_PUBLICO_FORMA_PAGAMENTO_INVALIDA',
+          'CT_CHECKOUT_PIX_PUBLICO_COMERCIAL_INCOMPLETO',
+          'CT_CHECKOUT_PIX_PUBLICO_QUANTIDADE_INVALIDA',
+          'CT_CHECKOUT_PIX_PUBLICO_NOME_INVALIDO',
+          'CT_CHECKOUT_PIX_PUBLICO_DOCUMENTO_INVALIDO',
+          'CT_CHECKOUT_PIX_PUBLICO_EMAIL_INVALIDO',
+          'CT_CHECKOUT_PIX_PUBLICO_WHATSAPP_INVALIDO',
+          'CT_CHECKOUT_PIX_PUBLICO_IDEMPOTENCIA_INVALIDA',
+          'CT_CHECKOUT_PIX_PUBLICO_EVENTO_NAO_ENCONTRADO',
+          'CT_CHECKOUT_PIX_PUBLICO_EVENTO_NAO_ATIVO',
+          'CT_CHECKOUT_PIX_PUBLICO_TIPO_INVALIDO',
+          'CT_CHECKOUT_PIX_PUBLICO_LOTE_INVALIDO',
+          'CT_CHECKOUT_PIX_PUBLICO_LOTE_INDISPONIVEL',
+          'CT_CHECKOUT_PIX_PUBLICO_PRECO_INVALIDO',
+          'CT_CHECKOUT_PIX_PUBLICO_PARTICIPANTES_QUANTIDADE_DIVERGENTE',
+          'CT_CHECKOUT_PIX_PUBLICO_LOTE_SEM_DISPONIBILIDADE',
+          'CT_CHECKOUT_PIX_PUBLICO_TIPO_SEM_CAPACIDADE',
+          'CT_CHECKOUT_PIX_PUBLICO_EVENTO_SEM_CAPACIDADE',
+          'CT_CHECKOUT_ADMISSAO_COMERCIAL_ALTERADA'
+        ].indexOf(code)>=0||/^CT_CHECKOUT_PIX_PUBLICO_PARTICIPANTE_NOME_[0-9]+$/.test(code);
+      }
+
+      function sendPaymentPayload(payload){
         google.script.run
           .withSuccessHandler(function(res){
-            state.busy=false;el.payButton.disabled=false;setLoading(false);
+            state.busy=false;el.payButton.disabled=false;setLoading(false);temporalUI();
             if(!res||res.sucesso!==true||!res.pedido){
+              if(paymentRejectedBeforeCommit(res)){frozenIntent=null;intentUncertain=false;loadCatalog(true);}
+              else intentUncertain=!!frozenIntent;
+              temporalUI();
               modal(
                 'Não foi possível iniciar o pagamento',
                 'Tente novamente. Se o problema persistir, entre em contato com o atendimento.'
               );
               return;
             }
+            frozenIntent=null;intentUncertain=false;
             state.order=res.pedido;state.queryToken=String(res.consultaToken||'');
             saveRecovery();
             renderOrder(res);
           })
           .withFailureHandler(function(error){
-            state.busy=false;el.payButton.disabled=false;setLoading(false);
+            var rejectedBeforeCommit=paymentRejectedBeforeCommit(error);
+            if(rejectedBeforeCommit){frozenIntent=null;intentUncertain=false;}
+            else intentUncertain=!!frozenIntent;
+            state.busy=false;el.payButton.disabled=false;setLoading(false);temporalUI();
             modal('Não foi possível iniciar o pagamento',friendlyError(error));
-            if(state.politicaComercialAtiva){
+            if(rejectedBeforeCommit)loadCatalog(true);
+            else if(state.politicaComercialAtiva){
               var message=String(error&&error.message?error.message:error||'');
               if(message.indexOf('CT_POLITICA_COMERCIAL_PRECO_ATUALIZADO')>=0)loadCatalog(true);
               else updateSummary();
@@ -1130,6 +1280,7 @@
       }
 
       function updatePaymentMethodUI(){
+        temporalUI();
         state.paymentMethod=el.paymentCard.checked?'CREDIT_CARD':'PIX';
         if(state.paymentMethod==='CREDIT_CARD'){
           checkoutUiWrite(el.payButton,'Continuar para pagamento com cartão');
@@ -1162,17 +1313,21 @@
       }
 
       function recoverOrder(rec){
+        if(recoveryRunning||state.order)return;
+        recoveryRunning=true;var recoveryToken=++recoveryGeneration;clearTimeout(catalogTimer);temporalUI();
         setLoading(true,'Recuperando pedido...','Consultando seu pagamento sem criar uma nova cobrança.');
         state.queryToken=String(rec.token||'');
         google.script.run
           .withSuccessHandler(function(res){
+            if(recoveryToken!==recoveryGeneration||state.order)return;
+            recoveryRunning=false;
             setLoading(false);
             if(!res||res.sucesso!==true||res.encontrado===false||!res.pedido){
               clearRecovery();renderAdvanceSalesNotice();return;
             }
             state.order=res.pedido;renderOrder(res);
           })
-          .withFailureHandler(function(){setLoading(false);})
+          .withFailureHandler(function(){if(recoveryToken!==recoveryGeneration||state.order)return;recoveryRunning=false;setLoading(false);temporalUI();})
           .ctCheckoutPixPublicoConsultarPROD(String(rec.pedidoId||''),state.queryToken);
       }
 
@@ -1199,6 +1354,8 @@
       }
 
       function renderOrder(res){
+        recoveryGeneration++;recoveryRunning=false;frozenIntent=null;intentUncertain=false;
+        clearTimeout(catalogTimer);document.getElementById('temporalLots').classList.add('hidden');el.closedPanel.classList.add('hidden');
         state.order=res.pedido||state.order;
         var status=String(state.order.status||'').toUpperCase();
         var forma=String(res&&res.pagamento&&res.pagamento.forma||state.paymentMethod||'PIX').toUpperCase();
@@ -1240,6 +1397,7 @@
 
         if(['EXPIRADO','CANCELADO','FALHA'].indexOf(status)>=0){
           stopPolling();stopExpiry();stopTicketReadyRefresh();clearRecovery();clearIdempotency();
+          state.order=null;state.queryToken='';
           el.pixPanel.classList.add('hidden');el.cardPanel.classList.add('hidden');
           el.salePanel.classList.remove('hidden');el.buyerPanel.classList.remove('hidden');el.payActionPanel.classList.remove('hidden');
           if(advanceSalesClosed()){showClosed(window.CTAdvanceSales.message);return;}
