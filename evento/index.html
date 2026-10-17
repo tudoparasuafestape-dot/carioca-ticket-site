@@ -811,10 +811,10 @@
       }
 
       function showError(msg,retryable,reference){
+        if(window.CTEventUber)window.CTEventUber.clear();
         state.data=null;
         clearTimeout(temporalTimer);temporalTimer=null;
         if(catalogClock)catalogClock.invalidate();
-        if(window.CTEventUber)window.CTEventUber.clear();
         if(window.CTPublicShare)window.CTPublicShare.clearEventWhatsApp($('shareWhatsAppAction'));
         $('loading').classList.add('hidden');
         $('app').classList.add('hidden');

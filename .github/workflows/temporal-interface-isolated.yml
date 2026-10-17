@@ -48,5 +48,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Exercise event and checkout pages with all requests intercepted
         run: |
-          node tests/checkout-temporal-rebuild.browser.cjs
-          node --test tests/event-temporal-rebuild.browser.cjs
+          checkout_status=0
+          node tests/checkout-temporal-rebuild.browser.cjs || checkout_status=$?
+          event_status=0
+          node --test tests/event-temporal-rebuild.browser.cjs || event_status=$?
+          test "$checkout_status" -eq 0 && test "$event_status" -eq 0

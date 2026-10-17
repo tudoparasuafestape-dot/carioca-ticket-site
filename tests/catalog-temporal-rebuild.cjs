@@ -107,7 +107,7 @@ class Target {
   }
   removeEventListener(type, callback) { this.listeners.set(type, (this.listeners.get(type) || []).filter(entry => entry.callback !== callback)); }
   dispatch(type, data = {}) {
-    const event = { target: this, prevented: false, stopped: false, preventDefault() { this.prevented = true; }, stopImmediatePropagation() { this.stopped = true; }, ...data };
+    const event = { type, target: this, prevented: false, stopped: false, preventDefault() { this.prevented = true; }, stopImmediatePropagation() { this.stopped = true; }, ...data };
     for (const entry of [...(this.listeners.get(type) || [])]) {
       entry.callback(event);
       if (entry.once) this.removeEventListener(type, entry.callback);
@@ -181,7 +181,37 @@ function catalogHarness({ delayedMount = false } = {}) {
 }
 
 async function testCatalog() {
-  let h = catalogHarness(); await h.settle();
+  // An early rejection is shown after mounting. Initial lifecycle events must
+  // not silently consume the next response or replace the explicit retry UI.
+  let h = catalogHarness({ delayedMount: true });
+  h.reject(0); await h.settle();
+  h.set(500); h.document.dispatch('DOMContentLoaded'); await h.settle();
+  check(() => assert.equal(h.ids.get('catalog-retry').hidden, false));
+  h.window.dispatch('pageshow', { persisted: false }); h.window.dispatch('focus'); await h.settle();
+  check(() => assert.equal(h.requests.length, 1));
+  check(() => assert.equal(h.ids.get('catalog-retry').hidden, false));
+  check(() => assert.deepEqual(h.cardIds(), []));
+  h.ids.get('catalog-retry').dispatch('click'); await h.settle();
+  check(() => assert.equal(h.requests.length, 2));
+  check(() => assert.equal(h.ids.get('catalog-retry').hidden, true));
+  h.response(1, { sucesso: true, eventos: [{ id: 'retried', nome: 'Retried' }] }); await h.settle();
+  check(() => assert.deepEqual(h.cardIds(), ['retried']));
+
+  // The existing transport timeout also stays actionable until explicit retry
+  // or a real page resume. A late reply from that request cannot regain authority.
+  h = catalogHarness(); await h.settle(); await h.tick(18000);
+  check(() => assert.equal(h.ids.get('catalog-retry').hidden, false));
+  h.window.dispatch('pageshow', { persisted: false }); h.window.dispatch('focus'); await h.settle();
+  check(() => assert.equal(h.requests.length, 1));
+  check(() => assert.equal(h.ids.get('catalog-retry').hidden, false));
+  h.response(0, publicResult([legacy('late-timeout')])); await h.settle();
+  check(() => assert.deepEqual(h.cardIds(), []));
+  h.ids.get('catalog-retry').dispatch('click'); await h.settle();
+  check(() => assert.equal(h.requests.length, 2));
+  h.response(1, publicResult([legacy('after-timeout')])); await h.settle();
+  check(() => assert.deepEqual(h.cardIds(), ['after-timeout']));
+
+  h = catalogHarness(); await h.settle();
   h.response(0, publicResult([
     canonical('canonical', BASE + 1000), legacy('legacy'),
     canonical('ended', BASE),
@@ -221,7 +251,40 @@ async function testCatalog() {
   h.response(2, publicResult([legacy('focused')])); await h.settle();
   check(() => assert.deepEqual(h.cardIds(), ['focused']));
 
-  // A populated hidden page removes links immediately and waits for a new reply.
+  // Legacy presentation survives brief hides without a DOM reset or another
+  // request. The unchanged rail retains its own active index and manual pause.
+  h = catalogHarness(); await h.settle();
+  h.response(0, { sucesso: true, eventos: [{ id: 'legacy-rail', nome: 'Legacy rail' }] }); await h.settle();
+  const legacyCard = h.ids.get('events-grid').children[0], categoryRenders = h.categories.length;
+  h.ids.get('events-grid').dataset.activeIndex = '1'; legacyCard.manualPauseProbe = true;
+  for (const elapsed of [11000, 24000]) {
+    h.document.hidden = true; h.document.dispatch('visibilitychange');
+    await h.tick(elapsed);
+    check(() => assert.equal(h.ids.get('events-grid').children[0], legacyCard));
+    h.document.hidden = false; h.document.dispatch('visibilitychange'); await h.settle();
+    check(() => assert.equal(h.requests.length, 1));
+    check(() => assert.equal(h.ids.get('events-grid').children[0], legacyCard));
+    check(() => assert.equal(h.ids.get('events-grid').dataset.activeIndex, '1'));
+    check(() => assert.equal(legacyCard.manualPauseProbe, true));
+    check(() => assert.equal(h.categories.length, categoryRenders));
+  }
+  // Legacy freshness is still bounded: expiring in the background revokes
+  // links immediately, then waits until visible before requesting a new catalog.
+  h.document.hidden = true; h.document.dispatch('visibilitychange');
+  await h.tick(300000);
+  check(() => assert.equal(h.requests.length, 1));
+  check(() => assert.deepEqual(h.cardIds(), []));
+  check(() => assert.equal(h.buyLinks().length, 0));
+  h.document.hidden = false; h.document.dispatch('visibilitychange'); await h.settle();
+  check(() => assert.equal(h.requests.length, 2));
+  check(() => assert.deepEqual(h.cardIds(), []));
+  h.response(1, { sucesso: true, eventos: [{ id: 'legacy-refreshed', nome: 'Refreshed' }] }); await h.settle();
+  check(() => assert.deepEqual(h.cardIds(), ['legacy-refreshed']));
+  h.window.dispatch('pagehide'); h.window.dispatch('pageshow', { persisted: true }); await h.settle();
+  check(() => assert.equal(h.requests.length, 3));
+  check(() => assert.deepEqual(h.cardIds(), []));
+
+  // A populated canonical page removes links immediately and waits for a new reply.
   h = catalogHarness(); await h.settle();
   h.response(0, publicResult([legacy('before-hide')])); await h.settle();
   h.document.hidden = true; h.document.dispatch('visibilitychange');

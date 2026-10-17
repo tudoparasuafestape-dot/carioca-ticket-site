@@ -153,7 +153,7 @@
       var current = requestId;
       expiryTimer = setTimeout(function () {
         if (current !== requestId || !ready) return;
-        if (authorityExpired()) refresh();
+        if (authorityExpired()) { if (document.hidden) suspend(); else refresh(); }
         else scheduleExpiry();
       }, Math.max(1, Math.ceil(remaining)));
     }
@@ -255,16 +255,24 @@
       feedback.textContent = '';
     }
     function resume(event) {
-      // The first native pageshow can follow a fast successful RPC. Keep that
-      // fresh response; only a real resume or lost authority needs another read.
-      var needsRefresh = suspended || (event && event.persisted === true) || phase === 'stale' || phase === 'error' || (ready && authorityExpired());
+      // Initial pageshow/focus can follow either a fast success or an early
+      // failure. Preserve its result, including the explicit retry UI. Only a
+      // real resume or expired authority triggers another automatic read.
+      var needsRefresh = suspended || (event && event.persisted === true) || phase === 'stale' || (ready && authorityExpired());
       suspended = false;
       if (needsRefresh) refresh();
     }
     window.addEventListener('focus', resume);
     window.addEventListener('pageshow', resume);
     window.addEventListener('pagehide', suspend);
-    document.addEventListener('visibilitychange', function () { if (document.hidden) suspend(); else resume(); });
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) { resume(); return; }
+      // Old responses have no canonical deadline. Retain a still-fresh legacy
+      // rail across a brief tab hide so its own Pause/Resume state stays intact.
+      // Unknown, expired and canonical responses lose authority immediately.
+      if (ready && catalogClock && catalogClock.legacy && !authorityExpired()) return;
+      suspend();
+    });
     function guardActivation(event) {
       if (ready && !authorityExpired()) return;
       event.preventDefault(); event.stopImmediatePropagation();
@@ -298,7 +306,6 @@
   // This adapter exposes one read-only method and sends no session credentials.
   function loadPublicEvents() {
     return new Promise(function (resolve, reject) {
-      var requestedAt = window.CTPublicCatalogClock ? window.CTPublicCatalogClock.sample() : NaN;
       var app = 'https://script.google.com/macros/s/AKfycbz28keO65PIIElB8dWMBt8nnEBw9CzBxWnc6nOhAKKGNDkMZnYbWjrhTtr_v-lEI2IAJA/exec';
       var id = 'CTCATALOG-' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
       var frame = document.createElement('iframe');
@@ -328,7 +335,7 @@
         var payload = event.data;
         if (!payload || payload.ctMinhaCariocaPost !== true || payload.id !== id) return;
         cleanup();
-        if (payload.ok === true) resolve({ catalog: payload.resultado, timing: { requestedAt: requestedAt, receivedAt: window.CTPublicCatalogClock ? window.CTPublicCatalogClock.sample() : NaN } });
+        if (payload.ok === true) resolve(payload.resultado);
         else reject(new Error('CATALOG_RPC_FAILED'));
       }
       var timer = setTimeout(function () { cleanup(); reject(new Error('CATALOG_RPC_TIMEOUT')); }, 18000);
@@ -337,17 +344,25 @@
       try { form.submit(); } catch (error) { cleanup(); reject(error); }
     });
   }
+  // Timing belongs outside the unchanged public transport adapter. The initial
+  // promise keeps its original request start even if mounting is delayed.
+  function beginLoad() {
+    var requestedAt = window.CTPublicCatalogClock ? window.CTPublicCatalogClock.sample() : NaN;
+    return loadPublicEvents().then(function (catalog) {
+      return { catalog: catalog, timing: { requestedAt: requestedAt, receivedAt: window.CTPublicCatalogClock ? window.CTPublicCatalogClock.sample() : NaN } };
+    });
+  }
   // After the pure clock helper, start the same public request
   // while optional presentation modules download, then mount once they have
   // initialized. A handled early rejection is still delivered to the normal
   // retry UI; every later load creates a fresh request.
-  var initialRequest = loadPublicEvents();
+  var initialRequest = beginLoad();
   initialRequest.catch(function () {});
   function initialize() {
     mount(function () {
       var request = initialRequest;
       initialRequest = null;
-      return request || loadPublicEvents();
+      return request || beginLoad();
     });
   }
   if (document.readyState === 'complete') initialize();
