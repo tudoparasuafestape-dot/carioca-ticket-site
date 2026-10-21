@@ -808,11 +808,11 @@
   },
   {
     "key": "institutional.text.89",
-    "source": "Versão operacional publicada em 17/09/2026. Esta política poderá ser atualizada conforme a evolução da plataforma.",
+    "source": "Versão operacional publicada em 20/10/2026. Esta política poderá ser atualizada conforme a evolução da plataforma.",
     "translations": {
-      "en-US": "Operational version published on 17/09/2026. This policy may be updated as the platform evolves.",
-      "es": "Versión operativa publicada el 17/09/2026. Esta política podrá actualizarse conforme evolucione la plataforma.",
-      "zh-Hans": "运营版本发布日期：17/09/2026。本政策可能随平台发展而更新。"
+      "en-US": "Operational version published on 20/10/2026. This policy may be updated as the platform evolves.",
+      "es": "Versión operativa publicada el 20/10/2026. Esta política podrá actualizarse conforme evolucione la plataforma.",
+      "zh-Hans": "运营版本发布日期：20/10/2026。本政策可能随平台发展而更新。"
     }
   },
   {
