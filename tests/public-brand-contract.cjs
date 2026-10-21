@@ -14,7 +14,10 @@ for(const path of pages){
    '      <div><span class="demo-home-label" data-i18n="demoLabel">DEMONSTRAÇÃO</span><h2 id="demo-home-title" data-i18n="demoTitle">Conheça um evento demonstrativo</h2><p data-i18n="demoCopy">Explore uma página de exemplo, com informações, mapa e Waze. Sem data marcada, venda ou emissão de ingressos.</p></div>\n'+
    '      <a class="btn btn-primary demo-home-action" href="/demonstracao/roda-de-samba/" data-i18n="demoOpen">Explorar demonstração</a>\n'+
    '    </section>\n';
-  now=now.replace(demoSection,'')
+  // Explicitly normalize only the independently tested temporal loader addition.
+  now=now.replace('  <script src="/assets/public-catalog-clock.js?v=20261017-temporal1" defer></script>\n','')
+   .replace('/assets/public-event-catalog.js?v=20261017-temporal1','/assets/public-event-catalog.js?v=20261016-demo-catalog1')
+   .replace(demoSection,'')
    .replace('  <link rel="stylesheet" href="/assets/demo-event.css?v=20261016-demo1">\n','')
    .replace('/assets/public-event-catalog.js?v=20261016-demo-catalog1','/assets/public-event-catalog.js?v=20261010-catalog-performance1')
    .replace('/assets/home-i18n.js?v=20261016-demo1','/assets/home-i18n.js?v=20261009-ad-plan-label')

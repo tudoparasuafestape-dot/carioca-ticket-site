@@ -7,7 +7,9 @@
     "test:contracts": "node tests/contracts.mjs && node tests/eventos-privados-v1.mjs",
     "test:e2e": "playwright test",
     "homologar": "npm run test:contracts && npm run test:e2e",
-    "test:private-events": "node tests/eventos-privados-v1.mjs"
+    "test:private-events": "node tests/eventos-privados-v1.mjs",
+    "test:temporal": "node tests/catalog-temporal-rebuild.cjs && node --test tests/checkout-temporal-rebuild.cjs tests/event-temporal-rebuild.cjs && node tests/producer-effective-lots.cjs",
+    "test:temporal:browser": "node tests/checkout-temporal-rebuild.browser.cjs && node --test tests/event-temporal-rebuild.browser.cjs"
   },
   "devDependencies": {
     "@playwright/test": "1.55.0"

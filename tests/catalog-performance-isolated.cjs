@@ -26,6 +26,14 @@ function warmSources() {
   for (const variant of ['before', 'after']) for (const file of files) {
     // These new controls did not exist in the historical catalog baseline.
     if(variant==='before'&&/^assets\/public-privacy\.(js|css)$/.test(file))continue;
+    // Warm newly introduced temporal assets only when the selected baseline has
+    // them. Never substitute current code into a historical before measurement.
+    if (variant === 'before' && /^assets\/public-(?:catalog-clock\.js|lot-status\.(?:js|css))$/.test(file)) {
+      const local = process.env.CT_CATALOG_BASELINE;
+      const exists = local ? fs.existsSync(path.join(local, file))
+        : execFileSync('git', ['ls-tree', '--name-only', BASE, '--', file], { cwd: ROOT, encoding: 'utf8' }).trim() === file;
+      if (!exists) continue;
+    }
     source(variant,file);
   }
 }
