@@ -100,5 +100,12 @@
   "Evento cancelado ou alterado",
   "Quando houver cancelamento ou alteração relevante comunicada pelo produtor, a Carioca Ticket poderá divulgar as orientações operacionais de acordo com as informações recebidas do responsável pelo evento e com a legislação aplicável.",
   "Nunca envie dados completos de cartão, CVV, senha bancária ou códigos de autenticação para solicitar reembolso.",
-  "Orientação geral publicada em 17/09/2026."
+  "Orientação geral publicada em 17/09/2026.",
+  "Uso de serviços e dados Google",
+  "A Carioca Ticket possui recursos operacionais integrados ao Google Apps Script, Google Sheets, Google Drive e Google Docs. Com a autorização da conta Google responsável pela execução, esses recursos podem consultar e atualizar planilhas, criar documentos e arquivos de ingressos, acessar arquivos de marca e enviar e-mails de acesso. Os dados envolvidos incluem, conforme o recurso, nome, e-mail, telefone ou WhatsApp e informações de eventos, pedidos, ingressos e pagamentos. Comprar um ingresso não autoriza acesso à conta Google, ao Drive ou aos e-mails do comprador.",
+  "Na página pública do ingresso, a opção “Salvar em PDF” utiliza a impressão do navegador. Esse procedimento não é o gerador operacional de PDFs no Drive. A exibição do QR Code do ingresso pode consultar o QuickChart, enviando o código do ingresso para gerar a imagem.",
+  "Recursos operacionais separados podem gerar PDFs de ingressos no Google Drive. Esses arquivos podem conter dados do ingresso, incluindo nome, telefone, tipo, valor e informações de pagamento. Se forem disponibilizados com acesso por link, quem obtiver o link poderá visualizar o PDF conforme a permissão do arquivo. Documentos temporários usados na geração podem ser movidos para a lixeira; isso não equivale à exclusão definitiva dos dados nem apaga o PDF.",
+  "Nos recursos que utilizam Asaas para pagamentos, podem ser enviados nome, CPF ou CNPJ, telefone e referências do cliente. No envio de códigos de acesso pelo WhatsApp/Meta, são utilizados o número destinatário e a mensagem com o código.",
+  "O acesso administrativo direto às planilhas e aos arquivos da operação é realizado pelo responsável pela Carioca Ticket. Atualmente, os registros e PDFs são mantidos, sem prazo fixo de exclusão definido. Essa administração direta não impede a visualização de arquivos disponibilizados por link.",
+  "A autorização Google da conta responsável pode ser revisada ou revogada nas configurações da Conta Google. A revogação pode impedir recursos dependentes dessa autorização e não apaga automaticamente registros ou arquivos já mantidos pela Carioca Ticket. Solicitações relacionadas a dados pessoais podem ser encaminhadas a contato@cariocaticket.com.br."
 ]
