@@ -42,8 +42,8 @@ let reject;navigator.clipboard.writeText=()=>new Promise((_,r)=>reject=r);valid(
 for(const route of ['evento','evento-v2']) {
  const html=fs.readFileSync(path.join(root,route,'index.html'),'utf8');
  assert.equal((html.match(/id="event-directions"/g)||[]).length,1);
- assert.match(html,/CTEventDirections\.render\(e\)/);
- assert.match(html,/event-directions\.js\?v=20261009-1/);
+ assert.match(html,/CTEventDirections\.render\(e,state\.eventoId\)/);
+ assert.match(html,/event-directions\.js\?v=20261010-universal1/);
  assert.match(html,/id="directions-map" target="_blank" rel="noopener noreferrer"/);
  assert.match(html,/id="directions-status" role="status" aria-live="polite"/);
  assert(!/uber:\/\/|99taxis:\/\/|m\.uber\.com/.test(html));
