@@ -808,11 +808,11 @@
   },
   {
     "key": "institutional.text.89",
-    "source": "Versão operacional publicada em 17/09/2026. Esta política poderá ser atualizada conforme a evolução da plataforma.",
+    "source": "Versão operacional publicada em 20/10/2026. Esta política poderá ser atualizada conforme a evolução da plataforma.",
     "translations": {
-      "en-US": "Operational version published on 17/09/2026. This policy may be updated as the platform evolves.",
-      "es": "Versión operativa publicada el 17/09/2026. Esta política podrá actualizarse conforme evolucione la plataforma.",
-      "zh-Hans": "运营版本发布日期：17/09/2026。本政策可能随平台发展而更新。"
+      "en-US": "Operational version published on 20/10/2026. This policy may be updated as the platform evolves.",
+      "es": "Versión operativa publicada el 20/10/2026. Esta política podrá actualizarse conforme evolucione la plataforma.",
+      "zh-Hans": "运营版本发布日期：20/10/2026。本政策可能随平台发展而更新。"
     }
   },
   {
@@ -921,6 +921,69 @@
       "en-US": "General guidance published on 17/09/2026.",
       "es": "Orientación general publicada el 17/09/2026.",
       "zh-Hans": "一般指引发布日期：17/09/2026。"
+    }
+  },
+  {
+    "key": "institutional.privacy.google.0",
+    "source": "Uso de serviços e dados Google",
+    "translations": {
+      "en-US": "Use of Google services and data",
+      "es": "Uso de servicios y datos de Google",
+      "zh-Hans": "Google 服务及数据的使用"
+    }
+  },
+  {
+    "key": "institutional.privacy.google.1",
+    "source": "A Carioca Ticket possui recursos operacionais integrados ao Google Apps Script, Google Sheets, Google Drive e Google Docs. Com a autorização da conta Google responsável pela execução, esses recursos podem consultar e atualizar planilhas, criar documentos e arquivos de ingressos, acessar arquivos de marca e enviar e-mails de acesso. Os dados envolvidos incluem, conforme o recurso, nome, e-mail, telefone ou WhatsApp e informações de eventos, pedidos, ingressos e pagamentos. Comprar um ingresso não autoriza acesso à conta Google, ao Drive ou aos e-mails do comprador.",
+    "translations": {
+      "en-US": "Carioca Ticket has operational features integrated with Google Apps Script, Google Sheets, Google Drive and Google Docs. With authorization from the Google account responsible for running them, these features can read and update spreadsheets, create ticket documents and files, access brand files and send access emails. Depending on the feature, the data involved includes names, email addresses, phone or WhatsApp numbers, and information about events, orders, tickets and payments. Buying a ticket does not authorize access to the buyer’s Google account, Drive or emails.",
+      "es": "Carioca Ticket cuenta con funciones operativas integradas con Google Apps Script, Google Sheets, Google Drive y Google Docs. Con la autorización de la cuenta de Google responsable de ejecutarlas, estas funciones pueden consultar y actualizar hojas de cálculo, crear documentos y archivos de entradas, acceder a archivos de marca y enviar correos electrónicos de acceso. Los datos involucrados incluyen, según la función, nombre, correo electrónico, teléfono o WhatsApp e información sobre eventos, pedidos, entradas y pagos. Comprar una entrada no autoriza el acceso a la cuenta de Google, al Drive ni a los correos electrónicos del comprador.",
+      "zh-Hans": "Carioca Ticket 提供与 Google Apps Script、Google Sheets、Google Drive 和 Google Docs 集成的运营功能。在获得负责运行这些功能的 Google 账号授权后，这些功能可查询和更新电子表格、创建门票文档及文件、访问品牌文件并发送访问邮件。根据具体功能，涉及的数据包括姓名、电子邮箱、电话号码或 WhatsApp 号码，以及活动、订单、门票和支付信息。购买门票并不授权访问购票人的 Google 账号、Drive 或电子邮件。"
+    }
+  },
+  {
+    "key": "institutional.privacy.google.2",
+    "source": "Na página pública do ingresso, a opção “Salvar em PDF” utiliza a impressão do navegador. Esse procedimento não é o gerador operacional de PDFs no Drive. A exibição do QR Code do ingresso pode consultar o QuickChart, enviando o código do ingresso para gerar a imagem.",
+    "translations": {
+      "en-US": "On the public ticket page, the “Save as PDF” option uses the browser’s print function. This procedure is separate from the operational PDF generator in Drive. Displaying the ticket’s QR Code may involve a request to QuickChart that sends the ticket code to generate the image.",
+      "es": "En la página pública de la entrada, la opción «Guardar como PDF» utiliza la función de impresión del navegador. Este procedimiento es distinto del generador operativo de PDF en Drive. Para mostrar el QR Code de la entrada se puede consultar QuickChart, enviando el código de la entrada para generar la imagen.",
+      "zh-Hans": "在公开门票页面上，“另存为 PDF”选项使用浏览器的打印功能。此操作与 Drive 中的运营用 PDF 生成功能不同。显示门票二维码（QR Code）时，可能会向 QuickChart 发送门票代码，以生成二维码图片。"
+    }
+  },
+  {
+    "key": "institutional.privacy.google.3",
+    "source": "Recursos operacionais separados podem gerar PDFs de ingressos no Google Drive. Esses arquivos podem conter dados do ingresso, incluindo nome, telefone, tipo, valor e informações de pagamento. Se forem disponibilizados com acesso por link, quem obtiver o link poderá visualizar o PDF conforme a permissão do arquivo. Documentos temporários usados na geração podem ser movidos para a lixeira; isso não equivale à exclusão definitiva dos dados nem apaga o PDF.",
+    "translations": {
+      "en-US": "Separate operational features can generate ticket PDFs in Google Drive. These files may contain ticket data, including name, phone number, type, price and payment information. If they are made available through link access, anyone who obtains the link will be able to view the PDF according to the file’s permission settings. Temporary documents used during generation may be moved to the trash; this does not permanently delete the data or delete the PDF.",
+      "es": "Otras funciones operativas pueden generar PDF de entradas en Google Drive. Estos archivos pueden contener datos de la entrada, incluidos nombre, teléfono, tipo, importe e información de pago. Si se habilita su acceso mediante enlace, quien obtenga el enlace podrá visualizar el PDF según los permisos del archivo. Los documentos temporales utilizados durante la generación pueden trasladarse a la papelera; esto no equivale a eliminar definitivamente los datos ni borra el PDF.",
+      "zh-Hans": "独立的运营功能可在 Google Drive 中生成门票 PDF。这些文件可能包含门票数据，包括姓名、电话号码、类型、金额和支付信息。如果文件开放了链接访问权限，获得链接的人可根据文件权限查看 PDF。生成过程中使用的临时文档可能被移至回收站；这不等于永久删除数据，也不会删除 PDF。"
+    }
+  },
+  {
+    "key": "institutional.privacy.google.4",
+    "source": "Nos recursos que utilizam Asaas para pagamentos, podem ser enviados nome, CPF ou CNPJ, telefone e referências do cliente. No envio de códigos de acesso pelo WhatsApp/Meta, são utilizados o número destinatário e a mensagem com o código.",
+    "translations": {
+      "en-US": "For features that use Asaas for payments, the data sent may include name, CPF or CNPJ, phone number and customer references. Sending access codes through WhatsApp/Meta uses the recipient’s number and the message containing the code.",
+      "es": "En las funciones que utilizan Asaas para pagos, se pueden enviar nombre, CPF o CNPJ, teléfono y referencias del cliente. Para enviar códigos de acceso por WhatsApp/Meta se utilizan el número del destinatario y el mensaje con el código.",
+      "zh-Hans": "在使用 Asaas 处理支付的功能中，可能发送姓名、CPF 或 CNPJ、电话号码及客户参考信息。通过 WhatsApp/Meta 发送访问验证码时，会使用收件人号码和包含验证码的消息。"
+    }
+  },
+  {
+    "key": "institutional.privacy.google.5",
+    "source": "O acesso administrativo direto às planilhas e aos arquivos da operação é realizado pelo responsável pela Carioca Ticket. Atualmente, os registros e PDFs são mantidos, sem prazo fixo de exclusão definido. Essa administração direta não impede a visualização de arquivos disponibilizados por link.",
+    "translations": {
+      "en-US": "Direct administrative access to operational spreadsheets and files is carried out by the person responsible for Carioca Ticket. Records and PDFs are currently retained, with no fixed deletion period defined. This direct administration does not prevent people from viewing files made available through links.",
+      "es": "El acceso administrativo directo a las hojas de cálculo y a los archivos de la operación lo realiza el responsable de Carioca Ticket. Actualmente, los registros y PDF se conservan sin un plazo fijo de eliminación definido. Esta administración directa no impide visualizar archivos disponibles mediante enlace.",
+      "zh-Hans": "运营电子表格及文件的直接管理访问由 Carioca Ticket 负责人进行。目前，记录和 PDF 会被保留，尚未设定固定的删除期限。这种直接管理并不妨碍他人查看通过链接提供访问的文件。"
+    }
+  },
+  {
+    "key": "institutional.privacy.google.6",
+    "source": "A autorização Google da conta responsável pode ser revisada ou revogada nas configurações da Conta Google. A revogação pode impedir recursos dependentes dessa autorização e não apaga automaticamente registros ou arquivos já mantidos pela Carioca Ticket. Solicitações relacionadas a dados pessoais podem ser encaminhadas a contato@cariocaticket.com.br.",
+    "translations": {
+      "en-US": "The responsible account’s Google authorization can be reviewed or revoked in Google Account settings. Revocation may prevent features that depend on that authorization from working and does not automatically delete records or files already retained by Carioca Ticket. Requests concerning personal data can be sent to contato@cariocaticket.com.br.",
+      "es": "La autorización de Google de la cuenta responsable puede revisarse o revocarse en la configuración de la Cuenta de Google. La revocación puede impedir funciones que dependan de esa autorización y no elimina automáticamente registros o archivos que Carioca Ticket ya conserva. Las solicitudes relacionadas con datos personales pueden enviarse a contato@cariocaticket.com.br.",
+      "zh-Hans": "负责账号的 Google 授权可在 Google 账号设置中查看或撤销。撤销授权可能导致依赖该授权的功能无法使用，但不会自动删除 Carioca Ticket 已保留的记录或文件。有关个人数据的请求可发送至 contato@cariocaticket.com.br。"
     }
   }
 ];

@@ -8,8 +8,8 @@ const source = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/institu
 const code = fs.readFileSync(path.join(__dirname, '../assets/institutional-translations.js'), 'utf8');
 const window = {}; vm.runInNewContext(code, {window});
 const api = window.CTInstitutionalTranslations;
-test('102 exact authored sources, unique keys and three complete target dictionaries', () => {
-  assert.equal(api.rows.length, 102);assert.equal(new Set(api.rows.map(r=>r.key)).size,102);
+test('109 exact authored sources, unique keys and three complete target dictionaries', () => {
+  assert.equal(api.rows.length, 109);assert.equal(new Set(api.rows.map(r=>r.key)).size,109);
   assert.deepEqual(Array.from(api.rows,r=>r.source),source);
   for(const row of api.rows) {
     assert.deepEqual(Object.keys(row.translations),['en-US','es','zh-Hans']);
