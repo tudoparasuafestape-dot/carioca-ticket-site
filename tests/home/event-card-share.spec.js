@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const { fixture, events } = require('./rail-fixture.cjs');
+const { temporalEnvelope, legacyNoEndTemporal } = require('../fixtures/public-temporal-envelope.cjs');
 const ORIGIN = 'http://127.0.0.1:4174';
 const PUBLIC = 'https://cariocaticket.com.br/evento/?evento=';
 function expected(event, cta='Confira este evento na Carioca Ticket.') {
@@ -33,7 +34,7 @@ async function prepare(page, count, mode='native', customRows) {
     sessionStorage.setItem('share-session-fixture', 'unchanged');
   }, mode);
   const data = customRows || rows(count);
-  const state = await fixture(page, { result:{ sucesso:true, eventos:data } });
+  const state = await fixture(page, { result:(_attempt,nowMs)=>({ sucesso:true,...temporalEnvelope('home',nowMs),eventos:data }) });
   await page.goto(ORIGIN + '/?ref=PRIVATE-FIXTURE&token=DO-NOT-SHARE#filters');
   await expect(page.locator('[data-public-share="event"]')).toHaveCount(count);
   return { state, data };
@@ -213,7 +214,7 @@ for (const [locale, cta, label, feedback] of [
 
 test('missing facts stay absent and unrelated private fields never enter the message', async ({ page }, testInfo) => {
   await page.setViewportSize({ width:320, height:915 });
-  const data = [{ id:'PUBLIC-safe', nome:'Festa <img src=x onerror=alert(1)> & amigos', data:'', horario:null, local:undefined, cidade:'', uf:'', token:'SECRET', convite:'PRIVATE-INVITE', links:{ evento:'https://invalid.example/?token=SECRET' } }];
+  const data = [{ temporal:legacyNoEndTemporal(), id:'PUBLIC-safe', nome:'Festa <img src=x onerror=alert(1)> & amigos', data:'', horario:null, local:undefined, cidade:'', uf:'', token:'SECRET', convite:'PRIVATE-INVITE', links:{ evento:'https://invalid.example/?token=SECRET' } }];
   const { state } = await prepare(page, 1, 'copy-fails', data);
   const host = current(page);
   await host.locator('button').click();

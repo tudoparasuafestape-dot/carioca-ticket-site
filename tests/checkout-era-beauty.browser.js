@@ -2,6 +2,7 @@
 // No production server, provider, real charge, order or ticket is contacted/created.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { temporalEnvelope } = require('./fixtures/public-temporal-envelope.cjs');
 const path = require('node:path');
 const { chromium } = require('playwright');
 const ROOT = path.resolve(__dirname, '..');
@@ -12,8 +13,8 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const amount = n => Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const round = n => Math.round(n * 100) / 100;
 
-function catalog(eventId) {
-  return { sucesso: true, evento: { id: eventId, nome: 'ERA BEAUTY | Local fixture' },
+function catalog(eventId, nowMs) {
+  return { sucesso: true, ...temporalEnvelope('checkout', nowMs), evento: { id: eventId, nome: 'ERA BEAUTY | Local fixture' },
     visual: {}, identidadeCliente: { emailObrigatorio: false },
     tipos: [87, 120, 0].map((price, i) => ({ id: 'TYPE-' + i, nome: i === 1 ? 'VIP' : 'Individual', capacidadePorVenda: 1,
       lotes: [{ id: 'LOT-' + i, nome: 'Lote local', preco: amount(price), precoNumero: price, quantidadeLimitada: false }] })) };
@@ -47,8 +48,8 @@ async function createFixture(browser, options = {}) {
     if (url.origin === ORIGIN) {
       if (url.pathname === '/checkout/' || url.pathname === '/checkout/index.html')
         return route.fulfill({ contentType: 'text/html; charset=utf-8', body: fs.readFileSync(path.join(ROOT, 'checkout/index.html'), 'utf8') });
-      if (url.pathname === '/assets/checkout-commercial-policy.js')
-        return route.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(ROOT, 'assets/checkout-commercial-policy.js'), 'utf8') });
+      if (['/assets/checkout-commercial-policy.js', '/assets/public-catalog-clock.js'].includes(url.pathname))
+        return route.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(ROOT, url.pathname.slice(1)), 'utf8') });
       return route.fulfill({ status: 200, contentType: 'application/javascript', body: '' });
     }
     if (url.origin !== 'https://script.google.com' || request.method() !== 'POST') {
@@ -60,7 +61,7 @@ async function createFixture(browser, options = {}) {
     let result, error = '';
     try {
       assert.equal(params.get('ctMinhaCariocaAction'), 'publicRpc');
-      if (method === 'ctCheckoutPublicoCarregarEventoPROD') result = catalog(state.eventId);
+      if (method === 'ctCheckoutPublicoCarregarEventoPROD') result = catalog(state.eventId, await page.evaluate(() => Date.now()));
       else if (method === 'ctPoliticaComercialPreviewPublicoPROD') {
         state.previews.push(args[0]);
         result = options.preview ? await options.preview(args[0], state.previews.length) : quote(args[0]);
@@ -160,13 +161,21 @@ async function createFixture(browser, options = {}) {
       await until(() => f.state.coupons.length === 1, 'coupon in flight'); await f.page.locator('#quantity').fill('2'); await f.page.locator('#paymentCard').check(); await f.total(191.4); await delay(900);
       await f.total(191.4); assert(!(await f.page.locator('#promoSummary').isVisible())); assert.equal(f.state.previews.at(-1).cupomCodigo, ''); await f.finish();
     });
-    await test('repeated payment clicks and failed retry retain same idempotency', async () => {
+    await test('repeated payment clicks and unknown failure preserve idempotency without recreating', async () => {
       const f = await createFixture(browser, { async pay() { await delay(250); throw new Error('CT_PC_REVISAO_DIVERGENTE'); } });
       await f.select(); await f.total(95.7); await f.page.evaluate(() => { document.querySelector('#payButton').click(); document.querySelector('#payButton').click(); });
       await until(() => f.state.payments.length === 1, 'one mock request'); await f.page.locator('#modalBg.open').waitFor({ state: 'visible' });
       assert.equal(f.state.payments.length, 1); assert.equal(await f.page.locator('#typeSelect').inputValue(), 'TYPE-0');
-      await f.closeModal(); await f.total(95.7); await f.page.locator('#payButton').click(); await until(() => f.state.payments.length === 2, 'retry mock request');
-      assert.equal(f.state.payments[0].idempotenciaChave, f.state.payments[1].idempotenciaChave); await delay(300); await f.finish();
+      await f.closeModal();
+      // This generic failure does not prove rejection before order creation. Recovery replaces unsafe retry.
+      const key = f.state.payments[0].idempotenciaChave;
+      assert(key); assert(await f.page.locator('#payButton').isDisabled());
+      assert(await f.page.locator('#catalogRecoveryAction').isVisible());
+      assert.equal(await f.page.locator('#catalogRecoveryAction').getAttribute('href'), '/minha-carioca/conta/');
+      await f.page.locator('#payButton').evaluate(button => button.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+      await delay(300); assert.equal(f.state.payments.length, 1, 'unknown failure must not recreate payment');
+      assert.equal(await f.page.evaluate(storageKey => localStorage.getItem(storageKey), 'CT_CHECKOUT_IDEMPOTENCY_' + ERA + '_PIX'), key);
+      await f.finish();
     });
     await test('legacy non-canary unchanged: no preview required and no revision field', async () => {
       const f = await createFixture(browser, { eventId: LEGACY }); await f.select(); await f.total(87);

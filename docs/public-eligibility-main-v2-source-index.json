@@ -1,0 +1,3182 @@
+{
+  "purpose": "SITE_V2_OFFLINE_RECONSTRUCTION_NOT_RELEASE",
+  "base_commit": "5d3a820a63bc2f6784f2296f5b1dda8888e65dc3",
+  "previous_candidate_base": "1cefedc61514cd85b2434e75b7520a4739bc903e",
+  "paired_backend_local_commit": "73832548ae58353fd0a3fccb59189a44e3936983",
+  "paired_backend_upstream_base": "8fffd69cd96edb907fd4c5c341ba4c964141dbeb",
+  "backend_runtime_reconciled": false,
+  "eligibilityContract": "CT_PUBLIC_ELIGIBILITY_EXCLUSIVE_V1",
+  "temporalVersion": 1,
+  "clock_query_version": "20261021-eligibility-exclusive1",
+  "runtime_changes": [
+    "assets/checkout-translations.js",
+    "assets/home-event-rail.js",
+    "assets/public-catalog-clock.js",
+    "assets/public-event-catalog.js",
+    "checkout/index.html",
+    "checkout-v2/index.html",
+    "evento/index.html",
+    "evento-v2/index.html",
+    "index.html"
+  ],
+  "existing_test_changes": [
+    "tests/advance-sales-closure.browser.cjs",
+    "tests/catalog-performance-isolated.cjs",
+    "tests/checkout-cover.browser.cjs",
+    "tests/checkout-era-beauty.browser.js",
+    "tests/checkout-era-beauty.dom.js",
+    "tests/checkout-home-navigation.browser.cjs",
+    "tests/checkout-language.browser.cjs",
+    "tests/checkout-language.dom.cjs",
+    "tests/checkout-ticket-status.browser.cjs",
+    "tests/e2e/buyer-journey.spec.js",
+    "tests/e2e/coupon-journey.spec.js",
+    "tests/e2e/evento-v2-loading-harness.spec.js",
+    "tests/e2e/first-party-facades.spec.js",
+    "tests/e2e/p0-polling-checkout.spec.js",
+    "tests/e2e/p0-ticket-open-after-payment.spec.js",
+    "tests/e2e/producer-finance-activation.spec.js",
+    "tests/e2e/producer-finance-master.spec.js",
+    "tests/e2e/public-event-catalog.spec.js",
+    "tests/event-accessibility-preview.cjs",
+    "tests/event-directions-browser.py",
+    "tests/event-language-preview.cjs",
+    "tests/event-map-preview-server.cjs",
+    "tests/event-uber-preview-server.cjs",
+    "tests/fixtures/home-stage1.cjs",
+    "tests/fixtures/public-canary.cjs",
+    "tests/home-preview-server.cjs",
+    "tests/home/category-language.spec.js",
+    "tests/home/desktop-navigation.spec.js",
+    "tests/home/event-card-share.spec.js",
+    "tests/home/event-rail.spec.js",
+    "tests/home/home-stage1.spec.js",
+    "tests/home/mobile-autoplay.spec.js",
+    "tests/home/rail-fixture.cjs",
+    "tests/home/reduced-motion-opt-in.spec.js",
+    "tests/home/whatsapp-share.spec.js",
+    "tests/public-language-integration.browser.cjs"
+  ],
+  "base_blobs": {
+    ".github/canary-backend-v279-20260923.txt": {
+      "sha": "0b49a56c2b552d8c133df7bc627b243532bb7210",
+      "bytes": 91,
+      "mode": "100644"
+    },
+    ".github/workflows/advance-sales-closure.yml": {
+      "sha": "43bda83dbf3396b949f1963f5e9ce2b2a94adb0e",
+      "bytes": 935,
+      "mode": "100644"
+    },
+    ".github/workflows/advertise-review.yml": {
+      "sha": "321e86a5c8f086fbb4a24bbfc218e7d6c38a24ce",
+      "bytes": 901,
+      "mode": "100644"
+    },
+    ".github/workflows/biocred-financeiro-canary-ci.yml": {
+      "sha": "bb6132a94b7170d56ba74e2d1151dce7570b3b81",
+      "bytes": 614,
+      "mode": "100644"
+    },
+    ".github/workflows/catalog-performance-isolated.yml": {
+      "sha": "b5ac4f59edb33cb6ca620772a1561c1ff86aae46",
+      "bytes": 1107,
+      "mode": "100644"
+    },
+    ".github/workflows/checkout-cover-isolated.yml": {
+      "sha": "ab0961d54574a0297620035c31334eb8bb03696e",
+      "bytes": 1007,
+      "mode": "100644"
+    },
+    ".github/workflows/checkout-home-navigation-isolated.yml": {
+      "sha": "730dae3f047c076b446159d3860704417bd2a616",
+      "bytes": 1303,
+      "mode": "100644"
+    },
+    ".github/workflows/checkout-language-isolated.yml": {
+      "sha": "e48ef431d549abee73331252bfaef579b92b0005",
+      "bytes": 1728,
+      "mode": "100644"
+    },
+    ".github/workflows/checkout-ticket-status-isolated.yml": {
+      "sha": "2fb68d53098dba11dc7d3e6ad1e6691e1921b3b7",
+      "bytes": 1521,
+      "mode": "100644"
+    },
+    ".github/workflows/ct-checkout-commercial-policy-readiness.yml": {
+      "sha": "70bf842975bd02d73b4b213882ca9762da035c93",
+      "bytes": 1755,
+      "mode": "100644"
+    },
+    ".github/workflows/ct-public-event-language.yml": {
+      "sha": "1229261a1e20c53f105a33c642b17ca52fb52560",
+      "bytes": 1244,
+      "mode": "100644"
+    },
+    ".github/workflows/dark-default-isolated.yml": {
+      "sha": "7297118da0aa189fb3f0e1aa8b8852ae57e26ab7",
+      "bytes": 970,
+      "mode": "100644"
+    },
+    ".github/workflows/event-accessibility-isolated.yml": {
+      "sha": "8a06880d62710e4fdfe23e3d66186b682cfd781f",
+      "bytes": 1690,
+      "mode": "100644"
+    },
+    ".github/workflows/event-demo-isolated.yml": {
+      "sha": "a1353fe87b4f5abe36c093f49d8c5651fe2b3c3d",
+      "bytes": 1270,
+      "mode": "100644"
+    },
+    ".github/workflows/event-directions-isolated.yml": {
+      "sha": "205e4ff06149d10d441863d372177a8054e2ae50",
+      "bytes": 1018,
+      "mode": "100644"
+    },
+    ".github/workflows/event-load-recovery.yml": {
+      "sha": "1d73437791a4845ec9208334213d406e7653f0af",
+      "bytes": 1127,
+      "mode": "100644"
+    },
+    ".github/workflows/event-map-integration.yml": {
+      "sha": "2b694ef7401c4a519c5c927f508bcf67871058be",
+      "bytes": 974,
+      "mode": "100644"
+    },
+    ".github/workflows/event-uber-isolated.yml": {
+      "sha": "896eafe6d0b1256eedfd4794acdf4f4f38040b9f",
+      "bytes": 1352,
+      "mode": "100644"
+    },
+    ".github/workflows/home-location-isolated.yml": {
+      "sha": "7e2f26771a748ba341cee80fff2f01a7a20bbd5b",
+      "bytes": 1065,
+      "mode": "100644"
+    },
+    ".github/workflows/home-stage1-isolated.yml": {
+      "sha": "410477c8098432c192d96e17f59b30bc6f16a090",
+      "bytes": 2985,
+      "mode": "100644"
+    },
+    ".github/workflows/homologacao-automatica.yml": {
+      "sha": "6489335b08545e45a64bdeacc53672c0c2bddbad",
+      "bytes": 9808,
+      "mode": "100644"
+    },
+    ".github/workflows/producer-guide-isolated.yml": {
+      "sha": "b97bd25e478d68bc8decd175e15788ef510db959",
+      "bytes": 998,
+      "mode": "100644"
+    },
+    ".github/workflows/public-brand-review.yml": {
+      "sha": "7fa4510c0293c5d92221e6797cf835bfb4775048",
+      "bytes": 1096,
+      "mode": "100644"
+    },
+    ".github/workflows/public-brand-secondary-review.yml": {
+      "sha": "b6a4dbea6553f2af18242fc33b9c7a73965e02d0",
+      "bytes": 1236,
+      "mode": "100644"
+    },
+    ".github/workflows/public-i18n-isolated.yml": {
+      "sha": "475235126d241ded21cc612c409438467fd6b278",
+      "bytes": 2115,
+      "mode": "100644"
+    },
+    ".github/workflows/public-login-markup-review.yml": {
+      "sha": "240b6ac59f1ced706c898021abddccb6d263994d",
+      "bytes": 982,
+      "mode": "100644"
+    },
+    ".github/workflows/public-login-polish-isolated.yml": {
+      "sha": "42326877fe4b37512a6f97d29df62429f2b495cf",
+      "bytes": 962,
+      "mode": "100644"
+    },
+    ".github/workflows/public-privacy-isolated.yml": {
+      "sha": "8c6e85c78a5dca35772f1f7bdfc8c24d08a6a636",
+      "bytes": 1701,
+      "mode": "100644"
+    },
+    ".github/workflows/scanner-session.yml": {
+      "sha": "230148cf216665fb382fe5bcb431f75bbaef73c8",
+      "bytes": 1225,
+      "mode": "100644"
+    },
+    ".gitignore": {
+      "sha": "945fcd0d86c1b95fa8612428db05ff311b02bf34",
+      "bytes": 47,
+      "mode": "100644"
+    },
+    "404.html": {
+      "sha": "03d6083fc9ffde47e2832e364079e786ff30c48f",
+      "bytes": 1184,
+      "mode": "100644"
+    },
+    "CNAME": {
+      "sha": "a8ba8e1fa9121c28216dae65904d6ab1cbc2441e",
+      "bytes": 21,
+      "mode": "100644"
+    },
+    "HOMOLOGACAO.md": {
+      "sha": "d73dfa9306f5f189a3dded16213397bdc156039a",
+      "bytes": 3123,
+      "mode": "100644"
+    },
+    "README.md": {
+      "sha": "36dcdb6dcff1bb92106e4699e95231ffd32c39f9",
+      "bytes": 434,
+      "mode": "100644"
+    },
+    "acessos-v2/index.html": {
+      "sha": "3a238ffe6e24240865dc665f095fa34938cf0ff6",
+      "bytes": 38977,
+      "mode": "100644"
+    },
+    "acessos/index.html": {
+      "sha": "302e76746a0b5cf9c3d78d7fe930287d546dbacc",
+      "bytes": 40197,
+      "mode": "100644"
+    },
+    "ajuda/index.html": {
+      "sha": "7982f58fbb742f7d9a8e335a7a4ffa7edea12fde",
+      "bytes": 8948,
+      "mode": "100644"
+    },
+    "anuncie/index.html": {
+      "sha": "6513029fb1240292eaa50be475a0a08b46afe6c4",
+      "bytes": 11066,
+      "mode": "100644"
+    },
+    "assets/advance-sales.js": {
+      "sha": "ef291e4cf6674152427dea45a247f1836c6920ec",
+      "bytes": 342,
+      "mode": "100644"
+    },
+    "assets/advertise.css": {
+      "sha": "48b05d4df2af3d241aa1f2c0c7bec7e0dc306c47",
+      "bytes": 8775,
+      "mode": "100644"
+    },
+    "assets/advertise.js": {
+      "sha": "619e698a5849ee7dee2e7648ce0507f1c34a310b",
+      "bytes": 17842,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-icon-192.png": {
+      "sha": "304b59fb1f98d8a235af9f458264e1ef8a504112",
+      "bytes": 13883,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-icon-512.png": {
+      "sha": "6a860b16d47fb8a4396f180578863f6228f3cc82",
+      "bytes": 61331,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-icon-maskable-512.png": {
+      "sha": "a1e2fc3abeed98b7e79afcb9fa35a41eccb58977",
+      "bytes": 50807,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-logo.png": {
+      "sha": "74da4e28a2a25138991cd832296b9e277b9efc9b",
+      "bytes": 102784,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-preview-dark-hq-v8.jpg": {
+      "sha": "665d718fb6265ab30285de49fdbabfaa5e4e8c91",
+      "bytes": 12601,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-preview-dark.png": {
+      "sha": "74da4e28a2a25138991cd832296b9e277b9efc9b",
+      "bytes": 102784,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-preview-oficial-v9.jpg": {
+      "sha": "8819f628839590d8d0bb3e5fd014eeabc60c0cc1",
+      "bytes": 187948,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-preview-og-v4.jpg": {
+      "sha": "fea980d5753d4a2c0a4efe4a4d353b70bbfa13d6",
+      "bytes": 15009,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-preview-og-v5.jpg": {
+      "sha": "1e781797f9347f49bbf7ada7f25331f90916f454",
+      "bytes": 15008,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-preview-og-v6.jpg": {
+      "sha": "e84d0099223f87efe6cd52f99e8b43b81ae81b00",
+      "bytes": 4665,
+      "mode": "100644"
+    },
+    "assets/carioca-ticket-simbolo.png": {
+      "sha": "392125f1a5020137f1859c03aed43b7d3dd83aa2",
+      "bytes": 20968,
+      "mode": "100644"
+    },
+    "assets/checkout-commercial-policy.js": {
+      "sha": "caf90920d0902a85b7ca08a6843ad2a815b0c015",
+      "bytes": 3722,
+      "mode": "100644"
+    },
+    "assets/checkout-home-navigation.css": {
+      "sha": "d617410eb8e8b9bfa80d290c822ad8864843b495",
+      "bytes": 1104,
+      "mode": "100644"
+    },
+    "assets/checkout-home-navigation.js": {
+      "sha": "e24e7b5e46c6a75eb0552c416331598a5d3f9bcd",
+      "bytes": 5192,
+      "mode": "100644"
+    },
+    "assets/checkout-language.css": {
+      "sha": "966757a74beb732a35f267593bf3a94a9d2bf4c5",
+      "bytes": 605,
+      "mode": "100644"
+    },
+    "assets/checkout-language.js": {
+      "sha": "ee4f7984a36fb8f5cc12b3fef874683a750b16e1",
+      "bytes": 5304,
+      "mode": "100644"
+    },
+    "assets/checkout-translations.js": {
+      "sha": "e5d19d0bf95e0d17f39b2d53487897bc81efcbf3",
+      "bytes": 52416,
+      "mode": "100644"
+    },
+    "assets/ct-analytics.js": {
+      "sha": "06aed93f9b18204f9d6a1a0eaf9392eba03133b3",
+      "bytes": 7439,
+      "mode": "100644"
+    },
+    "assets/demo-event.css": {
+      "sha": "b2ebee2233944b0b22ad494efd2e70fe8a7c187e",
+      "bytes": 9635,
+      "mode": "100644"
+    },
+    "assets/demo-event.js": {
+      "sha": "7a10b3889903fc28e2402a2cc582142162503301",
+      "bytes": 3045,
+      "mode": "100644"
+    },
+    "assets/era-approved-visual.css": {
+      "sha": "43fc1d40bd4909856bded5bb2b3bf8f232a9093d",
+      "bytes": 1519,
+      "mode": "100644"
+    },
+    "assets/era-approved-visual.js": {
+      "sha": "b6b25e31f0b79537de325ba45cd5a19fcf97901f",
+      "bytes": 6510,
+      "mode": "100644"
+    },
+    "assets/event-accessibility.css": {
+      "sha": "9856c746986cd98e3edb047282fe5e3cdfd28472",
+      "bytes": 6260,
+      "mode": "100644"
+    },
+    "assets/event-description-speech.js": {
+      "sha": "fec516cc39cc5029f3560bcab41709fc2901f232",
+      "bytes": 9300,
+      "mode": "100644"
+    },
+    "assets/event-directions.css": {
+      "sha": "cb24ff5ee32542db2ce640e0526aff48c1faa346",
+      "bytes": 2132,
+      "mode": "100644"
+    },
+    "assets/event-directions.js": {
+      "sha": "5a9f98846978d71b4117d01e0d4669750102a62a",
+      "bytes": 3970,
+      "mode": "100644"
+    },
+    "assets/event-i18n.css": {
+      "sha": "27ba6f524e08b36deae43ff1f063d4884c69455c",
+      "bytes": 1729,
+      "mode": "100644"
+    },
+    "assets/event-i18n.js": {
+      "sha": "b7add6a16dd960360cce2798f941b52e2261f970",
+      "bytes": 24181,
+      "mode": "100644"
+    },
+    "assets/event-map-preview.css": {
+      "sha": "8adc0a3fe58bbe25b085fcff119fc24611120160",
+      "bytes": 2029,
+      "mode": "100644"
+    },
+    "assets/event-map-preview.js": {
+      "sha": "b0c4b967698b36aaf3571470e6400fa87e1a7df1",
+      "bytes": 13032,
+      "mode": "100644"
+    },
+    "assets/event-ride-destinations.js": {
+      "sha": "332dfc43a87fdae5d8c3ff2f4142bbb3abc6a7da",
+      "bytes": 1354,
+      "mode": "100644"
+    },
+    "assets/event-uber.css": {
+      "sha": "8a7700455b7155ce4f25fb28c572082f48608445",
+      "bytes": 1709,
+      "mode": "100644"
+    },
+    "assets/event-uber.js": {
+      "sha": "c575f5c0027cf8bbba386c15de4dc2a8174be9bd",
+      "bytes": 6361,
+      "mode": "100644"
+    },
+    "assets/eventos/era-beauty-capa-oficial-20261008.jpg": {
+      "sha": "41d22c7e62f0d942a6bb4755c4c5c5ba59a45454",
+      "bytes": 944493,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/AC.json": {
+      "sha": "9ea5a389e646055cb2257064506f352c74fd5bfc",
+      "bytes": 164878,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/AL.json": {
+      "sha": "fdcea65a5316814a388ef688ef37c734d6cedb20",
+      "bytes": 95746,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/AM.json": {
+      "sha": "155de85dc28800dba2f761936611e48b30dda779",
+      "bytes": 970022,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/AP.json": {
+      "sha": "862ccf42a77e2ba597ba039a76df7757080f5c04",
+      "bytes": 168797,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/BA.json": {
+      "sha": "2dd585850a798509afa5b51ce21fb2f44887d7d3",
+      "bytes": 1018054,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/CE.json": {
+      "sha": "1d8fc0439fd5566cd8eb0d9149a45ad9d24c12b8",
+      "bytes": 357222,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/DF.json": {
+      "sha": "4edfbee90a807f0f989dfec9260bdb1e105c08eb",
+      "bytes": 7558,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/ES.json": {
+      "sha": "c40bda44b4edcc65af50cdc5a4e81e94ccf3f7e1",
+      "bytes": 212685,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/GO.json": {
+      "sha": "fdc1eaf232ce1c5d5e743a1edb259523971a39e9",
+      "bytes": 1050619,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/MA.json": {
+      "sha": "bb5f88ec1f497205f141493d1e80fb867ad44173",
+      "bytes": 556122,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/MG.json": {
+      "sha": "9196ac31fbecefcae6563e4920ea6e6bc373e599",
+      "bytes": 2249004,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/MS.json": {
+      "sha": "639a20ff7738a0094ddc4d5c1defd78d55ce7d45",
+      "bytes": 533411,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/MT.json": {
+      "sha": "008e60ed8b7c97d7c99be028affd443b405b4a34",
+      "bytes": 1118445,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/PA.json": {
+      "sha": "4070e0d126bbadb2bba1292a2eb1afcacdb73c6d",
+      "bytes": 630177,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/PB.json": {
+      "sha": "a5bf00ae3f406983583900547e99a7431d24e7d8",
+      "bytes": 240854,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/PE.json": {
+      "sha": "f6e3e58da35f70fa277d24ba06beceea043ba68b",
+      "bytes": 236400,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/PI.json": {
+      "sha": "382646197d7e9280587f49e79a5c9b8b06401120",
+      "bytes": 263453,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/PR.json": {
+      "sha": "d5d5e72c3c6a45137d45267c440a0ebda1ddb738",
+      "bytes": 973395,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/RJ.json": {
+      "sha": "2a4c653384b0c245a72ed2a7271c131443f9d482",
+      "bytes": 256897,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/RN.json": {
+      "sha": "71cf97064c6e0e0b4dbc18b383bd9364c3fda276",
+      "bytes": 113158,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/RO.json": {
+      "sha": "48c1c48c412a47c4687cedb631a1bbc0d2a52b48",
+      "bytes": 241571,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/RR.json": {
+      "sha": "5039ea94aa3c7f5fb8868220985f62adefed53be",
+      "bytes": 188046,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/RS.json": {
+      "sha": "1a1733774460ca665729d9125a3811ab610f68d1",
+      "bytes": 993305,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/SC.json": {
+      "sha": "cb3be5347ae389550fbb66cd7ec7b27433e03f27",
+      "bytes": 625377,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/SE.json": {
+      "sha": "089b85d5b56f2314e2ed905266960e503228c955",
+      "bytes": 109515,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/SP.json": {
+      "sha": "3f396332affb5a1cd5fab39ff37fd13db8ac6e01",
+      "bytes": 1292682,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/TO.json": {
+      "sha": "af6a1984553362d19e875b32e1cad25852602991",
+      "bytes": 675113,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/UF.json": {
+      "sha": "a87dc9578a19720cfcbb632146223dde9500653e",
+      "bytes": 354865,
+      "mode": "100644"
+    },
+    "assets/geo-ibge-2025/manifest.json": {
+      "sha": "b4dde8c36f140faa83d850219ff23e4ecf04b333",
+      "bytes": 9861,
+      "mode": "100644"
+    },
+    "assets/home-ad-priscila.png": {
+      "sha": "d9c3fa4ceebe30486fe9701389703eb03d84b3ee",
+      "bytes": 1386852,
+      "mode": "100644"
+    },
+    "assets/home-ad-tpssf.png": {
+      "sha": "ab28262228de07808ea18f4f5cdc0a973ff14a04",
+      "bytes": 1292395,
+      "mode": "100644"
+    },
+    "assets/home-advertisements.js": {
+      "sha": "760b9e64c9572f1d02a2133ea4b17337e6321a71",
+      "bytes": 8463,
+      "mode": "100644"
+    },
+    "assets/home-controls.js": {
+      "sha": "983849c26496d531e8ad2894c08f23cff40e71e8",
+      "bytes": 14261,
+      "mode": "100644"
+    },
+    "assets/home-event-rail.js": {
+      "sha": "511d2c4af914020619fa799cf429784c90216917",
+      "bytes": 11949,
+      "mode": "100644"
+    },
+    "assets/home-i18n.js": {
+      "sha": "b57d417bf55f1ebcfb6b2264a5a10551d0a9c0ae",
+      "bytes": 38301,
+      "mode": "100644"
+    },
+    "assets/home-install.js": {
+      "sha": "e0179bcfb5f775386d1f86e2fedba6ba141c0db3",
+      "bytes": 4845,
+      "mode": "100644"
+    },
+    "assets/home-location-worker.js": {
+      "sha": "dca2003ed7b024a7d0ffa23ce9679e1d586353f0",
+      "bytes": 5304,
+      "mode": "100644"
+    },
+    "assets/home-location.css": {
+      "sha": "1a49f3f8fe254abdf375d9f6ebd99fc005b24edd",
+      "bytes": 419,
+      "mode": "100644"
+    },
+    "assets/home-location.js": {
+      "sha": "6aa7fab2dec3022f94f5bb64931e2d2d9afde76b",
+      "bytes": 9060,
+      "mode": "100644"
+    },
+    "assets/home-municipalities.json": {
+      "sha": "667a1bef809c03348bc0724d547a3daeb8d92813",
+      "bytes": 178954,
+      "mode": "100644"
+    },
+    "assets/home-navigation.js": {
+      "sha": "4b8e7cf9056f7b68254ae39dc386b2bf236199ea",
+      "bytes": 3748,
+      "mode": "100644"
+    },
+    "assets/home-theme.js": {
+      "sha": "98545339ca51049fa2edff131478c485770ae8ec",
+      "bytes": 1719,
+      "mode": "100644"
+    },
+    "assets/home.css": {
+      "sha": "dc725ba453e5b4b3dd02f965e92b5c80c85ce399",
+      "bytes": 38226,
+      "mode": "100644"
+    },
+    "assets/institutional-language.css": {
+      "sha": "85081f6869eebf95c008b308da22ea58fd99cfc0",
+      "bytes": 1472,
+      "mode": "100644"
+    },
+    "assets/institutional-language.js": {
+      "sha": "3a1fdb1d4462e5de650c8227b0b3b9a72e071868",
+      "bytes": 4798,
+      "mode": "100644"
+    },
+    "assets/institutional-translations.js": {
+      "sha": "8e6cce3638f586567b5eaa50d0435ac65f6f8af3",
+      "bytes": 50998,
+      "mode": "100644"
+    },
+    "assets/producer-guide.css": {
+      "sha": "e06804ed24ab2b253e2edc97d28ef4f0b784fa7e",
+      "bytes": 6340,
+      "mode": "100644"
+    },
+    "assets/producer-guide.js": {
+      "sha": "5770430e4348c60d07fda1c83351e5c25a118c48",
+      "bytes": 16042,
+      "mode": "100644"
+    },
+    "assets/public-event-catalog.js": {
+      "sha": "549b437ed83eadc0cbe93eeff84c867114a06b50",
+      "bytes": 15499,
+      "mode": "100644"
+    },
+    "assets/public-i18n.js": {
+      "sha": "ab38aaa0cbd700ec2ee59e5ec988e704a8f0173b",
+      "bytes": 7835,
+      "mode": "100644"
+    },
+    "assets/public-logo-links.css": {
+      "sha": "f3051ac685355d528e3d28297cfd221e461c937c",
+      "bytes": 1044,
+      "mode": "100644"
+    },
+    "assets/public-privacy.css": {
+      "sha": "1ee957485004c83222074fabf6008891c48dcd10",
+      "bytes": 3557,
+      "mode": "100644"
+    },
+    "assets/public-privacy.js": {
+      "sha": "cd7d4f380a12ddeb800e559fa0381c8ff6c1b6c3",
+      "bytes": 15319,
+      "mode": "100644"
+    },
+    "assets/public-share.css": {
+      "sha": "4485ba19a4ca459198f7436670940175270975c6",
+      "bytes": 1564,
+      "mode": "100644"
+    },
+    "assets/public-share.js": {
+      "sha": "4b12d59e87f73229806b28ddd3cc16c074039629",
+      "bytes": 10170,
+      "mode": "100644"
+    },
+    "assets/roda-samba-30-anos.webp": {
+      "sha": "6cfa48bcde5c160d7b5c942f1e16776a50e1caa2",
+      "bytes": 18252,
+      "mode": "100644"
+    },
+    "assets/waze-mark.svg": {
+      "sha": "026a3ac117421608b6ca3889d867e25d00916c95",
+      "bytes": 1346,
+      "mode": "100644"
+    },
+    "backoffice/carioca-pay/baas-sandbox/index.html": {
+      "sha": "4b368c6b230145e5a8b6c342a91cabe86987b384",
+      "bytes": 25518,
+      "mode": "100644"
+    },
+    "backoffice/carioca-pay/index.html": {
+      "sha": "72d0a60dff6bb81fc44e8942e39c5f1f8d9aa589",
+      "bytes": 22276,
+      "mode": "100644"
+    },
+    "backoffice/carioca-pay/produtores/index.html": {
+      "sha": "9ef07ee26680c49743b545ae0407a781716581c7",
+      "bytes": 26791,
+      "mode": "100644"
+    },
+    "backoffice/carioca-pay/saldo-extrato/index.html": {
+      "sha": "5d6b80c2c59784bbcd8fa32338ae0a888b71ea18",
+      "bytes": 14188,
+      "mode": "100644"
+    },
+    "backoffice/eventos/index.html": {
+      "sha": "b84f75fdeebb8f1883efa7b07502ae3a8aa0e640",
+      "bytes": 20392,
+      "mode": "100644"
+    },
+    "backoffice/index.html": {
+      "sha": "2de6603e4c7c893245d0aba376df2e6c55136ffa",
+      "bytes": 26693,
+      "mode": "100644"
+    },
+    "backoffice/modalidades/index.html": {
+      "sha": "00a270445e088ca157e8db1c2c46a588a4d988d0",
+      "bytes": 11558,
+      "mode": "100644"
+    },
+    "backoffice/politicas-comerciais/index.html": {
+      "sha": "671917951c6ec2e5a7be61437cdfafd7878c2857",
+      "bytes": 21453,
+      "mode": "100644"
+    },
+    "bar/index.html": {
+      "sha": "339535efb16aabcd0c30d5e544fd502b8fc4e086",
+      "bytes": 28851,
+      "mode": "100644"
+    },
+    "campanha/index.html": {
+      "sha": "b0683285b638d2e9d5cea859a191b3ccc01c3591",
+      "bytes": 15022,
+      "mode": "100644"
+    },
+    "cancelamento-reembolso/index.html": {
+      "sha": "0d88a82cd1bfd2d7b4b12c075c0f137988f370f5",
+      "bytes": 9590,
+      "mode": "100644"
+    },
+    "central/index.html": {
+      "sha": "458e549b84d7c5eb35d679f9b72a4791d92d7ea6",
+      "bytes": 24450,
+      "mode": "100644"
+    },
+    "checkin/checkin.css": {
+      "sha": "db205d82216429e6f78b949bfd4cac1085be5871",
+      "bytes": 8861,
+      "mode": "100644"
+    },
+    "checkin/checkin.js": {
+      "sha": "2422eee677c4849181dd621770b40667b1ef1548",
+      "bytes": 33477,
+      "mode": "100644"
+    },
+    "checkin/index.html": {
+      "sha": "27b6e60d48977ccf685fa65698acad8fc0c222b6",
+      "bytes": 3681,
+      "mode": "100644"
+    },
+    "checkin/sw.js": {
+      "sha": "3de1b6de404f1770d69aba48925e56483fb643f6",
+      "bytes": 940,
+      "mode": "100644"
+    },
+    "checkout-v2/index.html": {
+      "sha": "24a2d8322d3356b7d996186e9f6f1ff42bf13a37",
+      "bytes": 134262,
+      "mode": "100644"
+    },
+    "checkout/index.html": {
+      "sha": "afb1d4970f67f2388e93cd2cfce8fba3b241a171",
+      "bytes": 129069,
+      "mode": "100644"
+    },
+    "comissionado/index.html": {
+      "sha": "4fabe2a7f522b232cea764039a282c6850933d61",
+      "bytes": 114469,
+      "mode": "100644"
+    },
+    "comissoes/index.html": {
+      "sha": "cdeed41146c4927bf8709818d8790f3fc702d3a6",
+      "bytes": 19486,
+      "mode": "100644"
+    },
+    "como-funciona/index.html": {
+      "sha": "b5fea2042b6133b97a084020be9af40152a9d969",
+      "bytes": 8482,
+      "mode": "100644"
+    },
+    "consulta/index.html": {
+      "sha": "30330e08bc8bf056c3756e702a7330c6c10b1e52",
+      "bytes": 12950,
+      "mode": "100644"
+    },
+    "convite/index.html": {
+      "sha": "28e6ebb589ca6029179b38fb090fa4e244e66bbc",
+      "bytes": 13707,
+      "mode": "100644"
+    },
+    "crm/index.html": {
+      "sha": "a65340d90d19e7c8832d61accfaa3974a8a51c85",
+      "bytes": 18552,
+      "mode": "100644"
+    },
+    "cupons/admin/index.html": {
+      "sha": "811b9837bec882eb13ed42eb1066b82518c4a48f",
+      "bytes": 9871,
+      "mode": "100644"
+    },
+    "cupons/index.html": {
+      "sha": "29d27f366614b8f21606c2842181303499cfe16c",
+      "bytes": 30463,
+      "mode": "100644"
+    },
+    "demonstracao/roda-de-samba/index.html": {
+      "sha": "ca6e3e51b44ec3283b1aab4509f97f50049df0fe",
+      "bytes": 9808,
+      "mode": "100644"
+    },
+    "docs/ERA_EVENT_LOAD_DIAGNOSIS_20261008.md": {
+      "sha": "9c23836c5f675cf80f10741468259ec266888220",
+      "bytes": 7307,
+      "mode": "100644"
+    },
+    "docs/ERA_TRANSPORT_INCIDENT_20261012.md": {
+      "sha": "3c8f692429cf46d430b590a4fcd86ddbe766c62c",
+      "bytes": 6665,
+      "mode": "100644"
+    },
+    "docs/ERA_VISUAL_ACAO_AUTENTICADA_20261008.md": {
+      "sha": "b659bf1ec9a5cc636ee8adfbc92001120ac29154",
+      "bytes": 2446,
+      "mode": "100644"
+    },
+    "docs/JOURNEY_QA.md": {
+      "sha": "e91d5d2ea6ab4ed4fc6768d84fa94bd92f2d8b6f",
+      "bytes": 2485,
+      "mode": "100644"
+    },
+    "docs/PRODUTOR_PREPROD_SITE_20260924.md": {
+      "sha": "e4d4429b5e06a78613cc11e10b9bdc683f46732e",
+      "bytes": 1966,
+      "mode": "100644"
+    },
+    "docs/PUBLIC_EVENT_CATALOG_20261008.md": {
+      "sha": "160ce8d4f5506e8f98e61d59d5c68b32917afbad",
+      "bytes": 6151,
+      "mode": "100644"
+    },
+    "docs/advance-sales-closure-20261011.md": {
+      "sha": "7ff3d4d94f90389eefe60c1fdcd65508cbc414b9",
+      "bytes": 5296,
+      "mode": "100644"
+    },
+    "docs/auditoria-home-2026-09-19.md": {
+      "sha": "ed6863087038ae3b93078f4ef6cc33358c746114",
+      "bytes": 3061,
+      "mode": "100644"
+    },
+    "docs/canary-safety-implementation.md": {
+      "sha": "56d7ba28bc341957f1bd32f719215e3ba760be3d",
+      "bytes": 7728,
+      "mode": "100644"
+    },
+    "docs/canary-safety-plan.md": {
+      "sha": "bd4bc4bad19ad3e54eee077c52a0eef5589a1adc",
+      "bytes": 13196,
+      "mode": "100644"
+    },
+    "docs/event-demonstration.md": {
+      "sha": "8ef41eb3a3545fc88ec898fd59fc695e1ab63ad1",
+      "bytes": 5883,
+      "mode": "100644"
+    },
+    "docs/event-directions.md": {
+      "sha": "c52d028908e6a03239e803ff596d8410d4548860",
+      "bytes": 3643,
+      "mode": "100644"
+    },
+    "docs/home-location-ibge.md": {
+      "sha": "9782c9d2f1821f2bf5015ab47baf8b492771aca1",
+      "bytes": 4642,
+      "mode": "100644"
+    },
+    "docs/public-event-map.md": {
+      "sha": "6b0cf64d1b300235e9876491aa6691d840556cd0",
+      "bytes": 4359,
+      "mode": "100644"
+    },
+    "docs/public-event-uber.md": {
+      "sha": "a471d7c0d130eb1e7f579959c2b60228bb27f516",
+      "bytes": 6345,
+      "mode": "100644"
+    },
+    "docs/public-language-plan.md": {
+      "sha": "cc70013d14b3490e1c5a32bd10c967302de51a89",
+      "bytes": 9121,
+      "mode": "100644"
+    },
+    "docs/public-privacy-candidate-review.md": {
+      "sha": "0bc4e98e1d96d845f5bd9029b4ad5ae9c70d70ba",
+      "bytes": 16853,
+      "mode": "100644"
+    },
+    "docs/releases/CANARY_BACKEND_297_20260923.md": {
+      "sha": "d93b8368f685b25ea8bd26791c618876f09b669c",
+      "bytes": 182,
+      "mode": "100644"
+    },
+    "docs/reviews/advance-sales/catalog-mobile.png": {
+      "sha": "300eca402fa687442ac1f31d78b839ed92db4978",
+      "bytes": 272146,
+      "mode": "100644"
+    },
+    "docs/reviews/advance-sales/checkout-closed-mobile.png": {
+      "sha": "2ff1917a20309d7cfe5e7439087ca2fa03044763",
+      "bytes": 148300,
+      "mode": "100644"
+    },
+    "docs/reviews/advance-sales/evento-mobile.png": {
+      "sha": "9ceefd18fd1f1c77452ac4a673788ab3bb51a24f",
+      "bytes": 511443,
+      "mode": "100644"
+    },
+    "docs/reviews/advance-sales/report.json": {
+      "sha": "e810ee9a36c3314025d149316ca3246de2f7eb94",
+      "bytes": 6554,
+      "mode": "100644"
+    },
+    "docs/reviews/catalog-performance.md": {
+      "sha": "48dba66871b97169d88761b346af61856845e3e0",
+      "bytes": 3590,
+      "mode": "100644"
+    },
+    "docs/reviews/checkout-language.md": {
+      "sha": "d6e16a7bd50d86a46be347f4a178c35d0ef95c47",
+      "bytes": 3833,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/README.md": {
+      "sha": "3e9c645e999af2f374eb2871ecc8fc20464b5104",
+      "bytes": 13561,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/capture-audio.json": {
+      "sha": "172b6bb46689cb845b1e2e300bb8507de6319b18",
+      "bytes": 1720,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/native-speech-audit.json": {
+      "sha": "75c2f3b5648c3aaa153cc4ffcdf9ea96198d7530",
+      "bytes": 3567,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/preservation.json": {
+      "sha": "ec384411535ee60a7ce16db7ebca969793fea7a1",
+      "bytes": 443,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/dark-1440.png": {
+      "sha": "cd66f0077eb45b718876bdea6294f05822605f79",
+      "bytes": 525207,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/dark-320.png": {
+      "sha": "2f1b40f8333bb8b653e9424475d3a7646c5b3691",
+      "bytes": 324327,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/dark-390.png": {
+      "sha": "848cf502ef24adf9f7fc31b98166fbd805f38dfe",
+      "bytes": 356144,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/dark-768.png": {
+      "sha": "d57b38e8e4247a9dc5d34adc41ade27ebc048ef5",
+      "bytes": 427081,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/dark-audio-idle-390.png": {
+      "sha": "dee5938a2809e23b4e320d36939e86b6f1a99305",
+      "bytes": 19344,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/dark-audio-paused-390.png": {
+      "sha": "56318d03d1119c7150acc2be751848dbbe35d6e3",
+      "bytes": 21356,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/dark-audio-playing-390.png": {
+      "sha": "14ecbd06bf670446675c7289a310fb87ea02d634",
+      "bytes": 19569,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/dark-audio-stopped-viewport-390.png": {
+      "sha": "382be00c8102afa5e0fc21b2f2adb6491a0e3ea5",
+      "bytes": 69209,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/evento-no-cover-dark-1440.png": {
+      "sha": "6350451950c4c845c958a6faee5f0b5cffd09eaa",
+      "bytes": 177325,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/evento-no-cover-dark-390.png": {
+      "sha": "55587ec57c9724c1c92dbee1f2532c223648849f",
+      "bytes": 84776,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/evento-no-cover-light-1440.png": {
+      "sha": "d1e920ede137e595d2b152720dce69b75b2926d4",
+      "bytes": 178490,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/evento-no-cover-light-390.png": {
+      "sha": "a7f8edac817f5a262ca81679ce23fb9d06fa2675",
+      "bytes": 85446,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/evento-v2-no-cover-dark-1440.png": {
+      "sha": "6350451950c4c845c958a6faee5f0b5cffd09eaa",
+      "bytes": 177325,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/evento-v2-no-cover-dark-390.png": {
+      "sha": "55587ec57c9724c1c92dbee1f2532c223648849f",
+      "bytes": 84776,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/evento-v2-no-cover-light-1440.png": {
+      "sha": "d1e920ede137e595d2b152720dce69b75b2926d4",
+      "bytes": 178490,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/evento-v2-no-cover-light-390.png": {
+      "sha": "a7f8edac817f5a262ca81679ce23fb9d06fa2675",
+      "bytes": 85446,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/libras-proof-390.png": {
+      "sha": "4d1e909b768b30db10715e9f9174b3d19ab08487",
+      "bytes": 39482,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/light-1440.png": {
+      "sha": "bc75c490871870eb7cee4f2e893a29de983da28c",
+      "bytes": 378339,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/light-320.png": {
+      "sha": "867fa476eb200e91f30a8f9bcf41a6a30c1a86da",
+      "bytes": 295239,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/light-390.png": {
+      "sha": "67aa451507cfc15ce80c649987b2e73a94ca70bd",
+      "bytes": 317233,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/light-768.png": {
+      "sha": "830068da01f603b1ac1f102b800867c1ee6cae67",
+      "bytes": 375124,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/light-audio-idle-390.png": {
+      "sha": "5b8692c923ca6edef7889ad4e19fb5ee08085fe3",
+      "bytes": 21500,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/light-audio-paused-390.png": {
+      "sha": "f991db4748d9e560c94a625273bf07e95c61b90b",
+      "bytes": 21518,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/light-audio-playing-390.png": {
+      "sha": "5ab6d2749a03a68d94ae2619f1b39096b7b1b19b",
+      "bytes": 19624,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/screenshots/light-audio-stopped-viewport-390.png": {
+      "sha": "3ef79b0480558b5ab38fe58191f5ddecb23383db",
+      "bytes": 61973,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/validation.json": {
+      "sha": "8bc007fe8a42fc8fe4437998b980da5644a8fc3d",
+      "bytes": 720,
+      "mode": "100644"
+    },
+    "docs/reviews/event-accessibility/vlibras-audit.json": {
+      "sha": "244ccb632cc2b187fbca424224ccb19c4cb6116b",
+      "bytes": 23768,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/README.md": {
+      "sha": "624a9c15bf8ad870f5b8b72414bbcc9fde046859",
+      "bytes": 5782,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/ad-primary-dark-1440.png": {
+      "sha": "e465b8468c5a1f5681cbc58af5d652b07b73937e",
+      "bytes": 411204,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/ad-primary-dark-412.png": {
+      "sha": "e0998637eb919de82f0ad440037d988e0aadacba",
+      "bytes": 54782,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/ad-primary-light-1440.png": {
+      "sha": "6462731042c53e6005f50856a9baf037ecbe0d3e",
+      "bytes": 410011,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/ad-primary-light-412.png": {
+      "sha": "1261ec238034b8bf5aae4dfbb06de75e384c7725",
+      "bytes": 54812,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/ad-secondary-dark-1440.png": {
+      "sha": "5f5e789a6118b39004dcc780969310fa18cd1bd7",
+      "bytes": 434657,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/ad-secondary-dark-412.png": {
+      "sha": "e5ed3b55576747cb5518ff52e1b85281b84a498b",
+      "bytes": 60311,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/ad-secondary-light-1440.png": {
+      "sha": "b55797c072ec44a2389cb08f589cd8300c898b38",
+      "bytes": 434738,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/ad-secondary-light-412.png": {
+      "sha": "daf0e960c6cc9339f320d72f514a10b7607c63be",
+      "bytes": 60273,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/capture-audit.json": {
+      "sha": "fc09520c252d83e4e60d88a04d2481c087719848",
+      "bytes": 547,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/dark-1440-15.png": {
+      "sha": "e792193569884aa31a907931a7cb3d5c89907349",
+      "bytes": 184218,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/dark-320-15.png": {
+      "sha": "abb337e2759f3843bad025a6b81a0e4ff54c4130",
+      "bytes": 62450,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/dark-412-15.png": {
+      "sha": "56aae1eb9fc4944adbd1419797c9a6b711dec2e0",
+      "bytes": 71175,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/light-1440-15.png": {
+      "sha": "aa6c26cac27d9fdaab39730003e20b074422ce32",
+      "bytes": 174085,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/light-320-15.png": {
+      "sha": "623d6bb2a9a7a4f03908889cf77339341dd73e6b",
+      "bytes": 63945,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/light-412-15.png": {
+      "sha": "4a52bc424550e8a6215a26712c4b96fd781fbd84",
+      "bytes": 68123,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-dark-1440-full.png": {
+      "sha": "e88d36297a6665dde17437b68c2203ae8b756d12",
+      "bytes": 1123435,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-dark-1440.png": {
+      "sha": "c25a7c40052b81d95c486c7b329c1d956803748f",
+      "bytes": 159533,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-dark-320-full.png": {
+      "sha": "103446a3514c1ec0e8e67725d0f349e3342588ad",
+      "bytes": 264503,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-dark-320.png": {
+      "sha": "b25a9c151e96b14f726a04439f4e2e5829a7c8fb",
+      "bytes": 72695,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-dark-412-full.png": {
+      "sha": "8ea82856795ecb5fcdd1d57493306d6bf65a33c9",
+      "bytes": 313867,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-dark-412.png": {
+      "sha": "b0792423259b60cac47dbdcb5bf3058f17980842",
+      "bytes": 84130,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-light-1440-full.png": {
+      "sha": "8d3a0213970d2066fbe3adc98e6b882a05630472",
+      "bytes": 1110860,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-light-1440.png": {
+      "sha": "c6c058fb8e3dd9272750a59861ad3a42015fad18",
+      "bytes": 150504,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-light-320-full.png": {
+      "sha": "9ac535227e3169387dac290996f0d95831bbf0c5",
+      "bytes": 264005,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-light-320.png": {
+      "sha": "88283a167eb20f5114a9b21a9a7dd2233328ca16",
+      "bytes": 74783,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-light-412-full.png": {
+      "sha": "8c745c41666287b1f3db55fcffa776acf1f7b3ce",
+      "bytes": 307292,
+      "mode": "100644"
+    },
+    "docs/reviews/home-rails/screenshots/preview-light-412.png": {
+      "sha": "d2de2604c38856b9ba8f1ff1b0f8d3fb5b85e5a2",
+      "bytes": 77730,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/README.md": {
+      "sha": "d13c3be78b0987f62a001540863212042121d3c7",
+      "bytes": 11053,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/catalog-error.png": {
+      "sha": "cb8d787a1288d5f8cf707dbaec2fa6d0f27fa05b",
+      "bytes": 67626,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/dark-1440.png": {
+      "sha": "3f15f350be4e51eff0916d5b6302bd8f1581522c",
+      "bytes": 170243,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/dark-320.png": {
+      "sha": "b7f8c1b96d5fec367fe9e5b300dbc0e7b67fe031",
+      "bytes": 120494,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/light-1440.png": {
+      "sha": "384f3b1c2bf7caf94727654889efd7df7a60739d",
+      "bytes": 172026,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/light-320.png": {
+      "sha": "1b3d00134fbb02a49ad23d8ba333a9db1b4b1a0f",
+      "bytes": 121225,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/missing-data.png": {
+      "sha": "cf6f5bff922b4ce99106404efb440a9cf6d05397",
+      "bytes": 59536,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/preview-dark-full.png": {
+      "sha": "3213a06b087985c1e8d83f7524eac14fdd4d53a6",
+      "bytes": 173097,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/preview-dark-paint.json": {
+      "sha": "c84a1c1658ce74bec85bb8a87b329c15de67918a",
+      "bytes": 696,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/preview-dark-producer-viewport.png": {
+      "sha": "ee8e50528f1787f5b6599b0bde092256571dc7a1",
+      "bytes": 93959,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/preview-dark-producer.png": {
+      "sha": "a6ab514717d9306e068114b350b8a06cc6b91b5d",
+      "bytes": 11684,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/preview-light-full.png": {
+      "sha": "0b8e11e6d4ab6adc1b726f38cc7c303e4a2b53b3",
+      "bytes": 174811,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/preview-light-paint.json": {
+      "sha": "7fe23c0c5d8228875d6ef6dbea000f6c9abae52e",
+      "bytes": 697,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/preview-light-producer-viewport.png": {
+      "sha": "c8e25dffeedac053d3c49519caa50e9f2be2cbf1",
+      "bytes": 94798,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/preview-light-producer.png": {
+      "sha": "9168e034248f5bb8073213022c3f2e09ebf93f7a",
+      "bytes": 11708,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/preview-local.png": {
+      "sha": "c9f1cbce31aab1497b26afbc62fe7a6b2fdfd3cf",
+      "bytes": 94488,
+      "mode": "100644"
+    },
+    "docs/reviews/home-stage1/screenshots/reflow-200-percent.png": {
+      "sha": "112ffe8fc02d13221b17fe7102bff7350d82f42b",
+      "bytes": 104875,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/README.md": {
+      "sha": "498ff8288267d5d576f17a8b08b71afc0c6a4c8c",
+      "bytes": 10596,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/advertising-source.json": {
+      "sha": "41808668e4544a388cf84b19912ff549391861a6",
+      "bytes": 1090,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/municipalities-source.json": {
+      "sha": "5ef56dfd342891b7ca288597b134cee95d719bf5",
+      "bytes": 340,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-priscila-dark-1440.png": {
+      "sha": "aba43c0ad4436cf5f622213b46a5ad1c212ab239",
+      "bytes": 433784,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-priscila-dark-320.png": {
+      "sha": "0215f1351c6d67c96456cae2a8bdc11e43aabf72",
+      "bytes": 39646,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-priscila-dark-412.png": {
+      "sha": "75be46e63749245b33465c6fa0e2855e5cf9fcfd",
+      "bytes": 59487,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-priscila-dark-768.png": {
+      "sha": "cbb1bf59a1431e5fe5c6ea40dd5cc1d5a8843a9e",
+      "bytes": 170662,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-priscila-light-1440.png": {
+      "sha": "84018cb3deb825f67da30b94813f0c89cd82f80d",
+      "bytes": 433719,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-priscila-light-320.png": {
+      "sha": "158aa8301462eb98472f22310990aa9d4b3fc1f8",
+      "bytes": 39621,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-priscila-light-412.png": {
+      "sha": "df2a5bb7fbd11c6adbbb60acbab7d8554ed55bcd",
+      "bytes": 59563,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-priscila-light-768.png": {
+      "sha": "9e8b293938f979a07f3d376276ef8ebedc05ee4c",
+      "bytes": 171030,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-tpssf-dark-1440.png": {
+      "sha": "f5b9867a71c9557995eb59e0c614db8af1da8451",
+      "bytes": 410486,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-tpssf-dark-320.png": {
+      "sha": "f88e7c6c3ff0505cf517b03cfb155b7a7bfa373c",
+      "bytes": 36143,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-tpssf-dark-412.png": {
+      "sha": "c44764862e489eef508e5225731ac9c89f495631",
+      "bytes": 54261,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-tpssf-dark-768.png": {
+      "sha": "a7e324f6b2ca02ac4a3742c2367f6a2b3eae5a35",
+      "bytes": 160697,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-tpssf-light-1440.png": {
+      "sha": "483636a949b5dd6388b19108e4e06f43bfb79f0e",
+      "bytes": 410599,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-tpssf-light-320.png": {
+      "sha": "8736ffce81daa26fdedb5598de8a9ee4f7fa0a4d",
+      "bytes": 36210,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-tpssf-light-412.png": {
+      "sha": "7796e9b0128fe1a4d4a61388ef35a6c8358c0bac",
+      "bytes": 54454,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/advertising-tpssf-light-768.png": {
+      "sha": "3f9ee653991676a368ea20b6e8081b265cbbc92f",
+      "bytes": 160845,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/after-dark-desktop.png": {
+      "sha": "443aa5331fecf1e693784ebad855c1dadafac50f",
+      "bytes": 1133612,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/after-dark-menu.png": {
+      "sha": "e9eb9cd0b0ff0e131945ce60ada0b482f7ff4af6",
+      "bytes": 46104,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/after-dark-mobile.png": {
+      "sha": "5d6f4361f5d01f8f31207e0450e5cf880e610b3d",
+      "bytes": 325332,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/after-dark-payment.png": {
+      "sha": "531c664606638f5f5bee0a3527f1199a293103ed",
+      "bytes": 28565,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/after-light-desktop.png": {
+      "sha": "1706faf1109cf2d0b7c9f3f4b7151dbbaf4e8bde",
+      "bytes": 1121704,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/after-light-menu.png": {
+      "sha": "53e0d02f0535882f689ea9295b63d3523d03de1e",
+      "bytes": 49717,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/after-light-mobile.png": {
+      "sha": "24e3f4080d60f2d04c47d9b8fd1f4b9729258567",
+      "bytes": 327426,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/after-light-payment.png": {
+      "sha": "5db60a1844b20881bc8137aeea96c5e42b69730a",
+      "bytes": 28505,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/before-dark-desktop.png": {
+      "sha": "3213a06b087985c1e8d83f7524eac14fdd4d53a6",
+      "bytes": 173097,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/before-dark-menu.png": {
+      "sha": "4a6283c9524d41fba85c6e37f249b58f1772cfc4",
+      "bytes": 40888,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/before-dark-mobile.png": {
+      "sha": "b7096e237c09254382867bf816417031928f9d5d",
+      "bytes": 135667,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/before-dark-payment.png": {
+      "sha": "7d73c98dc286f009a01581f4d159acedec65f391",
+      "bytes": 21327,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/before-light-desktop.png": {
+      "sha": "0b8e11e6d4ab6adc1b726f38cc7c303e4a2b53b3",
+      "bytes": 174811,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/before-light-menu.png": {
+      "sha": "f30efdd27cdbbc237ffd1e339a5c2d11c88cbf78",
+      "bytes": 41214,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/before-light-mobile.png": {
+      "sha": "6d975510bf8e13742e0507d682c249e02927ce35",
+      "bytes": 136557,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/before-light-payment.png": {
+      "sha": "731fea4f017989e4cfd6ecd1db101dd806b36f57",
+      "bytes": 21838,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/catalog-error.png": {
+      "sha": "bd6e96d02bff5b18f0fd14ff68232b56bf4d7eb9",
+      "bytes": 500846,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/dark-1440.png": {
+      "sha": "89ea357486e803e94f4a67794920d476a6ede101",
+      "bytes": 1132130,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/dark-320.png": {
+      "sha": "943d9361b4dc3600c2884c0b81c500e5806b5123",
+      "bytes": 270281,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/language-en-US-footer-320.png": {
+      "sha": "e9c9db836f8d82d595b17ef6afbcbcab7d8f7c1a",
+      "bytes": 28383,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/language-en-US-menu-320.png": {
+      "sha": "01cfce1c565f19e5f03256e2300d2713b2161b85",
+      "bytes": 47123,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/language-es-footer-320.png": {
+      "sha": "6de861d0537f279cefda40a4b0eb30df33b1d369",
+      "bytes": 29861,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/language-es-menu-320.png": {
+      "sha": "c4395ebd4c31e3269140be2c6a67d87ba517a46d",
+      "bytes": 47513,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/language-pt-BR-footer-320.png": {
+      "sha": "1f48ca0ea4da00a7ae3edede3c3d2b032847af32",
+      "bytes": 28754,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/language-pt-BR-menu-320.png": {
+      "sha": "b44758df5368d8354366ff6844ba00fbead78590",
+      "bytes": 47404,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/language-zh-Hans-footer-320.png": {
+      "sha": "8e6d12dec99f5deb333d642617a2049df2a3f82e",
+      "bytes": 30658,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/language-zh-Hans-menu-320.png": {
+      "sha": "efc78eb0065146d8fb61623c4dd47b800f54501c",
+      "bytes": 45973,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/light-1440.png": {
+      "sha": "afa94837908aae3a693572a497429fe228bfd3f7",
+      "bytes": 1118903,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/light-320.png": {
+      "sha": "93b279d37c57869b309a0f5b5940b3fdde8bafca",
+      "bytes": 265044,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/missing-data.png": {
+      "sha": "74713973a77ef65d933ba2b95d80e3f1d5765e21",
+      "bytes": 225840,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-dark-full-1.png": {
+      "sha": "443aa5331fecf1e693784ebad855c1dadafac50f",
+      "bytes": 1133612,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-dark-full-2.png": {
+      "sha": "223c9279f5f0f534a02ffcf6dc5986cc083fb210",
+      "bytes": 1133613,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-dark-paint.json": {
+      "sha": "a7a7b6e27eab3e40b52bd53df700b83c88548b11",
+      "bytes": 702,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-dark-producer-viewport.png": {
+      "sha": "c19276b91958db7fa10f93bb2e191339c86b34c4",
+      "bytes": 125960,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-dark-producer.png": {
+      "sha": "3a5324c7507508af140deefcec87b6b55e67ed3e",
+      "bytes": 11491,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-light-full-1.png": {
+      "sha": "1706faf1109cf2d0b7c9f3f4b7151dbbaf4e8bde",
+      "bytes": 1121704,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-light-full-2.png": {
+      "sha": "028f0f41cd68efcd23c006b9093f15daa97d26ff",
+      "bytes": 1121705,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-light-paint.json": {
+      "sha": "2b153a4544e8dc1e0bf7814fb76941de72fb5e2e",
+      "bytes": 703,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-light-producer-viewport.png": {
+      "sha": "6dc026dc09b5bbc1a64945e6d435a0fad2346bba",
+      "bytes": 126319,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-light-producer.png": {
+      "sha": "ee93e7dbf8cf4cd03ff62116bd619abd5740724e",
+      "bytes": 11543,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/preview-local.png": {
+      "sha": "a6e4d809d2b5d34124e6c0f09343203266a8b772",
+      "bytes": 489396,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/reflow-200-percent.png": {
+      "sha": "accf8fc25a258cb564a274d2cf5a637ca5d2c8fe",
+      "bytes": 185884,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/text-150-dark-320.png": {
+      "sha": "bb75e07e7ac1ee5a7d4922bfb14845bf4c847ac9",
+      "bytes": 31419,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/screenshots/text-150-light-320.png": {
+      "sha": "b3aa2eac7267f5886191bbb325c78550c6c4adce",
+      "bytes": 32534,
+      "mode": "100644"
+    },
+    "docs/reviews/home-v1/validation.json": {
+      "sha": "502a43e85c8c04992ca2fe0e038b3c87cd664f5b",
+      "bytes": 6516,
+      "mode": "100644"
+    },
+    "docs/reviews/public-event-language.md": {
+      "sha": "d1cc3411dc7e8f2a47f9b923d01dd28ba55dfdf5",
+      "bytes": 2556,
+      "mode": "100644"
+    },
+    "docs/waze-mark-provenance.md": {
+      "sha": "fd679ced3e63cb00a757d0d8e4a066df02172748",
+      "bytes": 2014,
+      "mode": "100644"
+    },
+    "evento-v2/index.html": {
+      "sha": "ede3a780d41f0001591f70ed67d148fa17510f40",
+      "bytes": 145983,
+      "mode": "100644"
+    },
+    "evento/index.html": {
+      "sha": "ce9d798936cb25b6f49c19b1332a6965ed53456e",
+      "bytes": 145008,
+      "mode": "100644"
+    },
+    "eventos-v2/index.html": {
+      "sha": "424157387cd87f6bf010d958b7a3dcf1e5c3d420",
+      "bytes": 80606,
+      "mode": "100644"
+    },
+    "financeiro/index.html": {
+      "sha": "8afa3f0af89eead09bfdbca6a60fe416b307f733",
+      "bytes": 24882,
+      "mode": "100644"
+    },
+    "fornecedor/index.html": {
+      "sha": "1c6970bb06f73e79f77316a2e82866bd67c9c6ca",
+      "bytes": 35375,
+      "mode": "100644"
+    },
+    "fornecedores/index.html": {
+      "sha": "8eb6efc91bf504b5597ad5de77f91a807786d714",
+      "bytes": 22401,
+      "mode": "100644"
+    },
+    "google994ee99d62e24f28.html": {
+      "sha": "c07af0d26a2d0a41eef09f8c384e0265745dde59",
+      "bytes": 53,
+      "mode": "100644"
+    },
+    "index.html": {
+      "sha": "ba825abcf16e32720039893c80f7d70b1d0d17c8",
+      "bytes": 29444,
+      "mode": "100644"
+    },
+    "ingresso/index.html": {
+      "sha": "9bde3f71ebe8c71d50bd19006c30ee678f1c4581",
+      "bytes": 19517,
+      "mode": "100644"
+    },
+    "manifest-checkin.webmanifest": {
+      "sha": "f12568da7f87bcc69a509ad4689e73478bdab21f",
+      "bytes": 745,
+      "mode": "100644"
+    },
+    "manifest-produtor.webmanifest": {
+      "sha": "4e8ba9170f0517a8e4aaea4f628210a724ef8731",
+      "bytes": 1393,
+      "mode": "100644"
+    },
+    "manifest.webmanifest": {
+      "sha": "b8b033edb2fa603aa88832df7fff9aaaa98e5f29",
+      "bytes": 816,
+      "mode": "100644"
+    },
+    "minha-carioca/acesso/index.html": {
+      "sha": "a4e6a46e89393e4b9bcf70536b46709e831dec7a",
+      "bytes": 23886,
+      "mode": "100644"
+    },
+    "minha-carioca/conta/index.html": {
+      "sha": "64ea9d8891c4a7f960abd66716973db55bb1a325",
+      "bytes": 17438,
+      "mode": "100644"
+    },
+    "minha-carioca/index.html": {
+      "sha": "9bacf652f82913bab620e8a6f97d4625e67ae8c3",
+      "bytes": 14545,
+      "mode": "100644"
+    },
+    "minha-carioca/ingressos/index.html": {
+      "sha": "339acbdd2c6919b45986b97e5e4c236b484c3d97",
+      "bytes": 8930,
+      "mode": "100644"
+    },
+    "minha-carioca/login/index.html": {
+      "sha": "2d34fbf33d0c35434a0a106845e51d1987736ede",
+      "bytes": 23926,
+      "mode": "100644"
+    },
+    "package.json": {
+      "sha": "6f008841f76af9b5f26dfd088748060957ae5968",
+      "bytes": 497,
+      "mode": "100644"
+    },
+    "parceiro/admin/index.html": {
+      "sha": "9819ca3bac61928d34af678fd05a9325d62258fc",
+      "bytes": 26889,
+      "mode": "100644"
+    },
+    "parceiro/ativar/index.html": {
+      "sha": "ad282c0febe72481b5d42a520b0ef68981fe71e0",
+      "bytes": 14307,
+      "mode": "100644"
+    },
+    "parceiro/conduta/index.html": {
+      "sha": "00fdd0d1d4cb7833a40d7eae9d5e54a70f965a3e",
+      "bytes": 5826,
+      "mode": "100644"
+    },
+    "parceiro/index.html": {
+      "sha": "82883e4d1b799c88ce9349a5dbd5b61202de8b8e",
+      "bytes": 40627,
+      "mode": "100644"
+    },
+    "parceiro/manual/index.html": {
+      "sha": "02b5c73216cc8f4e84135a1fa089557b1bb12b48",
+      "bytes": 5277,
+      "mode": "100644"
+    },
+    "parceiro/programa/index.html": {
+      "sha": "c80e3c49fa6662f4dda16b34db25405549d235e5",
+      "bytes": 40475,
+      "mode": "100644"
+    },
+    "parceiro/regras-comerciais/index.html": {
+      "sha": "901eefb9f65773849ad96e841ecd0e36a2addc07",
+      "bytes": 3646,
+      "mode": "100644"
+    },
+    "parceiro/regulamento/index.html": {
+      "sha": "416853c8bfbce918bf92279442da920f3e09c092",
+      "bytes": 5932,
+      "mode": "100644"
+    },
+    "parceiro/tratamento-dados/index.html": {
+      "sha": "665ef149a963cf88bda912eac75667fbf2230d60",
+      "bytes": 3687,
+      "mode": "100644"
+    },
+    "playwright.branch-guard.config.cjs": {
+      "sha": "6625b5dcf2d3072aebf8be1d7b51fd9a88c5e549",
+      "bytes": 571,
+      "mode": "100644"
+    },
+    "playwright.canary.config.cjs": {
+      "sha": "05da005b4616f86463d11386a8d3395be4ffc86f",
+      "bytes": 1154,
+      "mode": "100644"
+    },
+    "playwright.catalog-isolated.config.cjs": {
+      "sha": "1999097836bf52b748f55d33e5dd05de6cf3aa6d",
+      "bytes": 879,
+      "mode": "100644"
+    },
+    "playwright.config.js": {
+      "sha": "e74fbb59e07c1752272a16f20caa4301dd6fa9d7",
+      "bytes": 1305,
+      "mode": "100644"
+    },
+    "playwright.event-accessibility.config.cjs": {
+      "sha": "ea355849cbf2fa8ab2a8eee9adab29f3890db51f",
+      "bytes": 637,
+      "mode": "100644"
+    },
+    "playwright.home.config.cjs": {
+      "sha": "7b9d59745a287be70f9f18d482571cfa2a6996eb",
+      "bytes": 635,
+      "mode": "100644"
+    },
+    "privacidade/index.html": {
+      "sha": "edb1c122ea4450a883e33d3176ab902e812b42cc",
+      "bytes": 17244,
+      "mode": "100644"
+    },
+    "produtor-v2/index.html": {
+      "sha": "2b86c78bf662662580c879243ebc83241a9c3a7d",
+      "bytes": 69878,
+      "mode": "100644"
+    },
+    "produtor/campanhas/index.html": {
+      "sha": "d0f7e9176bd34671f699a5e9c33dfba213751b98",
+      "bytes": 30304,
+      "mode": "100644"
+    },
+    "produtor/carioca-pay/index.html": {
+      "sha": "9fc9257a63b7b4b4e819a22ebbaf7b5073f9f7dd",
+      "bytes": 13588,
+      "mode": "100644"
+    },
+    "produtor/comissoes/index.html": {
+      "sha": "b0c9140878033ff3d761d29cf49c73920e32ac19",
+      "bytes": 33709,
+      "mode": "100644"
+    },
+    "produtor/convidados/index.html": {
+      "sha": "e2c40eb96b4b30ce112ec4b70af20cc1de2bcb24",
+      "bytes": 25769,
+      "mode": "100644"
+    },
+    "produtor/cortesias/index.html": {
+      "sha": "69231ea882a66150319ba4a6ab34485f5b9af2e4",
+      "bytes": 46933,
+      "mode": "100644"
+    },
+    "produtor/financeiro/index.html": {
+      "sha": "471b0ffea43dc087f03b0582ee611c4965602612",
+      "bytes": 32115,
+      "mode": "100644"
+    },
+    "produtor/index.html": {
+      "sha": "eee45965ad6afb12966782cfb8b92b02f9acfe67",
+      "bytes": 96376,
+      "mode": "100644"
+    },
+    "produtor/ingressos/index.html": {
+      "sha": "7b5a00fdaf97632f9392c8d0de87ae923ae51fe5",
+      "bytes": 35014,
+      "mode": "100644"
+    },
+    "produtor/politica-comercial/index.html": {
+      "sha": "0856d1cf00cb0b4bf8c2ac55b222524b24f2099f",
+      "bytes": 11212,
+      "mode": "100644"
+    },
+    "produtor/solicitacoes/index.html": {
+      "sha": "34231fb13d0b244daaf0712f64824d432d6c4273",
+      "bytes": 22706,
+      "mode": "100644"
+    },
+    "produtor/solicitar/index.html": {
+      "sha": "890501a66055e2e90a0cde95d51ad33fc45c716a",
+      "bytes": 15232,
+      "mode": "100644"
+    },
+    "pwa-register.js": {
+      "sha": "5bf3e88911cc8342c0cd9d541ce314e605ecf3ad",
+      "bytes": 306,
+      "mode": "100644"
+    },
+    "reembolsos/index.html": {
+      "sha": "c8d5ce5faa7734dc2aa28fe6de052041ea3a459c",
+      "bytes": 19536,
+      "mode": "100644"
+    },
+    "relatorios/index.html": {
+      "sha": "74ff3f39c61ba019415435e6d20b1f6c40df7225",
+      "bytes": 13454,
+      "mode": "100644"
+    },
+    "roda-de-samba/index.html": {
+      "sha": "f7b5d95b30c52256bfbb6d8a3586c623366bed6b",
+      "bytes": 4234,
+      "mode": "100644"
+    },
+    "saude-vendas/index.html": {
+      "sha": "483a73becb6b7463122fc89a7956adae507a7115",
+      "bytes": 18823,
+      "mode": "100644"
+    },
+    "scripts/fetch-home-boundaries.py": {
+      "sha": "c55b89d4c09fa47a7d348c65e1775f12c6489391",
+      "bytes": 2515,
+      "mode": "100644"
+    },
+    "sobre/index.html": {
+      "sha": "d7d90123ba63c26fdf25034dcc6d97031f48eaec",
+      "bytes": 6829,
+      "mode": "100644"
+    },
+    "styles.css": {
+      "sha": "a189f4cef7b2f19d91ec39ddf749343dace1f329",
+      "bytes": 18231,
+      "mode": "100644"
+    },
+    "sw.js": {
+      "sha": "80888ce9a64f2fab571e1dfd70d581d46c361ea8",
+      "bytes": 366,
+      "mode": "100644"
+    },
+    "termos/index.html": {
+      "sha": "eb08bec971f86a74b884a3b58d57f4a26876f19d",
+      "bytes": 10851,
+      "mode": "100644"
+    },
+    "tests/advance-sales-closure.browser.cjs": {
+      "sha": "122caa55d69bb668c5328d3a2d71418ce2e47327",
+      "bytes": 16414,
+      "mode": "100644"
+    },
+    "tests/advertise-browser.py": {
+      "sha": "8278811f6c2a1d8efcd11ef715270fc61517b87d",
+      "bytes": 13127,
+      "mode": "100644"
+    },
+    "tests/advertise-contract.cjs": {
+      "sha": "8872a4b2431b237c13c2fb2bf8f77ecead173ff9",
+      "bytes": 3644,
+      "mode": "100644"
+    },
+    "tests/biocred-financeiro-canary.contract.mjs": {
+      "sha": "da2a9d4148317b3e95fc3cf41a356728f2be203e",
+      "bytes": 2097,
+      "mode": "100644"
+    },
+    "tests/campanhas-recompensas.contract.mjs": {
+      "sha": "f175d30b3abe7b1662fdc7cc874cdd08690f716b",
+      "bytes": 2706,
+      "mode": "100644"
+    },
+    "tests/catalog-performance-isolated.cjs": {
+      "sha": "9ff284ea29086bc3da03fe8682531bafb35e485c",
+      "bytes": 23216,
+      "mode": "100644"
+    },
+    "tests/central-session.runtime.cjs": {
+      "sha": "af4da436dbf3da92ad93212aa7c775f777b0a928",
+      "bytes": 16070,
+      "mode": "100644"
+    },
+    "tests/checkout-commercial-policy.runtime.js": {
+      "sha": "f2be1c10060c77d906d2e69554f5aee61cd19f39",
+      "bytes": 4118,
+      "mode": "100644"
+    },
+    "tests/checkout-cover-contract.cjs": {
+      "sha": "675759a856305a8dcd72ac9160a82a0fa4892851",
+      "bytes": 5355,
+      "mode": "100644"
+    },
+    "tests/checkout-cover.browser.cjs": {
+      "sha": "23b1b2ae056eb1d9ed605877c09fd2fb6bfbc6f3",
+      "bytes": 9495,
+      "mode": "100644"
+    },
+    "tests/checkout-era-beauty.browser.js": {
+      "sha": "08cedbccc4534f495b80aa9112e1c7049bef2454",
+      "bytes": 15849,
+      "mode": "100644"
+    },
+    "tests/checkout-era-beauty.dom.js": {
+      "sha": "c227751f9c91f43fbffb2b806798e81d3c8d745f",
+      "bytes": 44487,
+      "mode": "100644"
+    },
+    "tests/checkout-home-navigation.browser.cjs": {
+      "sha": "07780aa6a9911d155632854da4d748d83443cf8e",
+      "bytes": 21007,
+      "mode": "100644"
+    },
+    "tests/checkout-home-navigation.runtime.cjs": {
+      "sha": "fbd635f054eee2de1739907c71be9f5f99b46bd5",
+      "bytes": 4381,
+      "mode": "100644"
+    },
+    "tests/checkout-language.browser.cjs": {
+      "sha": "f58299cf1b8540e08b9916fa3482dba213439e0c",
+      "bytes": 15047,
+      "mode": "100644"
+    },
+    "tests/checkout-language.dom.cjs": {
+      "sha": "5fd562afcd7d89d04b83afebd677dbd8023a073c",
+      "bytes": 54952,
+      "mode": "100644"
+    },
+    "tests/checkout-ticket-status.browser.cjs": {
+      "sha": "df35ac23032ba1c399b871bcb3c73e2e217b8083",
+      "bytes": 19455,
+      "mode": "100644"
+    },
+    "tests/checkout_gratuito_contract.py": {
+      "sha": "51ffc6bd2c0263feb6bc0e48d6c817439021db72",
+      "bytes": 1897,
+      "mode": "100644"
+    },
+    "tests/comissoes-promotores.contract.mjs": {
+      "sha": "85376ea9bf3f61d52fa3e8f6f8692e71493d2be3",
+      "bytes": 3113,
+      "mode": "100644"
+    },
+    "tests/contracts.mjs": {
+      "sha": "13b2ab0696c87e3895dc6e2d4cbce0bce66dc657",
+      "bytes": 54236,
+      "mode": "100644"
+    },
+    "tests/dark-default-browser.py": {
+      "sha": "77f08d1ce83088445cfcfa261afcc54bb220141f",
+      "bytes": 6784,
+      "mode": "100644"
+    },
+    "tests/dark-default-contract.cjs": {
+      "sha": "9bbc43c5965733c06ee332f62d8bda0bcaed51d9",
+      "bytes": 2613,
+      "mode": "100644"
+    },
+    "tests/demo-event-isolated.cjs": {
+      "sha": "60b4200136b46bebb1e179e223a1568fe2ad947d",
+      "bytes": 13529,
+      "mode": "100644"
+    },
+    "tests/e2e/authenticated-operational.spec.js": {
+      "sha": "a8d12fa0826af436a84ad0acff7c089599f3580b",
+      "bytes": 64327,
+      "mode": "100644"
+    },
+    "tests/e2e/backoffice-master.spec.js": {
+      "sha": "4e8462fd21a921115f0901906df7cd23f2e927f0",
+      "bytes": 8521,
+      "mode": "100644"
+    },
+    "tests/e2e/buyer-journey.spec.js": {
+      "sha": "140be5326da7e1ad6a5d0dc0ce8da5d4f41da7ef",
+      "bytes": 12014,
+      "mode": "100644"
+    },
+    "tests/e2e/canary-real.spec.js": {
+      "sha": "555b6e17269867f9722085b4ac311d272e6a9334",
+      "bytes": 10127,
+      "mode": "100644"
+    },
+    "tests/e2e/checkin-journey.spec.js": {
+      "sha": "7606867d46c778329d04caec68ae2eafa2539930",
+      "bytes": 2484,
+      "mode": "100644"
+    },
+    "tests/e2e/coupon-journey.spec.js": {
+      "sha": "e79c3c0f7e6a0db3d28e5d1d34473cecb68a1465",
+      "bytes": 22594,
+      "mode": "100644"
+    },
+    "tests/e2e/critical-matrix.spec.js": {
+      "sha": "257ef18923e7aa13f4d62e8e3392538fde09230c",
+      "bytes": 17095,
+      "mode": "100644"
+    },
+    "tests/e2e/era-approved-visual.spec.js": {
+      "sha": "e950643b8f56076145dd3883fc7a85e922773ef5",
+      "bytes": 10216,
+      "mode": "100644"
+    },
+    "tests/e2e/evento-v2-loading-harness.spec.js": {
+      "sha": "5d8971f8fac4207fc0b6751504a78429e8acd670",
+      "bytes": 15029,
+      "mode": "100644"
+    },
+    "tests/e2e/first-party-facades.spec.js": {
+      "sha": "3626fa5c2bd95967c226c46374a78c15504d0d9b",
+      "bytes": 30246,
+      "mode": "100644"
+    },
+    "tests/e2e/helpers/branch-isolated.cjs": {
+      "sha": "a113da3c28e61052775077412e65a554d1652946",
+      "bytes": 1515,
+      "mode": "100644"
+    },
+    "tests/e2e/helpers/public-isolated.cjs": {
+      "sha": "471defd2d5527a8ebda2aa41294d56ef2e62b66e",
+      "bytes": 1068,
+      "mode": "100644"
+    },
+    "tests/e2e/meeting-readiness.spec.js": {
+      "sha": "d54cf9fade5adb08604de8a299d3430ade2b96a8",
+      "bytes": 8558,
+      "mode": "100644"
+    },
+    "tests/e2e/navigation-journey.spec.js": {
+      "sha": "bda9e640770c4eebe0397fd2819ee29f6c1933f2",
+      "bytes": 8252,
+      "mode": "100644"
+    },
+    "tests/e2e/operational-entry.spec.js": {
+      "sha": "c69688eeee47b2fadc2083dffe8c9a54ebf91fb0",
+      "bytes": 1848,
+      "mode": "100644"
+    },
+    "tests/e2e/p0-polling-checkout.spec.js": {
+      "sha": "932718195b39874d65c251e3092bc4f14d2bbcb0",
+      "bytes": 5758,
+      "mode": "100644"
+    },
+    "tests/e2e/p0-ticket-actions.spec.js": {
+      "sha": "674d16a44a0fd712eaf5236dfd880fb5d3d92128",
+      "bytes": 10008,
+      "mode": "100644"
+    },
+    "tests/e2e/p0-ticket-open-after-payment.spec.js": {
+      "sha": "f04dca550803a0600c44fca82899b24b20864e6b",
+      "bytes": 7565,
+      "mode": "100644"
+    },
+    "tests/e2e/partner-onboarding.spec.js": {
+      "sha": "8c802a261c3353da09931523f24384d6f47c45a6",
+      "bytes": 17666,
+      "mode": "100644"
+    },
+    "tests/e2e/partner-public-production.spec.js": {
+      "sha": "bb384f9433c721ec0379ec11d1225e8f1e2a014a",
+      "bytes": 3207,
+      "mode": "100644"
+    },
+    "tests/e2e/politica-comercial.spec.js": {
+      "sha": "1f69481c826c073dba88bbd85f835bfeee00a9be",
+      "bytes": 6749,
+      "mode": "100644"
+    },
+    "tests/e2e/producer-campaign-reward.spec.js": {
+      "sha": "a1e87b8671db13f7b7dae04a0b938f30236e7671",
+      "bytes": 13973,
+      "mode": "100644"
+    },
+    "tests/e2e/producer-commissions.spec.js": {
+      "sha": "ade08289153c232700739701392e80227d4ac158",
+      "bytes": 10821,
+      "mode": "100644"
+    },
+    "tests/e2e/producer-courtesy.spec.js": {
+      "sha": "eaa78df56aadb0fbad3d540c80624ecfba0e0cf1",
+      "bytes": 68534,
+      "mode": "100644"
+    },
+    "tests/e2e/producer-event-governance.spec.js": {
+      "sha": "57b8760e82bc9c1b46532618dbe47c978e58e19e",
+      "bytes": 12755,
+      "mode": "100644"
+    },
+    "tests/e2e/producer-finance-activation.spec.js": {
+      "sha": "579494ae5420fc6c9a18a3f67c818547d8de7a60",
+      "bytes": 9763,
+      "mode": "100644"
+    },
+    "tests/e2e/producer-finance-master.spec.js": {
+      "sha": "13a683e54caf66991c7fe40b9944945981330d03",
+      "bytes": 12321,
+      "mode": "100644"
+    },
+    "tests/e2e/producer-hardening-local.spec.js": {
+      "sha": "cdbb52685e5710cfddcb101540e330cdc594656d",
+      "bytes": 16067,
+      "mode": "100644"
+    },
+    "tests/e2e/producer-onboarding.spec.js": {
+      "sha": "206f600845050ea22557dd07a1335681d69d50d2",
+      "bytes": 11507,
+      "mode": "100644"
+    },
+    "tests/e2e/producer-portal-first-paint.spec.js": {
+      "sha": "6cdbfefb41819f5fb00881689e7cdb47f35c0182",
+      "bytes": 2228,
+      "mode": "100644"
+    },
+    "tests/e2e/public-event-catalog.spec.js": {
+      "sha": "d5a93aeaef0de81257993a68d0ac3b6cb5bdf582",
+      "bytes": 21362,
+      "mode": "100644"
+    },
+    "tests/e2e/public-journey.spec.js": {
+      "sha": "4f2db4cbf14429623ca0d1c050b38db3dcb6f542",
+      "bytes": 7216,
+      "mode": "100644"
+    },
+    "tests/e2e/supplier-journey.spec.js": {
+      "sha": "651f928805f11cf06d26f1100e085d1b74b806db",
+      "bytes": 8153,
+      "mode": "100644"
+    },
+    "tests/era-finance-summary.runtime.js": {
+      "sha": "b414a710c7c47563bc3b35de12ed4dfddc344d94",
+      "bytes": 26070,
+      "mode": "100644"
+    },
+    "tests/event-accessibility-preview.cjs": {
+      "sha": "e1e953717841dd9a61d7c4217d6433e146c254f7",
+      "bytes": 5561,
+      "mode": "100644"
+    },
+    "tests/event-accessibility/audit-native.cjs": {
+      "sha": "2cbf1662e7e22b2a547c3ccdb3414f3404b6c107",
+      "bytes": 3767,
+      "mode": "100644"
+    },
+    "tests/event-accessibility/audit-vlibras.cjs": {
+      "sha": "35323346116e0f5f74611abf047530f754fe5743",
+      "bytes": 3586,
+      "mode": "100644"
+    },
+    "tests/event-accessibility/event.spec.cjs": {
+      "sha": "2f26b3ae01955ac5343da8e1b86dd23ae5aec42e",
+      "bytes": 22073,
+      "mode": "100644"
+    },
+    "tests/event-accessibility/vlibras-proof.cjs": {
+      "sha": "0e20c5b5f8f9bbde6ad2748998d4850d71928935",
+      "bytes": 4453,
+      "mode": "100644"
+    },
+    "tests/event-directions-browser.py": {
+      "sha": "856ff4883ba39827b1f55d797e424657b3bb8da1",
+      "bytes": 8833,
+      "mode": "100644"
+    },
+    "tests/event-directions-contract.cjs": {
+      "sha": "906d9ebafe96b4753b6ddac2d0808fcaabf17398",
+      "bytes": 4823,
+      "mode": "100644"
+    },
+    "tests/event-language-preview.cjs": {
+      "sha": "a4caf1b5a4a8eaa97d0b69c09a0027f2d3d0ec7c",
+      "bytes": 5760,
+      "mode": "100644"
+    },
+    "tests/event-language.spec.py": {
+      "sha": "964ee54201a16f88f4c5b39011f2de389bd77f69",
+      "bytes": 11690,
+      "mode": "100644"
+    },
+    "tests/event-map-contract.cjs": {
+      "sha": "a9d176ba27797fb08fb0c9d51068ead0becc8158",
+      "bytes": 3169,
+      "mode": "100644"
+    },
+    "tests/event-map-integration.cjs": {
+      "sha": "ffe9005564a2435d4d7e7a3904b59aa12ae7e754",
+      "bytes": 9094,
+      "mode": "100644"
+    },
+    "tests/event-map-preview-server.cjs": {
+      "sha": "0977bab35f05757ea554b08014b735455c07d784",
+      "bytes": 5493,
+      "mode": "100644"
+    },
+    "tests/event-uber-browser.cjs": {
+      "sha": "251bd94837161c47c731484a33bf999a6c54c269",
+      "bytes": 8817,
+      "mode": "100644"
+    },
+    "tests/event-uber-contract.cjs": {
+      "sha": "e3633b7d8c5c7d33d17a6a7ff4292ac2c58cad55",
+      "bytes": 5853,
+      "mode": "100644"
+    },
+    "tests/event-uber-preview-server.cjs": {
+      "sha": "d921876b1a9c4530d0d88e20e0f8cd26b6263096",
+      "bytes": 6378,
+      "mode": "100644"
+    },
+    "tests/event-waze-browser.cjs": {
+      "sha": "d5b99d1038c82eaf6b0ec140b6fbdecb30f59add",
+      "bytes": 11026,
+      "mode": "100644"
+    },
+    "tests/event-waze-contract.cjs": {
+      "sha": "eeea6d3f574c2627e6abd5dbf2ff561879072ca3",
+      "bytes": 6195,
+      "mode": "100644"
+    },
+    "tests/evento-transport-runtime.cjs": {
+      "sha": "ba5a9c610d338c7c7ad4383e90168311f8232cc3",
+      "bytes": 18499,
+      "mode": "100644"
+    },
+    "tests/eventos-privados-v1.mjs": {
+      "sha": "7e53a2cb0b1d53879fa1fe495d86befa968a1c7d",
+      "bytes": 6282,
+      "mode": "100644"
+    },
+    "tests/fixtures/home-stage1.cjs": {
+      "sha": "7865c7cad11f5cbd1f5be26f1063f5286b0859d4",
+      "bytes": 1678,
+      "mode": "100644"
+    },
+    "tests/fixtures/institutional-source-text.json": {
+      "sha": "eb214395a3c96dca1542d2f38f86b395e16da19c",
+      "bytes": 9677,
+      "mode": "100644"
+    },
+    "tests/fixtures/public-canary.cjs": {
+      "sha": "c0c7945d6c78d5490448a6b39df1602a3aae11be",
+      "bytes": 6576,
+      "mode": "100644"
+    },
+    "tests/full-surface-audit.mjs": {
+      "sha": "af6951662b4729e37f8ed6297da5d9a6f34a8ad9",
+      "bytes": 6418,
+      "mode": "100644"
+    },
+    "tests/home-location-browser.py": {
+      "sha": "a66ba78cf28cd5a1aebc50bbd56fd46f71a78153",
+      "bytes": 8366,
+      "mode": "100644"
+    },
+    "tests/home-location.test.js": {
+      "sha": "fb2689b53b926eb906741cf733f6e6fd01bac8e5",
+      "bytes": 2915,
+      "mode": "100644"
+    },
+    "tests/home-preview-server.cjs": {
+      "sha": "54fe965f04726e5037c8c728903a84545a6cdbe2",
+      "bytes": 4945,
+      "mode": "100644"
+    },
+    "tests/home/capture.cjs": {
+      "sha": "14ee3d4f9ba0bfc1624af0c3ee898eb6f3d68a5c",
+      "bytes": 1161,
+      "mode": "100644"
+    },
+    "tests/home/category-language.spec.js": {
+      "sha": "b138ebf0cf9b59b0cec53fe5fa9608476401fb6d",
+      "bytes": 6424,
+      "mode": "100644"
+    },
+    "tests/home/compact-ads-home-links.spec.js": {
+      "sha": "0c67e3989cfc390bf968ee383b893f94affb59b1",
+      "bytes": 10864,
+      "mode": "100644"
+    },
+    "tests/home/desktop-navigation.spec.js": {
+      "sha": "7cccf76060b17c095846af2d27149b82c718a762",
+      "bytes": 17139,
+      "mode": "100644"
+    },
+    "tests/home/event-card-share.spec.js": {
+      "sha": "f629ade3bb1a002f951fd63a412cbe30141af5cb",
+      "bytes": 14530,
+      "mode": "100644"
+    },
+    "tests/home/event-rail.spec.js": {
+      "sha": "5ca507d8b45abdcaf1e59e904a8e25a778f326e3",
+      "bytes": 22196,
+      "mode": "100644"
+    },
+    "tests/home/home-stage1.spec.js": {
+      "sha": "54907b3e9bb6e8c1e74d82fb446c5d110e20d29f",
+      "bytes": 57015,
+      "mode": "100644"
+    },
+    "tests/home/install-social.spec.js": {
+      "sha": "a742f5064cb57c9c5282e83ce23e3daf4b792367",
+      "bytes": 11443,
+      "mode": "100644"
+    },
+    "tests/home/mobile-autoplay.spec.js": {
+      "sha": "f401fbd6bb3b4a69548db2ff0a63c194fc09d1a7",
+      "bytes": 12393,
+      "mode": "100644"
+    },
+    "tests/home/preview-security.spec.js": {
+      "sha": "6727315992e25dac654730cf61072729fac9a277",
+      "bytes": 7617,
+      "mode": "100644"
+    },
+    "tests/home/public-share.spec.js": {
+      "sha": "1f5ebcb418c94d9142e291c9488e069bc6e401ac",
+      "bytes": 4274,
+      "mode": "100644"
+    },
+    "tests/home/rail-fixture.cjs": {
+      "sha": "4ad955fadabef4c1c337e28cb086417b2f8d83ce",
+      "bytes": 3708,
+      "mode": "100644"
+    },
+    "tests/home/reduced-motion-opt-in.spec.js": {
+      "sha": "b17609e9f3443ac7f5fb256f9ec098e8af986198",
+      "bytes": 35659,
+      "mode": "100644"
+    },
+    "tests/home/remaining-logo-links.spec.js": {
+      "sha": "ce3997075c8d9b27ca96bcbb1957bc8e292bb154",
+      "bytes": 4683,
+      "mode": "100644"
+    },
+    "tests/home/review-rails.cjs": {
+      "sha": "eab458beb48caa464fff465e4df46408143e93ed",
+      "bytes": 2270,
+      "mode": "100644"
+    },
+    "tests/home/whatsapp-share.spec.js": {
+      "sha": "50cf7d1448757b22815796925b4cf9a1f28f4714",
+      "bytes": 8575,
+      "mode": "100644"
+    },
+    "tests/institutional-language.browser.cjs": {
+      "sha": "61a864d29afff185e60f8e6841b6be1cf8d2cfae",
+      "bytes": 7086,
+      "mode": "100644"
+    },
+    "tests/institutional-language.runtime.cjs": {
+      "sha": "824cd995fec7b3f9764369a8bb5a60e9b78e12a9",
+      "bytes": 2422,
+      "mode": "100644"
+    },
+    "tests/journey-contracts.mjs": {
+      "sha": "b51c5fa3d62f6a8a5c4edd06388719b08b01832b",
+      "bytes": 23508,
+      "mode": "100644"
+    },
+    "tests/politica-comercial.contract.mjs": {
+      "sha": "9fd30b5faafe5078e21a4458049e6818ad83014c",
+      "bytes": 3600,
+      "mode": "100644"
+    },
+    "tests/producer-guide.browser.cjs": {
+      "sha": "189d8e9e1e5a739c588ea7b1a00136d42cd6b843",
+      "bytes": 6968,
+      "mode": "100644"
+    },
+    "tests/producer-guide.runtime.cjs": {
+      "sha": "c2f238a90bdaa303e32aaaa8b8bec9f38c98fe99",
+      "bytes": 1406,
+      "mode": "100644"
+    },
+    "tests/producer-portal-performance.contract.mjs": {
+      "sha": "57a563a973a152246c8e0dfda51d30d849c65cdf",
+      "bytes": 3230,
+      "mode": "100644"
+    },
+    "tests/public-brand-browser.py": {
+      "sha": "3ed171839214cdf1cfa824215da0e2e08bcd9d9b",
+      "bytes": 5203,
+      "mode": "100644"
+    },
+    "tests/public-brand-contract.cjs": {
+      "sha": "164030dea1be712f6c68f23c1a4aa70439ec275a",
+      "bytes": 4086,
+      "mode": "100644"
+    },
+    "tests/public-brand-home-signature.py": {
+      "sha": "a0a7efe9ff296232bab3db7bf739e8a90149ae0a",
+      "bytes": 5993,
+      "mode": "100644"
+    },
+    "tests/public-brand-secondary-browser.py": {
+      "sha": "66045fc2e683cd7f1aa84d529a53ad90e0605cfe",
+      "bytes": 4738,
+      "mode": "100644"
+    },
+    "tests/public-brand-secondary-contract.cjs": {
+      "sha": "ca41ec236ff0093f7f8cef60c20aeaa9dc9e0043",
+      "bytes": 3527,
+      "mode": "100644"
+    },
+    "tests/public-i18n.runtime.cjs": {
+      "sha": "c86782dd40b9d28103ea67c48ce1e6a898ea21d4",
+      "bytes": 11174,
+      "mode": "100644"
+    },
+    "tests/public-language-integration.browser.cjs": {
+      "sha": "e862a33e7b83e26600e88e45c6fe4fdff98e00b3",
+      "bytes": 10613,
+      "mode": "100644"
+    },
+    "tests/public-login-markup-browser.py": {
+      "sha": "a26979795eb2f7a6d100696fb37e578c631a6f4a",
+      "bytes": 3159,
+      "mode": "100644"
+    },
+    "tests/public-login-markup-contract.cjs": {
+      "sha": "a0ad69b3f110ca2f32bcc07052bc8c9645dbf020",
+      "bytes": 3209,
+      "mode": "100644"
+    },
+    "tests/public-login-polish.browser.cjs": {
+      "sha": "615926af1a63c9f311d87a04d82a9f8ca533d0bc",
+      "bytes": 5701,
+      "mode": "100644"
+    },
+    "tests/public-privacy.browser.cjs": {
+      "sha": "d8f42cd7d0c560a318ba2f0c9421353c5c2591bf",
+      "bytes": 10095,
+      "mode": "100644"
+    },
+    "tests/public-privacy.contract.cjs": {
+      "sha": "187903ba98f808b63c8045f8c6eb7bc36bb4a706",
+      "bytes": 3229,
+      "mode": "100644"
+    },
+    "tests/public-privacy.runtime.cjs": {
+      "sha": "9ecfd605fe19e50fc84173cc98d52343d95a7297",
+      "bytes": 9317,
+      "mode": "100644"
+    },
+    "tests/round2-stabilization.contract.mjs": {
+      "sha": "96e79803a4810cee0d5e0b58eb815a666f200afd",
+      "bytes": 2325,
+      "mode": "100644"
+    },
+    "tests/safety/branch-guard-regression.cjs": {
+      "sha": "8f81424d04511a77b8b74d2171161d3bf512abb8",
+      "bytes": 1578,
+      "mode": "100644"
+    },
+    "tests/safety/declared-mocks.cjs": {
+      "sha": "61bb3907133438adae2898cb80943d28367ccf01",
+      "bytes": 9109,
+      "mode": "100644"
+    },
+    "tests/safety/fixtures/branch-guard.cases.cjs": {
+      "sha": "2eeccae07548f4c51ed60faab576ce091befbdf1",
+      "bytes": 4053,
+      "mode": "100644"
+    },
+    "tests/safety/isolated-network.cjs": {
+      "sha": "1acefed0965deae579748e5ae89a8d8353425716",
+      "bytes": 5734,
+      "mode": "100644"
+    },
+    "tests/safety/network-isolation.browser.cjs": {
+      "sha": "16f332351440d6dac25b525db07083dba7f62330",
+      "bytes": 3997,
+      "mode": "100644"
+    },
+    "tests/safety/public-request-policy.cjs": {
+      "sha": "2ce85aed6f17abe5221d40b53452cf7b68d0a11b",
+      "bytes": 4681,
+      "mode": "100644"
+    },
+    "tests/safety/public-request-policy.test.cjs": {
+      "sha": "25e964bedadfe2c654d4c839f5b7d1ee769f53ed",
+      "bytes": 5446,
+      "mode": "100644"
+    },
+    "tests/safety/published-static.cjs": {
+      "sha": "803d8ea8b1544d49cd53f6715faabfc3b8b1d080",
+      "bytes": 4543,
+      "mode": "100644"
+    },
+    "tests/safety/published-static.test.cjs": {
+      "sha": "0af79dd2d990278588a82a7706f3e30b9a1e434d",
+      "bytes": 2175,
+      "mode": "100644"
+    },
+    "tests/safety/pwa-isolated.cjs": {
+      "sha": "20c61e79f88d0dd0b00bdf7b6bf196ccf48f899c",
+      "bytes": 6820,
+      "mode": "100644"
+    },
+    "tests/safety/telemetry-isolated.browser.cjs": {
+      "sha": "c9e4cdc686363255ddaff07ed2f6b90b77729b9e",
+      "bytes": 2587,
+      "mode": "100644"
+    },
+    "tests/scanner-session.browser.cjs": {
+      "sha": "bd56bbc05724c746d729868089c3925c5d6be60c",
+      "bytes": 5446,
+      "mode": "100644"
+    },
+    "tests/scanner-session.runtime.cjs": {
+      "sha": "e1e8fad7d226552036f9623cf741dd16135402a4",
+      "bytes": 10038,
+      "mode": "100644"
+    },
+    "tests/ticket-language.browser.cjs": {
+      "sha": "feb6401f3a2c21a275b48950fc32b040ff405004",
+      "bytes": 9596,
+      "mode": "100644"
+    },
+    "tests/ticket-language.dom.cjs": {
+      "sha": "69b902f0c81c0e247dfa2c0e9f2f434f36a0fcc6",
+      "bytes": 12790,
+      "mode": "100644"
+    },
+    "tests/whatsapp-share-contract.cjs": {
+      "sha": "19f6d82ec67d8e7f031aa264683051e234274677",
+      "bytes": 3507,
+      "mode": "100644"
+    },
+    "vendas/index.html": {
+      "sha": "e00aa9169ee59459d034fcbcc8a23c1ad341e2e7",
+      "bytes": 105126,
+      "mode": "100644"
+    }
+  },
+  "required_materialized_paths": [
+    "404.html",
+    "acessos-v2/index.html",
+    "acessos/index.html",
+    "ajuda/index.html",
+    "anuncie/index.html",
+    "assets/advance-sales.js",
+    "assets/advertise.css",
+    "assets/advertise.js",
+    "assets/carioca-ticket-icon-192.png",
+    "assets/carioca-ticket-icon-512.png",
+    "assets/carioca-ticket-icon-maskable-512.png",
+    "assets/carioca-ticket-logo.png",
+    "assets/carioca-ticket-preview-dark-hq-v8.jpg",
+    "assets/carioca-ticket-preview-dark.png",
+    "assets/carioca-ticket-preview-oficial-v9.jpg",
+    "assets/carioca-ticket-preview-og-v4.jpg",
+    "assets/carioca-ticket-preview-og-v5.jpg",
+    "assets/carioca-ticket-preview-og-v6.jpg",
+    "assets/carioca-ticket-simbolo.png",
+    "assets/checkout-commercial-policy.js",
+    "assets/checkout-home-navigation.css",
+    "assets/checkout-home-navigation.js",
+    "assets/checkout-language.css",
+    "assets/checkout-language.js",
+    "assets/checkout-translations.js",
+    "assets/ct-analytics.js",
+    "assets/demo-event.css",
+    "assets/demo-event.js",
+    "assets/era-approved-visual.css",
+    "assets/era-approved-visual.js",
+    "assets/event-accessibility.css",
+    "assets/event-description-speech.js",
+    "assets/event-directions.css",
+    "assets/event-directions.js",
+    "assets/event-i18n.css",
+    "assets/event-i18n.js",
+    "assets/event-map-preview.css",
+    "assets/event-map-preview.js",
+    "assets/event-ride-destinations.js",
+    "assets/event-uber.css",
+    "assets/event-uber.js",
+    "assets/eventos/era-beauty-capa-oficial-20261008.jpg",
+    "assets/home-advertisements.js",
+    "assets/home-controls.js",
+    "assets/home-event-rail.js",
+    "assets/home-i18n.js",
+    "assets/home-install.js",
+    "assets/home-location-worker.js",
+    "assets/home-location.css",
+    "assets/home-location.js",
+    "assets/home-navigation.js",
+    "assets/home-theme.js",
+    "assets/home.css",
+    "assets/institutional-language.css",
+    "assets/institutional-language.js",
+    "assets/institutional-translations.js",
+    "assets/producer-guide.css",
+    "assets/producer-guide.js",
+    "assets/public-event-catalog.js",
+    "assets/public-i18n.js",
+    "assets/public-logo-links.css",
+    "assets/public-privacy.css",
+    "assets/public-privacy.js",
+    "assets/public-share.css",
+    "assets/public-share.js",
+    "assets/roda-samba-30-anos.webp",
+    "assets/waze-mark.svg",
+    "backoffice/carioca-pay/baas-sandbox/index.html",
+    "backoffice/carioca-pay/index.html",
+    "backoffice/carioca-pay/produtores/index.html",
+    "backoffice/carioca-pay/saldo-extrato/index.html",
+    "backoffice/eventos/index.html",
+    "backoffice/index.html",
+    "backoffice/modalidades/index.html",
+    "backoffice/politicas-comerciais/index.html",
+    "bar/index.html",
+    "campanha/index.html",
+    "cancelamento-reembolso/index.html",
+    "central/index.html",
+    "checkin/checkin.css",
+    "checkin/checkin.js",
+    "checkin/index.html",
+    "checkin/sw.js",
+    "checkout-v2/index.html",
+    "checkout/index.html",
+    "comissionado/index.html",
+    "comissoes/index.html",
+    "como-funciona/index.html",
+    "consulta/index.html",
+    "convite/index.html",
+    "crm/index.html",
+    "cupons/admin/index.html",
+    "cupons/index.html",
+    "demonstracao/roda-de-samba/index.html",
+    "evento-v2/index.html",
+    "evento/index.html",
+    "eventos-v2/index.html",
+    "financeiro/index.html",
+    "fornecedor/index.html",
+    "fornecedores/index.html",
+    "google994ee99d62e24f28.html",
+    "index.html",
+    "ingresso/index.html",
+    "manifest-checkin.webmanifest",
+    "manifest-produtor.webmanifest",
+    "manifest.webmanifest",
+    "minha-carioca/acesso/index.html",
+    "minha-carioca/conta/index.html",
+    "minha-carioca/index.html",
+    "minha-carioca/ingressos/index.html",
+    "minha-carioca/login/index.html",
+    "package.json",
+    "parceiro/admin/index.html",
+    "parceiro/ativar/index.html",
+    "parceiro/conduta/index.html",
+    "parceiro/index.html",
+    "parceiro/manual/index.html",
+    "parceiro/programa/index.html",
+    "parceiro/regras-comerciais/index.html",
+    "parceiro/regulamento/index.html",
+    "parceiro/tratamento-dados/index.html",
+    "playwright.config.js",
+    "privacidade/index.html",
+    "produtor-v2/index.html",
+    "produtor/campanhas/index.html",
+    "produtor/carioca-pay/index.html",
+    "produtor/comissoes/index.html",
+    "produtor/convidados/index.html",
+    "produtor/cortesias/index.html",
+    "produtor/financeiro/index.html",
+    "produtor/index.html",
+    "produtor/ingressos/index.html",
+    "produtor/politica-comercial/index.html",
+    "produtor/solicitacoes/index.html",
+    "produtor/solicitar/index.html",
+    "pwa-register.js",
+    "reembolsos/index.html",
+    "relatorios/index.html",
+    "roda-de-samba/index.html",
+    "saude-vendas/index.html",
+    "sobre/index.html",
+    "styles.css",
+    "sw.js",
+    "termos/index.html",
+    "tests/advance-sales-closure.browser.cjs",
+    "tests/catalog-performance-isolated.cjs",
+    "tests/checkout-cover.browser.cjs",
+    "tests/checkout-era-beauty.browser.js",
+    "tests/checkout-era-beauty.dom.js",
+    "tests/checkout-home-navigation.browser.cjs",
+    "tests/checkout-language.browser.cjs",
+    "tests/checkout-language.dom.cjs",
+    "tests/checkout-ticket-status.browser.cjs",
+    "tests/demo-event-isolated.cjs",
+    "tests/e2e/buyer-journey.spec.js",
+    "tests/e2e/coupon-journey.spec.js",
+    "tests/e2e/evento-v2-loading-harness.spec.js",
+    "tests/e2e/first-party-facades.spec.js",
+    "tests/e2e/helpers/branch-isolated.cjs",
+    "tests/e2e/p0-polling-checkout.spec.js",
+    "tests/e2e/p0-ticket-open-after-payment.spec.js",
+    "tests/e2e/producer-finance-activation.spec.js",
+    "tests/e2e/producer-finance-master.spec.js",
+    "tests/e2e/public-event-catalog.spec.js",
+    "tests/event-accessibility-preview.cjs",
+    "tests/event-directions-browser.py",
+    "tests/event-language-preview.cjs",
+    "tests/event-map-preview-server.cjs",
+    "tests/event-uber-preview-server.cjs",
+    "tests/fixtures/home-stage1.cjs",
+    "tests/fixtures/institutional-source-text.json",
+    "tests/fixtures/public-canary.cjs",
+    "tests/home-preview-server.cjs",
+    "tests/home/category-language.spec.js",
+    "tests/home/desktop-navigation.spec.js",
+    "tests/home/event-card-share.spec.js",
+    "tests/home/event-rail.spec.js",
+    "tests/home/home-stage1.spec.js",
+    "tests/home/mobile-autoplay.spec.js",
+    "tests/home/rail-fixture.cjs",
+    "tests/home/reduced-motion-opt-in.spec.js",
+    "tests/home/whatsapp-share.spec.js",
+    "tests/institutional-language.runtime.cjs",
+    "tests/public-brand-contract.cjs",
+    "tests/public-brand-secondary-contract.cjs",
+    "tests/public-i18n.runtime.cjs",
+    "tests/public-language-integration.browser.cjs",
+    "tests/safety/declared-mocks.cjs",
+    "tests/safety/isolated-network.cjs",
+    "vendas/index.html"
+  ],
+  "materialization_note": "190 pinned inputs (177 text sources and 13 binary assets), including all 131 runtime HTML/JS/CSS/SVG/webmanifest sources. Remaining original files retain immutable tree pins. This is not a deploy tree; preservation checks also verify extra base files present in a full checkout.",
+  "transport_sha256": {
+    "checkout": "42e34f0467b327ced73fcae469bccea9c5216356ec2da154f8b5fdfa1b0152a4",
+    "checkout-v2": "4ebb280890203a58092de426bda616333db43ea5e8381a5c1429ca5a207bc846",
+    "evento": "c0bc6fadb642ef7f82bf0bc022c0068d63bc12aa843982ece516db6c1e97d0a0",
+    "evento-v2": "c0bc6fadb642ef7f82bf0bc022c0068d63bc12aa843982ece516db6c1e97d0a0"
+  },
+  "frozen_checkout_functions_sha256": {
+    "checkout": {
+      "startExpiry": "c600f518a0132010d685226b62e26d626a5c5aa1c430acf268a418681c91c4e7",
+      "stopExpiry": "1b9f8479b238b202c36a090c82363e8fa0158d760a571c1f301928695e352a88",
+      "startPolling": "76fd0c3fa5fee8b3c4c43c1cdb39b87c4f671342757f909b3dc2e0a16c227f61",
+      "stopPolling": "caa042866a1309c2483b0706b7a53d9b312bfca001b3b20a33f5d6f9c879631b",
+      "storageKey": "75bdd1e8ff5fe5da191bf7511e8aa9abc620497539653a4cd9a31c8ac67b9282",
+      "idempotencyStorageKey": "66c44bd4a7bd80b35cef4b49ed66e902e7e9f35a7a357a60769de3524a70b736",
+      "saveRecovery": "d1b115121773010432d672dd2f3b5ecd8e21009e8252b5252dde593ced60a67d",
+      "readRecovery": "40960a1a6e8ac600678703fc66b3a195c61a1f487b8774738051e20d9f17d812",
+      "clearRecovery": "7f33469e17ad5ed0d1fb88b109d30577301dc2cda3425efa0cc388a2f38d7d80",
+      "getOrCreateIdempotency": "fa73846d111fb1bae0eca211faf7ed3727fbdf3d19a19dbc159ec5ddd53f5518",
+      "clearIdempotency": "92a8e04f62fab672b9e6733fccae3f56a87b62ff868faaaab0505d30ed6654cb",
+      "officialTicketLink": "2b527d0193ccdb4b7ed2952f217c77cbe74839d9ca5f17ad04271deb4044310c"
+    },
+    "checkout-v2": {
+      "startExpiry": "c600f518a0132010d685226b62e26d626a5c5aa1c430acf268a418681c91c4e7",
+      "stopExpiry": "1b9f8479b238b202c36a090c82363e8fa0158d760a571c1f301928695e352a88",
+      "startPolling": "4316d7a9c3b3a9f67cc843206fc6090166f6c74d64d331315813a8372ff2a00b",
+      "stopPolling": "caa042866a1309c2483b0706b7a53d9b312bfca001b3b20a33f5d6f9c879631b",
+      "storageKey": "75bdd1e8ff5fe5da191bf7511e8aa9abc620497539653a4cd9a31c8ac67b9282",
+      "idempotencyStorageKey": "64c7eed14e5879d12cde482b19a9988bd48a34095a8c0e21129fa16e3bfc5fc9",
+      "saveRecovery": "d1b115121773010432d672dd2f3b5ecd8e21009e8252b5252dde593ced60a67d",
+      "readRecovery": "40960a1a6e8ac600678703fc66b3a195c61a1f487b8774738051e20d9f17d812",
+      "clearRecovery": "7f33469e17ad5ed0d1fb88b109d30577301dc2cda3425efa0cc388a2f38d7d80",
+      "getOrCreateIdempotency": "fa73846d111fb1bae0eca211faf7ed3727fbdf3d19a19dbc159ec5ddd53f5518",
+      "clearIdempotency": "92a8e04f62fab672b9e6733fccae3f56a87b62ff868faaaab0505d30ed6654cb",
+      "officialTicketLink": "2b527d0193ccdb4b7ed2952f217c77cbe74839d9ca5f17ad04271deb4044310c"
+    }
+  },
+  "main_entrypoint_dependencies": {
+    "checkout/index.html": [
+      "assets/advance-sales.js",
+      "assets/checkout-commercial-policy.js",
+      "assets/checkout-home-navigation.css",
+      "assets/checkout-home-navigation.js",
+      "assets/checkout-language.css",
+      "assets/checkout-language.js",
+      "assets/checkout-translations.js",
+      "assets/ct-analytics.js",
+      "assets/public-i18n.js",
+      "assets/public-privacy.css",
+      "assets/public-privacy.js"
+    ],
+    "checkout-v2/index.html": [
+      "assets/advance-sales.js",
+      "assets/checkout-home-navigation.css",
+      "assets/checkout-home-navigation.js",
+      "assets/checkout-language.css",
+      "assets/checkout-language.js",
+      "assets/checkout-translations.js",
+      "assets/ct-analytics.js",
+      "assets/public-i18n.js",
+      "assets/public-privacy.css",
+      "assets/public-privacy.js"
+    ],
+    "evento/index.html": [
+      "assets/advance-sales.js",
+      "assets/ct-analytics.js",
+      "assets/event-accessibility.css",
+      "assets/event-description-speech.js",
+      "assets/event-directions.css",
+      "assets/event-directions.js",
+      "assets/event-i18n.css",
+      "assets/event-i18n.js",
+      "assets/event-map-preview.css",
+      "assets/event-map-preview.js",
+      "assets/event-ride-destinations.js",
+      "assets/event-uber.css",
+      "assets/event-uber.js",
+      "assets/home-theme.js",
+      "assets/public-i18n.js",
+      "assets/public-privacy.css",
+      "assets/public-privacy.js",
+      "assets/public-share.js"
+    ],
+    "evento-v2/index.html": [
+      "assets/advance-sales.js",
+      "assets/ct-analytics.js",
+      "assets/event-accessibility.css",
+      "assets/event-description-speech.js",
+      "assets/event-directions.css",
+      "assets/event-directions.js",
+      "assets/event-i18n.css",
+      "assets/event-i18n.js",
+      "assets/event-map-preview.css",
+      "assets/event-map-preview.js",
+      "assets/event-ride-destinations.js",
+      "assets/event-uber.css",
+      "assets/event-uber.js",
+      "assets/home-theme.js",
+      "assets/public-i18n.js",
+      "assets/public-privacy.css",
+      "assets/public-privacy.js",
+      "assets/public-share.js"
+    ]
+  },
+  "prerequisites_explicit": [
+    "new shared clock from reviewed exclusive helper",
+    "public page/home expiry, refresh and no-retry-on-unknown response delta absent in main",
+    "four recovery translations added without replacing main keys",
+    "home active-card/pause preservation on catalog refresh"
+  ],
+  "prohibited_imports": [
+    "eventos-v2 producer calendar from historical candidate",
+    "whole historical candidate tree",
+    "main revert",
+    "workflow/OAuth/deploy changes"
+  ],
+  "main_checkout_translation_values_sha256": {
+    "A venda e o ingresso s\u00f3 s\u00e3o criados depois que o Asaas confirma o recebimento do PIX.": "ab7a830dce1561e4afc2c700b418d7ca260992cefc44dd179a53c5b76bbdafde",
+    "APLICAR": "0fb4bc8a7700a878575e167f55d117a503ed86bb5057208e0f648361c21bb7a6",
+    "Abra o ingresso de cada participante abaixo e apresente o QR Code na entrada.": "fa173a2e18ec824fdae1a0ad21399010bf4df83393debc00d7fe98de5397e019",
+    "Abrindo seu ingresso digital": "c4b37cdf3784f4a839f6247212324e35178e4751dca8579855cf39aaa2ec9aeb",
+    "Abrir ingresso": "92b24777156a89c71c1d0e8aed90964768204a40e5194d500894a8fec48f3324",
+    "Aguardando pagamento.": "9ab1e2cefb48884cfdc71c1527808f34900b9c333170938828e1e154e1d12946",
+    "Aguarde alguns instantes. Voc\u00ea ser\u00e1 direcionado ao ingresso seguro da Carioca Ticket.": "fd75c10bcf61d96cd16a1dcae4899eccf55f8e927c54646ff31bd69c4756c508",
+    "As vendas online deste evento ainda n\u00e3o est\u00e3o dispon\u00edveis.": "a39aa4f5df67f9b03bfda98f4bf88b3e72cae883dd37f16d02f05d1b1749eb03",
+    "Aten\u00e7\u00e3o": "b5e904c8e38baca6f44d8ad96f09be1eae9cc188c76294426a55241de0f6ae27",
+    "Atualizar pagamento": "5006671627cca4570781d21ff60e7e314eb8061ea793703f3651fa36c3577878",
+    "Atualizar total": "5220009ae8fee2fb0e6564f95de8279faca297024755ffde7a66c6c4b4b4170d",
+    "Carioca Ticket \u00b7 acesso seguro ao ingresso digital": "5a8bba6b373604d0a0952d06d2a683a419be4459e8a94ef68a8e14f5e756aea6",
+    "Carioca Ticket \u2014 p\u00e1gina inicial": "c26a1ef0e5a53c9fe5193aecd210c33b5a83db8ffde475a1771004e5b278b360",
+    "Carregando evento...": "2b4c8b3cd2b43d986f887d21e52451ce1368481bd7e905f0a70c9c3299980147",
+    "Cart\u00e3o de cr\u00e9dito": "f85308fa522e7c5e2baab32ed0f44e6d3549680d041a35b97c39ad7c66184bfb",
+    "Como deseja pagar?": "7b22f24c1d6002aa4052d9fae9d267823f8242691ddd563fc35d3c7bcd821437",
+    "Comprar ingressos": "6f108e67e3fc60cc232a2f50b9455ff6c43d7a69865b4e0ca653e09ea860688d",
+    "Confirma\u00e7\u00e3o r\u00e1pida por QR Code ou copia e cola.": "33cb8641716098af608521e9c5aa3e8fc6ca571960aa7a0c9b8676a5503613fa",
+    "Continuar no checkout": "24e70db79d15d20365138c72a8feb7683a5523ab0bb8d6208aafe82e74cd3365",
+    "Copiar c\u00f3digo PIX": "7c2bd982f6141b661b488a9a78181f0316e5b21432df380134e0b059ff6755d7",
+    "Cupom": "2a7ea33ac110dbe8b73faddb4bebb2dbcdf54234a0aef614f3ae6ac919c36048",
+    "C\u00f3digo PIX Copia e Cola": "f06008fd160dd391e015ba22ff863b64ac40d7472a3a4b76aacffcff01a0ba24",
+    "Digite seu cupom": "b835abb71e081183a2bdc9cee087410fed68e93b97d8bbc2e3f9efa08d9e5d10",
+    "Encargos comerciais adicionais": "60116803dc4e8733c68756e72d5200a70bb73c8b8861959699ca1fce9165728b",
+    "Entendi": "cc1333230875ec2ee183442fd8a7dbb24f5522f8f497984e0e17122e60324bd7",
+    "Escolha seu ingresso": "0ab25f020415607eaf7f45bfcdc134501dd765a35ecced0423465e53c4dfa9f8",
+    "Este pedido j\u00e1 possui um cupom aplicado. Deseja substituir?": "9f7fe3acc2444cb97b65a6ffba46d36543d7d4fb966550b8e792c6c3e73c36fb",
+    "Foto oficial do evento": "77c8acfc25629babf5a517b46d6ab8911ffdf5e39ed598ccc7329ad6ef2dc069",
+    "Gerar PIX e reservar ingresso": "6ecd71b62c5a37ec7c74dcaf1e69b5c240bc67de73f0cb2ba0ab8066e3443277",
+    "Ingresso oficial": "0fade3f8f021fc181796ea8acfb7493f4d370f0705d56304447223720a928b78",
+    "Ingressos": "b33e77d9d0d0b6decec1a2a61cff5db8523cc8d15b10ed3f1bece7ba4412804b",
+    "Ingressos dispon\u00edveis": "94bc280453fee2339ee64e8fc962165e4ee083ba3a71f0fd2d433ca06cf1c67d",
+    "Lote": "510e8e3b2772ee1c7602c716d96230b276b331e4cde32ac07d9a6d2d3d80ce0b",
+    "MANTER ATUAL": "610094fd576a13cdf6d3ea88f0505b24865327ecc6d802959e4f980d02ff4f72",
+    "Meus ingressos na Minha Carioca": "42d2693dff4372e75cac5c81402a6cc456316e0a9ed25bd81d390be6a0ab3398",
+    "Nome completo *": "5a3eedbe3affa030c9e0fe2cc01eea75f0843438b219eb59d0ece11e5e70a8ea",
+    "O CPF \u00e9 enviado ao provedor de pagamento e n\u00e3o fica armazenado em claro no pedido.": "a26d7d6943dbacc49f206ae1e2c246e3715af3a8c77f79bac60ee72e41c72787",
+    "Pagamento PIX": "09d353e3339c184e02fe0c3d463e2c00adc49015fe529a893d35304210eb8c79",
+    "Pagamento com cart\u00e3o": "2276887d2a43399171a5b88a9d34de86c9f60e87dac28c93925313abefb8afbb",
+    "Pagamento confirmado. Acesse abaixo os ingressos dispon\u00edveis.": "e7670e38cda3125378cdd709909b9d7c93e57776c5bac9dba24ea9950ee574d2",
+    "Pagamento em ambiente seguro do Asaas. A Carioca Ticket n\u00e3o recebe os dados do cart\u00e3o.": "d9b9b6ece2eec5c712ba0170e4588e3c30a6cb4ea395d2bdc8f8019596d9cba5",
+    "Pagar com cart\u00e3o agora": "d2a2da4394879a843028328c1a2c72ef8cf3aa9b06a08725c7a089bd95f720d4",
+    "Para concluir sua compra, clique no bot\u00e3o abaixo. Voc\u00ea ser\u00e1 levado ao ambiente seguro do Asaas para informar os dados do cart\u00e3o. Depois do pagamento, volte para esta aba.": "2655c2cdf3a7faff47fc97ef23ce4a94445d528137234bbdb6f84b46b6c756f5",
+    "Preparando uma compra segura.": "ee53ec6f38e17a74fb2e9da00645328a27aefa2f1465808d284d1e75aeae9b2b",
+    "QR Code PIX": "b356154a525caea541a5fc02d5ecd10b692117b1f4c10dee0a108ea78da301ae",
+    "Quantidade": "731f3e777b962e0f8a5cecb16930c5fc66c8d5edf8b9ebacf1608d3fbfcff879",
+    "Quero receber novidades, benef\u00edcios e comunica\u00e7\u00f5es de marketing relacionadas aos eventos. Posso cancelar essa autoriza\u00e7\u00e3o depois.": "0f0d889b8da179167b65b2a89f3379cd4dc758fb1d4f98cb252476f11f519360",
+    "REMOVER CUPOM": "8aff3207f9917bef0206e6fc9631b7af1105aa831fdb4580b804b003d15625e8",
+    "SEU PEDIDO": "214802b1ab32cd239e3dcf3aafd31e1203d793f1e2c7e21faabdd99398641557",
+    "SUBSTITUIR": "4c07b4f08106aef0047fe17f3c75956201f84fdf07f0153790291d858cad03fd",
+    "Saiba mais sobre a taxa Carioca Ticket": "47efcc0845e3c48b9b9fb82dc30cc94597c8af89027d83ea6a8472295d7acef6",
+    "Sair para a p\u00e1gina inicial": "eee954e9375ef074f9476490631c2ebc545d84591e18fde01bbd35378873ecab",
+    "Selecione": "1b8313f9266ce8d615a9817f4c773ac43e0f50c1db0cf6c23bf92eefba6d6a80",
+    "Selecione o tipo": "9e26435c6163bdd4b54559fcf11e1aa354aea01cdcdd6153488ee4bed20750e8",
+    "Seus dados": "15dfa2947fd3f2d7f1d1071b3e6bd8e7b177f5f8f9f7b136f623af3d3855f282",
+    "Seus ingressos \ud83c\udf9f\ufe0f": "5cfeaa9d8023592da74d60d9552949a74e7c6aabfff3e27bdfe6fe5e646e1d40",
+    "Somente para pagamento": "91abd4705ea97d84b1f0dda6fb9904d702b453e995d6d9a726853ffe9c6a2f06",
+    "TOTAL": "369a2d5b9c1d555cf5ae808fbcfef2a488192cfcb688a1a6903e4a778ab2f3b3",
+    "Taxa Carioca Ticket": "53c2b1550280fcfa18d968813bb5ed395b9c447b1023d15353373e602733dfa7",
+    "Tem um cupom?": "c504f61cef06a79ad956534d768005d362aac7fda5082855c6cea6d04f491393",
+    "Tipo de ingresso": "42137c9f2d1ea74ac06893a980f78ec6419abf13be6d7a7983411e1f89aeccdf",
+    "Total a pagar": "b02b29a97ccd4da7e47e5e82a54d6fdba257e5c81ea219a0d50e036e0c65ba4c",
+    "Total com promo\u00e7\u00e3o": "65cb5861dcb68721404e4e0b00e86d0a9d7592bfacbdb8d7d17cfdf27ba206d2",
+    "Usaremos este e-mail para enviar o acesso seguro aos seus ingressos ap\u00f3s a confirma\u00e7\u00e3o do pagamento.": "0ccd1976243483edc712401d9614d5388ab801e48a149a38029c7db9f6680d89",
+    "Valor original": "910ca67411c7d9e7cf455bd8b23aaeae1c06e4ea6471e5634410a3dbbdfdaa5b",
+    "Voltar \u00e0 p\u00e1gina inicial?": "cbe1b7cb5a83a118cfb13be2501ba6814e3be70a56710ace34b51521a012eb4b",
+    "\u2190 Voltar ao evento": "c30388163d2ac431ae14fa7dcb84d63222334e6964a5b6cecd01a4089082375b",
+    "\u2713 Ambiente seguro": "412ddb7e72c76eb9bd36a431cbe57ab9695217c190adab6e58886e5877f06ea2",
+    "\u2713 Ingresso com QR Code": "59655e3fca2ef2b1a67aa65cb35a40ecdc49ed0d4157749d5ab392d204230883",
+    "\u2713 PIX e cart\u00e3o": "fb32617d5649c6dd833a9c8091f76093f461eb5a59563fe814a6b18f8a1f654d",
+    "Idioma": "04f66bb2b34dc0f23dd0d051bf19d16e33ed8f1686c468b1b377e668f59c704b",
+    "Participante": "36cf0784d12b19528d3ad75f3c229800bdb8c791959a2429cd9f2d676271161b",
+    "Ingresso": "58785eab2941486d78527c70385e987b8207948c15e5badcb33e440ffd9eb988",
+    "Data": "374123c10af8b6a2f0d79b3d37307849fed3de429a8662db32974df59395601f",
+    "Local": "d952916c7c2ff3126e350826b3913f088ea66a54ba5ac40d9b3abc2f76ebcbe1",
+    "QR Code do ingresso": "5e8a7c85135e398db54420269d3fe902ed65f750adcabc6f8165d9f2d25176e3",
+    "\ud83d\udcf2 Compartilhar pelo WhatsApp": "d17f4809ab2f2feb9593e1084719d371a8ef96eca26e72fc6305a3c94d2afd24",
+    "\ud83d\udd17 Compartilhar ingresso": "3397114caeec5cbd41cb3a5a4d1ef282ab4f0d2f7ed3fd99c70a13dc67411408",
+    "\ud83d\udcc4 Salvar em PDF": "e3fa79924cf4474b0fdb78b8e70613d64d0158fe2c90404d294db7151b8a7843",
+    "Voltar para Minha Carioca": "16c6a6b28014fa10dca12e520aa7f129d98748d03df2fe5e15de51731b3687a6",
+    "Ver eventos": "106a0385ee2f7c9df62705e721bfcec126972615e3e14dc33297a87d55a56f1f",
+    "\u2713 Link copiado": "aff7971dd5a73ae343783ae74684f85a2ae6e8fc62bf034795bd36f7daad296a",
+    "Use o menu do navegador para copiar": "f77bc2ac9fdc347e243bf5bb113181b439007f6314ded622ec5205bb4177bb42",
+    "N\u00e3o foi poss\u00edvel abrir este ingresso.": "56982625b90841bde38713ed0db5d78a8c6cb29ce3566b16824e80dd073ea4d7",
+    "O link est\u00e1 incompleto, inv\u00e1lido ou expirado.": "cae79b02adf7e32004a521b71ff619ce23f95e37bb46101da26d4bc07bfc7fca",
+    "E-mail (opcional)": "2c565a0248d56ff465bb2ef1625e9f8409805cb6792bc1f8705e8cb728ae4ff5",
+    "Cupom removido.": "fc00fa58409d3a7928004f04acf7c45484e879237a0037687a94c59db07c7f14",
+    "Digite seu cupom.": "fa0ee49df06b85d3659611980c52188f1728dd5b28fb742a6b43adf6cf781129",
+    "Selecione o ingresso e o lote primeiro.": "fb3ecad138def9b8d6a8797cd74f052eb59f85ca1537b5c483de47a998bc9a46",
+    "VALIDANDO...": "d8138263bd014650866ce4ef14d4b08ffd4e96a59dd33de96fc99b56d1e96084",
+    "N\u00e3o foi poss\u00edvel aplicar este cupom.": "c1a8bcd112322f2b083cc9781e3f1525a4ccb433ca6e895beaca21ca4288f1a2",
+    "N\u00e3o foi poss\u00edvel validar o cupom agora.": "2b04ee3eeb3c06e726e949d2b7b8ec1a89e680193b5f2a24624cbb54a1009652",
+    "Continuar para pagamento com cart\u00e3o": "624c59461920a3f6935c08109447109aaaed8a79f11afd40c3db036443553724",
+    "Voc\u00ea ser\u00e1 direcionado ao ambiente seguro do Asaas para informar os dados do cart\u00e3o. A Carioca Ticket n\u00e3o recebe n\u00famero, validade ou CVV.": "a53c48e51dfbc64cf0df4406bd45adbcf3550ba82a94d6fd8214df7a72fc5e68",
+    "Pagamento confirmado. Finalizando seu ingresso agora...": "42b7d4124bd381ac13a8e4f0b68a69827cb3e4cc32a2bfe53f25e80848567b0b",
+    "Aguardando confirma\u00e7\u00e3o do PIX. Pode voltar do app do banco para esta tela: verificaremos automaticamente.": "e61299e6dfdfb942048e847051de69fa15bfe63ae928e4bfb4fb3c0024c6a286",
+    "Atualizando...": "c004c93c4805e1e6ea39edf84df0dbd85f4a385bc625dc5b00b4f88aed2082b8",
+    "A capacidade dispon\u00edvel deste evento foi atingida.": "e4453fc0f2187e1fd9aac1ddf6a3c45d9e54e4e3a50ca0e623d93383cf4b3905",
+    "A emiss\u00e3o gratuita s\u00f3 \u00e9 permitida para ingresso ou lote oficialmente configurado com valor R$ 0,00.": "0ae7465e6bda362db64b7d9754c415e0bd309a698a709121c57e0ec448be4fe3",
+    "A quantidade escolhida n\u00e3o est\u00e1 mais dispon\u00edvel neste lote.": "5d4d124155a970650a155a0e9d8e8432100aa9a27523ee6e4f9899b5c295e508",
+    "A venda online deste evento est\u00e1 temporariamente indispon\u00edvel.": "32396e03f6547da8d23480a0a4478e0e77ed52ac983e0c91fe3c95d49df43ad4",
+    "Abrindo ingresso...": "60d9050f8c3a92d253b692c296ce5426858566c464e7254cccdaf28d799d0401",
+    "Aguarde a atualiza\u00e7\u00e3o do valor final antes de continuar para o pagamento.": "65da82af6b8aa34a58eec0b2c90c3a307997035aef7450e762755c8fb4d31742",
+    "Aguarde a atualiza\u00e7\u00e3o do valor final com a taxa antes de continuar para o pagamento.": "8a9af30db563b7199f8b9f5c7f59dacd9369faf276a30d31a68061904de16945",
+    "As vendas online deste evento n\u00e3o est\u00e3o dispon\u00edveis.": "f7000274648df1619a3516a333444a28e09859d3fe044105dee3f3f9df8343ed",
+    "Confira o CPF/CNPJ informado.": "33150530b2925ba29b7dfbfd570afc174f290aec81ec7e016c8f36a59c7ee0df",
+    "Confira o e-mail informado.": "91bc6d07dbda4196e6aca4e5596ee32f03d3081ca0d9eb9a401568a757412c31",
+    "Confirmando o total": "6a6349e0ddffcf66b081284f596554c0ae08d4f7a77684b94251e7cb74b86a11",
+    "Confirmando pre\u00e7o atualizado...": "f52ce82bfe05a49df5f79bfa3d064bf8239ba0d0589f7e355163b4dbb5e2a08c",
+    "Confirmando total com a taxa...": "27c57dafab9d37d3d63d331f9e490774909825aa55b87a552ab99aa402fb79c5",
+    "Consultando seu pagamento sem criar uma nova cobran\u00e7a.": "9d42a2e75763bfe9092a62804fe99879659df65d1d0154252a13b2ead7437ba6",
+    "Emitindo ingresso gratuito...": "715935f9b825e3654d4ffbfbd607aa6a4c515bce6b5aedab6a5ca1d1d0a1da91",
+    "Emitir ingresso gratuito": "9e95edb141ff1d110052f121cc2fdffde75c557a39a1e37940dbe8a7d20bc8db",
+    "Escolha seu ingresso e finalize sua compra com seguran\u00e7a.": "43bb91de59db2d38cb23a95b149256ec73f329a0ce1340780899b91d9290870f",
+    "Esta campanha est\u00e1 temporariamente pausada.": "654b074544f0e674bc51a33009e868641e4f7e313e752f5b7f6205df2c9d8b35",
+    "Esta promo\u00e7\u00e3o atingiu o limite dispon\u00edvel.": "e8bbba007eacc6f9c0832c27ee299a9ab2fac105f204cae54f28178e36263dfc",
+    "Este cupom expirou.": "b064bc9595c2c5a79a8255d3bf9c408df2dfefa7860d81003ecf6b4775f026fb",
+    "Este ingresso \u00e9 originalmente pago e n\u00e3o pode ser convertido em gratuito por desconto. Para gratuidade, o produtor deve usar o fluxo de cortesia.": "c3ebe6e5523f5790b26c312d3a23a2dd10ad2499c3b4fea3be3fcecd3d790937",
+    "Este lote acabou de esgotar. Atualize e escolha outra op\u00e7\u00e3o.": "be10497dd02ea6c474b0ef79ba7c9f8ab738cb7a1dbdaaa063c7c3cc43bf3c1e",
+    "Este pedido n\u00e3o est\u00e1 mais dispon\u00edvel. Voc\u00ea pode tentar novamente.": "1fed2843390e66c10e6d80343664dbee2fa23d4a0d4e822f9ac10dd908a0d044",
+    "Foram feitas muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar novamente.": "3a7cb2b94eac1da604337980a2d4644964a1cf3b7fae4b824ee8a30074bad277",
+    "Gerando PIX...": "29b93873306f19da64b683038834e9fddfd74195c3c70b7facc124457024fa43",
+    "Informe o nome completo do comprador.": "14f85d069c40f0dcb92c982485c560e1d349c8ab63009e99bbbc69b3f648bf2d",
+    "Informe o nome de todos os participantes.": "e3845da2db677957a78014d4cebf3cc87d1585dca1aca5d1fc39e6be94b1a55d",
+    "Informe um CPF ou CNPJ v\u00e1lido.": "486cd94b10ff65cc21892bc05131aa160dab7c490178ff4cd268cffc2dba42b6",
+    "Informe um WhatsApp v\u00e1lido.": "be013444c009a04004522fe0a4cec6489a513f1452fb946a9ffbe698d5cb2ba0",
+    "Informe um e-mail v\u00e1lido para receber seus ingressos.": "522029a9f466d0787e17401722a9c43e746026ee76abc5a927d47258131393bb",
+    "Ingresso indispon\u00edvel": "f02cbc16235fd778196758bb72b2232676257f106edca09a35ab170e97143b88",
+    "Nenhuma cobran\u00e7a ser\u00e1 criada. Ap\u00f3s a confirma\u00e7\u00e3o dos dados, seu ingresso com QR Code ser\u00e1 emitido.": "18cd044be01b0183a70361fb978e2493124004106e1ad9b207aebc714210ec0a",
+    "N\u00e3o foi poss\u00edvel abrir o link seguro agora. Voc\u00ea pode acessar o ingresso pela Minha Carioca.": "208c5680d354280e25630daab5c4dd55c0048dcfe67b585a585305aa28a33051",
+    "N\u00e3o foi poss\u00edvel carregar a venda online agora. Tente novamente mais tarde.": "7e823dfadd7ad89ed976492d708461b26f62cf8aaf0fa829f0f083b98354e5d2",
+    "N\u00e3o foi poss\u00edvel concluir a opera\u00e7\u00e3o.": "331bd5896a4225397f88a16d78c5b4f6d59c3009838510c40e4075352cc75485",
+    "N\u00e3o foi poss\u00edvel concluir esta etapa agora. Nenhum ingresso ser\u00e1 emitido sem pagamento confirmado.": "f771143b72e948f1b71bb39f713b8b343c7154d1a2db41cc55a6797240071eb0",
+    "N\u00e3o foi poss\u00edvel confirmar a condi\u00e7\u00e3o comercial. Atualize e revise o total com a taxa antes de tentar novamente.": "dab7137782e8a8e1ef5f64617bec97ae46afc6aea29db8ff01414449d5412a9d",
+    "N\u00e3o foi poss\u00edvel confirmar o total com a taxa. Atualize o total para continuar.": "69fa74b1edbab17d28892042fbaed8f2f17e3bbd29f6eb80b63ec23f8886c296",
+    "N\u00e3o foi poss\u00edvel emitir o ingresso gratuito agora. Nenhuma cobran\u00e7a foi criada.": "d6dea0a749ad830fdd0db641d5436ad7cc6e06dfc3745ddb4bf60058af6663b7",
+    "N\u00e3o foi poss\u00edvel exibir os ingressos agora. Tente novamente em alguns instantes.": "cfec744a478e42c538c08b7501bc9f17f01c89761776939b0a03eafc38d59693",
+    "N\u00e3o foi poss\u00edvel iniciar o pagamento": "fd59caa6937600883fa6f27b400b9f54f91a802796676c773dc2d0bb36e4abf5",
+    "N\u00e3o foi poss\u00edvel preparar a sa\u00edda segura. Continue no checkout para preservar seus dados e o andamento do pedido.": "87b7a465af1cd8de7b5d831b90b44934c1e8d751bd55d8eb76198e5e495149e6",
+    "N\u00e3o h\u00e1 ingressos dispon\u00edveis para venda online neste momento.": "56e2423d57415d0e47c325bb4ad1fadb6f9744d79881d2c46f9fb9bd6148ff70",
+    "O cupom n\u00e3o p\u00f4de ser aplicado. Revise a promo\u00e7\u00e3o e tente novamente.": "163e137371c78cbffde48e15bb725a3fdc2f0411282c47a2775540578a48faad",
+    "O c\u00f3digo PIX foi copiado.": "1ee0f54f5bc71ab121c0289d3df25c5b5773c039109c26ed18814988296d6c8e",
+    "O c\u00f3digo PIX foi copiado. Abra o aplicativo do seu banco e escolha PIX Copia e Cola.": "ceb671ce1f33e607223fa49743939590615ca2ef6afc92c79b10b8ae23ae096b",
+    "O ingresso foi emitido, mas o link seguro ainda n\u00e3o ficou dispon\u00edvel. Abra pela Minha Carioca.": "49d67941d932d44683f35eeffe8c28cec70ce08aef5c880b96be3f2356854af1",
+    "O link de compra n\u00e3o informou qual evento deve ser aberto.": "07029cfd6dc5a6cce54fb69a7cc0975419e5fa09c5beea93b96636737d2aa3b4",
+    "Pedido encerrado": "aa6d7f493ee40e5f48b6f46daf2431d6c604d4e080e1fdd80f83c2158b044198",
+    "Preparando pagamento...": "7209df1480e1821d0c0ebe939560c406d8973aad763f6e52765f04c3b8898f35",
+    "Quantidade indispon\u00edvel": "b1e8fa0b8cfa1f3fa62ca381147721fd5657a5c9db3809c10bcdc056e3d6db39",
+    "Recuperando pedido...": "93d7a698f555667d64d40da0824bb053644f08e42cca31e57a99a24b5fc44fd5",
+    "Reserva expirada. Atualizando...": "beae723f102cf893d385647e0fec415c565e7f400f55c88048d0ff8af77d5b50",
+    "Reservando seus ingressos com seguran\u00e7a.": "8331c743d669b059514114774837465098d1b8c0e7b66ac64bcb0a8ea2ba74d2",
+    "Reservando seus ingressos e criando o pagamento seguro.": "bad51af18efbb42dbe7992bd34fce11a50784661e7d5de9772e7cab9ad7e2a81",
+    "Revise seus dados": "dbf988a2a8e42d71f11292aa7e4b29ec460b9a5ce92b07589cff43c0eee89d16",
+    "Selecione o tipo de ingresso e o lote.": "cab66d8ab19ded8fbec0666ca0629615f73133ad95d39929f25e5dc734768008",
+    "Seu WhatsApp ser\u00e1 o identificador principal da Conta Carioca. Se informar um e-mail, ele tamb\u00e9m poder\u00e1 ser usado como canal de contato.": "451f8f0e655e31fe21331f4aa77bb3ed2cf3e28855e9cf944e5f8058196342af",
+    "Sua compra ainda n\u00e3o foi conclu\u00edda. Clique no bot\u00e3o abaixo para pagar com cart\u00e3o.": "f2b84780d214be49a67c2d1aca9f2b86e1cd3944a41a80a8238931726d9c71f9",
+    "Tente novamente. Se o problema persistir, entre em contato com o atendimento.": "983b5de5e97a3e45833edbb5d9cbc23de7c96c3ce8355ddc1c666562098de4c0",
+    "Validando cupom e total...": "50dd81b145f6db5444e0c834fbedf6d7012b4bc0c32799e33251237258a57063",
+    "Validando disponibilidade e lotes.": "fde3ef63fdc620be7b82e98af4fb607f9fe26434439bc6b5f648eab1c5040b09",
+    "Validando seus dados e reservando o acesso sem criar cobran\u00e7a.": "d5b06d780ac803d9df7f830a0a4f2529f54ea09f2d50c57c0f786b298645d9ab",
+    "\ud83c\udfab Abrir meu ingresso": "1666a412be3babaf9cdbb467124988d5ce02d83ac0caec00fd5f7c2306d72e89",
+    "Participante {count}": "599c9f781aad9cbb5067d6fa85a4db34c30a91f57f13703890bd57d27ce1c489",
+    "{count} acesso": "88eed1dbcd722e12bd055dcff724bb33e0d106ae4a99019bc4d914c7798d77de",
+    "{count} acessos": "ef536021705d37584e3ac550ae36e9c44450d886da45d0b6b1932991ac74a5d3",
+    "Cupom {code}": "13235c652bbab532f381a44fa6c1ce419a10bec404100bb92cbd3bf988959bce",
+    "Cupom aplicado! Voc\u00ea ganhou {amount} de desconto.": "d88ca4a9917063008c3001b48d668eef6b3f711d5de2c60adbe819abea8650c5",
+    "Reserva v\u00e1lida por aproximadamente {time}": "283cc7faaed8d5bbd0974644c11a8b96ba3943e834616e51e300e194e8058c24",
+    "\ud83c\udfab Abrir ingresso {number}": "e3edd4c3516be93b60eaa2b4d864a0a4b3d940db1c64957d1d550bb033f60d97",
+    "\ud83c\udfab Abrir meu ingresso \u2014 {name}": "34489cc1a7ba75164496dfff717ab2a75a3a7593a0bafcce1fc81af601771614",
+    "\ud83c\udfab Abrir ingresso {number} \u2014 {name}": "6c153bd5f3adc1a3b7492568dc000a52b4da29de5a56e8017b96f66537a37ec1",
+    "Taxa Carioca Ticket ({percent})": "33f5e9bb99a46b4b8c74504abb64fe99079b4839c9bf8f5e2421d565bb417420",
+    "Taxa Carioca Ticket ({percent}) \u00b7 paga pelo produtor": "f6c2d8b3d84ea9275d7c92e401b21a399f593e903d3a93728c0ec9d9ce24aa01",
+    "Sua parte da taxa Carioca Ticket ({percent})": "49ae39b7f574f57a32d4fde79522e9b7b6694ee28a99bc7639330dfe3bf4a5c3",
+    "O produtor absorve {amount}. Nenhuma parte da taxa Carioca Ticket foi adicionada ao seu total.": "c29009a296d8f7e0a45387e0015aeb42ad0b524ca3078422034a3ae5d0cc6107",
+    "Nesta venda, voc\u00ea paga {buyer} da taxa e o produtor absorve {organizer}.": "5b7a30b3d8dd40a9a1fd51d6cb15731e8f4305368ffde1092725fa6c914850e3",
+    "A taxa Carioca Ticket est\u00e1 inclu\u00edda no total a pagar.": "627740b10d33a90b523c75ab69256d084a0b1e2644ea1215e67527ff7731e2bb",
+    "Sem taxa adicional para o comprador.": "6cbb8b6dc9b1bdf95ea4605be4bc7128fcd9fe9b3847a8e026e328b26e04cfbd",
+    "Sobre a taxa Carioca Ticket": "91bf7def485aef1e311cd6d88f16ee373d9a52ef386771bdac989c88aabd2093",
+    "Esta taxa remunera a tecnologia e a opera\u00e7\u00e3o da plataforma para processar a venda, emitir e validar ingressos. O percentual e quem absorve a taxa seguem a condi\u00e7\u00e3o comercial vigente deste evento.": "97608672170e3c13d56bc0c51f1a224382a72c0cd73917f290e87ee971dfcd02",
+    "O tempo de reserva terminou. Voc\u00ea pode gerar um novo pedido.": "bc65165106673b88148b7aab4dc76870753e0852f8166ffe1f93b32a0d7a77b5",
+    "Estamos aguardando a resposta da cria\u00e7\u00e3o do pedido. Continue nesta tela por enquanto para n\u00e3o interromper a recupera\u00e7\u00e3o do pagamento. A sa\u00edda ser\u00e1 liberada ap\u00f3s a resposta.": "52ea4ea1a9139f8ccca28c810d54de1caa26c74b022a89178e1b439ee5a48ed4",
+    "Estamos consultando um pedido anterior. Aguarde a resposta para conferir o andamento antes de sair ou iniciar outra compra.": "d2c4b5a939881314325e6531a2b20ed3a45aaee3f5008769a8597aa1015f9a54",
+    "Voltar \u00e0 p\u00e1gina inicial n\u00e3o cancela o pedido nem uma cobran\u00e7a existente. A atualiza\u00e7\u00e3o do pagamento nesta tela ser\u00e1 interrompida. A recupera\u00e7\u00e3o ao retornar depende dos dados dispon\u00edveis neste navegador. Se j\u00e1 pagou, confira o pagamento antes de tentar outra compra. Deseja sair?": "532f5efb49a757fe64ca588ceadc77eb4d42e31019f359fec9635f6eab7d7de8",
+    "Os dados preenchidos e as escolhas que ainda n\u00e3o foram conclu\u00eddas podem ser perdidos ao sair. Deseja voltar \u00e0 p\u00e1gina inicial?": "0fc652c6be6f3e6565e2cbde40d36afdd9e9065cb2997baafa65b4deefd3d1c9",
+    "Confirmando...": "495d87ddccfaea4fe913ae9a63fb59898c0eb415337e3bc810f10de13fd9f55a",
+    "A confirmar": "f5e40608973a584f4e1821ae2f07e375e9bcde3b9523490f5cef7ba7df04c5bf",
+    "O link est\u00e1 incompleto ou inv\u00e1lido. Solicite novamente o ingresso oficial.": "f383754f7e0f3db2def828e62d7cea02ad534728326998edd0ed967b10d23831",
+    "N\u00e3o foi poss\u00edvel validar este ingresso.": "1796075c4461bf0fbbbbbd99f873df8bea51cb7a48a673b340d2e1ad130dc561",
+    "A consulta demorou mais que o esperado.": "61a07aaa30cc315a6d29fc097f8f3138a7d3799ee798da5f2de1a10d57f23c15",
+    "Os nomes e textos cadastrados pelo produtor permanecem no idioma original.": "37fedfb9583f561438985e3ab694d6d6c532fbbf17b650ea68d54ff08e3a065e",
+    "{name} \u2014 {price} \u00b7 {count} acesso(s) dispon\u00edvel(is)": "3887c276bdde3f09f274334f6032979cb3479d8cb99810508ede245940714856",
+    "Ingresso promocional: somente acesso. N\u00e3o inclui o copo oficial do evento.": "32a7235ebecac20dd80ee5bbdd7c2253132b2af8c794ee33d0188aeef61a4926",
+    "Cupom {code} recebido. Selecione o ingresso e o lote participante para aplicar automaticamente.": "803a73d39dc0af1229f09b6303153ff272671ca569b6a7e36f02f085e01cb428",
+    "Ingresso Carioca Ticket": "c4f11df4c7defd2840ce7cf1483d18532970f617fc5d923583dd935efd332722",
+    "Meu ingresso para {event}": "63c4f262abd4e4d2fbab41683182749c2b2d39ef19c2e64b2c9508842cea9d06",
+    "Meu ingresso Carioca Ticket \u2014 {event}": "60817a59343c47383bd091928628580ec2c43a07c4677cf9f27dc7d95e42b1d1",
+    "O produtor absorve {amount}. Nenhuma parte da taxa Carioca Ticket foi adicionada ao seu total. Encargos adicionais, quando aplic\u00e1veis, s\u00e3o informados separadamente.": "99f019f8cdda6d2633e4e3775bd8deec96890aa94996e12c0f583ad7ac4d1716",
+    "Nesta venda, voc\u00ea paga {buyer} da taxa e o produtor absorve {organizer}. Encargos adicionais, quando aplic\u00e1veis, s\u00e3o informados separadamente.": "8e66c121b453ed90c0e7e835e748655932615d9f0d5bf24c9fb0bda138482434",
+    "A taxa Carioca Ticket est\u00e1 inclu\u00edda no total a pagar. Encargos adicionais, quando aplic\u00e1veis, s\u00e3o informados separadamente.": "a2b334baf9e3e995bda59450067b80ba90282d4f709357c836a602b84054636b",
+    "Sem taxa adicional para o comprador. Encargos adicionais, quando aplic\u00e1veis, s\u00e3o informados separadamente.": "6223c63bbc66db6576296f023ed6073469c155ae4347b114358acbb9422006c0",
+    "Cupom aplicado! Voc\u00ea ganhou {amount} de desconto. Ingresso promocional: somente acesso. N\u00e3o inclui o copo oficial do evento.": "dcc3f81d2a679d8236291956ace53eb6423247f15cfaf95ca11439d33e784b70",
+    "Comprar Ingressos | Carioca Ticket": "15bc9241f54e05818a68f97e1130284ff427f9297af4046726ebf3415e9bac05",
+    "Ingresso Digital | Carioca Ticket": "92d6840dfccef53b1d589cdcdc0743b18dbe63c28bcf22d5d7c928d295e77bba",
+    "Este ingresso \u00e9 individual e permite somente uma entrada.": "1e9f51332af678f831bbd1826c1a42dcfbd08b1d58f3a6a78a78b15fc168c86a",
+    "Este ingresso n\u00e3o autoriza entrada neste momento.": "8c4f50de61c085757433d61cdb9ae211b2fd6484e9903e0e6262a704e116fd1c",
+    "Taxa Carioca Ticket \u00b7 paga pelo produtor": "5af14064cf665690b200efb6bd0ea3bcb8de71b620a6c9ebd281698d64f1389a",
+    "Sua parte da taxa Carioca Ticket": "a178cf2d1da4a0443b23f6108a1bda1e7fc49adae753f374cad9db2e4c1b6747",
+    "A taxa est\u00e1 inclu\u00edda no total a pagar.": "717bf272c7e4632e4db911553d32138cbe71a40f322be3d86b2349f4f7c3647e",
+    "O produtor absorve {amount}. Nenhuma parte da taxa CT foi adicionada ao seu total.": "303721f0a43df349da937a66eb0b0ae8a62a2d052a0d7cf338d8bf871cc02703",
+    "O produtor absorve {amount}.": "0ef02d0f356cb46d0a065e245e70ead6dd307fd2aca2d79efdbf5d73022ca551",
+    "Sem taxa adicional para o comprador nesta opera\u00e7\u00e3o.": "752834f114e9f63d5851b3ee4d1441d04a57fc2e5f464eb0f3c66d1f5b4990b1",
+    "Sem taxa adicional para o comprador. Encargos adicionais informados separadamente acima.": "ddafdaeff1310a978d69c5b8cf034b8294ebbd807778979eb31b4e4adff5ed13",
+    "A taxa est\u00e1 inclu\u00edda no total a pagar. Encargos adicionais informados separadamente acima.": "fdd95377e4ed0624252ab0e151475ada2b7b366aedde3da2456c08ae8c9f01f3",
+    "O produtor absorve {amount}. Nenhuma parte da taxa CT foi adicionada ao seu total. Encargos adicionais informados separadamente acima.": "1e4a83a42ed3a9646560308cf6fbb878c079308b0ca62c19165bf5faf9123aa0",
+    "O produtor absorve {amount}. Encargos adicionais informados separadamente acima.": "ed329bca0348c01a3dbf5aa70057f123da98aba394f1bd95a14169615032e083",
+    "E-mail *": "99cfefcd1c10cb52785e0a89359eced87b64a059d390f8ed2dba0838ce515df8",
+    "PIX copiado": "95a5fe3411cb29cd8235cc3835cd514739ff0d9f1f5a9dc1e6a0beb533a1824c",
+    "\u25cf Ingresso v\u00e1lido": "421e04860bcaf74036e6895d4cf5ba7204024d20a391c5948d5ff28195c05114"
+  },
+  "main_demo_section_sha256": "b74dd414f867cca9d50259b83b474bf062f05af35f85e738c8bbaf9819eba478",
+  "preserved_materialized_count": 146
+}

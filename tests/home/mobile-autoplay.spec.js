@@ -1,11 +1,12 @@
 const { test, expect } = require('@playwright/test');
 const { fixture, events } = require('./rail-fixture.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 const fs = require('node:fs');
 const reviewRows = events.map((event, i) => ({ ...event, id:'AUTOPLAY-PREVIEW-' + (i + 1), nome:i ? 'Encontro de cultura e economia criativa — edição de demonstração' : 'Roda de música e encontro de amigos — edição de demonstração', local:'Espaço cultural de demonstração', visual:{ ...event.visual, descricaoCurta:'Programação de demonstração para avaliar a experiência no celular. Dados sintéticos, sem venda ou emissão de ingressos.' } }));
 async function setup(page) {
   await page.clock.install();
   await page.emulateMedia({ reducedMotion:'no-preference' });
-  const state = await fixture(page, { result:{ sucesso:true, eventos:reviewRows } });
+  const state = await fixture(page, { result:(_attempt,nowMs)=>({ sucesso:true,...temporalEnvelope('home',nowMs),eventos:reviewRows }) });
   await expect(page.locator('.catalog-card')).toHaveCount(2);
   await page.evaluate(() => {
     window.autoplayChanges = [];
@@ -142,13 +143,23 @@ test('touch cancellation does not pause, while explicit event and ad pauses surv
   await context.close();
 });
 test('backgrounding clears interrupted touch contact without inventing a permanent pause',async({page})=>{
-  await page.setViewportSize({width:390,height:664});await setup(page);
+  await page.setViewportSize({width:390,height:664});const state=await setup(page);
   await page.locator('#events-grid').scrollIntoViewIfNeeded();
   await page.locator('#events-grid').dispatchEvent('pointerdown',{isPrimary:true,button:0,pointerType:'touch',pointerId:81,clientX:180,clientY:320});
   async function hidden(value){await page.evaluate(value=>{Object.defineProperty(document,'hidden',{configurable:true,value});document.dispatchEvent(new Event('visibilitychange'));},value);}
   await hidden(true);await page.evaluate(()=>{window.autoplayChanges=[];});await page.clock.runFor(11000);
   expect(await page.evaluate(()=>autoplayChanges)).toEqual([]);
-  await hidden(false);for(let i=0;i<55;i++)await page.clock.runFor(100);
+  // Visibility invalidates the lease and removes the old rail. Its five-second
+  // interval starts only after the required fresh response has rendered.
+  await expect(page.locator('.catalog-card')).toHaveCount(0);
+  await hidden(false);await page.clock.runFor(0);
+  await expect.poll(()=>state.attempts).toBe(2);
+  await expect(page.locator('.catalog-card')).toHaveCount(2);
+  await expect(page.locator('#events-grid')).toHaveAttribute('aria-busy','false');
+  expect((await geometry(page,'#events-grid')).intersecting).toBe(true);
+  await page.clock.runFor(0);
+  expect(await page.evaluate(()=>autoplayChanges)).toEqual([]);
+  for(let i=0;i<55;i++)await page.clock.runFor(100);
   expect(await page.evaluate(()=>autoplayChanges)).toEqual(['1']);
   const ad=page.locator('#advertising-primary');await ad.scrollIntoViewIfNeeded();
   await ad.locator('.ad-stage').dispatchEvent('pointerdown',{isPrimary:true,button:0,pointerType:'touch',pointerId:82});

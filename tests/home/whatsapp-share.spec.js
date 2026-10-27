@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const fs = require('node:fs'), path = require('node:path');
 const { fixture, events } = require('./rail-fixture.cjs');
+const { temporalEnvelope, legacyNoEndTemporal, PROFILE_MS } = require('../fixtures/public-temporal-envelope.cjs');
 const ROOT = path.resolve(__dirname, '../..'), ORIGIN = 'http://127.0.0.1:4174';
 const languages = {
   'pt-BR': ['Compartilhar no WhatsApp', 'Confira este evento na Carioca Ticket.'],
@@ -10,9 +11,10 @@ const languages = {
 };
 const eventData = { id:'PUBLIC & festa/中文', nome:'Festa <img src=x> & amigos', data:'20/12/2030', horario:'18h', local:'Casa da música', cidade:'Recife', uf:'PE', token:'PRIVATE-TOKEN', convite:'PRIVATE-INVITE' };
 async function prepare(page, surface, locale) {
+  await page.clock.install({ time: new Date('2030-12-20T12:00:00Z') });
   const network = [];
   const errors = []; page.on('pageerror',error=>errors.push(error.message));
-  await page.addInitScript(({locale,eventData,surface}) => {
+  await page.addInitScript(({locale,eventData,surface,detailEnvelope,detailTtl}) => {
     localStorage.setItem('ct-home-locale', locale);
     localStorage.setItem('ct-home-font', '150');
     window.shareCalls = []; window.copyCalls = [];
@@ -22,12 +24,14 @@ async function prepare(page, surface, locale) {
     if (surface !== 'home' && surface !== 'card') HTMLFormElement.prototype.submit = function () {
       const fields = new FormData(this);
       if (fields.get('metodo') !== 'ctEventoPublicoCarregarPROD') return;
-      setTimeout(() => dispatchEvent(new MessageEvent('message', { origin:'https://script.google.com', data:{ctMinhaCariocaPost:true,id:fields.get('ctMinhaCariocaRequestId'),ok:true,resultado:{sucesso:true,evento:eventData,visual:{},tipos:[]}} })), 0);
+      const nowMs = Date.now(), now = new Date(nowMs).toISOString();
+      const temporal = { ...detailEnvelope, serverNow: now, temporalEvaluatedAt: now, validUntil: new Date(nowMs + detailTtl).toISOString() };
+      setTimeout(() => dispatchEvent(new MessageEvent('message', { origin:'https://script.google.com', data:{ctMinhaCariocaPost:true,id:fields.get('ctMinhaCariocaRequestId'),ok:true,resultado:{sucesso:true,...temporal,evento:eventData,visual:{},tipos:[]}} })), 0);
     };
-  }, {locale,eventData,surface});
+  }, {locale,eventData,surface,detailEnvelope:temporalEnvelope('detail', Date.UTC(2030,11,20,12)),detailTtl:PROFILE_MS.detail});
   if (surface === 'home' || surface === 'card') {
     // Home fixture owns its intercepted synthetic catalog transport.
-    await fixture(page, { result:{sucesso:true,eventos:[{...events[0],...eventData}]} });
+    await fixture(page, { result:(_attempt,nowMs)=>({sucesso:true,...temporalEnvelope('home',nowMs),eventos:[{...events[0],...eventData,temporal:legacyNoEndTemporal()}]}) });
     await page.goto(ORIGIN+'/?token=PRIVATE-TOKEN#PRIVATE-HASH');
   } else {
     await page.context().route('**/*', route => {

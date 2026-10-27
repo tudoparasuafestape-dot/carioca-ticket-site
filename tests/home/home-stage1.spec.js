@@ -4,6 +4,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { events, cover } = require('../fixtures/home-stage1.cjs');
 const { capture } = require('./capture.cjs');
+const { temporalEnvelope, legacyNoEndTemporal } = require('../fixtures/public-temporal-envelope.cjs');
 const ROOT = path.resolve(__dirname, '../..');
 const ORIGIN = 'http://127.0.0.1:4174';
 const EVIDENCE = path.join(ROOT, 'docs/reviews/home-v1/screenshots');
@@ -19,6 +20,7 @@ const approvedAds = [
 ];
 
 async function fixture(page, options = {}) {
+  if (!options.clockInstalled) await page.clock.install({ time: new Date('2030-12-20T12:00:00Z') });
   await page.addInitScript(() => { Math.random = () => 0; });
   const state = { methods: [], errors: [], blocked: [], attempts: 0, cities: 0 };
   page.on('pageerror', error => state.errors.push(error.message));
@@ -44,8 +46,9 @@ async function fixture(page, options = {}) {
     if (url.origin === 'https://script.google.com' && request.method() === 'POST' && params.get('metodo') === 'ctEventosPublicosListarPROD' && params.get('argsJson') === '[]' && params.get('ctMinhaCariocaAction') === 'publicRpc') {
       state.methods.push(params.get('metodo'));
       state.attempts++;
-      const result = typeof options.result === 'function' ? options.result(state.attempts) : options.result;
-      const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: true, resultado: result || { sucesso: true, eventos: events } };
+      const nowMs = await page.evaluate(() => Date.now());
+      const result = typeof options.result === 'function' ? await options.result(state.attempts, nowMs) : options.result;
+      const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: true, resultado: result === undefined ? { sucesso: true, ...temporalEnvelope('home', nowMs), eventos: events } : result };
       return route.fulfill({ contentType: 'text/html; charset=utf-8', body: `<script>parent.postMessage(${JSON.stringify(payload).replace(/</g, '\\u003c')}, '*')</script>` });
     }
     state.blocked.push(request.method() + ' ' + url.origin + url.pathname);
@@ -224,7 +227,7 @@ test('200% layout reflow and text enlargement keep controls reachable', async ({
 });
 
 test('empty/error/retry and missing metadata never fabricate event facts', async ({ page }) => {
-  const state = await fixture(page, { result: attempt => attempt === 1 ? { sucesso: false } : { sucesso: true, eventos: [] } });
+  const state = await fixture(page, { result: (attempt, nowMs) => attempt === 1 ? { sucesso: false } : { sucesso: true, ...temporalEnvelope('home', nowMs), eventos: [] } });
   await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
   await screenshot(page, 'catalog-error');
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
@@ -234,10 +237,10 @@ test('empty/error/retry and missing metadata never fabricate event facts', async
 });
 
 test('missing and broken images have usable fallbacks and absent fields remain explicit', async ({ page }) => {
-  await fixture(page, { result: { sucesso: true, eventos: [
-    { id: 'PREVIEW-UNKNOWN', nome: 'Informações incompletas — fixture' },
+  await fixture(page, { result: (_attempt, nowMs) => ({ sucesso: true, ...temporalEnvelope('home', nowMs), eventos: [
+    { id: 'PREVIEW-UNKNOWN', nome: 'Informações incompletas — fixture', temporal: legacyNoEndTemporal() },
     { ...events[0], visual: { capaUrl: '/missing.png' } }
-  ] } });
+  ] }) });
   await loaded(page);
   await expect(page.locator('.catalog-image-fallback')).toHaveText(['Capa indisponível', 'Capa indisponível']);
   await expect(page.locator('.catalog-card').first()).toContainText('Data e horário não informados');
@@ -255,10 +258,15 @@ test('existing home destinations and the public transport contract remain unchan
   expect([...new Set(hrefs)].filter(href => !actual.includes(href))).toEqual([]);
   const oldCatalog = execFileSync('git', ['show', 'edcfe04d:assets/public-event-catalog.js'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   const catalog = fs.readFileSync(path.join(ROOT, 'assets/public-event-catalog.js'), 'utf8').replace(/\r\n/g, '\n');
-  // Scheduling may start the public read earlier; the complete transport
-  // implementation (endpoint, fields, origin checks and timeout) stays exact.
+  // Permit only the reviewed cancellation interface around the historical
+  // transport. Endpoint, fields, origin/correlation guards, timeout and cleanup
+  // remain exact; an unrelated transport change must still fail this contract.
   const adapter = code => code.match(/  function loadPublicEvents\(\) \{[\s\S]*?\n  \}/)[0];
-  expect(adapter(catalog)).toBe(adapter(oldCatalog));
+  const expectedAdapter = adapter(oldCatalog)
+    .replace('    return new Promise(function (resolve, reject) {', '    var abort = function () {};\n    var promise = new Promise(function (resolve, reject) {')
+    .replace('      function receive(event) {', "      abort = function () { cleanup(); reject(new Error('CATALOG_CANCELLED')); };\n      function receive(event) {")
+    .replace(/    \}\);\n  \}$/, '    });\n    return { promise: promise, cancel: function () { abort(); } };\n  }');
+  expect(adapter(catalog)).toBe(expectedAdapter);
   expect(fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8').replace(/\r\n/g, '\n')).toBe(execFileSync('git', ['show', 'edcfe04d:styles.css'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n'));
 });
 
@@ -386,7 +394,7 @@ test('city list error recovers locally and all preferences work with unavailable
 
 test('periods show concrete dates, categories preserve location and empty results preserve controls', async ({ page }) => {
   await page.clock.install({ time: new Date('2030-12-20T12:00:00Z') });
-  const state = await fixture(page);
+  const state = await fixture(page, { clockInstalled: true });
   await loaded(page);
   await page.locator('#filters-toggle').click();
   await page.locator('[data-period="week"]').click();
@@ -674,7 +682,7 @@ for (const locale of Object.keys(dictionaries)) {
   test(`translated catalog error, retry, empty and missing-data messages / ${locale}`, async ({ page }) => {
     await page.addInitScript(value => localStorage.setItem('ct-home-locale', value), locale);
     const dictionary = dictionaries[locale];
-    const state = await fixture(page, { result: attempt => attempt === 1 ? { sucesso: false } : attempt === 2 ? { sucesso: true, eventos: [] } : { sucesso: true, eventos: [{ id: 'INCOMPLETE', nome: 'Nome original — fixture' }] } });
+    const state = await fixture(page, { result: (attempt, nowMs) => attempt === 1 ? { sucesso: false } : attempt === 2 ? { sucesso: true, ...temporalEnvelope('home', nowMs), eventos: [] } : { sucesso: true, ...temporalEnvelope('home', nowMs), eventos: [{ id: 'INCOMPLETE', nome: 'Nome original — fixture', temporal: legacyNoEndTemporal() }] } });
     await expect(page.locator('#catalog-status-message')).toHaveText(dictionary.loadError);
     await expect(page.locator('#catalog-retry')).toHaveText(dictionary.retry);
     await page.locator('#catalog-retry').click();

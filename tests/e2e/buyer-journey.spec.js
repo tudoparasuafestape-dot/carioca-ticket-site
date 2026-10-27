@@ -1,4 +1,5 @@
 const { test, expect, mockRoute, mockFailure } = require('./helpers/branch-isolated.cjs');
+const { temporalEnvelope, legacyNoEndTemporal } = require('../fixtures/public-temporal-envelope.cjs');
 
 // Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
 const MOCK_CONTRACT = {
@@ -199,15 +200,15 @@ async function installMock(page, state) {
         if(method==='ctEventosPublicosListarPROD'){
           const event=eventFixture();
           expect(args).toEqual([]);
-          result={sucesso:true,eventos:[{...event.evento,visual:event.visual}]};
+          result={sucesso:true,...temporalEnvelope('home',await page.evaluate(() => Date.now())),eventos:[{...event.evento,temporal:legacyNoEndTemporal(),visual:event.visual}]};
         } else if(method==='ctEventoPublicoCarregarPROD'){
           expect(String(args[0]||'')).toBe(EVENT_ID);
-          result=eventFixture();
+          result={...eventFixture(),...temporalEnvelope('detail',await page.evaluate(() => Date.now()))};
         } else if(method==='ctEventoPublicoCarregarVideoDataPROD'){
           result={sucesso:false};
         } else if(method==='ctCheckoutPublicoCarregarEventoPROD'){
           expect(String(args[0]||'')).toBe(EVENT_ID);
-          result=checkoutFixture();
+          result={...checkoutFixture(),...temporalEnvelope('checkout',await page.evaluate(() => Date.now()))};
         } else if(method==='ctCheckoutPixPublicoIniciarPROD'){
           state.initCalls+=1;
           const payload=args[0]||{};

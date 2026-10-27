@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const { fixture, events } = require('./rail-fixture.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 test.use({ offline: true, serviceWorkers: 'block' });
 const data = ['Beleza & Negócios', 'Samba e Pagode', 'Música · fixture'].map((categoria, index) => ({
   ...events[index % events.length], id: 'CATEGORY-FIXTURE-' + index,
@@ -16,7 +17,7 @@ for (const width of [320, 1440]) for (const theme of ['light', 'dark']) {
   test(`categories and native flag choices / ${width} / ${theme}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 900 });
     await page.addInitScript(theme => { localStorage.setItem('ct-home-theme', theme); localStorage.setItem('ct-home-font', '150'); }, theme);
-    const state = await fixture(page, { result: { sucesso: true, eventos: data } });
+    const state = await fixture(page, { result: (_attempt, nowMs) => ({ sucesso: true, ...temporalEnvelope('home', nowMs), eventos: data }) });
     await expect(page.locator('.catalog-card')).toHaveCount(3);
     for (const [locale, translated] of Object.entries(labels)) {
       await page.locator('#accessibility-toggle').click();
@@ -64,7 +65,7 @@ for (const width of [320, 1440]) for (const theme of ['light', 'dark']) {
   });
 }
 test('native flag choices keyboard, dismissal, repeated selection and original category aliases', async ({ page }) => {
-  const state = await fixture(page, { result: { sucesso: true, eventos: data } });
+  const state = await fixture(page, { result: (_attempt, nowMs) => ({ sucesso: true, ...temporalEnvelope('home', nowMs), eventos: data }) });
   await expect(page.locator('.catalog-card')).toHaveCount(3);
   await page.locator('#accessibility-toggle').click();
   await page.locator('input[value="pt-BR"]').focus();

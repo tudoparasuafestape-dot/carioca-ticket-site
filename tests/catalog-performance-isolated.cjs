@@ -3,6 +3,7 @@
 const { chromium } = require('@playwright/test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { temporalEnvelope, legacyNoEndTemporal } = require('./fixtures/public-temporal-envelope.cjs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
@@ -25,12 +26,12 @@ function warmSources() {
   const files = ['index.html', 'manifest.webmanifest', ...fs.readdirSync(path.join(ROOT, 'assets')).filter(name => /^(home|public-).+\.(js|css|json)$/.test(name)).map(name => 'assets/' + name)];
   for (const variant of ['before', 'after']) for (const file of files) {
     // These new controls did not exist in the historical catalog baseline.
-    if(variant==='before'&&/^assets\/public-privacy\.(js|css)$/.test(file))continue;
+    if(variant==='before'&&(/^assets\/public-privacy\.(js|css)$/.test(file)||file==='assets/public-catalog-clock.js'))continue;
     source(variant,file);
   }
 }
 function rows(n) {
-  return Array.from({ length: n }, (_, i) => ({ id: 'SYNTHETIC-' + i, nome: 'Evento sintético ' + i,
+  return Array.from({ length: n }, (_, i) => ({ temporal: legacyNoEndTemporal(), id: 'SYNTHETIC-' + i, nome: 'Evento sintético ' + i,
     data: '10/10/2027', horario: '18:00', local: 'Local de teste', cidade: i % 2 ? 'Recife' : 'Olinda', uf: 'PE',
     visual: { categoria: i % 2 ? 'Música' : 'Teatro', descricaoCurta: 'Somente uma fixture, sem compra real.', capaUrl: '/__fixture/cover-' + i + '.svg' } }));
 }
@@ -89,7 +90,10 @@ async function fixture(browser, variant, count, options = {}) {
       state.calls.push(call);
       if (options.hold) await new Promise(resolve => { state.release = resolve; });
       if (options.rpcDelay) await sleep(options.rpcDelay);
-      const result = state.responses.length ? state.responses.shift() : { sucesso: true, eventos: rows(count) };
+      const hasQueued = state.responses.length > 0;
+      const queued = hasQueued ? state.responses.shift() : undefined;
+      const nowMs = await page.evaluate(() => Date.now());
+      const result = hasQueued ? (typeof queued === 'function' ? queued(nowMs) : queued) : { sucesso: true, ...temporalEnvelope('home', nowMs), eventos: rows(count) };
       const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: !result.transportError, resultado: result };
       call.reply = await page.evaluate(() => performance.now());
       return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<script>parent.postMessage(' + JSON.stringify(payload).replace(/</g, '\\u003c') + ', "*")</script>' });
@@ -128,16 +132,34 @@ async function benchmark(browser, variant, count) {
   const initialImageSources = await f.page.locator('.catalog-photo img[src]').count();
   const filtered = await filter(f.page, 'Recife');
   await ready(f.page, Math.floor(count / 2));
+  if (count > 1) assert.equal(await f.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), 'SYNTHETIC-1');
   const restored = await filter(f.page, '');
   await ready(f.page, count);
   let rotation = null;
   if (count > 1) {
+    const beforeRotation = await f.page.evaluate(() => {
+      const grid = document.querySelector('#events-grid');
+      return { index: Number(grid.dataset.activeIndex), ids: Array.from(grid.children, card => card.dataset.eventId) };
+    });
+    assert.deepEqual(beforeRotation.ids, rows(count).map(event => event.id));
+    // The historical rail resets to the first card; the candidate preserves
+    // the selected Recife event when restoring the complete list.
+    assert.equal(beforeRotation.index, variant === 'after' ? 1 : 0);
+    const expectedNext = { index: (beforeRotation.index + 1) % count, id: beforeRotation.ids[(beforeRotation.index + 1) % count] };
     rotation = await f.page.evaluate(() => {
       const start = performance.now(), before = window.__perf.attributes;
       document.querySelector('#event-rail-next').click();
       return { syncMs: performance.now() - start, attributes: window.__perf.attributes - before };
     });
-    await f.page.waitForFunction(() => document.querySelector('#events-grid').dataset.activeIndex === '1');
+    await f.page.waitForFunction(expected => {
+      const grid = document.querySelector('#events-grid'), card = grid.children[expected.index];
+      return grid.dataset.activeIndex === String(expected.index) && card &&
+        card.dataset.eventId === expected.id && !card.hasAttribute('inert');
+    }, expectedNext);
+    rotation.fromIndex = beforeRotation.index;
+    rotation.fromEventId = beforeRotation.ids[beforeRotation.index];
+    rotation.toIndex = expectedNext.index;
+    rotation.toEventId = expectedNext.id;
   }
   assert.equal(f.state.calls.length, 1);
   const result = { variant, count, rpcStartMs: f.state.calls[0].start, rpcReplyMs: f.state.calls[0].reply, cardsAtMs: first.cardsAt, firstCoverAtMs: firstCoverAt, firstCreated: first.created, initialImageRequests, initialImageSources, filtered, restored, rotation, imageRequests: f.state.imageRequests.length };
@@ -191,17 +213,17 @@ async function regression(browser) {
     assert.equal(invalid, 0);
   }
   // Force the existing retry handler to test invalidation even after success.
-  f.state.responses.push({ sucesso: true, eventos: rows(15).slice(1) });
+  f.state.responses.push(nowMs => ({ sucesso: true, ...temporalEnvelope('home', nowMs), eventos: rows(15).slice(1) }));
   await f.page.locator('#catalog-retry').evaluate(button => button.click()); await ready(f.page, 14);
   await filter(f.page, ''); await ready(f.page, 14);
   assert.equal(await f.page.locator('[data-event-id="SYNTHETIC-0"]').count(), 0);
-  f.state.responses.push({ sucesso: true, eventos: rows(15).slice(2) });
+  f.state.responses.push(nowMs => ({ sucesso: true, ...temporalEnvelope('home', nowMs), eventos: rows(15).slice(2) }));
   await f.page.goto(ORIGIN + '/away'); await f.page.goto(ORIGIN); await ready(f.page, 13);
   assert.equal(await f.page.locator('[data-event-id="SYNTHETIC-1"]').count(), 0);
   assert.equal(f.state.calls.length, 3);
   assert.equal(await f.page.evaluate(() => Object.keys(localStorage).some(k => /catalog|event/.test(k))), false);
   await f.finish(); passed++;
-  const retry = await fixture(browser, 'after', 2, { presentationDelay: 500, responses: [{ transportError: true }, { sucesso: true, eventos: rows(1) }] });
+  const retry = await fixture(browser, 'after', 2, { presentationDelay: 500, responses: [{ transportError: true }, nowMs => ({ sucesso: true, ...temporalEnvelope('home', nowMs), eventos: rows(1) })] });
   await retry.page.locator('#catalog-retry').waitFor({ state: 'visible' });
   const rejected = await snapshot(retry.page);
   assert(rejected.transportErrorAt > 0 && rejected.transportErrorAt < rejected.domReadyAt);
@@ -224,7 +246,7 @@ async function regression(browser) {
   assert.equal(await initialFilter.page.locator('.catalog-title a').getAttribute('id'), 'catalog-event-5-title');
   await initialFilter.finish(); passed++;
   const categoryRows = rows(2); categoryRows[0].visual.categoria = 'Beleza';
-  const category = await fixture(browser, 'after', 2, { responses: [{ sucesso: true, eventos: categoryRows }] });
+  const category = await fixture(browser, 'after', 2, { responses: [nowMs => ({ sucesso: true, ...temporalEnvelope('home', nowMs), eventos: categoryRows })] });
   await ready(category.page, 2);
   await filter(category.page, 'Beauty'); await ready(category.page, 0);
   await category.page.locator('#home-language').selectOption('en-US', { force: true }); await ready(category.page, 1);
@@ -233,16 +255,34 @@ async function regression(browser) {
   await category.finish(); passed++;
   const share = await fixture(browser, 'after', 15, { sharePending: true });
   await ready(share.page, 15);
+  const shareIds = rows(15).map(event => event.id);
+  const retainedShareId = rows(15).find(event => event.cidade === 'Recife').id;
+  const retainedShareIndex = shareIds.indexOf(retainedShareId);
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), shareIds[0]);
   await share.page.locator('.catalog-card:not([inert]) [data-public-share="event"] button').click();
   await filter(share.page, 'Recife'); await ready(share.page, 7);
+  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), '0');
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
   await filter(share.page, ''); await ready(share.page, 15);
+  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), String(retainedShareIndex));
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
   await share.page.locator('#home-language').selectOption('en-US', { force: true }); await ready(share.page, 15);
+  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), String(retainedShareIndex));
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
   assert.equal(await share.page.locator('#event-rail-next').isDisabled(), true);
   assert.equal(await share.page.evaluate(() => shareCalls.length), 1);
   await share.page.evaluate(() => releaseShare());
   await share.page.waitForFunction(() => !document.querySelector('#event-rail-next').disabled);
+  // Releasing the pending share must not reset the retained selection. Advance
+  // from that actual selection and require both its successor's index and ID.
+  const beforeShareNext = Number(await share.page.locator('#events-grid').getAttribute('data-active-index'));
+  assert.equal(beforeShareNext, retainedShareIndex);
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
+  assert.deepEqual(await share.page.locator('.catalog-card').evaluateAll(nodes => nodes.map(node => node.dataset.eventId)), shareIds);
+  const expectedShareNext = (beforeShareNext + 1) % shareIds.length;
   await share.page.locator('#event-rail-next').click();
-  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), '1');
+  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), String(expectedShareNext));
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), shareIds[expectedShareNext]);
   await share.finish(); passed++;
   const drag = await fixture(browser, 'after', 3); await ready(drag.page, 3);
   async function dragStart() {

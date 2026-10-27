@@ -12,7 +12,7 @@ async function setup({width=390,choice,denied=false,locale='pt-BR',theme='dark',
  const context=await browser.newContext({offline:true,serviceWorkers:'block',viewport:{width,height:900}});
  await context.addInitScript(({choice,key,denied,locale,theme,font})=>{if(denied){Object.defineProperty(window,'localStorage',{get(){throw Error('Storage blocked')}});}else{if(choice)localStorage.setItem(key,JSON.stringify(choice));localStorage.setItem('ct-home-locale',locale);localStorage.setItem('ct-home-theme',theme);localStorage.setItem('ct-home-font',String(font));}}, {choice,key,denied,locale,theme,font});
  const fixtures=createFixtures(),cat=fixtures.handlers['publicRpc:ctEventoPublicoCarregarPROD'];
- fixtures.handlers['publicRpc:ctEventoPublicoCarregarPROD']=(args,state)=>{const v=cat(args,state);v.evento.endereco='Rua de Teste, 42';return v;};
+ fixtures.handlers['publicRpc:ctEventoPublicoCarregarPROD']=async(args,state)=>{const v=await cat(args,state);v.evento.endereco='Rua de Teste, 42';return v;};
  const maps=[];const destination='LOCAL SINTETICO, Rua de Teste, 42, Recife, PE, Brasil';
  fixtures.resources['https://maps.google.com/maps?output=embed&q='+encodeURIComponent(destination)]={contentType:'text/html',body:'<!doctype html><p>Mapa simulado localmente</p>'};
  const guard=await installIsolatedNetwork(context,{root,origin,...fixtures});
@@ -29,7 +29,7 @@ for(const route of ['/','/evento/','/checkout/']){
  await expect(t.page.locator('#ct-privacy-banner')).toBeVisible();
  assert.equal(await t.page.locator('#ct-privacy-banner').evaluate(e=>getComputedStyle(e).position),'fixed');
  await expect(t.page.locator('#ct-privacy-dialog')).not.toBeVisible();
- if(route==='/evento/'){await t.page.locator('#buyMobile').click({trial:true});assert(await t.page.locator('#buyMobile').evaluate(e=>{const b=document.getElementById('ct-privacy-banner').getBoundingClientRect(),a=e.getBoundingClientRect();return b.bottom<=a.top||b.top>=a.bottom||b.right<=a.left||b.left>=a.right;}));}
+ if(route==='/evento/'){await expect(t.page.locator('#app')).toBeVisible();await t.page.locator('#buyMobile').click({trial:true});assert(await t.page.locator('#buyMobile').evaluate(e=>{const b=document.getElementById('ct-privacy-banner').getBoundingClientRect(),a=e.getBoundingClientRect();return b.bottom<=a.top||b.top>=a.bottom||b.right<=a.left||b.left>=a.right;}));}
  if(route==='/checkout/'){await t.page.locator('#buyerName').fill('Comprador sintético');await t.page.locator('#quantity').fill('2');assert.equal(await t.page.locator('#buyerName').inputValue(),'Comprador sintético');}
  await t.page.getByRole('button',{name:'Continuar sem estas opções',exact:true}).click();await expect(t.page.locator('main')).toBeFocused();assert(await t.page.locator('main').evaluate(e=>{const r=e.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight}));await t.page.waitForTimeout(2800);
  assert.equal(t.guard.state.telemetry.length,0);assert.equal(await t.page.evaluate(()=>CTPrivacy.allowed('analytics')),false);

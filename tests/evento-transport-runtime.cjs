@@ -8,12 +8,13 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const pw = require('playwright');
+const { temporalEnvelope } = require('./fixtures/public-temporal-envelope.cjs');
 const root = process.env.CT_TEST_SOURCE_ROOT || path.resolve(__dirname, '..');
 const baseline = process.env.CT_TEST_BASELINE === '1';
 const engine = process.env.CT_TEST_BROWSER || 'chromium';
 const host = 'https://cariocaticket.com.br';
 const errorText = 'Não foi possível carregar o evento agora. Tente novamente em alguns instantes.';
-const fixture = id => ({sucesso:true, evento:{id,nome:'Evento de teste',data:'01/01/2030'},
+const fixture = (id, nowMs) => ({sucesso:true, ...temporalEnvelope('detail', nowMs), evento:{id,nome:'Evento de teste',data:'01/01/2030'},
   visual:{descricaoCurta:'Fixture isolada'},menorPreco:'R$ 10,00',
   tipos:[{nome:'Ingresso de teste',lotes:[{nome:'Lote de teste',precoNumero:10,preco:'R$ 10,00'}]}]});
 let browser;
@@ -42,6 +43,8 @@ async function isolated(routeName, run, {analytics=false, submitThrows=false, ev
       return route.fulfill({contentType:'text/html',body:'<!doctype html><iframe src="'+url+'"></iframe>'});
     if(request.method()==='GET' && bridgeReplies.has(request.url()))
       return route.fulfill({contentType:'text/html; charset=utf-8',body:bridgeReplies.get(request.url())});
+    if(request.method()==='GET' && u.origin===pageOrigin && u.pathname==='/assets/public-catalog-clock.js' && u.search==='?v=20261021-eligibility-exclusive1')
+      return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,'assets/public-catalog-clock.js'),'utf8')});
     if(i18n && request.method()==='GET' && u.origin===pageOrigin && ['/assets/public-i18n.js','/assets/event-i18n.js'].includes(u.pathname))
       return route.fulfill({contentType:'application/javascript',body:fs.readFileSync(path.join(root,u.pathname),'utf8')});
     if(request.method()==='GET' && u.origin===host && u.pathname==='/blank-test')
@@ -76,8 +79,11 @@ async function isolated(routeName, run, {analytics=false, submitThrows=false, ev
     while(posts.length<n && Date.now()<until) await new Promise(resolve=>setTimeout(resolve,10));
     assert.equal(posts.length,n,'one transport submission per explicit load');
   };
-  const reply=async (index=0, {ok=true,resultado=fixture(event),erro='',origin='https://script.google.com'}={})=>{
+  const reply=async (index=0, {ok=true,resultado,erro='',origin='https://script.google.com'}={})=>{
     const p=posts[index];
+    // Only the default positive fixture gets an envelope, sampled from this
+    // browser's controlled clock at reply time. Explicit negative payloads stay verbatim.
+    if(resultado===undefined)resultado=fixture(event,await page.evaluate(()=>Date.now()));
     const payload={ctMinhaCariocaPost:true,id:p.id,ok,resultado,erro};
     if(origin!=='https://script.google.com') {
       // Deliberately synthetic invalid origin; successful transport tests below
@@ -89,7 +95,7 @@ async function isolated(routeName, run, {analytics=false, submitThrows=false, ev
   };
   const bridgeReply=async (index=0,{send=true,targets=[host,'https://www.cariocaticket.com.br']}={})=>{
     const p=posts[index],bridgeUrl='https://fixture-script.googleusercontent.com/userCodeAppPanel?request='+index;
-    const payload={ctMinhaCariocaPost:true,id:p.id,ok:true,resultado:fixture(event),erro:''};
+    const payload={ctMinhaCariocaPost:true,id:p.id,ok:true,resultado:fixture(event,await page.evaluate(()=>Date.now())),erro:''};
     // Model Apps Script's nested iframe and exact apex/www target list. No
     // Google script, credential, cookie or live request is used in this fixture.
     bridgeReplies.set(bridgeUrl,'<!doctype html><title>Synthetic bridge</title><script>'+(send?
@@ -97,8 +103,11 @@ async function isolated(routeName, run, {analytics=false, submitThrows=false, ev
     await p.route.fulfill({contentType:'text/html',body:'<!doctype html><iframe src="'+bridgeUrl+'"></iframe>'});
     await page.waitForLoadState('load');
   };
-  const late=async index=>page.evaluate(payload=>window.dispatchEvent(new MessageEvent('message',{
-    origin:'https://script.google.com',data:payload})),{ctMinhaCariocaPost:true,id:posts[index].id,ok:true,resultado:fixture(event)});
+  const late=async index=>{
+    const resultado=fixture(event,await page.evaluate(()=>Date.now()));
+    return page.evaluate(payload=>window.dispatchEvent(new MessageEvent('message',{
+      origin:'https://script.google.com',data:payload})),{ctMinhaCariocaPost:true,id:posts[index].id,ok:true,resultado});
+  };
   const timeout=async ()=>{await page.clock.runFor(45000);await page.locator('#errorBox').waitFor({state:'visible'});};
   try {
     await page.goto(topUrl,{waitUntil:'domcontentloaded'});if(!submitThrows)await waitPosts(1);

@@ -2,11 +2,12 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { temporalEnvelope, legacyNoEndTemporal } = require('./public-temporal-envelope.cjs');
 // Generic open-sales journey; real Samba closure has its own isolated suite.
 const EVENT = 'EVT-LOCAL-PUBLIC-CANARY';
 const PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zs3sAAAAASUVORK5CYII=';
-function catalog() {
-  return { sucesso: true, evento: { id: EVENT, nome: 'Roda de Samba Estilo Carioca', data: '11/10/2026', horario: '15h',
+function catalog(profile, nowMs) {
+  return { sucesso: true, ...temporalEnvelope(profile, nowMs), evento: { id: EVENT, nome: 'Roda de Samba Estilo Carioca', data: '11/10/2026', horario: '15h',
     local: 'LOCAL SINTETICO', cidade: 'Recife', uf: 'PE' },
     visual: { capaUrl: '', posterUrl: '', midiaTipo: 'IMAGEM', descricaoCurta: 'Fixture isolada', categoria: 'Fixture', realizacao: 'Equipe de teste' },
     menorPreco: 'R$ 25,00',
@@ -18,17 +19,23 @@ const capabilities = { sucesso: true, loginEmailSenha: { habilitado: true }, cad
   recuperacaoSenha: { habilitado: true }, google: { habilitado: false }, autenticacao: { firebase: { habilitado: true } } };
 const firebaseConfig = { apiKey: 'LOCAL-FIXTURE-NOT-A-KEY', projectId: 'local-fixture', authDomain: 'localhost' };
 const zeroArgs = result => args => { assert.deepEqual(args, []); return structuredClone(result); };
-function createFixtures() {
+function createFixtures({ now = () => Date.now() } = {}) {
   const handlers = {
     'portalRpc:ctCentralAcessoObterCapacidadesPROD': zeroArgs(capabilities),
     'portalRpc:ctCentralAcessoObterFirebaseConfigPROD': zeroArgs({ sucesso: true, firebaseConfig }),
     'portalRpc:ctCentralAcessoBootstrapPROD': zeroArgs({ sucesso: true, capacidades: capabilities, firebaseConfig, cacheTtlSegundos: 600 }),
     'portalRpc:ctMarcaOficialObterDataUriPROD': args => { assert(['DESKTOP', 'MOBILE'].includes(args[0])); return PIXEL; },
-    'publicRpc:ctEventosPublicosListarPROD': zeroArgs({ sucesso: true, eventos: [{ ...catalog().evento,
-      visual: { capaUrl: '/assets/carioca-ticket-logo.png', descricaoCurta: 'Fixture local' },
-      links: { evento: '/evento/?evento=' + EVENT, comprar: '/checkout/?evento=' + EVENT } }], total: 1 }),
-    'publicRpc:ctEventoPublicoCarregarPROD': args => { assert.equal(args[0], EVENT); return catalog(); },
-    'publicRpc:ctCheckoutPublicoCarregarEventoPROD': args => { assert.equal(args[0], EVENT); return catalog(); },
+    // Build a positive envelope at each request, from this fixture's clock.
+    'publicRpc:ctEventosPublicosListarPROD': async args => {
+      assert.deepEqual(args, []);
+      const instant = await now(), event = catalog('home', instant).evento;
+      return { sucesso: true, ...temporalEnvelope('home', instant), eventos: [{ ...event,
+        temporal: legacyNoEndTemporal(),
+        visual: { capaUrl: '/assets/carioca-ticket-logo.png', descricaoCurta: 'Fixture local' },
+        links: { evento: '/evento/?evento=' + EVENT, comprar: '/checkout/?evento=' + EVENT } }], total: 1 };
+    },
+    'publicRpc:ctEventoPublicoCarregarPROD': async args => { assert.equal(args[0], EVENT); return catalog('detail', await now()); },
+    'publicRpc:ctCheckoutPublicoCarregarEventoPROD': async args => { assert.equal(args[0], EVENT); return catalog('checkout', await now()); },
     'publicRpc:ctCuponsPublicoValidarSeguroPROD': args => {
       const p = args[0]; assert.equal(p.eventoId, EVENT); assert.equal(p.tipoId, 'TIPO-EBD1F87D'); assert.equal(p.loteId, 'LOTE-E2D1C48C');
       if (p.codigo === 'CTCANARIOINEXISTENTE') return { sucesso: true, valido: false, mensagem: 'Cupom não encontrado.' };

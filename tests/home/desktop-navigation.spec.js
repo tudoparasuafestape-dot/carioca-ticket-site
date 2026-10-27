@@ -3,12 +3,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { events, cover } = require('../fixtures/home-stage1.cjs');
 const { capture } = require('./capture.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 const ROOT = path.resolve(__dirname, '../..'), ORIGIN = 'http://127.0.0.1:4174';
 const EVIDENCE = path.join(ROOT, 'docs/reviews/home-v1/screenshots');
 const dictionaries = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets/home-i18n.js'), 'utf8').match(/var dictionaries = (\{[\s\S]*?\n\});/)[1]);
 test.use({ offline: true, serviceWorkers: 'block' });
 
 async function fixture(page) {
+  await page.clock.install({ time: new Date('2030-12-20T12:00:00Z') });
   const state = { errors: [], blocked: [], methods: [] };
   page.on('pageerror', error => state.errors.push(error.message));
   await page.addInitScript(() => { Math.random = () => 0; });
@@ -26,7 +28,7 @@ async function fixture(page) {
     const params = new URLSearchParams(request.postData() || '');
     if (url.origin === 'https://script.google.com' && request.method() === 'POST' && params.get('metodo') === 'ctEventosPublicosListarPROD' && params.get('argsJson') === '[]' && params.get('ctMinhaCariocaAction') === 'publicRpc') {
       state.methods.push(params.get('metodo'));
-      const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: true, resultado: { sucesso: true, eventos: events } };
+      const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: true, resultado: { sucesso: true, ...temporalEnvelope('home', await page.evaluate(() => Date.now())), eventos: events } };
       return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<script>parent.postMessage(' + JSON.stringify(payload).replace(/</g, '\\u003c') + ', "*")</script>' });
     }
     state.blocked.push(request.method() + ' ' + url.origin + url.pathname);
