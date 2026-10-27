@@ -255,16 +255,34 @@ async function regression(browser) {
   await category.finish(); passed++;
   const share = await fixture(browser, 'after', 15, { sharePending: true });
   await ready(share.page, 15);
+  const shareIds = rows(15).map(event => event.id);
+  const retainedShareId = rows(15).find(event => event.cidade === 'Recife').id;
+  const retainedShareIndex = shareIds.indexOf(retainedShareId);
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), shareIds[0]);
   await share.page.locator('.catalog-card:not([inert]) [data-public-share="event"] button').click();
   await filter(share.page, 'Recife'); await ready(share.page, 7);
+  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), '0');
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
   await filter(share.page, ''); await ready(share.page, 15);
+  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), String(retainedShareIndex));
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
   await share.page.locator('#home-language').selectOption('en-US', { force: true }); await ready(share.page, 15);
+  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), String(retainedShareIndex));
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
   assert.equal(await share.page.locator('#event-rail-next').isDisabled(), true);
   assert.equal(await share.page.evaluate(() => shareCalls.length), 1);
   await share.page.evaluate(() => releaseShare());
   await share.page.waitForFunction(() => !document.querySelector('#event-rail-next').disabled);
+  // Releasing the pending share must not reset the retained selection. Advance
+  // from that actual selection and require both its successor's index and ID.
+  const beforeShareNext = Number(await share.page.locator('#events-grid').getAttribute('data-active-index'));
+  assert.equal(beforeShareNext, retainedShareIndex);
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
+  assert.deepEqual(await share.page.locator('.catalog-card').evaluateAll(nodes => nodes.map(node => node.dataset.eventId)), shareIds);
+  const expectedShareNext = (beforeShareNext + 1) % shareIds.length;
   await share.page.locator('#event-rail-next').click();
-  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), '1');
+  assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), String(expectedShareNext));
+  assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), shareIds[expectedShareNext]);
   await share.finish(); passed++;
   const drag = await fixture(browser, 'after', 3); await ready(drag.page, 3);
   async function dragStart() {
