@@ -132,16 +132,34 @@ async function benchmark(browser, variant, count) {
   const initialImageSources = await f.page.locator('.catalog-photo img[src]').count();
   const filtered = await filter(f.page, 'Recife');
   await ready(f.page, Math.floor(count / 2));
+  if (count > 1) assert.equal(await f.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), 'SYNTHETIC-1');
   const restored = await filter(f.page, '');
   await ready(f.page, count);
   let rotation = null;
   if (count > 1) {
+    const beforeRotation = await f.page.evaluate(() => {
+      const grid = document.querySelector('#events-grid');
+      return { index: Number(grid.dataset.activeIndex), ids: Array.from(grid.children, card => card.dataset.eventId) };
+    });
+    assert.deepEqual(beforeRotation.ids, rows(count).map(event => event.id));
+    // The historical rail resets to the first card; the candidate preserves
+    // the selected Recife event when restoring the complete list.
+    assert.equal(beforeRotation.index, variant === 'after' ? 1 : 0);
+    const expectedNext = { index: (beforeRotation.index + 1) % count, id: beforeRotation.ids[(beforeRotation.index + 1) % count] };
     rotation = await f.page.evaluate(() => {
       const start = performance.now(), before = window.__perf.attributes;
       document.querySelector('#event-rail-next').click();
       return { syncMs: performance.now() - start, attributes: window.__perf.attributes - before };
     });
-    await f.page.waitForFunction(() => document.querySelector('#events-grid').dataset.activeIndex === '1');
+    await f.page.waitForFunction(expected => {
+      const grid = document.querySelector('#events-grid'), card = grid.children[expected.index];
+      return grid.dataset.activeIndex === String(expected.index) && card &&
+        card.dataset.eventId === expected.id && !card.hasAttribute('inert');
+    }, expectedNext);
+    rotation.fromIndex = beforeRotation.index;
+    rotation.fromEventId = beforeRotation.ids[beforeRotation.index];
+    rotation.toIndex = expectedNext.index;
+    rotation.toEventId = expectedNext.id;
   }
   assert.equal(f.state.calls.length, 1);
   const result = { variant, count, rpcStartMs: f.state.calls[0].start, rpcReplyMs: f.state.calls[0].reply, cardsAtMs: first.cardsAt, firstCoverAtMs: firstCoverAt, firstCreated: first.created, initialImageRequests, initialImageSources, filtered, restored, rotation, imageRequests: f.state.imageRequests.length };

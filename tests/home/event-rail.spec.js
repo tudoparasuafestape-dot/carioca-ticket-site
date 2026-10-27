@@ -231,15 +231,21 @@ test('reduced motion, unavailable storage, text enlargement and 200% reflow keep
   expect(await page.evaluate(()=>sessionStorage.getItem('existing-session-fixture'))).toBe('unchanged');
   await page.setViewportSize({width:720,height:500}); await overflow(page);
 });
-test('filters, empty/error/retry and broken covers reset the feature without a second RPC',async({page})=>{
+test('filters preserve the selected event through an empty result without a second RPC',async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});
   const state=await open(page,15);
   await page.locator('#event-rail-next').click(); await active(page,1);
+  const selectedId=rows(15)[1].id;
+  await expect(page.locator('.catalog-card:not([inert])')).toHaveAttribute('data-event-id',selectedId);
   await page.locator('#event-search-input').fill('criativo'); await page.locator('#event-search-form button').click();
   await active(page,0); await expect(page.locator('.catalog-card')).toHaveCount(7);
+  await expect(page.locator('.catalog-card:not([inert])')).toHaveAttribute('data-event-id',selectedId);
   await page.locator('#event-search-input').fill('does-not-exist'); await page.locator('#event-search-form button').click();
   await expect(page.locator('#event-feature')).toBeHidden(); await expect(page.locator('#no-events')).toBeVisible();
-  await page.locator('#clear-event-search').click(); await active(page,0);
+  await page.locator('#clear-event-search').click();
+  await expect(page.locator('.catalog-card')).toHaveCount(15);
+  await active(page,rows(15).findIndex(event=>event.id===selectedId));
+  await expect(page.locator('.catalog-card:not([inert])')).toHaveAttribute('data-event-id',selectedId);
   expect(state.methods).toHaveLength(1);
 });
 for(const slot of ['primary','secondary']) test(`${slot} advertisement: existing 5-second timer, stable randomized start and interaction pauses`,async({page})=>{

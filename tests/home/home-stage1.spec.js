@@ -258,10 +258,15 @@ test('existing home destinations and the public transport contract remain unchan
   expect([...new Set(hrefs)].filter(href => !actual.includes(href))).toEqual([]);
   const oldCatalog = execFileSync('git', ['show', 'edcfe04d:assets/public-event-catalog.js'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   const catalog = fs.readFileSync(path.join(ROOT, 'assets/public-event-catalog.js'), 'utf8').replace(/\r\n/g, '\n');
-  // Scheduling may start the public read earlier; the complete transport
-  // implementation (endpoint, fields, origin checks and timeout) stays exact.
+  // Permit only the reviewed cancellation interface around the historical
+  // transport. Endpoint, fields, origin/correlation guards, timeout and cleanup
+  // remain exact; an unrelated transport change must still fail this contract.
   const adapter = code => code.match(/  function loadPublicEvents\(\) \{[\s\S]*?\n  \}/)[0];
-  expect(adapter(catalog)).toBe(adapter(oldCatalog));
+  const expectedAdapter = adapter(oldCatalog)
+    .replace('    return new Promise(function (resolve, reject) {', '    var abort = function () {};\n    var promise = new Promise(function (resolve, reject) {')
+    .replace('      function receive(event) {', "      abort = function () { cleanup(); reject(new Error('CATALOG_CANCELLED')); };\n      function receive(event) {")
+    .replace(/    \}\);\n  \}$/, '    });\n    return { promise: promise, cancel: function () { abort(); } };\n  }');
+  expect(adapter(catalog)).toBe(expectedAdapter);
   expect(fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8').replace(/\r\n/g, '\n')).toBe(execFileSync('git', ['show', 'edcfe04d:styles.css'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n'));
 });
 

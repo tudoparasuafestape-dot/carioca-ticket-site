@@ -183,10 +183,10 @@ async function expectNoAnimation(page, carousel) {
   expect(probe.moving).toEqual([]);
 }
 
-async function assertIsolated(state) {
+async function assertIsolated(state, expectedCatalogReads = 1) {
   expect(state.errors).toEqual([]);
   expect(state.blocked).toEqual([]);
-  expect(state.methods).toEqual(['ctEventosPublicosListarPROD']);
+  expect(state.methods).toEqual(Array(expectedCatalogReads).fill('ctEventosPublicosListarPROD'));
 }
 
 async function hidden(page, value) {
@@ -438,10 +438,19 @@ for (const carousel of CAROUSELS) {
     const state = await setup(page);
     await reveal(page, carousel);
     await pause(page, carousel);
+    if (carousel.name !== 'events') await assertIsolated(state);
     // Neither returning from the background nor re-entering the viewport resumes a manual pause.
     await hidden(page, true);
     await page.clock.runFor(11000);
     await hidden(page, false);
+    if (carousel.name === 'events') {
+      // Hidden invalidates the old temporal lease. Wait for the exact next
+      // intercepted response and its new DOM, not just the POST dispatch.
+      await page.clock.runFor(0);
+      await expect.poll(() => state.attempts).toBe(2);
+      await expect(page.locator('.catalog-card')).toHaveCount(2);
+      await expect(page.locator(carousel.track)).toHaveAttribute('aria-busy', 'false');
+    }
     await page.locator('footer').scrollIntoViewIfNeeded();
     expect((await geometry(page, carousel.track)).visible).toBe(false);
     await page.clock.runFor(11000);
@@ -449,13 +458,27 @@ for (const carousel of CAROUSELS) {
     await page.clock.runFor(11000);
     await expectPaused(page, carousel);
     expect(await changes(page, carousel)).toEqual([]);
+    // Initial read plus exactly one fresh read after returning visible.
+    if (carousel.name !== 'events') await assertIsolated(state, 2);
 
     await resume(page, carousel);
     await page.clock.runFor(2000);
     await hidden(page, true);
     await page.clock.runFor(11000);
     expect(await changes(page, carousel)).toEqual([]);
+    if (carousel.name === 'events') await expect(page.locator('.catalog-card')).toHaveCount(0);
     await hidden(page, false);
+    if (carousel.name === 'events') {
+      await page.clock.runFor(0);
+      await expect.poll(() => state.attempts).toBe(3);
+      await expect(page.locator('.catalog-card')).toHaveCount(2);
+      await expect(page.locator(carousel.track)).toHaveAttribute('aria-busy', 'false');
+      expect((await geometry(page, carousel.track)).visible).toBe(true);
+      await page.clock.runFor(0);
+      await expectPlaying(page, carousel);
+      expect(await changes(page, carousel)).toEqual([]);
+    }
+    // Keep the exact 4,999/5,000-ms boundary, now from the usable fresh rail.
     await page.clock.runFor(4999);
     expect(await changes(page, carousel)).toEqual([]);
     await page.clock.runFor(1);
@@ -472,7 +495,9 @@ for (const carousel of CAROUSELS) {
     await page.clock.runFor(1);
     expect((await changes(page, carousel)).length).toBe(1);
     await expectReduced(page);
-    await assertIsolated(state);
+    // The second visibility restoration requires one more fresh catalog read;
+    // scrolling alone must not add reads. Events also wait for both fresh renders.
+    await assertIsolated(state, 3);
   });
 }
 
