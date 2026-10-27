@@ -1,3 +1,4 @@
+import { temporalEnvelope } from '../fixtures/public-temporal-envelope.cjs';
 import { test, expect, mockRoute, mockFailure } from './helpers/branch-isolated.cjs';
 
 // Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
@@ -41,7 +42,7 @@ async function installMock(page,state){
       if(method==='ctEventosPublicosListarPROD'){
         expect(p.get('ctMinhaCariocaAction')).toBe('publicRpc');
         expect(args).toEqual([]);
-        resultado={sucesso:true,eventos:[]};
+        resultado={sucesso:true,...temporalEnvelope('home',await page.evaluate(()=>Date.now())),eventos:[]};
       }else if(method==='ctFinanceiroProdutorMasterListarPROD'){
         resultado={sucesso:true,autorizado:true,ambienteProvider:'PRODUCAO',itens:[{
           financeiroId:'FIN-E2E',organizacaoId:'ORG-E2E',produtorId:'PROD-E2E',produtorNome:'Produtor E2E',
@@ -129,7 +130,7 @@ test.describe('Ativação financeira Master do Produtor',()=>{
       const id=String(p.get('ctMinhaCariocaRequestId')||'');
       const method=String(p.get('metodo')||'');
       let resultado=null;
-      if(method==='ctEventosPublicosListarPROD')resultado={sucesso:true,eventos:[]};
+      if(method==='ctEventosPublicosListarPROD')resultado={sucesso:true,...temporalEnvelope('home',await page.evaluate(()=>Date.now())),eventos:[]};
       else if(method==='ctFinanceiroProdutorMasterListarPROD')resultado={sucesso:true,autorizado:true,itens:[{produtorId:'PROD-E2E',produtorNome:'Produtor E2E',provedorAmbiente:'PRODUCAO',statusOnboarding:'PENDENTE_CREDENCIAL',credencialConfigurada:false,recebimentoHabilitado:false,splitHabilitado:false,prontoParaVendas:false,credencialRefEsperada:'CT_SECRET_ASAAS_PRODUCAO_PROD_E2E'}],contagem:{pendentes:1,prontos:0}};
       else if(method==='ctFinanceiroProdutorMasterProntidaoPROD')resultado={sucesso:true,autorizado:true,credencialRefEsperada:'CT_SECRET_ASAAS_PRODUCAO_PROD_E2E',vinculoProviderCompleto:true,segredoExiste:false,providerValidado:false,podeAtivar:false,segredoExposto:false,movimentouDinheiro:false,erroProvider:'CREDENCIAL_NAO_ENCONTRADA',termosVersaoAtual:'CT-FIN-PROD-2026-09'};
       else throw new Error('Método inesperado: '+method);

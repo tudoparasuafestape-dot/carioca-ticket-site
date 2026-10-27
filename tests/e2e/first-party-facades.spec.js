@@ -1,4 +1,5 @@
 const { test, expect, mockRoute, mockFailure } = require('./helpers/branch-isolated.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 
 // Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
 const MOCK_CONTRACT = {
@@ -271,6 +272,12 @@ async function mockAppsScriptRpc(page) {
 
     try {
       resultado = rpcResult(method, args);
+      // Only public catalogs receive fresh metadata; operational fixtures remain unchanged.
+      if (method === 'ctEventoPublicoCarregarPROD') {
+        resultado = { ...resultado, ...temporalEnvelope('detail', await page.evaluate(() => Date.now())) };
+      } else if (method === 'ctCheckoutPublicoCarregarEventoPROD') {
+        resultado = { ...resultado, ...temporalEnvelope('checkout', await page.evaluate(() => Date.now())) };
+      }
     } catch (e) { mockFailure(route, e);
       ok = false;
       erro = e && e.message ? e.message : String(e);

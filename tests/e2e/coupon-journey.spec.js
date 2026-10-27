@@ -1,4 +1,5 @@
 const { test, expect, mockRoute, mockFailure, fixtureError } = require('./helpers/branch-isolated.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 
 // Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
 const MOCK_CONTRACT = {
@@ -112,8 +113,8 @@ async function mock(page,state){
           result={sucesso:true,autorizado:true,admin:{nome:'Admin',perfil:'ADMINISTRADOR'},itens:state.saved?[{...campaign(state.paused?'PAUSADA':'ATIVA'),produtorId:'PROD-E2E',eventoId:EVENT}]:[],total:state.saved?1:0};
         }else throw new Error('portalRpc não previsto: '+method);
       }else if(action==='publicRpc'){
-        if(method==='ctCheckoutPublicoCarregarEventoPROD')result=catalog();
-        else if(method==='ctEventoPublicoCarregarPROD')result={...catalog(),menorPreco:'R$ 25,00',visual:{...catalog().visual,realizacao:'Tudo Para Sua Festa',categoria:'Samba',destaque:'30 anos da Banda Sem Razão',descricaoCompleta:'Evento especial de 30 anos.'}};
+        if(method==='ctCheckoutPublicoCarregarEventoPROD')result={...catalog(),...temporalEnvelope('checkout',await page.evaluate(() => Date.now()))};
+        else if(method==='ctEventoPublicoCarregarPROD')result={...catalog(),...temporalEnvelope('detail',await page.evaluate(() => Date.now())),menorPreco:'R$ 25,00',visual:{...catalog().visual,realizacao:'Tudo Para Sua Festa',categoria:'Samba',destaque:'30 anos da Banda Sem Razão',descricaoCompleta:'Evento especial de 30 anos.'}};
         else if(method==='ctCuponsPublicoRegistrarAcessoSeguroPROD'){
           state.trafficCalls=Number(state.trafficCalls||0)+1;state.lastTraffic=args[0]||{};result={sucesso:true,registrado:true};
         }else if(method==='ctCuponsPublicoValidarSeguroPROD'){

@@ -11,6 +11,7 @@
   var announcement = document.getElementById('event-rail-announcement');
   var reduced = matchMedia('(prefers-reduced-motion: reduce)');
   var cards = [], visibleCards = [], index = 0, paused = false, visible = false, hovered = false;
+  var activeEventId = null;
   var timer, animationTimer, frame, moving = false, drag = null, clickBlockedUntil = 0, toggleIntent = null;
   var INTERVAL = 5000, DURATION = 320;
   var sharing = new Set();
@@ -197,8 +198,15 @@
     paint(); labels(); schedule();
   }).observe(grid);
   function reset() {
-    clearTimeout(timer); clearAnimation(); drag = null; index = 0;
+    // Keep the surviving active event (and the user's pause choice) on expiry,
+    // refresh and language changes. A temporarily empty grid keeps its anchor.
+    var previousIndex = index;
+    if (cards[index]) activeEventId = cards[index].dataset.eventId;
+    clearTimeout(timer); clearAnimation(); drag = null;
     cards = Array.from(grid.children);
+    index = cards.findIndex(function (card) { return card.dataset.eventId === activeEventId; });
+    if (index < 0) index = Math.min(previousIndex, Math.max(0, cards.length - 1));
+    if (cards[index]) activeEventId = cards[index].dataset.eventId;
     visibleCards = [];
     cards.forEach(function (card) {
       card.style.transition = 'none'; card.style.visibility = 'hidden';

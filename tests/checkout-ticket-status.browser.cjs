@@ -3,6 +3,7 @@
 // Never forward a request, contact production, or create a real payment/order.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { temporalEnvelope } = require('./fixtures/public-temporal-envelope.cjs');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const { chromium } = require('playwright');
@@ -14,7 +15,7 @@ const ENDPOINTS = new Set(['https://script.google.com/macros/s/AKfycbz28keO65PII
   'https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec']);
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(check, name) { const end = Date.now() + 6000; while (Date.now() < end) { if (await check()) return; await wait(25); } assert.fail(name); }
-function catalog() { return { sucesso: true, evento: { id: EVENT, nome: 'Evento sintético de navegação' }, visual: {}, identidadeCliente: { emailObrigatorio: false },
+function catalog(nowMs) { return { sucesso: true, ...temporalEnvelope('checkout', nowMs), evento: { id: EVENT, nome: 'Evento sintético de navegação' }, visual: {}, identidadeCliente: { emailObrigatorio: false },
   tipos: [{ id: 'LOCAL-TYPE', nome: 'Individual', capacidadePorVenda: 1, lotes: [{ id: 'LOCAL-LOT', nome: 'Lote local', preco: 'R$ 25,00', precoNumero: 25, quantidadeLimitada: false }] }] }; }
 const PIX = { qrCodeBase64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zs3sAAAAASUVORK5CYII=', copiaECola: 'LOCAL-PIX-FIXTURE-NOT-PAYABLE' };
 function ticket(name, n = 1) { return { codigo: 'CT-LOCAL-' + n, nome: name, link: 'https://cariocaticket.com.br/ingresso/?codigo=CT-LOCAL-' + n + '&sig=LOCAL-NOT-VALID' }; }
@@ -38,7 +39,7 @@ async function fixture(browser, routePath, mobile, options = {}) {
     try {
       if (url.origin === ORIGIN && req.method() === 'GET') {
         if (url.pathname === '/') { state.home++; return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><title>Home fixture</title><h1>Página inicial local</h1>' }); }
-        const files = { '/assets/advance-sales.js':'assets/advance-sales.js', '/assets/public-privacy.js':'assets/public-privacy.js','/assets/public-privacy.css':'assets/public-privacy.css', '/assets/public-i18n.js':'assets/public-i18n.js','/assets/checkout-language.js':'assets/checkout-language.js','/assets/checkout-language.css':'assets/checkout-language.css','/assets/checkout-translations.js':'assets/checkout-translations.js', '/checkout/': 'checkout/index.html', '/checkout-v2/': 'checkout-v2/index.html',
+        const files = { '/assets/public-catalog-clock.js': 'assets/public-catalog-clock.js', '/assets/advance-sales.js':'assets/advance-sales.js', '/assets/public-privacy.js':'assets/public-privacy.js','/assets/public-privacy.css':'assets/public-privacy.css', '/assets/public-i18n.js':'assets/public-i18n.js','/assets/checkout-language.js':'assets/checkout-language.js','/assets/checkout-language.css':'assets/checkout-language.css','/assets/checkout-translations.js':'assets/checkout-translations.js', '/checkout/': 'checkout/index.html', '/checkout-v2/': 'checkout-v2/index.html',
           '/assets/checkout-home-navigation.js': 'assets/checkout-home-navigation.js', '/assets/checkout-home-navigation.css': 'assets/checkout-home-navigation.css',
           '/assets/checkout-commercial-policy.js': 'assets/checkout-commercial-policy.js' };
         if (Object.hasOwn(files, url.pathname)) {
@@ -57,7 +58,7 @@ async function fixture(browser, routePath, mobile, options = {}) {
       assert.equal(fields.get('ctMinhaCariocaAction'), 'publicRpc');
       const args = JSON.parse(fields.get('argsJson')), method = fields.get('metodo');
       let result;
-      if (method === 'ctCheckoutPublicoCarregarEventoPROD') { assert.equal(args[0], EVENT); result = catalog(); }
+      if (method === 'ctCheckoutPublicoCarregarEventoPROD') { assert.equal(args[0], EVENT); result = catalog(await page.evaluate(() => Date.now())); }
       else if (method === 'ctCheckoutPixPublicoIniciarPROD') {
         state.payments.push(args[0]);
         if(options.timeoutPayment) return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><!-- Simulated missing response: real bridge timeout must release the UI. -->' });

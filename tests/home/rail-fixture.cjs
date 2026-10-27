@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 const path = require('node:path');
 const { events, cover } = require('../fixtures/home-stage1.cjs');
 const ROOT = path.resolve(__dirname, '../..');
@@ -31,8 +32,9 @@ async function fixture(page, options = {}) {
     if (url.origin === 'https://script.google.com' && request.method() === 'POST' && params.get('metodo') === 'ctEventosPublicosListarPROD' && params.get('argsJson') === '[]' && params.get('ctMinhaCariocaAction') === 'publicRpc') {
       state.methods.push(params.get('metodo'));
       state.attempts++;
-      const result = typeof options.result === 'function' ? options.result(state.attempts) : options.result;
-      const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: true, resultado: result || { sucesso: true, eventos: events } };
+      const nowMs = await page.evaluate(() => Date.now());
+      const result = typeof options.result === 'function' ? await options.result(state.attempts, nowMs) : options.result;
+      const payload = { ctMinhaCariocaPost: true, id: params.get('ctMinhaCariocaRequestId'), ok: true, resultado: result === undefined ? { sucesso: true, ...temporalEnvelope('home', nowMs), eventos: events } : result };
       return route.fulfill({ contentType: 'text/html; charset=utf-8', body: `<script>parent.postMessage(${JSON.stringify(payload).replace(/</g, '\\u003c')}, '*')</script>` });
     }
     state.blocked.push(request.method() + ' ' + url.origin + url.pathname);

@@ -3,6 +3,7 @@
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { temporalEnvelope, legacyNoEndTemporal } = require('./fixtures/public-temporal-envelope.cjs');
 const path = require('node:path');
 const root = path.resolve(__dirname,'..');
 const origin='http://127.0.0.1:4191';
@@ -11,16 +12,16 @@ const legal=new Set(['termos','privacidade','cancelamento-reembolso']);
 const screenshots=path.join(root,'test-results/public-language');
 const sourceText=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/institutional-source-text.json'),'utf8'));
 const normalize=s=>s.replace(/\s+/g,' ').trim();
-const catalog=[{id:'FIXTURE-LANGUAGE-1',nome:'Evento original',data:'10/10/2026',horario:'18:00',local:'Local original',cidade:'Recife',uf:'PE',visual:{categoria:'Beleza',descricaoCurta:'Descrição original em português.'},links:{evento:'/evento/?evento=FIXTURE-LANGUAGE-1',comprar:'/checkout/?evento=FIXTURE-LANGUAGE-1'}}];
+const catalog=[{temporal:legacyNoEndTemporal(),id:'FIXTURE-LANGUAGE-1',nome:'Evento original',data:'10/10/2026',horario:'18:00',local:'Local original',cidade:'Recife',uf:'PE',visual:{categoria:'Beleza',descricaoCurta:'Descrição original em português.'},links:{evento:'/evento/?evento=FIXTURE-LANGUAGE-1',comprar:'/checkout/?evento=FIXTURE-LANGUAGE-1'}}];
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.CT_CHROMIUM_EXECUTABLE?{executablePath:process.env.CT_CHROMIUM_EXECUTABLE}:{})});
  const context=await browser.newContext({serviceWorkers:'block'});const unexpected=[],errors=[];let rpc=0;
- await context.route('**/*',route=>{
+ await context.route('**/*',async route=>{
   const req=route.request(),u=new URL(req.url());
   if(u.origin==='https://script.google.com'&&req.method()==='POST'){
    const p=new URLSearchParams(req.postData()||'');
    if(p.get('metodo')==='ctEventosPublicosListarPROD'&&p.get('argsJson')==='[]'&&p.get('ctMinhaCariocaAction')==='publicRpc'){
-    rpc++;const payload={ctMinhaCariocaPost:true,id:p.get('ctMinhaCariocaRequestId'),ok:true,resultado:{sucesso:true,eventos:catalog}};
+    rpc++;const payload={ctMinhaCariocaPost:true,id:p.get('ctMinhaCariocaRequestId'),ok:true,resultado:{sucesso:true,...temporalEnvelope('home',await req.frame().page().evaluate(()=>Date.now())),eventos:catalog}};
     return route.fulfill({contentType:'text/html; charset=utf-8',body:'<script>parent.postMessage('+JSON.stringify(payload)+',"*")</script>'});
    }
   }

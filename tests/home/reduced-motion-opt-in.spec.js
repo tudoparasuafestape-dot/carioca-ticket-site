@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const { fixture, events } = require('./rail-fixture.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 
 // This suite uses only the existing fully intercepted home fixture. It must run
 // with playwright.home.config.cjs, never the production/default E2E config.
@@ -79,7 +80,7 @@ async function setup(page, reducedMotion = 'reduce', options = {}) {
     }
     window.originalMatchMedia = window.matchMedia;
   }, { standalone: !!options.standalone, missingEventNote: !!options.missingEventNote });
-  const state = await fixture(page, { missingAds: !!options.missingAds, ...(options.singleEvent ? { result: { sucesso: true, eventos: [events[0]] } } : {}) });
+  const state = await fixture(page, { missingAds: !!options.missingAds, ...(options.singleEvent ? { result: (_attempt, nowMs) => ({ sucesso: true, ...temporalEnvelope('home', nowMs), eventos: [events[0]] }) } : {}) });
   await expect(page.locator('.catalog-card')).toHaveCount(options.singleEvent ? 1 : 2);
   for (const carousel of CAROUSELS.slice(1)) await expect(page.locator(`${carousel.track} > .ad-slide`)).toHaveCount(2);
   // Freeze only after the fixture has loaded. All subsequent 4,999/5,000 ms

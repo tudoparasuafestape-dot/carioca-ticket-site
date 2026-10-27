@@ -7,14 +7,17 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 const { installIsolatedNetwork } = require('./safety/isolated-network.cjs');
 const { createFixtures } = require('./fixtures/public-canary.cjs');
+const { temporalEnvelope, legacyNoEndTemporal } = require('./fixtures/public-temporal-envelope.cjs');
 const ROOT = path.resolve(__dirname, '..'), ORIGIN = 'http://127.0.0.1:4179';
 const SAMBA = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD', ERA = 'EVT-23112026-ERA-BEAUTY-EAC4B673';
 const MESSAGE = 'Evento encerrado.';
 const ORDER = 'ORDER-SYNTHETIC', TOKEN = 'TOKEN-SYNTHETIC', KEY = 'KEY-SYNTHETIC-PRE-CLOSURE';
 const OUT = process.env.CT_EVIDENCE_DIR || 'test-results/advance-sales';
 const report = [];
-function catalog(id) {
-  return { sucesso: true, evento: { id, nome: id === SAMBA ? 'Roda de Samba Estilo Carioca' : 'ERA BEAUTY', data: '11/10/2026', horario: '15h',
+// Synthetic controlled server/client instant, unrelated to the runner's wall clock.
+const FIXTURE_NOW = Date.UTC(2026, 9, 21, 12);
+function catalog(id, profile = 'checkout', nowMs = FIXTURE_NOW) {
+  return { sucesso: true, ...temporalEnvelope(profile, nowMs), evento: { id, nome: id === SAMBA ? 'Roda de Samba Estilo Carioca' : 'ERA BEAUTY', data: '11/10/2026', horario: '15h',
     ...(id === SAMBA ? { local: 'Vevets Recepções', endereco: 'Rua Arenópolis, 82 - Candeias', cidade: 'Jaboatão dos Guararapes', uf: 'PE' } : { local: 'SEBRAE PE', endereco: 'Rua Tabajaras, 360 - Ilha do Retiro', cidade: 'Recife', uf: 'PE' }) },
     visual: { descricaoCurta: id === SAMBA ? 'Garanta seu ingresso. Ingressos na portaria por R$30.' : 'Evento sintético para teste isolado', categoria: 'Música', ...(id === SAMBA ? { descricaoCompleta: 'Compre agora. Ingressos disponíveis na portaria por R$30.', observacoes: 'Garanta já seu ingresso!', destaque: 'Ingressos na portaria por R$30.' } : {}) }, menorPreco: 'R$ 25,00', identidadeCliente: { emailObrigatorio: false },
     tipos: [{ id: 'LOCAL-TYPE', nome: 'Individual', capacidadePorVenda: 1, lotes: [{ id: 'LOCAL-LOT', nome: 'Pré-venda', preco: 'R$ 25,00', precoNumero: 25, quantidadeLimitada: false }] }] };
@@ -24,21 +27,23 @@ async function fixture(browser, route, mobile, options = {}) {
   const context = await browser.newContext({ offline: true, serviceWorkers: 'block', permissions: [], viewport: { width: mobile ? 390 : 1440, height: 900 } });
   const page = await context.newPage(), errors = [], payments = [], calls = [];
   page.on('pageerror', e => errors.push(e.message));
+  await page.clock.install({ time: new Date(FIXTURE_NOW) });
   await context.addInitScript(({ event, method, recovery, key, order, token, retry }) => {
     localStorage.setItem('ct-public-privacy-v1', JSON.stringify({ version: 1, analytics: false, maps: true }));
     if (recovery) localStorage.setItem('CT_CHECKOUT_RECOVERY_' + event, JSON.stringify({ pedidoId: order, token }));
     if (retry) localStorage.setItem('CT_CHECKOUT_IDEMPOTENCY_' + event + '_' + method, key);
   }, { event, method, recovery: options.recover, retry: options.retry, key: KEY, order: ORDER, token: TOKEN });
-  const fixtures = createFixtures();
+  const now = () => page.evaluate(() => Date.now());
+  const fixtures = createFixtures({ now });
   function order() {
     const status = options.status || 'AGUARDANDO_PAGAMENTO';
     return { sucesso: true, autorizado: true, encontrado: true, consultaToken: TOKEN,
-      pedido: { pedidoId: ORDER, eventoId: event, status, expiraEm: new Date(Date.now() + 3600000).toISOString() },
+      pedido: { pedidoId: ORDER, eventoId: event, status, expiraEm: new Date(FIXTURE_NOW + 3600000).toISOString() },
       pagamento: { forma: method, pix: { copiaECola: 'PIX-SYNTHETIC-NOT-PAYABLE' }, invoiceUrl: 'https://example.invalid/synthetic-payment' },
       ingressoEmitido: status === 'CONCLUIDO', ingressos: status === 'CONCLUIDO' ? [{ codigo: 'CT-LOCAL-TEST', link: 'https://cariocaticket.com.br/ingresso/?codigo=CT-LOCAL-TEST&sig=LOCAL-NOT-VALID' }] : [] };
   }
-  fixtures.handlers['publicRpc:ctEventosPublicosListarPROD'] = () => ({ sucesso: true, eventos: [SAMBA, ERA].map(id => ({ ...catalog(id).evento, visual: catalog(id).visual })), total: 2 });
-  for (const rpc of ['ctEventoPublicoCarregarPROD', 'ctCheckoutPublicoCarregarEventoPROD']) fixtures.handlers['publicRpc:' + rpc] = args => { assert.equal(args[0], event); return catalog(event); };
+  fixtures.handlers['publicRpc:ctEventosPublicosListarPROD'] = async () => ({ sucesso: true, ...temporalEnvelope('home', await now()), eventos: [SAMBA, ERA].map(id => ({ ...catalog(id).evento, temporal: legacyNoEndTemporal(), visual: catalog(id).visual })), total: 2 });
+  for (const rpc of ['ctEventoPublicoCarregarPROD', 'ctCheckoutPublicoCarregarEventoPROD']) fixtures.handlers['publicRpc:' + rpc] = async args => { assert.equal(args[0], event); return catalog(event, rpc === 'ctEventoPublicoCarregarPROD' ? 'detail' : 'checkout', await now()); };
   for (const rpc of ['ctCheckoutPixPublicoConsultarPROD', 'ctCheckoutPixPublicoStatusLocalPROD', 'ctCheckoutPixPublicoReconciliarPROD']) fixtures.handlers['publicRpc:' + rpc] = args => { assert.deepEqual(args, [ORDER, TOKEN]); calls.push(rpc); return order(); };
   fixtures.handlers['publicRpc:ctCheckoutPixPublicoIniciarPROD'] = args => { payments.push(args[0]); return order(); };
   fixtures.handlers['publicRpc:ctPoliticaComercialPreviewPublicoPROD'] = args => {
@@ -79,8 +84,10 @@ async function assertEndedPresentation(page) {
 async function aliasFixture(browser, js) {
   const context = await browser.newContext({ offline: true, serviceWorkers: 'block', javaScriptEnabled: js, viewport: { width: 390, height: 900 } });
   const page = await context.newPage();
-  const fixtures = createFixtures();
-  fixtures.handlers['publicRpc:ctEventoPublicoCarregarPROD'] = args => { assert.equal(args[0], SAMBA); return catalog(SAMBA); };
+  if (js) await page.clock.install({ time: new Date(FIXTURE_NOW) });
+  const now = () => page.evaluate(() => Date.now());
+  const fixtures = createFixtures({ now });
+  fixtures.handlers['publicRpc:ctEventoPublicoCarregarPROD'] = async args => { assert.equal(args[0], SAMBA); return catalog(SAMBA, 'detail', await now()); };
   const guard = await installIsolatedNetwork(context, { root: ROOT, origin: ORIGIN, ...fixtures });
   await page.goto(ORIGIN + '/roda-de-samba/');
   if (js) {
@@ -171,10 +178,18 @@ async function aliasFixture(browser, js) {
       if (method === 'PIX') assert.equal(await f.page.locator('#pixCode').inputValue(), 'PIX-SYNTHETIC-NOT-PAYABLE');
       else assert.equal(await f.page.locator('#cardPaymentLink').getAttribute('href'), 'https://example.invalid/synthetic-payment');
       await f.close(route + ' preserves pending recovery/refresh ' + method);
-      const retry = await fixture(browser, route, false, { method, retry: true }); await retry.fill();
-      await retry.page.locator('#payButton').click(); await retry.page.locator(method === 'PIX' ? '#pixPanel' : '#cardPanel').waitFor({ state: 'visible' });
-      assert.equal(retry.payments.length, 1); assert.equal(retry.payments[0].idempotenciaChave, KEY);
-      await retry.close(route + ' lost-response retry reuses saved key ' + method);
+      // Deliberate exclusive-contract UI expectation: an unknown result is
+      // not proof of a failed order. Retain the old key, never replay creation.
+      const retry = await fixture(browser, route, false, { method, retry: true });
+      assert(await retry.page.locator('#catalogRecoveryAction').isVisible());
+      assert.equal(await retry.page.locator('#catalogRecoveryAction').getAttribute('href'), '/minha-carioca/conta/');
+      assert(await retry.page.locator('#payButton').isDisabled());
+      // Invoke the handler directly too; disabled markup alone is insufficient.
+      await retry.page.evaluate(() => document.getElementById('payButton').onclick());
+      assert.equal(retry.payments.length, 0);
+      assert.equal(await retry.page.evaluate(({ event, method }) => localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_' + event + '_' + method), { event: SAMBA, method }), KEY);
+      assert.equal(await retry.page.evaluate(({ event, method }) => localStorage.getItem('CT_CHECKOUT_IDEMPOTENCY_' + event + '_' + method), { event: SAMBA, method: method === 'PIX' ? 'CREDIT_CARD' : 'PIX' }), null);
+      await retry.close(route + ' lost-response recovery preserves saved key without recreation ' + method);
     }
     for (const route of ['/checkout/', '/checkout-v2/']) for (const status of ['CONCLUIDO', 'EXPIRADO', 'CANCELADO']) {
       const f = await fixture(browser, route, false, { recover: true, status });

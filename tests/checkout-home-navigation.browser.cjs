@@ -3,6 +3,7 @@
 // Never forward a request, contact production, or create a real payment/order.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { temporalEnvelope } = require('./fixtures/public-temporal-envelope.cjs');
 const path = require('node:path');
 const { chromium } = require('playwright');
 const ROOT = path.resolve(__dirname, '..');
@@ -13,7 +14,7 @@ const ENDPOINTS = new Set(['https://script.google.com/macros/s/AKfycbz28keO65PII
   'https://script.google.com/macros/s/AKfycbyhx6mnGJMsgpGmx-C1r6ZUXbrE66-X6Rkusp1ulVOGcDfJfIs-jgysWp1PfkqB1UC3hg/exec']);
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(check, name) { const end = Date.now() + 6000; while (Date.now() < end) { if (await check()) return; await wait(25); } assert.fail(name); }
-function catalog() { return { sucesso: true, evento: { id: EVENT, nome: 'Evento sintético de navegação' }, visual: {}, identidadeCliente: { emailObrigatorio: false },
+function catalog(nowMs) { return { sucesso: true, ...temporalEnvelope('checkout', nowMs), evento: { id: EVENT, nome: 'Evento sintético de navegação' }, visual: {}, identidadeCliente: { emailObrigatorio: false },
   tipos: [{ id: 'LOCAL-TYPE', nome: 'Individual', capacidadePorVenda: 1, lotes: [{ id: 'LOCAL-LOT', nome: 'Lote local', preco: 'R$ 25,00', precoNumero: 25, quantidadeLimitada: false }] }] }; }
 function order(method = 'PIX', complete = false) { return { sucesso: true, autorizado: true, encontrado: true, consultaToken: TOKEN,
   pedido: { pedidoId: ORDER, eventoId: EVENT, status: complete ? 'CONCLUIDO' : 'AGUARDANDO_PAGAMENTO', expiraEm: new Date(Date.now() + 600000).toISOString() },
@@ -35,7 +36,7 @@ async function fixture(browser, routePath, mobile, options = {}) {
     try {
       if (url.origin === ORIGIN && req.method() === 'GET') {
         if (url.pathname === '/') { state.home++; return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><title>Home fixture</title><h1>Página inicial local</h1>' }); }
-        const files = { '/assets/advance-sales.js':'assets/advance-sales.js', '/assets/public-i18n.js':'assets/public-i18n.js','/assets/checkout-language.js':'assets/checkout-language.js','/assets/checkout-language.css':'assets/checkout-language.css','/assets/checkout-translations.js':'assets/checkout-translations.js', '/checkout/': 'checkout/index.html', '/checkout-v2/': 'checkout-v2/index.html',
+        const files = { '/assets/public-catalog-clock.js': 'assets/public-catalog-clock.js', '/assets/advance-sales.js':'assets/advance-sales.js', '/assets/public-i18n.js':'assets/public-i18n.js','/assets/checkout-language.js':'assets/checkout-language.js','/assets/checkout-language.css':'assets/checkout-language.css','/assets/checkout-translations.js':'assets/checkout-translations.js', '/checkout/': 'checkout/index.html', '/checkout-v2/': 'checkout-v2/index.html',
           '/assets/checkout-home-navigation.js': 'assets/checkout-home-navigation.js', '/assets/checkout-home-navigation.css': 'assets/checkout-home-navigation.css',
           '/assets/checkout-commercial-policy.js': 'assets/checkout-commercial-policy.js',
           '/assets/public-privacy.js':'assets/public-privacy.js', '/assets/public-privacy.css':'assets/public-privacy.css' };
@@ -55,7 +56,7 @@ async function fixture(browser, routePath, mobile, options = {}) {
       assert.equal(fields.get('ctMinhaCariocaAction'), 'publicRpc');
       const args = JSON.parse(fields.get('argsJson')), method = fields.get('metodo');
       let result;
-      if (method === 'ctCheckoutPublicoCarregarEventoPROD') { assert.equal(args[0], EVENT); result = catalog(); }
+      if (method === 'ctCheckoutPublicoCarregarEventoPROD') { assert.equal(args[0], EVENT); result = catalog(await page.evaluate(() => Date.now())); }
       else if (method === 'ctCheckoutPixPublicoIniciarPROD') {
         state.payments.push(args[0]);
         if(options.timeoutPayment) return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<!doctype html><!-- Simulated missing response: real bridge timeout must release the UI. -->' });
@@ -147,15 +148,21 @@ async function fixture(browser, routePath, mobile, options = {}) {
     assert.match(await f.page.locator('#checkoutLeaveMessage').textContent(), /não cancela o pedido/);
     await f.page.locator('#checkoutStay').click(); assert.equal(f.state.payments.length, 0); await f.finish();
    });
-   await test(routePath + ' failed creation releases guard without changing retry idempotency', async () => {
+   await test(routePath + ' unknown creation releases exit guard but blocks recreation and preserves idempotency', async () => {
     const f = await fixture(browser, routePath, false, { holdPayment: true, failPayment: true }); await f.fill();
     await f.page.locator('#payButton').click(); await until(() => !!f.state.release, 'held failed creation');
     await f.page.evaluate(() => document.querySelector('#checkoutHome').click()); assert(await f.page.locator('#checkoutLeave').isDisabled());
     f.state.release(); await until(async () => !(await f.page.locator('#checkoutLeave').isDisabled()), 'failed creation releases exit');
     await f.page.locator('#checkoutStay').click(); await f.page.locator('#modalOk').click();
     const key = f.state.payments[0].idempotenciaChave; f.state.release = null;
-    await f.page.locator('#payButton').click(); await until(() => !!f.state.release, 'explicit retry');
-    assert.equal(f.state.payments[1].idempotenciaChave, key); f.state.release(); await f.page.locator('#loading').waitFor({ state: 'hidden' }); await f.finish();
+    // A response without an authoritative order result is unknown, not permission to create again.
+    assert(key); assert(await f.page.locator('#payButton').isDisabled());
+    assert(await f.page.locator('#catalogRecoveryAction').isVisible());
+    assert.equal(await f.page.locator('#catalogRecoveryAction').getAttribute('href'), '/minha-carioca/conta/');
+    await f.page.locator('#payButton').evaluate(button => button.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    await wait(100); assert.equal(f.state.payments.length, 1, 'unknown result must not create a second order');
+    assert.equal(await f.page.evaluate(key => localStorage.getItem(key), 'CT_CHECKOUT_IDEMPOTENCY_' + EVENT + '_PIX'), key);
+    assert.equal(f.state.release, null); await f.page.locator('#loading').waitFor({ state: 'hidden' }); await f.finish();
    });
    await test(routePath + ' bridge timeout releases creation guard without new payment', async () => {
     const f = await fixture(browser, routePath, false, { clock: true, timeoutPayment: true }); await f.fill();

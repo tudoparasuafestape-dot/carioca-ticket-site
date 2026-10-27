@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const { fixture, events } = require('./rail-fixture.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 const ORIGIN = 'http://127.0.0.1:4174';
 const PUBLIC = 'https://cariocaticket.com.br/evento/?evento=';
 function expected(event, cta='Confira este evento na Carioca Ticket.') {
@@ -33,7 +34,7 @@ async function prepare(page, count, mode='native', customRows) {
     sessionStorage.setItem('share-session-fixture', 'unchanged');
   }, mode);
   const data = customRows || rows(count);
-  const state = await fixture(page, { result:{ sucesso:true, eventos:data } });
+  const state = await fixture(page, { result:(_attempt,nowMs)=>({ sucesso:true,...temporalEnvelope('home',nowMs),eventos:data }) });
   await page.goto(ORIGIN + '/?ref=PRIVATE-FIXTURE&token=DO-NOT-SHARE#filters');
   await expect(page.locator('[data-public-share="event"]')).toHaveCount(count);
   return { state, data };

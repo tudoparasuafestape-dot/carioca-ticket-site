@@ -19,7 +19,11 @@ HTMLFormElement.prototype.submit = function () {
   const method = fields.get('metodo');
   if (fields.get('ctMinhaCariocaAction') !== 'publicRpc' ||
       !['ctEventoPublicoCarregarPROD','ctEventosPublicosListarPROD'].includes(method)) throw new Error('Blocked in synthetic preview');
+  const nowMs = Date.now();
   const result = method === 'ctEventosPublicosListarPROD' ? ${JSON.stringify({ sucesso: true, eventos: events })} : ${JSON.stringify(fixture)};
+  Object.assign(result, { temporalVersion: 1, eligibilityContract: 'CT_PUBLIC_ELIGIBILITY_EXCLUSIVE_V1',
+    serverNow: new Date(nowMs).toISOString(), temporalEvaluatedAt: new Date(nowMs).toISOString(),
+    validUntil: new Date(nowMs + 300000).toISOString(), nextTransitionAt: null });
   if (method === 'ctEventoPublicoCarregarPROD' && new URL(location.href).searchParams.get('scenario') === 'no-cover') {
     result.visual.capaUrl = '';
     result.visual.posterUrl = '';
@@ -56,7 +60,7 @@ module.exports = http.createServer((req, res) => {
     html = html.replace(/(<body[^>]*>)/, '$1<aside id="preview-notice" style="padding:8px 16px;background:#ffd66d;color:#171717;text-align:center;font:13px system-ui">Prévia local · dados sintéticos · compras e destinos externos bloqueados</aside>');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(demo-event\.css|roda-samba-30-anos\.webp|advance-sales\.js|waze-mark\.svg|home-location\.(?:js|css)|public-i18n\.js|event-i18n\.(?:js|css)|event-(?:directions|map-preview)\.(?:js|css)|event-uber\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-(?:share|privacy)\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(public-catalog-clock\.js|demo-event\.css|roda-samba-30-anos\.webp|advance-sales\.js|waze-mark\.svg|home-location\.(?:js|css)|public-i18n\.js|event-i18n\.(?:js|css)|event-(?:directions|map-preview)\.(?:js|css)|event-uber\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-(?:share|privacy)\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/plain', 'Destination blocked in synthetic preview');
   const file = path.join(root, url.pathname.slice(1));
   const type = file.endsWith('.webp') ? 'image/webp' : file.endsWith('.svg') ? 'image/svg+xml' : file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';

@@ -2,13 +2,14 @@ const { test, expect } = require('@playwright/test');
 const path = require('node:path');
 const fs = require('node:fs');
 const { fixture, events } = require('./rail-fixture.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 const { capture } = require('./capture.cjs');
 const EVIDENCE = path.resolve(__dirname, '../../docs/reviews/home-rails/screenshots');
 function rows(n) {
   return Array.from({ length:n }, (_, i) => ({ ...events[i % 2], id:'PREVIEW-RAIL-' + (i + 1), nome:events[i % 2].nome + ' ' + (i + 1) }));
 }
 async function open(page, n=15, options={}) {
-  const state=await fixture(page,{ ...options, result:options.result || { sucesso:true,eventos:rows(n) } });
+  const state=await fixture(page,{ ...options, result:options.result || ((_attempt,nowMs)=>({ sucesso:true,...temporalEnvelope('home',nowMs),eventos:rows(n) })) });
   await expect(page.locator('#events-grid')).toHaveAttribute('data-active-index','0');
   return state;
 }

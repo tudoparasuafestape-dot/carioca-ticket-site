@@ -1,3 +1,4 @@
+import { temporalEnvelope } from '../fixtures/public-temporal-envelope.cjs';
 import { test, expect, mockRoute, mockFailure } from './helpers/branch-isolated.cjs';
 
 // Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
@@ -46,7 +47,7 @@ async function installMock(page,state){
       expect(action).toBe(method==='ctEventosPublicosListarPROD'?'publicRpc':'portalRpc');
       if(method==='ctEventosPublicosListarPROD'){
         expect(args).toEqual([]);
-        resultado={sucesso:true,eventos:[]};
+        resultado={sucesso:true,...temporalEnvelope('home',await page.evaluate(()=>Date.now())),eventos:[]};
       }else if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
         resultado={sucesso:true,autenticado:true,autorizado:true,usuario:{id:'USR-PROD'},produtores:[{id:'PROD-E2E',nomeFantasia:'Produtor E2E',eventos:[{id:'EVT-E2E',nome:'Evento E2E'}]}]};
       }else if(method==='ctContaCariocaPayPortalResumoPROD'){
@@ -117,7 +118,7 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
       const method=String(p.get('metodo')||'');
       let resultado=null;
       if(method==='ctEventosPublicosListarPROD'){
-        resultado={sucesso:true,eventos:[]};
+        resultado={sucesso:true,...temporalEnvelope('home',await page.evaluate(()=>Date.now())),eventos:[]};
       }else if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
         resultado={sucesso:true,autenticado:true,autorizado:true,usuario:{id:'USR-PROD'},produtores:[{id:'PROD-E2E',nomeFantasia:'Produtor E2E',eventos:[{id:'EVT-E2E',nome:'Evento E2E'}]}]};
       }else if(method==='ctContaCariocaPayPortalResumoPROD'){

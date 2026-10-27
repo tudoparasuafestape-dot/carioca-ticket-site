@@ -1,11 +1,12 @@
 const { test, expect } = require('@playwright/test');
 const { fixture, events } = require('./rail-fixture.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 const fs = require('node:fs');
 const reviewRows = events.map((event, i) => ({ ...event, id:'AUTOPLAY-PREVIEW-' + (i + 1), nome:i ? 'Encontro de cultura e economia criativa — edição de demonstração' : 'Roda de música e encontro de amigos — edição de demonstração', local:'Espaço cultural de demonstração', visual:{ ...event.visual, descricaoCurta:'Programação de demonstração para avaliar a experiência no celular. Dados sintéticos, sem venda ou emissão de ingressos.' } }));
 async function setup(page) {
   await page.clock.install();
   await page.emulateMedia({ reducedMotion:'no-preference' });
-  const state = await fixture(page, { result:{ sucesso:true, eventos:reviewRows } });
+  const state = await fixture(page, { result:(_attempt,nowMs)=>({ sucesso:true,...temporalEnvelope('home',nowMs),eventos:reviewRows }) });
   await expect(page.locator('.catalog-card')).toHaveCount(2);
   await page.evaluate(() => {
     window.autoplayChanges = [];

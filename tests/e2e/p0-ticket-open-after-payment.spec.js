@@ -1,4 +1,5 @@
 const { test, expect, mockRoute } = require('./helpers/branch-isolated.cjs');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 
 // Only these actions/methods belong to this fixture; all other RPCs fall through to denial.
 const MOCK_CONTRACT = {
@@ -123,7 +124,7 @@ async function instalarBackendFake(page, contadores) {
 
     let resultado;
     if (metodo === 'ctCheckoutPublicoCarregarEventoPROD') {
-      resultado = catalogo();
+      resultado = { ...catalogo(), ...temporalEnvelope('checkout', await page.evaluate(() => Date.now())) };
     } else if (metodo === 'ctCheckoutPixPublicoIniciarPROD') {
       resultado = {
         ...respostaPedido('PROCESSANDO', false),

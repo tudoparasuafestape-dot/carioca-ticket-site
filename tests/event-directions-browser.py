@@ -17,8 +17,12 @@ PRELUDE = '''HTMLFormElement.prototype.submit = function() {
  const data = new FormData(this);
  if (data.get('metodo') !== 'ctEventoPublicoCarregarPROD') throw new Error('Unexpected RPC');
  window.fixtureRpcCount = (window.fixtureRpcCount || 0) + 1;
+ const nowMs = Date.now();
+ const result = Object.assign(FIXTURE, { temporalVersion: 1, eligibilityContract: 'CT_PUBLIC_ELIGIBILITY_EXCLUSIVE_V1',
+   serverNow: new Date(nowMs).toISOString(), temporalEvaluatedAt: new Date(nowMs).toISOString(),
+   validUntil: new Date(nowMs + 300000).toISOString(), nextTransitionAt: null });
  setTimeout(() => window.dispatchEvent(new MessageEvent('message', {
- origin: 'https://script.google.com', data: {ctMinhaCariocaPost:true, id:data.get('ctMinhaCariocaRequestId'), ok:true, resultado:FIXTURE}
+ origin: 'https://script.google.com', data: {ctMinhaCariocaPost:true, id:data.get('ctMinhaCariocaRequestId'), ok:true, resultado:result}
  })), 0);
 };
 Object.defineProperty(navigator, 'clipboard', {configurable:true, value:{writeText:async text => {window.copied=text; window.copyCount=(window.copyCount||0)+1;}}});

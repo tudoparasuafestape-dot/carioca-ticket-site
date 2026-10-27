@@ -18,12 +18,14 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { temporalEnvelope } = require('../fixtures/public-temporal-envelope.cjs');
 let chromium;
 try { ({ chromium } = require('playwright')); }
 catch { ({ chromium } = require('playwright-core')); }
 
 const sourcePath = path.resolve(__dirname, '../../evento-v2/index.html');
 const original = fs.readFileSync(sourcePath, 'utf8');
+const clockSource = fs.readFileSync(path.resolve(__dirname, '../../assets/public-catalog-clock.js'), 'utf8');
 const localUrl = 'http://127.0.0.1/evento-v2/?evento=EVT-HARNESS';
 const mark = name => `window.__loadingHarness.mark('${name}');`;
 
@@ -45,7 +47,7 @@ function observedHtml() {
   // This anchor distinguishes the initial failure handler from campaign handlers.
   insertAfter('.withFailureHandler(function(error){', mark('failure-start'));
   insertAfter('function render(res,languageOnly){', mark('render-start'));
-  insertAfter('} catch (err) {', 'window.__loadingHarness.renderCaught(err);');
+  insertAfter("}catch(error){\n                if(eventLease)eventLease.invalidate('render-failed');", 'window.__loadingHarness.renderCaught(error);');
   insertAfter('function registrarAcessoCampanha(){', mark('campaign-start'));
   insertAfter("$('mobileBuy').classList.remove('hidden');", mark('render-complete'));
   insertAfter('function showError(msg,retryable,reference){', mark('show-error'));
@@ -54,7 +56,9 @@ function observedHtml() {
   const policy = "default-src 'none'; script-src 'unsafe-inline'; " +
     "style-src 'unsafe-inline'; img-src data:; connect-src 'none'; " +
     "form-action 'none'; frame-src 'none'; base-uri 'none'";
-  insertAfter('<head>', `<meta http-equiv="Content-Security-Policy" content="${policy}">`);
+  // Inline the exact local clock before the app. CSP continues to deny every external asset.
+  assert.equal(/<\/script/i.test(clockSource), false, 'Clock source cannot terminate the inline fixture script');
+  insertAfter('<head>', `<meta http-equiv="Content-Security-Policy" content="${policy}"><script>${clockSource}</script>`);
   return html;
 }
 
@@ -120,9 +124,9 @@ function installObservation() {
   });
 }
 
-function resultFixture() {
+function resultFixture(nowMs) {
   return {
-    sucesso: true,
+    sucesso: true, ...temporalEnvelope('detail', nowMs),
     evento: { id: 'EVT-HARNESS', nome: 'Evento sintético', data: '01/01/2030' },
     visual: { capaUrl: '', posterUrl: '', descricaoCurta: 'Fixture local' },
     menorPreco: 'R$ 10,00',
@@ -234,7 +238,7 @@ function ordered(events, expected) {
 }
 
 test('1 - sucesso imediato: cleanup, render e CTA utilizável', t => isolated(t, async (page, errors) => {
-  await deliver(page, resultFixture());
+  await deliver(page, resultFixture(await page.evaluate(() => Date.now())));
   const state = await snapshot(page);
   ordered(state.events, ['message-received', 'cleanup-start', 'timer-cancelled',
     'cleanup-complete', 'message-accepted', 'success-start', 'render-start', 'render-complete', 'campaign-start']);
@@ -294,9 +298,9 @@ async function expectRenderRecovery(page, errors, result, pattern) {
   }
 }
 test('3 - tipos:{} lança erro de render e recupera UI sem campanha', t => isolated(t, async (page, errors) => {
-  await expectRenderRecovery(page, errors, { ...resultFixture(), tipos: {} }, /forEach.*not a function/);
+  await expectRenderRecovery(page, errors, { ...resultFixture(await page.evaluate(() => Date.now())), tipos: {} }, /forEach.*not a function/);
 }));
 test('4 - eventName ausente lança erro de render e recupera UI sem campanha', t => isolated(t, async (page, errors) => {
   await page.locator('#eventName').evaluate(element => element.remove());
-  await expectRenderRecovery(page, errors, resultFixture(), /null.*textContent|textContent.*null/);
+  await expectRenderRecovery(page, errors, resultFixture(await page.evaluate(() => Date.now())), /null.*textContent|textContent.*null/);
 }));
