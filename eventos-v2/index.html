@@ -810,6 +810,7 @@
     }
   </style>
   <link rel="stylesheet" href="/assets/era-approved-visual.css">
+  <link rel="stylesheet" href="/assets/events-workspace.css?v=20261028-1">
 </head>
 
 <body>
@@ -986,7 +987,7 @@
         <div>
 
           <p class="marca">
-            🎟 CARIOCA TICKET
+            <img src="/assets/carioca-ticket-simbolo.png" alt="" width="36" height="36"> CARIOCA TICKET
           </p>
 
           <h1>
@@ -994,7 +995,7 @@
           </h1>
 
           <p class="subtitulo">
-            Cadastre, configure e publique vários eventos ao mesmo tempo
+            Do cadastro à publicação: acompanhe cada evento pelo nome.
           </p>
 
         </div>
@@ -1004,7 +1005,7 @@
 
           <a
             href="/central/"
-            style="display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 12px;border:1px solid #d8d8d8;border-radius:10px;background:#fff;color:#333;text-decoration:none;font-size:12px;font-weight:bold;"
+            class="workspace-back"
           >
             ← Central Mobile
           </a>
@@ -1015,7 +1016,7 @@
             type="button"
             title="Atualizar eventos"
           >
-            🔄
+            Atualizar
           </button>
 
           <button
@@ -1024,7 +1025,7 @@
             type="button"
             title="Criar novo evento"
           >
-            ＋
+            ＋ Novo evento
           </button>
 
         </div>
@@ -1034,6 +1035,7 @@
 
       <section
         id="estadoCarregando"
+        role="status" aria-live="polite"
         class="estado"
       >
         Carregando eventos...
@@ -1042,6 +1044,7 @@
 
       <section
         id="estadoErro"
+        role="alert"
         class="estado estado-erro oculto"
       >
       </section>
@@ -1080,6 +1083,15 @@
         </section>
 
 
+        <section class="workspace-guide" aria-labelledby="workspaceGuideTitle">
+          <div><p class="workspace-eyebrow">Seu espaço de eventos</p><h2 id="workspaceGuideTitle">Uma etapa de cada vez</h2><p>Escolha o evento pelo nome. A seleção para gestão não publica vendas.</p></div>
+          <ol><li><span>01</span> Dados do evento</li><li><span>02</span> Ingressos e lotes</li><li><span>03</span> Revisão e publicação</li></ol>
+        </section>
+        <section class="workspace-search">
+          <label for="workspaceEventSearch">Encontrar evento</label>
+          <input id="workspaceEventSearch" type="search" placeholder="Busque pelo nome do evento" autocomplete="off" aria-controls="listaEventos" aria-describedby="workspaceSearchStatus">
+          <span id="workspaceSearchStatus" role="status" aria-live="polite"></span>
+        </section>
         <section class="barra-acoes">
 
           <div
@@ -1605,6 +1617,7 @@
 
 
     function registrarEventosDaTela() {
+      document.getElementById('workspaceEventSearch').addEventListener('input', function(){preencherListaEventos(eventosCarregados);});
       document
         .getElementById(
           'botaoAtualizar'
@@ -1909,6 +1922,14 @@
           'listaEventos'
         );
 
+      const busca = document.getElementById('workspaceEventSearch').value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const total = eventos.length;
+      eventos = eventos.filter(function(evento){return String(evento.nome || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(busca);});
+      document.getElementById('workspaceSearchStatus').textContent = busca ? eventos.length + ' de ' + total + ' eventos encontrados' : '';
+      if (busca && !eventos.length) {
+        area.innerHTML = '<div class="sem-eventos"><h3>Nenhum evento encontrado</h3><p>Tente outro nome ou limpe a busca.</p></div>';
+        return;
+      }
       if (!eventos.length) {
         area.innerHTML =
           '<div class="sem-eventos">' +
@@ -2167,13 +2188,15 @@
 
           '</div>' +
 
-          '<div class="evento-id">' +
+          criarEtapasEvento(evento) +
+          '<details class="evento-technical"><summary>Referência técnica</summary><div class="evento-id">' +
             escaparHtml(
               evento.id ||
               ''
             ) +
           '</div>' +
 
+          '</details>' +
           '<div class="evento-acoes">' +
             (evento.id === 'EVT-23112026-ERA-BEAUTY-EAC4B673' ? '<button class="botao botao-secundario" type="button" data-era-approved-visual="EVT-23112026-ERA-BEAUTY-EAC4B673">Aplicar visual aprovado do ERA</button>' : '') +
             botaoAtivar +
@@ -2189,6 +2212,18 @@
       );
     }
 
+
+    // Presentation only: publication readiness and pending items remain backend-owned.
+    function criarEtapasEvento(evento) {
+      const publicacao = evento.publicacao || {};
+      const pendencias = Array.isArray(publicacao.pendencias) ? publicacao.pendencias.filter(function(p){return typeof p === 'string' && p.trim();}) : [];
+      const resumo = publicacao.publicado === true ? 'Vendas publicadas' : (publicacao.prontoPublicar === true ? 'Pronto para revisão final' : 'Consulte a situação antes de publicar');
+      return '<ol class="event-stages" aria-label="Etapas do evento">' +
+        '<li><span>01</span><div><strong>Dados do evento</strong><small>Cadastro registrado</small></div></li>' +
+        '<li><span>02</span><div><strong>Ingressos e lotes</strong><a href="/produtor/ingressos/?evento=' + encodeURIComponent(String(evento.id || '')) + '">Conferir configuração</a></div></li>' +
+        '<li><span>03</span><div><strong>Revisão e publicação</strong><small>' + escaparHtml(resumo) + '</small></div></li></ol>' +
+        (pendencias.length ? '<details class="event-pending"><summary>' + pendencias.length + ' pendência(s) informada(s)</summary><ul>' + pendencias.map(function(p){return '<li>' + escaparHtml(p) + '</li>';}).join('') + '</ul></details>' : '');
+    }
 
     function abrirModalidadeEvento(eventoId) {
       window.location.href =

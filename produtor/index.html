@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 
 <meta charset="UTF-8">
@@ -943,6 +943,8 @@ body.portal-modal-open{overflow:hidden}
 }
 
 </style>
+  <link rel="stylesheet" href="/assets/producer-workspace.css?v=20261028-1">
+  <script src="/assets/producer-workspace-menu.js?v=20261028-1" defer></script>
   <script src="/pwa-register.js" defer></script>
 </head>
 <body>
@@ -1386,11 +1388,16 @@ Portal do Produtor
 </div>
 </div>
 </div>
-<div class="top-actions">
+<div class="workspace-header-actions">
 <span
 id="topUser"
 class="top-user-label"
 ></span>
+<details id="workspaceMenu" class="workspace-menu">
+<summary id="workspaceMenuToggle" aria-controls="workspaceNavigation"><span aria-hidden="true">☰</span> Menu da plataforma</summary>
+<nav id="workspaceNavigation" class="workspace-navigation" aria-label="Menu da plataforma">
+<div class="workspace-menu-heading"><strong>Sua operação</strong><span>Acessos disponíveis para sua conta</span></div>
+<div class="top-actions">
 <a
 id="eventsManagementLink"
 class="ghost"
@@ -1510,18 +1517,22 @@ type="button"
 Sair
 </button>
 </div>
+</nav>
+</details>
+</div>
 </div>
 </header>
-<main class="container">
+<main id="workspaceOverview" class="container" tabindex="-1">
 <div class="hello">
 <small>
-Visão operacional
+Visão geral · Produtor
 </small>
 <h2 id="helloName">
 Portal do Produtor
 </h2>
+<p class="workspace-intro">Sua operação em um só lugar. Escolha o produtor e o evento para acompanhar os resultados.</p>
 </div>
-<section class="selectors">
+<section class="selectors" aria-label="Contexto da operação">
 <div class="field">
 <label for="producerSelect">
 Produtor
@@ -1567,6 +1578,9 @@ Atualizar painel
 <div
 id="portalMessage"
 class="message"
+role="status"
+aria-live="polite"
+aria-atomic="true"
 ></div>
 <section
 id="dashboard"
@@ -5328,6 +5342,8 @@ preencherEventos();
 
 function trocarProdutor(){
 
+invalidarConsultaPainel();
+
 var id =
 String(
 el.producerSelect.value ||
@@ -5793,7 +5809,20 @@ document.body.classList.remove('portal-modal-open');
 }
 
 
+function invalidarConsultaPainel(){
+if(state.painelLoading){
+definirLoading(false);
+state.painelLoading=false;
+}
+state.painelSequencia++;
+state.painelEmAndamento=false;
+el.refreshButton.textContent='Atualizar painel';
+el.refreshButton.removeAttribute('aria-busy');
+}
+
 function trocarEvento(){
+
+invalidarConsultaPainel();
 
 if(
 !state.produtorAtual
@@ -5865,9 +5894,12 @@ return;
 }
 
 state.painelEmAndamento=true;
+state.painelLoading=!!show;
 var sequencia=++state.painelSequencia;
 
 el.refreshButton.disabled=true;
+el.refreshButton.textContent='Atualizando painel...';
+el.refreshButton.setAttribute('aria-busy','true');
 
 limparMensagem(el.portalMessage);
 
@@ -5884,7 +5916,10 @@ return;
 
 state.painelSequencia++;
 state.painelEmAndamento=false;
+state.painelLoading=false;
 el.refreshButton.disabled=!state.eventoAtual;
+el.refreshButton.textContent='Atualizar painel';
+el.refreshButton.removeAttribute('aria-busy');
 
 if(show){
 definirLoading(false);
@@ -5909,7 +5944,10 @@ return;
 
 clearTimeout(timer);
 state.painelEmAndamento=false;
+state.painelLoading=false;
 el.refreshButton.disabled=!state.eventoAtual;
+el.refreshButton.textContent='Atualizar painel';
+el.refreshButton.removeAttribute('aria-busy');
 
 if(show){
 definirLoading(false);
@@ -5946,6 +5984,7 @@ return;
 }
 
 renderizarPainel(r.painel);
+mostrarMensagem(el.portalMessage,'Painel atualizado.','success');
 }
 )
 .withFailureHandler(
@@ -5957,7 +5996,10 @@ return;
 
 clearTimeout(timer);
 state.painelEmAndamento=false;
+state.painelLoading=false;
 el.refreshButton.disabled=!state.eventoAtual;
+el.refreshButton.textContent='Atualizar painel';
+el.refreshButton.removeAttribute('aria-busy');
 
 if(show){
 definirLoading(false);
@@ -6897,6 +6939,8 @@ erro
 }
 
 function resetarEstado(){
+
+invalidarConsultaPainel();
 
 invalidarTentativaRestauracao();
 

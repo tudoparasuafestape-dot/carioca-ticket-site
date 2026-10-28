@@ -1,0 +1,20 @@
+'use strict';
+// Offline local files and synthetic RPC replies only; no service or production request is allowed.
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {chromium}=require('playwright');
+const root=path.resolve(__dirname,'..');
+(async()=>{
+const browser=await chromium.launch({headless:true,...(process.env.CT_CHROMIUM_PATH?{executablePath:process.env.CT_CHROMIUM_PATH}:{}),proxy:{server:'http://127.0.0.1:9',bypass:'<-loopback>'},args:['--disable-background-networking','--disable-quic','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1']});
+try{
+const context=await browser.newContext({offline:true,serviceWorkers:'block'});
+await context.route('**/*',async r=>{const u=new URL(r.request().url());if(u.origin==='http://127.0.0.1'&&r.request().method()==='GET'){const p=path.resolve(root,'.'+u.pathname+(u.pathname.endsWith('/')?'index.html':''));if(p.startsWith(root+path.sep)&&fs.existsSync(p))return r.fulfill({body:fs.readFileSync(p),contentType:p.endsWith('.html')?'text/html':p.endsWith('.css')?'text/css':p.endsWith('.js')?'text/javascript':'image/png'});}return r.abort();});
+await context.routeWebSocket('**/*',s=>s.close());
+await context.addInitScript(()=>{window.__calls=[];sessionStorage.setItem('CT_PORTAL_PRODUTOR_PROD_SESSION_V1',JSON.stringify({token:'SYNTHETIC',expiraEm:'2031-01-01T00:00:00Z'}));HTMLFormElement.prototype.submit=function(){window.__calls.push(Object.fromEntries(new FormData(this)));};});
+const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1/eventos-v2/');
+const fixture={total:2,publicados:0,eventos:[{id:'SYNTH-A',nome:'Festival de Música',status:'RASCUNHO',data:'10/12/2030',horario:'18:00',local:'Espaço de demonstração',cidade:'Recife',uf:'PE',capacidade:100,publicacao:{prontoPublicar:false,pendencias:['Configure os tipos de ingresso','<script>unsafe</script>']}},{id:'SYNTH-B',nome:'Encontro de arte',status:'ATIVO',data:'12/12/2030',publicacao:{prontoPublicar:true}}]};
+await page.evaluate(f=>{const r=window.__calls[0];window.dispatchEvent(new MessageEvent('message',{origin:'https://script.google.com',data:{ctMinhaCariocaPost:true,id:r.ctMinhaCariocaRequestId,ok:true,resultado:f}}));},fixture);
+await page.locator('.evento-card').first().waitFor();assert.equal(await page.locator('.evento-card').count(),2);assert.equal(await page.locator('.event-stages').count(),2);assert.equal(await page.locator('.event-pending').count(),1);assert.equal(await page.locator('.evento-id').first().isVisible(),false);await page.locator('.evento-technical summary').first().click();assert.equal(await page.locator('.evento-id').first().textContent(),'SYNTH-A');await page.locator('.evento-technical summary').first().click();await page.fill('#workspaceEventSearch','musica');assert.equal(await page.locator('.evento-card').count(),1);await page.fill('#workspaceEventSearch','não existe');assert.equal(await page.locator('.evento-card').count(),0);await page.fill('#workspaceEventSearch','');assert.equal(await page.locator('.evento-card').count(),2);assert.equal(await page.locator('.event-stages a').first().getAttribute('href'),'/produtor/ingressos/?evento=SYNTH-A');
+for(const width of [1440,768,390,320]){await page.setViewportSize({width,height:1000});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'overflow '+width);if(width===1440||width===390){fs.mkdirSync(path.join(root,'test-results/events-workspace'),{recursive:true});await page.screenshot({path:path.join(root,'test-results/events-workspace',width+'.png'),fullPage:true});}}
+await page.click('#botaoNovoEvento');await page.locator('#modalNovoEvento').waitFor({state:'visible'});await page.keyboard.press('Escape');assert.equal(await page.locator('#modalNovoEvento').isVisible(),false);assert.deepEqual(errors,[]);console.log('PASS: offline names/search, accents, no-results, restored list, stages, escaped pending text, technical IDs collapsed, four widths, modal dismissal.');await context.close();
+}finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1});
