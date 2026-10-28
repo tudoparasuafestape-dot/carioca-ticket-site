@@ -9,7 +9,8 @@ const MOCK_CONTRACT = {
       "ctPoliticaComercialMasterSalvarPROD",
       "ctPoliticaComercialProdutorResumoPROD",
       "ctPoliticaComercialSimularPROD",
-      "ctPortalProdutorRestaurarSessaoIsoladaPROD"
+      "ctPortalProdutorRestaurarSessaoIsoladaPROD",
+      "ctPortalProdutorCarregarCatalogoEventosPROD"
     ]
   }
 };
@@ -51,8 +52,14 @@ async function mock(page,state){
         state.simulated=args[1];
         result={sucesso:true,ator:'MASTER',movimentouDinheiro:false,calculo:{subtotalIngressos:100,taxaCtTotal:10,taxaComprador:4,taxaProdutor:6,comissoesProdutor:2,totalComprador:104,deducoesProdutor:8,liquidoComercialProdutor:92}};
       }else if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
-        result={sucesso:true,autenticado:true,autorizado:true,produtores:[{id:'PROD-E2E',nomeFantasia:'Produtor E2E',eventos:[{id:'EVT-E2E',nome:'Evento E2E'}]}]};
+        result={sucesso:true,autenticado:true,autorizado:true,produtores:[{id:'PROD-E2E',nomeFantasia:'Produtor E2E',eventos:[],catalogoEventosPendente:true}]};
+      }else if(method==='ctPortalProdutorCarregarCatalogoEventosPROD'){
+        if(args[0]!=='CT-POLICY-E2E'||args[1]!=='PROD-E2E')throw new Error('Catalogo fora do contexto autorizado');
+        state.catalogueProducer=args[1];
+        result={sucesso:true,autenticado:true,autorizado:true,produtorId:'PROD-E2E',eventos:[{id:'EVT-E2E',nome:'Evento E2E',status:'RASCUNHO'}]};
       }else if(method==='ctPoliticaComercialProdutorResumoPROD'){
+        if(args[1]!=='PROD-E2E'||args[2]!=='EVT-E2E')throw new Error('Resumo sem evento autorizado');
+        state.summaryContext={produtorId:args[1],eventoId:args[2]};
         result={sucesso:true,autorizado:true,movimentouDinheiro:false,politica:{politicaId:'POL-1',escopo:'EVENTO',origem:'POLITICA_NEGOCIADA',taxaCtPercentual:7,pagadorTaxa:'PRODUTOR',compradorPercentualTaxa:0,produtorPercentualTaxa:100,beneficiarios:[{perfilTipo:'PROMOTOR',beneficiarioNome:'Promotor E2E',tipoCalculo:'PERCENTUAL_INGRESSOS',valorRegra:2,fonteCusteio:'PRODUTOR'}]}};
       }else{
         throw new Error('Metodo nao previsto: '+method);
@@ -106,11 +113,15 @@ test.describe('Politica comercial flexivel',()=>{
     const state={saved:null,simulated:null,deactivated:null};await mock(page,state);await seed(page);
     await page.goto('/produtor/politica-comercial/',{waitUntil:'domcontentloaded'});
     await expect(page.getByRole('heading',{name:'Sua política comercial'})).toBeVisible();
+    await expect(page.locator('#event')).toHaveValue('EVT-E2E');
+    await expect.poll(()=>state.catalogueProducer).toBe('PROD-E2E');
+    await expect.poll(()=>state.summaryContext&&state.summaryContext.eventoId).toBe('EVT-E2E');
     await expect(page.locator('#metrics')).toContainText('7%');
     await expect(page.locator('#metrics')).toContainText('PRODUTOR');
     await expect(page.locator('#commissions')).toContainText('Promotor E2E');
     await page.locator('#simulate').click();
     await expect.poll(()=>state.simulated&&state.simulated.produtorId).toBe('PROD-E2E');
+    expect(state.simulated.eventoId).toBe('EVT-E2E');
     await expect(page.locator('#simulation')).toContainText('R$ 92,00');
   });
 });
