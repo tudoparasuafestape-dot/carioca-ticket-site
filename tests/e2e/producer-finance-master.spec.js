@@ -233,6 +233,11 @@ test.describe('Herminho — ingressos com repasse posterior, sem Conta Pay',()=>
   test('master separa cadastro de ingressos de futura conta para pagamentos',async({page},testInfo)=>{
     const calls=[];await installCentralReceiptsMock(page,calls);await seed(page,'CT-MASTER-CENTRAL-SYNTH');
     await page.goto('/backoffice/carioca-pay/produtores/?produtor='+HERMINHO_PRODUCER,{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#modelEyebrow')).toHaveText('Cadastro de ingressos');
+    await expect(page.locator('#modelTitle')).toHaveText('Ingressos com repasse posterior');
+    await expect(page.locator('#modelDescription')).toContainText('Não exige subconta');
+    await expect(page.locator('#modelDescription')).not.toContainText('credencial');
+    await expect(page.locator('#modelSafety')).toContainText('sem ativar vendas');
     await expect(page.locator('#detailBadge')).toHaveText('INGRESSOS');
     await expect(page.locator('#detail')).toContainText('Não é necessário criar subconta');
     await expect(page.locator('#detail')).toContainText('não ativa vendas nem autoriza repasses');

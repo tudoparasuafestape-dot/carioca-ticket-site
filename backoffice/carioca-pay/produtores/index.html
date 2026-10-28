@@ -23,7 +23,7 @@ button,input,select{font:inherit}.hidden{display:none!important}.top{border-bott
 <div id="app" class="hidden">
 <header class="top"><div class="topin"><a class="brand" href="/backoffice/carioca-pay/"><img src="/assets/carioca-ticket-icon-192.png" alt="Carioca Ticket"><div><b>Financeiro de Produtores</b><small>Conta Carioca Pay · Master</small></div></a><div><a class="btn" href="/backoffice/carioca-pay/">Solicitações financeiras</a> <a class="btn" href="/backoffice/">Backoffice</a></div></div></header>
 <main class="wrap">
-<section class="hero"><div class="ey">Ativação financeira</div><h1>Prontidão do produtor</h1><p>Valide a referência segura da credencial de produção e libere recebimento somente depois da validação do provider.</p><div class="safe">Somente referência opaca · validação GET · sem cobrança, split ou transferência</div></section>
+<section class="hero"><div id="modelEyebrow" class="ey">Ativação financeira</div><h1 id="modelTitle">Prontidão do produtor</h1><p id="modelDescription">Valide a referência segura da credencial de produção e libere recebimento somente depois da validação do provider.</p><div id="modelSafety" class="safe">Somente referência opaca · validação GET · sem cobrança, split ou transferência</div></section>
 <section class="stats"><div class="stat"><small>Pendentes</small><strong id="pendingCount">0</strong></div><div class="stat"><small>Prontos para vendas</small><strong id="readyCount">0</strong></div></section>
 <section class="filters"><input id="search" placeholder="Buscar produtor ou organização"><select id="statusFilter"><option value="">Todos</option><option value="PENDENTE_CREDENCIAL">Pendente de credencial</option><option value="ATIVO">Ativo</option></select><button id="refresh" class="btn gold" type="button">Atualizar</button></section>
 <div class="grid"><section class="panel"><div class="head"><b>Produtores</b><span id="listCount" class="badge">0</span></div><div id="list" class="list"><div class="empty">Carregando…</div></div></section><section class="panel"><div class="head"><b>Configuração</b><span id="detailBadge" class="badge">—</span></div><div id="detail" class="detail"><div class="empty">Selecione um produtor.</div></div></section></div>
@@ -98,7 +98,12 @@ function renderProvisioningResult(){
  updateProvisionButton();
 }
 function renderDetail(){
- var x=state.selected;if(!x){$('detail').innerHTML='<div class="empty">Selecione um produtor.</div>';return}
+ var x=state.selected,central=isCentralTicketModel(x);
+ $('modelEyebrow').textContent=central?'Cadastro de ingressos':'Ativação financeira';
+ $('modelTitle').textContent=central?'Ingressos com repasse posterior':'Prontidão do produtor';
+ $('modelDescription').textContent=central?'Recebimento pela Carioca Ticket, com registro separado deste evento. Não exige subconta; ações de pagamento pela Conta Carioca Pay são uma etapa separada.':'Valide a referência segura da credencial de produção e libere recebimento somente depois da validação do provider.';
+ $('modelSafety').textContent=central?'Consulta do cadastro · sem ativar vendas, criar conta ou transferir valores':'Somente referência opaca · validação GET · sem cobrança, split ou transferência';
+ if(!x){$('detail').innerHTML='<div class="empty">Selecione um produtor.</div>';return}
  if(isCentralTicketModel(x)){
    $('detailBadge').textContent='INGRESSOS';$('detailBadge').className='badge warn';
    $('detail').innerHTML='<h2>'+esc(x.produtorNome||x.produtorId)+'</h2><div class="sub">'+esc(x.produtorId)+'</div><div class="box"><b>Cadastro para venda de ingressos</b><p class="note">Neste evento, os pagamentos são recebidos pela Carioca Ticket, com valores do produtor registrados separadamente e repasse posterior. Não é necessário criar subconta ou ativar uma Conta Carioca Pay para esse modelo.</p><p class="note">Evento vinculado: '+esc(x.vendaIngressos.eventoId)+'</p><p class="note">A publicação das vendas ainda depende das verificações do evento e da autorização da Carioca Ticket. Esta tela não ativa vendas nem autoriza repasses.</p></div><div class="box"><b>Conta Carioca Pay · etapa separada</b><p class="note">Status cadastral financeiro: '+esc(x.statusOnboarding||'Pendente')+'. Este status não confirma prontidão do evento.</p><p class="note">Uma conta para executar ações de pagamento pelo produtor faz parte de uma contratação e habilitação separadas. Nenhuma conta, credencial, cobrança ou transferência é criada aqui.</p></div>';
