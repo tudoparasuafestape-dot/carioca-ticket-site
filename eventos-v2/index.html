@@ -14,6 +14,7 @@
 
   <title>Eventos | Carioca Ticket</title>
 
+  <link rel="stylesheet" href="/assets/event-cover-picker.css?v=20261028a">
   <style>
     * {
       box-sizing: border-box;
@@ -867,6 +868,11 @@
 
       case 'ctEventosOperacionalVisualEraSeguraPROD':
         if(args.length!==1)throw new Error('CT_ERA_VISUAL_ARGUMENTOS_INVALIDOS');
+        return {method:method,args:[token,args[0]]};
+
+      case 'ctEventoCapaBibliotecaListarSeguraPROD':
+      case 'ctEventoCapaBibliotecaSalvarSeguraPROD':
+        if(args.length!==1)throw new Error('CT_CAPA_ARGUMENTOS_INVALIDOS');
         return {method:method,args:[token,args[0]]};
 
       case 'ctEventosPublicacaoFecharPROD':
@@ -2175,6 +2181,7 @@
           '</div>' +
 
           '<div class="evento-acoes">' +
+            '<button class="botao botao-secundario" type="button" data-approved-event-cover="' + escaparAtributo(evento.id) + '">Escolher capa</button>' +
             (evento.id === 'EVT-23112026-ERA-BEAUTY-EAC4B673' ? '<button class="botao botao-secundario" type="button" data-era-approved-visual="EVT-23112026-ERA-BEAUTY-EAC4B673">Aplicar visual aprovado do ERA</button>' : '') +
             botaoAtivar +
             '<button class="botao botao-secundario" type="button" onclick="abrirModalidadeEvento(\'' +
@@ -3815,6 +3822,7 @@
   </script>
 
   <script src="/assets/ct-analytics.js?v=20260923a" defer></script>
+  <script src="/assets/event-cover-picker.js?v=20261028a"></script>
   <script src="/assets/era-approved-visual.js?v=20261008-category"></script>
 </body>
 </html>
