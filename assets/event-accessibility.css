@@ -74,3 +74,8 @@ html[data-home-theme="light"] .ct-event .loading { background:#f7f7f7; color:var
   html:has(.ct-event) { scroll-behavior:auto; }
 }
 
+
+/* Exact approved Herminho art only. No checkout or eligibility changes. */
+.ct-event .cover:has(img[src="https://cariocaticket.com.br/assets/eventos/herminho-horizontal-905fe9374a491192.png"]) { min-height:0; aspect-ratio:1600/838; }
+.ct-event .cover img[src="https://cariocaticket.com.br/assets/eventos/herminho-horizontal-905fe9374a491192.png"] { min-height:0; height:100%; object-fit:contain; }
+.ct-event .cover:has(img[src="https://cariocaticket.com.br/assets/eventos/herminho-horizontal-905fe9374a491192.png"]) .cover-shade { display:none; }
