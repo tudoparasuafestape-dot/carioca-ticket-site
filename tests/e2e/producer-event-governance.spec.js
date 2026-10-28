@@ -220,3 +220,25 @@ test.describe('Jornada do produtor até publicação',()=>{
     await expect(page.locator('#modalMensagemTexto')).toContainText('Vendas publicadas com sucesso.');
   });
 });
+
+
+test('gestão de eventos — nomes, etapas e prévia sintética', async ({page}, testInfo) => {
+  test.skip(!BRANCH_MODE, 'Prévia somente na branch local com fixtures.');
+  const state={ready:false,published:false,statusCalls:0,publishCalls:0};
+  await installProducerEventMock(page,state);await seed(page);
+  await page.goto('/eventos-v2/',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('.evento-card')).toHaveCount(1);
+  await expect(page.locator('.event-stages')).toContainText('Dados do evento');
+  await expect(page.locator('.event-stages')).toContainText('Consulte a situação antes de publicar');
+  await expect(page.locator('.evento-id')).toBeHidden();
+  await page.locator('#workspaceEventSearch').fill('produtor');
+  await expect(page.locator('.evento-card')).toHaveCount(1);
+  await page.locator('#workspaceEventSearch').fill('Nome inexistente');
+  await expect(page.locator('.evento-card')).toHaveCount(0);
+  await expect(page.locator('#workspaceSearchStatus')).toContainText('0 de 1');
+  await page.locator('#workspaceEventSearch').fill('');
+  await expect(page.locator('.evento-card')).toHaveCount(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({path:testInfo.outputPath('events-workspace-synthetic.png'),fullPage:true});
+  expect(state.publishCalls).toBe(0);
+});

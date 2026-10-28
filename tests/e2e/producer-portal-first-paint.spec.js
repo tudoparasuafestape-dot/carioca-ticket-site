@@ -56,4 +56,33 @@ test.describe('Portal do Produtor — primeira pintura profissional', () => {
     await expect(page.locator('#registerPassword')).toBeVisible();
     await expect(page.locator('#registerButton')).toBeVisible();
   });
+
+  test('menu e visão geral — prévia sintética sem autenticação real', async ({ page }, testInfo) => {
+    await page.goto('/produtor/', { waitUntil: 'domcontentloaded' });
+    // Visual fixture only. Do not claim this DOM setup tests server authorization.
+    await page.evaluate(() => {
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('portalView').classList.remove('hidden');
+      document.getElementById('helloName').textContent = 'Produtora de demonstração';
+      document.getElementById('topUser').textContent = 'Conta de demonstração';
+      document.getElementById('producerSelect').innerHTML = '<option>Produtora de demonstração</option>';
+      document.getElementById('eventPickerTitle').textContent = 'Festival de demonstração';
+      document.getElementById('eventPickerMeta').textContent = 'Dados sintéticos · rascunho';
+    });
+    await expect(page.locator('#workspaceMenuToggle')).toBeVisible();
+    await expect(page.locator('#commercialPolicyLink')).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath('producer-overview-synthetic.png'), fullPage: true });
+    await page.locator('#workspaceMenuToggle').click();
+    await expect(page.locator('#eventsManagementLink')).toBeVisible();
+    await expect(page.locator('#commercialPolicyLink')).toBeHidden();
+    await page.screenshot({ path: testInfo.outputPath('producer-menu-synthetic.png'), fullPage: true });
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#workspaceMenu')).not.toHaveAttribute('open', '');
+    await expect(page.locator('#workspaceMenuToggle')).toBeFocused();
+    await page.locator('#workspaceMenuToggle').click();
+    await page.locator('.top-title').click();
+    await expect(page.locator('#workspaceMenu')).not.toHaveAttribute('open', '');
+  });
 });
