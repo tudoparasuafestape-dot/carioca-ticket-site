@@ -60,9 +60,13 @@ async function load(){
  }catch(e){if($('app').classList.contains('hidden'))$('gateText').textContent=e&&e.message?e.message:String(e);else toast(e&&e.message?e.message:String(e))}
  finally{state.busy=false;$('refresh').disabled=false}
 }
+function isCentralTicketModel(x){
+ var v=x&&x.vendaIngressos;
+ return !!(x&&x.produtorId==='PROD-7FD7A8BFD98F4777BB7D92C0D812165E'&&v&&v.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'&&v.modo==='VENDA_PADRAO_REPASSE_POSTERIOR'&&v.subcontaObrigatoria===false&&v.contaPaySeparada===true);
+}
 function renderList(){
  if(!state.list.length){$('list').innerHTML='<div class="empty">Nenhum produtor encontrado.</div>';return}
- $('list').innerHTML=state.list.map(function(x){return '<button class="item'+(state.selected&&state.selected.produtorId===x.produtorId?' on':'')+'" data-id="'+esc(x.produtorId)+'" type="button"><b>'+esc(x.produtorNome||x.produtorId)+'</b><small>'+esc(x.produtorId)+' · '+esc(x.statusOnboarding||'—')+'</small><small>'+(x.prontoParaVendas?'Pronto para vendas':'Vendas bloqueadas')+'</small></button>'}).join('');
+ $('list').innerHTML=state.list.map(function(x){return '<button class="item'+(state.selected&&state.selected.produtorId===x.produtorId?' on':'')+'" data-id="'+esc(x.produtorId)+'" type="button"><b>'+esc(x.produtorNome||x.produtorId)+'</b><small>'+esc(x.produtorId)+' · '+esc(x.statusOnboarding||'—')+'</small><small>'+(isCentralTicketModel(x)?'Ingressos · repasse posterior':(x.prontoParaVendas?'Pronto para vendas':'Vendas bloqueadas'))+'</small></button>'}).join('');
  $('list').querySelectorAll('[data-id]').forEach(function(b){b.addEventListener('click',function(){select(this.dataset.id)})})
 }
 function select(id){state.selected=state.list.find(function(x){return String(x.produtorId)===String(id)})||null;state.readiness=null;state.provisioning=null;state.provisionData={};renderList();renderDetail()}
@@ -95,6 +99,11 @@ function renderProvisioningResult(){
 }
 function renderDetail(){
  var x=state.selected;if(!x){$('detail').innerHTML='<div class="empty">Selecione um produtor.</div>';return}
+ if(isCentralTicketModel(x)){
+   $('detailBadge').textContent='INGRESSOS';$('detailBadge').className='badge warn';
+   $('detail').innerHTML='<h2>'+esc(x.produtorNome||x.produtorId)+'</h2><div class="sub">'+esc(x.produtorId)+'</div><div class="box"><b>Cadastro para venda de ingressos</b><p class="note">Neste evento, os pagamentos são recebidos pela Carioca Ticket, com valores do produtor registrados separadamente e repasse posterior. Não é necessário criar subconta ou ativar uma Conta Carioca Pay para esse modelo.</p><p class="note">Evento vinculado: '+esc(x.vendaIngressos.eventoId)+'</p><p class="note">A publicação das vendas ainda depende das verificações do evento e da autorização da Carioca Ticket. Esta tela não ativa vendas nem autoriza repasses.</p></div><div class="box"><b>Conta Carioca Pay · etapa separada</b><p class="note">Status cadastral financeiro: '+esc(x.statusOnboarding||'Pendente')+'. Este status não confirma prontidão do evento.</p><p class="note">Uma conta para executar ações de pagamento pelo produtor faz parte de uma contratação e habilitação separadas. Nenhuma conta, credencial, cobrança ou transferência é criada aqui.</p></div>';
+   return;
+ }
  $('detailBadge').textContent=x.prontoParaVendas?'PRONTO':'PENDENTE';$('detailBadge').className='badge '+(x.prontoParaVendas?'ok':'warn');
  var html='<h2>'+esc(x.produtorNome||x.produtorId)+'</h2><div class="sub">'+esc(x.produtorId)+'</div><div class="kvgrid">'+
  '<div class="kv"><small>Status financeiro</small><strong>'+esc(x.statusOnboarding||'—')+'</strong></div>'+
