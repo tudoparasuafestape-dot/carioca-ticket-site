@@ -2,8 +2,21 @@
 const fs=require('node:fs'),cp=require('node:child_process'),assert=require('node:assert/strict');
 const paths=['convite','minha-carioca','minha-carioca/login','minha-carioca/acesso','parceiro/programa','parceiro/manual','parceiro/conduta','parceiro/regulamento','produtor/solicitar','campanha','roda-de-samba'];
 const base='7f86913bc3089eaf02632dc74c4743c937dac4d1';
+const approvedDeltaBytes=fs.readFileSync(require('node:path').join(__dirname,'fixtures/producer-document-approved-delta.json'));
+assert.equal(require('node:crypto').createHash('sha256').update(approvedDeltaBytes).digest('hex'),'8747becdd677e54598a75b2fe8692a51cce758480a969519cb028c0a9ea2c4c8','Approved document delta fixture changed; explicit review required');
+const approvedDelta=JSON.parse(approvedDeltaBytes);
+assert.equal(approvedDelta.route,'produtor/solicitar');
+assert.equal(approvedDelta.changes.length,4);
 for(const route of paths){
  const path=route+'/index.html';let source=(fs.existsSync('../public-brand-audit-base/'+path)?fs.readFileSync('../public-brand-audit-base/'+path,'utf8'):cp.execFileSync('git',['show',base+':'+path],{encoding:'utf8'})).replace(/\r\n/g,'\n');const current=fs.readFileSync(path,'utf8').replace(/\r\n/g,'\n').replace(/  <link rel="stylesheet" href="\/assets\/public-privacy.css\?v=20261010-1">\n/g,'').replace(/  <script src="\/assets\/public-privacy.js\?v=20261010-1" defer><\/script>\n/g,'');
+ // Apply only the reviewed CPF/CNPJ input, mask/checksum, listener and submit delta.
+ // Compare the unchanged assertions against this exact expected source; never normalize current.
+ if(route==='produtor/solicitar')for(const change of approvedDelta.changes){
+  assert.ok(change.before.length>0&&change.after.length>0);
+  assert.equal(source.split(change.before).length-1,1,'Document delta historical anchor must occur exactly once');
+  assert.equal(current.split(change.after).length-1,1,'Approved document change must occur exactly once');
+  source=source.replace(change.before,()=>change.after);
+ }
  // Approved explicit WhatsApp enhancement changes only the public share cache keys.
  if(route==='parceiro/programa')source=source.replace('/assets/public-share.js?v=20261009-card-share1','/assets/public-share.js?v=20261010-whatsapp1').replace('/assets/public-share.css?v=20261009-share1','/assets/public-share.css?v=20261010-whatsapp1');
  // Authorized event-specific closure changes this title/copy only; keep redirect,

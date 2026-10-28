@@ -63,7 +63,7 @@ body{min-height:100vh}.hidden{display:none!important}
     <div class="grid">
       <div class="field"><label for="nomeFantasia">Nome da empresa / marca</label><input id="nomeFantasia" required maxlength="200" autocomplete="organization"></div>
       <div class="field"><label for="razaoSocial">Razão social (se houver)</label><input id="razaoSocial" maxlength="250" autocomplete="organization-title"></div>
-      <div class="field"><label for="cpfCnpj">CPF ou CNPJ do responsável/empresa</label><input id="cpfCnpj" required maxlength="18" inputmode="numeric" autocomplete="off"></div>
+      <div class="field"><label for="cpfCnpj">CPF ou CNPJ do responsável/empresa</label><input id="cpfCnpj" type="text" required maxlength="18" inputmode="numeric" autocomplete="off" aria-describedby="documentHelp"><small id="documentHelp">Informe todos os dígitos, incluindo zeros iniciais. CPF: 11 dígitos; CNPJ: 14 dígitos.</small></div>
       <div class="field"><label for="whatsapp">WhatsApp</label><input id="whatsapp" required maxlength="20" inputmode="tel" autocomplete="tel"></div>
       <div class="field"><label for="cidade">Cidade</label><input id="cidade" required maxlength="150" autocomplete="address-level2"></div>
       <div class="field"><label for="uf">UF</label><input id="uf" required maxlength="2" autocomplete="address-level1" placeholder="PE"></div>
@@ -95,7 +95,39 @@ function msg(text,type){var e=document.getElementById('formMessage');e.textConte
 function humanStatus(s){return {ENVIADO:'ENVIADO',EM_ANALISE:'EM ANÁLISE',PENDENCIA:'PENDÊNCIA',REPROVADO:'REPROVADO',APROVANDO:'APROVANDO',ATIVO:'ATIVO'}[String(s||'').toUpperCase()]||String(s||'')}
 function statusCopy(s){s=String(s||'').toUpperCase();if(s==='ENVIADO')return['Solicitação recebida','Seus dados foram enviados e aguardam início da análise.'];if(s==='EM_ANALISE')return['Cadastro em análise','A Carioca Ticket está revisando os dados da sua operação.'];if(s==='PENDENCIA')return['Precisamos de um ajuste','Revise a pendência informada e reenvie seu cadastro.'];if(s==='REPROVADO')return['Cadastro não aprovado','Você pode revisar os dados e enviar uma nova análise.'];if(s==='APROVANDO')return['Concluindo liberação','A liberação está sendo processada. Atualize em alguns instantes.'];if(s==='ATIVO')return['Produtor liberado','Seu produtor já está ativo. Você pode acessar o Portal do Produtor.'];return['Complete seu cadastro','Envie os dados para análise.']}
 
-function fillForm(s){s=s||{};['nomeFantasia','razaoSocial','cpfCnpj','whatsapp','cidade','uf','instagram'].forEach(function(k){if(s[k]!=null)document.getElementById(k).value=String(s[k]||'')})}
+function documentDigits(value){return String(value==null?'':value).replace(/\D/g,'')}
+function formatDocument(value){
+ var d=documentDigits(value);
+ // Never pad an identifier or discard excess digits: an overlong value must fail validation.
+ if(d.length>14)return d;
+ if(d.length<=11)return d.replace(/^(\d{3})(\d)/,'$1.$2').replace(/^(\d{3}\.\d{3})(\d)/,'$1.$2').replace(/(\.\d{3})(\d{1,2})$/,'$1-$2');
+ return d.replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2}\.\d{3})(\d)/,'$1.$2').replace(/(\.\d{3})(\d)/,'$1/$2').replace(/(\/\d{4})(\d{1,2})$/,'$1-$2');
+}
+function validDocument(value){
+ var d=documentDigits(value),sum=0,i,check;
+ if(!/^\d+$/.test(d)||/^(\d)\1+$/.test(d))return false;
+ if(d.length===11){
+  for(i=0;i<9;i++)sum+=Number(d.charAt(i))*(10-i);
+  check=(sum*10)%11;if(check===10)check=0;if(check!==Number(d.charAt(9)))return false;
+  sum=0;for(i=0;i<10;i++)sum+=Number(d.charAt(i))*(11-i);
+  check=(sum*10)%11;if(check===10)check=0;return check===Number(d.charAt(10));
+ }
+ if(d.length!==14)return false;
+ var weights=[5,4,3,2,9,8,7,6,5,4,3,2];
+ for(i=0;i<12;i++)sum+=Number(d.charAt(i))*weights[i];
+ check=sum%11;check=check<2?0:11-check;if(check!==Number(d.charAt(12)))return false;
+ sum=0;weights=[6,5,4,3,2,9,8,7,6,5,4,3,2];
+ for(i=0;i<13;i++)sum+=Number(d.charAt(i))*weights[i];
+ check=sum%11;return (check<2?0:11-check)===Number(d.charAt(13));
+}
+function maskDocumentInput(){
+ var input=document.getElementById('cpfCnpj'),old=input.value,start=input.selectionStart,end=input.selectionEnd;
+ var beforeStart=documentDigits(old.slice(0,start==null?old.length:start)).length,beforeEnd=documentDigits(old.slice(0,end==null?old.length:end)).length;
+ input.value=formatDocument(old);input.setCustomValidity('');
+ function caret(count){if(!count)return 0;var seen=0;for(var i=0;i<input.value.length;i++){if(/\d/.test(input.value.charAt(i)))seen++;if(seen===count)return i+1}return input.value.length}
+ if(start!=null&&end!=null)input.setSelectionRange(caret(beforeStart),caret(beforeEnd));
+}
+function fillForm(s){s=s||{};['nomeFantasia','razaoSocial','cpfCnpj','whatsapp','cidade','uf','instagram'].forEach(function(k){if(s[k]!=null)document.getElementById(k).value=k==='cpfCnpj'?formatDocument(s[k]):String(s[k]||'')});document.getElementById('cpfCnpj').setCustomValidity('')}
 function render(r){
   if(r&&r.possuiProdutor===true){location.replace('/produtor/');return}
   var ind=r&&r.indicacao?r.indicacao:null;
@@ -146,9 +178,12 @@ async function logout(){
 
 document.getElementById('logoutButton').addEventListener('click',logout);
 document.getElementById('refreshStatus').addEventListener('click',load);
+document.getElementById('cpfCnpj').addEventListener('input',maskDocumentInput);
 document.getElementById('producerForm').addEventListener('submit',async function(ev){
   ev.preventDefault();msg('');
-  var data={nomeFantasia:document.getElementById('nomeFantasia').value,razaoSocial:document.getElementById('razaoSocial').value,cpfCnpj:document.getElementById('cpfCnpj').value,whatsapp:document.getElementById('whatsapp').value,cidade:document.getElementById('cidade').value,uf:String(document.getElementById('uf').value||'').toUpperCase(),instagram:document.getElementById('instagram').value};
+  var documentInput=document.getElementById('cpfCnpj'),documentValue=documentDigits(documentInput.value);
+  if(!validDocument(documentValue)){documentInput.setCustomValidity('Informe um CPF ou CNPJ válido, incluindo todos os zeros iniciais.');msg('Informe um CPF ou CNPJ válido, incluindo todos os zeros iniciais.','bad');documentInput.reportValidity();return}
+  var data={nomeFantasia:document.getElementById('nomeFantasia').value,razaoSocial:document.getElementById('razaoSocial').value,cpfCnpj:documentValue,whatsapp:document.getElementById('whatsapp').value,cidade:document.getElementById('cidade').value,uf:String(document.getElementById('uf').value||'').toUpperCase(),instagram:document.getElementById('instagram').value};
   var b=document.getElementById('submitButton');b.disabled=true;setLoading(true,'Enviando para análise...');
   try{var r=await rpc('ctProdutorOnboardingEnviarPROD',[session.token,data]);if(!r||r.sucesso!==true)throw new Error('Não foi possível enviar a solicitação.');msg('Cadastro enviado para análise.','ok');await load()}
   catch(e){var m=String(e&&e.message||e||'');if(m.indexOf('DOCUMENTO_INVALIDO')>=0)m='Informe um CPF ou CNPJ válido.';else if(m.indexOf('WHATSAPP_INVALIDO')>=0)m='Informe um WhatsApp válido.';else if(m.indexOf('JA_POSSUI_PRODUTOR')>=0){location.replace('/produtor/');return}msg(m,'bad')}
@@ -159,3 +194,4 @@ load();
 </script>
 </body>
 </html>
+
