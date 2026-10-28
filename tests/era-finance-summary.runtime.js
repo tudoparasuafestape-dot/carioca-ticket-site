@@ -39,6 +39,7 @@ class Element {
       }
     };
   }
+  get parentElement() { return this.parentNode; }
   get textContent() { return this._text + this.children.map(child => child.textContent).join(''); }
   set textContent(value) { this.children = []; this._text = String(value ?? ''); }
   set innerHTML(value) { this.children = []; this._text = ''; parse(String(value), this, this.ownerDocument); }
@@ -385,3 +386,7 @@ async function check(name, run) { await run(); checks++; console.log('PASS ' + n
   });
   console.log('PASS era-finance-summary.runtime: ' + checks + ' scenario groups; all RPCs local mocks');
 }()).catch(error => { console.error(error); process.exitCode = 1; });
+
+
+// Additional exact-pair central receipt rendering regressions; offline only.
+require('./herminho-central-ux.runtime.cjs');

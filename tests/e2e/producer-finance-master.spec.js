@@ -169,3 +169,82 @@ test.describe('Conta Carioca Pay — Produtor e Master',()=>{
     await expect(page.locator('#detail')).toContainText('CONCLUIDO');
   });
 });
+
+// Central ticket receipts: read-only, synthetic and isolated from the mutable Pay fixtures above.
+const HERMINHO_PRODUCER='PROD-7FD7A8BFD98F4777BB7D92C0D812165E';
+const HERMINHO_EVENT='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
+const CENTRAL_RECEIPTS_CONTRACT={rpc:{portalRpc:[
+  'ctPortalProdutorRestaurarSessaoIsoladaPROD',
+  'ctContaCariocaPayPortalResumoPROD',
+  'ctFinanceiroProdutorMasterListarPROD'
+],publicRpc:['ctEventosPublicosListarPROD']}};
+async function installCentralReceiptsMock(page,calls){
+  // branch-isolated auto fixture denies every unexpected remote request; this
+  // contract intentionally permits no mutation, charge, account or payout RPC.
+  await mockRoute(page,CENTRAL_RECEIPTS_CONTRACT,async route=>{
+    const p=new URLSearchParams(route.request().postData()||'');
+    const id=String(p.get('ctMinhaCariocaRequestId')||'');
+    const method=String(p.get('metodo')||'');
+    let result;
+    try{
+      const args=JSON.parse(p.get('argsJson')||'[]');
+      expect(p.get('ctMinhaCariocaAction')).toBe(method==='ctEventosPublicosListarPROD'?'publicRpc':'portalRpc');
+      calls.push(method);
+      if(method==='ctEventosPublicosListarPROD'){
+        expect(args).toEqual([]);
+        result={sucesso:true,...temporalEnvelope('home',await page.evaluate(()=>Date.now())),eventos:[]};
+      }else if(method==='ctPortalProdutorRestaurarSessaoIsoladaPROD'){
+        result={sucesso:true,autenticado:true,autorizado:true,usuario:{id:'USR-CENTRAL-SYNTH'},produtores:[{id:HERMINHO_PRODUCER,nomeFantasia:'Herminho · demonstração sintética',eventos:[{id:HERMINHO_EVENT,nome:'Aniversário de Herminho · teste'}]}]};
+      }else if(method==='ctContaCariocaPayPortalResumoPROD'){
+        expect(args[1]).toBe(HERMINHO_EVENT);
+        result={sucesso:true,autorizado:true,produtorId:HERMINHO_PRODUCER,eventoId:HERMINHO_EVENT,
+          financeiro:{configurado:true,status:'PENDENTE_CREDENCIAL',recebimentoCentralizado:true,prontoParaOperar:false,movimentacaoRealHabilitada:false,aportePixHabilitado:false},
+          vendas:{confirmado:22,composicaoCentralizada:{brutoConfirmado:22,taxaCtConfirmada:2,liquidoProdutorConfirmado:20,outrasDeducoesConfirmadas:0,pagamentosSemComposicao:0},conciliacaoCentralizada:{pagamentosPendentes:1,brutoPendente:22}},
+          ledger:{saldoOperacional:0,porOrigem:{}},solicitacoes:{},antecipacao:{disponivelSolicitar:0},saque:{saldoAutoritativoDisponivel:false,saldoDisponivel:0},
+          repasse:{status:'BLOQUEADO_CONCILIACAO_PENDENTE',conciliacaoPendente:true,automatico:false,disponivelParaTransferencia:0},atualizadoEm:'28/10/2026 · fixture sintética'};
+      }else if(method==='ctFinanceiroProdutorMasterListarPROD'){
+        result={sucesso:true,autorizado:true,itens:[{produtorId:HERMINHO_PRODUCER,produtorNome:'Herminho · demonstração sintética',statusOnboarding:'PENDENTE_CREDENCIAL',prontoParaVendas:false,
+          vendaIngressos:{modo:'VENDA_PADRAO_REPASSE_POSTERIOR',eventoId:HERMINHO_EVENT,subcontaObrigatoria:false,contaPaySeparada:true}}],contagem:{pendentes:1,prontos:0}};
+      }else{throw new Error('Unexpected central receipt RPC: '+method)}
+    }catch(error){mockFailure(route,error);await route.abort('blockedbyclient');return}
+    await route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><html><body><script>window.top.postMessage('+envelope(id,true,result,'')+', "*");<\/script></body></html>'});
+  });
+}
+test.describe('Herminho — ingressos com repasse posterior, sem Conta Pay',()=>{
+  test.skip(!BRANCH_MODE,'Somente fixtures offline da branch; nunca executar contra produção.');
+  test('produtor vê composição 20 + 2 sem saldo global nem ações de pagamento',async({page},testInfo)=>{
+    const calls=[];await installCentralReceiptsMock(page,calls);await seed(page,'CT-CENTRAL-SYNTH');
+    await page.goto('/produtor/financeiro/',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#financeTitle')).toHaveText('Recebimentos de ingressos');
+    await expect(page.locator('#confirmedSales')).toContainText('22,00');
+    await expect(page.locator('#eraCtFee')).toContainText('2,00');
+    await expect(page.locator('#eraProducerNet')).toContainText('20,00');
+    await expect(page.locator('#compositionExplanation')).toContainText('não é saldo disponível para saque');
+    await expect(page.locator('#eraCompositionWarning')).toContainText('pendente(s) de conciliação');
+    await expect(page.locator('#ledgerBalance')).toBeHidden();
+    await expect(page.locator('#actionsSection')).toBeHidden();
+    await expect(page.locator('#policySection')).toBeHidden();
+    await expect(page.locator('#advanceButton')).toBeDisabled();
+    await expect(page.locator('#withdrawButton')).toBeDisabled();
+    await expect(page.locator('#financeIntro')).toContainText('Não exige subconta');
+    expect(calls.filter(x=>x==='ctContaCariocaPayPortalResumoPROD')).toHaveLength(1);
+    await testInfo.attach('herminho-central-producer.png',{body:await page.screenshot({fullPage:true}),contentType:'image/png'});
+  });
+  test('master separa cadastro de ingressos de futura conta para pagamentos',async({page},testInfo)=>{
+    const calls=[];await installCentralReceiptsMock(page,calls);await seed(page,'CT-MASTER-CENTRAL-SYNTH');
+    await page.goto('/backoffice/carioca-pay/produtores/?produtor='+HERMINHO_PRODUCER,{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#modelEyebrow')).toHaveText('Cadastro de ingressos');
+    await expect(page.locator('#modelTitle')).toHaveText('Ingressos com repasse posterior');
+    await expect(page.locator('#modelDescription')).toContainText('Não exige subconta');
+    await expect(page.locator('#modelDescription')).not.toContainText('credencial');
+    await expect(page.locator('#modelSafety')).toContainText('sem ativar vendas');
+    await expect(page.locator('#detailBadge')).toHaveText('INGRESSOS');
+    await expect(page.locator('#detail')).toContainText('Não é necessário criar subconta');
+    await expect(page.locator('#detail')).toContainText('não ativa vendas nem autoriza repasses');
+    await expect(page.locator('#detail')).toContainText('Conta Carioca Pay · etapa separada');
+    await expect(page.locator('#detail')).toContainText('PENDENTE_CREDENCIAL');
+    await expect(page.locator('#activateButton, #validateButton, #provisionButton, #suspendButton')).toHaveCount(0);
+    expect(calls.filter(x=>x==='ctFinanceiroProdutorMasterListarPROD')).toHaveLength(1);
+    await testInfo.attach('herminho-central-master.png',{body:await page.screenshot({fullPage:true}),contentType:'image/png'});
+  });
+});

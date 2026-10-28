@@ -58,8 +58,8 @@ button,select,input{font:inherit}
 <main class="wrap">
   <section class="hero">
     <div class="eyebrow">Centro financeiro do evento</div>
-    <h1>Conta Carioca Pay</h1>
-    <p>Centralize vendas, patrocínios, capital próprio e pagamentos planejados sem perder a origem de cada valor.</p>
+    <h1 id="financeTitle">Conta Carioca Pay</h1>
+    <p id="financeIntro">Centralize vendas, patrocínios, capital próprio e pagamentos planejados sem perder a origem de cada valor.</p>
     <div class="preview">Homologação interna • movimentação real desabilitada</div>
   </section>
 
@@ -82,14 +82,14 @@ button,select,input{font:inherit}
     </section>
 
     <section id="eraCompositionNote" class="card hidden" aria-live="polite">
-      <p class="note">Composição registrada nos pagamentos confirmados. O líquido apurado não representa saldo liquidado nem disponível para saque. A antecipação considera apenas o líquido elegível validado pelo servidor.</p>
+      <p id="compositionExplanation" class="note">Composição registrada nos pagamentos confirmados. O líquido apurado não representa saldo liquidado nem disponível para saque. A antecipação considera apenas o líquido elegível validado pelo servidor.</p>
       <p id="eraOtherDeductions" class="note hidden" style="margin-top:8px"></p>
       <p id="eraCompositionWarning" class="note off hidden" style="margin-top:8px"></p>
     </section>
 
     <div class="grid">
       <div>
-        <section class="card">
+        <section id="originSection" class="card">
           <div class="head"><div><h2>Caixa por origem</h2><span>rastreabilidade financeira</span></div></div>
           <div class="origin-grid">
             <div class="origin"><small>Ingressos online</small><strong id="originOnline">R$ 0,00</strong></div>
@@ -102,7 +102,7 @@ button,select,input{font:inherit}
           <p class="note" style="margin-top:12px">Vendas online ainda são exibidas pelo ledger de pagamentos oficial. Bar e portaria serão incorporados pela Smart App quando seus módulos financeiros forem ativados.</p>
         </section>
 
-        <section class="card">
+        <section id="actionsSection" class="card">
           <div class="head"><div><h2>Ações financeiras</h2><span>solicitações protegidas</span></div></div>
           <div class="action-grid">
             <div class="action"><b>Solicitar antecipação</b><small>Até 80% do saldo elegível. Uma nova solicitação só é aceita quando não existe outra antecipação aberta para este evento. A solicitação segue para análise do Administrador Master e não movimenta dinheiro automaticamente.</small><div class="status-line" style="margin-top:8px"><span>Status</span><b id="advanceStatus">—</b></div><div class="field" style="margin-top:10px"><label for="advanceValue">Valor solicitado</label><input id="advanceValue" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00"></div><button id="advanceButton" class="btn gold" type="button" style="width:100%;margin-top:8px">Enviar antecipação para análise</button></div>
@@ -113,7 +113,7 @@ button,select,input{font:inherit}
       </div>
 
       <aside>
-        <section class="card">
+        <section id="policySection" class="card">
           <div class="head"><div><h3>Política financeira</h3><span>padrão Carioca Ticket</span></div></div>
           <div class="policy">
             <div class="policy-item"><small>Máximo antecipável</small><strong id="policyMax">80%</strong></div>
@@ -307,6 +307,7 @@ function render(r){
   withdrawStatus.className=withdrawOpen?'off':'on';
   var withdrawButton=document.getElementById('withdrawButton');
   withdrawButton.disabled=fin.prontoParaOperar!==true||!saqueDisponivel||withdrawOpen||Number(saque.saldoDisponivel||0)<Number(saque.minimoSolicitacao||500);
+  renderCentralReceiptMode(r);
   document.getElementById('updatedAt').textContent='Atualizado em '+esc(r.atualizadoEm||'');
 }
 
@@ -315,18 +316,39 @@ function setGate(id,on,yes,no){
 }
 
 // Presentation only: frozen composition and anticipation eligibility come from the server.
+function isCentralReceipt(r){
+  return !!(r&&r.produtorId==='PROD-7FD7A8BFD98F4777BB7D92C0D812165E'&&r.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'&&r.financeiro&&r.financeiro.recebimentoCentralizado===true&&state.produtor&&state.produtor.id===r.produtorId&&state.evento&&state.evento.id===r.eventoId);
+}
+function renderCentralReceiptMode(r){
+  var central=isCentralReceipt(r);
+  ['originSection','actionsSection','policySection','rulesTopButton'].forEach(function(id){document.getElementById(id).classList.toggle('hidden',central)});
+  ['ledgerBalance','anticipationAvailable','plannedPayments'].forEach(function(id){document.getElementById(id).parentElement.classList.toggle('hidden',central)});
+  document.getElementById('financeTitle').textContent=central?'Recebimentos de ingressos':'Conta Carioca Pay';
+  document.getElementById('financeIntro').textContent=central?'Recebimento pela Carioca Ticket, com registro separado deste evento e repasse posterior ao produtor. Não exige subconta para vender ingressos.':'Centralize vendas, patrocínios, capital próprio e pagamentos planejados sem perder a origem de cada valor.';
+  document.getElementById('compositionExplanation').textContent=central?'Valores registrados exclusivamente para este produtor e evento. O líquido não é saldo disponível para saque. Repasse depende de conciliação e validação dos dados bancários; não é automático. Conta Carioca Pay para ações de pagamento é uma etapa separada.':'Composição registrada nos pagamentos confirmados. O líquido apurado não representa saldo liquidado nem disponível para saque. A antecipação considera apenas o líquido elegível validado pelo servidor.';
+  if(central){
+    document.getElementById('financialConfigured').textContent='Ingressos · repasse posterior';
+    document.getElementById('financialConfigured').className='off';
+    document.getElementById('advanceButton').disabled=true;
+    document.getElementById('withdrawButton').disabled=true;
+    ['realMovement','depositPix','providerAdvance'].forEach(function(id){setGate(id,false,'','Não habilitado neste modelo')});
+    document.getElementById('withdrawAvailable').textContent='Não disponível neste modelo';
+    closeRules();
+  }
+}
 function renderEraComposition(r,vendas){
+  var central=isCentralReceipt(r);
   var era=r.produtorId==='PROD-1D96238E910D473CBC159AABCC2EAA94'&&r.eventoId==='EVT-23112026-ERA-BEAUTY-EAC4B673'&&
     state.produtor&&state.produtor.id===r.produtorId&&state.evento&&state.evento.id===r.eventoId;
-  ['eraCtFeeMetric','eraProducerNetMetric','eraCompositionNote'].forEach(function(id){document.getElementById(id).classList.toggle('hidden',!era)});
-  document.getElementById('confirmedSalesLabel').textContent=era?'Bruto confirmado':'Vendas confirmadas';
+  ['eraCtFeeMetric','eraProducerNetMetric','eraCompositionNote'].forEach(function(id){document.getElementById(id).classList.toggle('hidden',!(era||central))});
+  document.getElementById('confirmedSalesLabel').textContent=(era||central)?'Bruto confirmado':'Vendas confirmadas';
   var fee=document.getElementById('eraCtFee'),net=document.getElementById('eraProducerNet');
   var other=document.getElementById('eraOtherDeductions'),warning=document.getElementById('eraCompositionWarning');
   fee.textContent=money(0);net.textContent=money(0);
   other.textContent='';other.classList.add('hidden');
   warning.textContent='';warning.classList.add('hidden');
-  if(!era)return;
-  var c=vendas.composicaoEra;
+  if(!era&&!central)return;
+  var c=central?vendas.composicaoCentralizada:vendas.composicaoEra;
   var valid=c&&['brutoConfirmado','taxaCtConfirmada','liquidoProdutorConfirmado','outrasDeducoesConfirmadas','pagamentosSemComposicao'].every(function(key){return typeof c[key]==='number'&&isFinite(c[key])&&c[key]>=0})&&Math.floor(c.pagamentosSemComposicao)===c.pagamentosSemComposicao;
   if(!valid){
     fee.textContent='Não apurada';net.textContent='Não apurado';
@@ -340,7 +362,11 @@ function renderEraComposition(r,vendas){
     other.classList.remove('hidden');
   }
   if(c.pagamentosSemComposicao>0){
-    warning.textContent=c.pagamentosSemComposicao+' pagamento(s) confirmado(s) sem composição financeira válida: incluídos no bruto, mas excluídos do líquido apurado e da base de antecipação.';
+    warning.textContent=c.pagamentosSemComposicao+(central?' pagamento(s) sem composição financeira válida, excluído(s) do líquido registrado.':' pagamento(s) confirmado(s) sem composição financeira válida: incluídos no bruto, mas excluídos do líquido apurado e da base de antecipação.');
+    warning.classList.remove('hidden');
+  }
+  if(central&&vendas.conciliacaoCentralizada&&Number(vendas.conciliacaoCentralizada.pagamentosPendentes)>0){
+    warning.textContent+=(warning.textContent?' ':'')+Number(vendas.conciliacaoCentralizada.pagamentosPendentes)+' pagamento(s) pendente(s) de conciliação, excluído(s) do líquido registrado. Não há valor disponível para transferência.';
     warning.classList.remove('hidden');
   }
 }
@@ -449,4 +475,5 @@ init();
 </script>
 </body>
 </html>
+
 
