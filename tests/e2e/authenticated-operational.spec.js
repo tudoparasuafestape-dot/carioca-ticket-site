@@ -1564,7 +1564,7 @@ test.describe('Jornada operacional autenticada', () => {
   test('Portal logout durante restore impede callback tardio de reabrir Portal', async ({ page }) => {
     const state={token:'CT-E2E-TOKEN-RESTORE-LOGOUT',restoreDelayMs:11000,transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
     await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
-    await expect(page.locator('#portalView')).toBeVisible({timeout:3000}); await page.locator('#logoutButton').click(); await expect(page.locator('#loginView')).toBeVisible();
+    await expect(page.locator('#portalView')).toBeVisible({timeout:3000}); await page.locator('#workspaceMenuToggle').click(); await page.locator('#logoutButton').click(); await expect(page.locator('#loginView')).toBeVisible();
     await page.waitForTimeout(11500); await expect(page.locator('#portalView')).toHaveClass(/hidden/);
     const stored=await page.evaluate(key=>({local:localStorage.getItem(key),session:sessionStorage.getItem(key)}),STORAGE); expect(stored.local).toBeNull(); expect(stored.session).toBeNull();
   });
@@ -1593,7 +1593,7 @@ test.describe('Jornada operacional autenticada', () => {
   test('Portal F5 apos logout nao ressuscita sessao', async ({ page }) => {
     const state={token:'CT-E2E-TOKEN-F5-LOGOUT',transactionCalls:0,barMutationCalls:0,eventMutationCalls:0,supplierMutationCalls:0,commissionMutationCalls:0};
     await installMock(page,state); await seedSession(page,state.token); await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
-    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); await page.locator('#logoutButton').click(); await expect(page.locator('#loginView')).toBeVisible();
+    await expect(page.locator('#helloName')).toContainText('Operador Homologacao',{timeout:5000}); await page.locator('#workspaceMenuToggle').click(); await page.locator('#logoutButton').click(); await expect(page.locator('#loginView')).toBeVisible();
     await page.reload({waitUntil:'domcontentloaded'}); await expect(page.locator('#loginView')).toBeVisible(); await expect(page.locator('#portalView')).toHaveClass(/hidden/);
   });
 

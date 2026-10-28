@@ -108,6 +108,7 @@ test.describe('Gate de jornada e navegação por perfil',()=>{
 
     await page.goto('/produtor/',{waitUntil:'domcontentloaded'});
     await expect(page.locator('#portalView')).toBeVisible({timeout:15000});
+    await page.locator('#workspaceMenuToggle').click();
     await expect(page.locator('#partnerPortalLink')).toBeVisible();
     await expect(page.locator('#partnerPortalLink')).toHaveText('Portal Parceiro CT');
     await expect(page.locator('#partnerPortalLink')).toHaveAttribute('href','/parceiro/');
