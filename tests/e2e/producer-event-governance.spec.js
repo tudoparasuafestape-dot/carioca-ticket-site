@@ -220,3 +220,110 @@ test.describe('Jornada do produtor até publicação',()=>{
     await expect(page.locator('#modalMensagemTexto')).toContainText('Vendas publicadas com sucesso.');
   });
 });
+
+// BEGIN isolated approved-cover scenarios. Keep this block separate from PR230 visual changes.
+// Runs in both existing desktop/mobile CI projects; no workflow or real service changes.
+import fs from 'node:fs';
+const COVER_FIXTURE_EVENT = 'EVT-COVER-SYNTHETIC';
+const COVER_FIXTURE_ASSET = 'herminho-tbt-20261107-a2f84c198ed5b283';
+const COVER_FIXTURE_URL = 'https://cariocaticket.com.br/assets/eventos/' + COVER_FIXTURE_ASSET + '.jpg';
+const COVER_MOCK_CONTRACT = {rpc:{portalRpc:[
+  'ctEventosOperacionalListarSeguraPROD',
+  'ctEventoCapaBibliotecaListarSeguraPROD',
+  'ctEventoCapaBibliotecaSalvarSeguraPROD'
+]}};
+
+async function installCoverMock(page, state) {
+  Object.assign(state, {reads:0, saves:0, applied:false, calls:[]});
+  // Exact approved image is fulfilled from the checkout, never fetched from the URL.
+  await mockRoute(page, {resources:[COVER_FIXTURE_URL]}, route => route.fulfill({
+    status:200, contentType:'image/jpeg',
+    body:fs.readFileSync('assets/eventos/' + COVER_FIXTURE_ASSET + '.jpg')
+  }));
+  await mockRoute(page, COVER_MOCK_CONTRACT, async route => {
+    const params = new URLSearchParams(route.request().postData() || '');
+    const id = params.get('ctMinhaCariocaRequestId'), method = params.get('metodo');
+    let ok = true, result, error = '';
+    try {
+      const args = JSON.parse(params.get('argsJson') || '[]');
+      expect(args[0]).toBe('CT-ADMIN-E2E');
+      state.calls.push(method);
+      if (method === 'ctEventosOperacionalListarSeguraPROD') {
+        expect(args).toHaveLength(1);
+        result = {sucesso:true, autenticado:true, autorizado:true, total:1, publicados:0,
+          eventoAtivo:null, eventoSelecionado:null, listagemRapida:true,
+          eventos:[{id:COVER_FIXTURE_EVENT,nome:'Evento de demonstração da capa',status:'RASCUNHO',ativo:false,
+            data:'07/11/2026',local:'Espaço de demonstração',cidade:'Recife',uf:'PE',
+            publicacao:{sucesso:true,eventoId:COVER_FIXTURE_EVENT,publicado:false,prontoPublicar:false,pendencias:[],validacaoCompleta:false}}]};
+      } else if (method === 'ctEventoCapaBibliotecaListarSeguraPROD') {
+        expect(args).toHaveLength(2); expect(args[1]).toBe(COVER_FIXTURE_EVENT); state.reads++;
+        result = {ok:true,eventId:COVER_FIXTURE_EVENT,eventName:'Aniversário de Herminho · prévia isolada',
+          version:(state.applied?'b':'a').repeat(64),currentAssetId:state.applied?COVER_FIXTURE_ASSET:'',
+          assets:[{assetId:COVER_FIXTURE_ASSET,name:'Arte oficial aprovada · 07 novembro',url:COVER_FIXTURE_URL,
+            sha256:'a2f84c198ed5b283d51252671f9da5111721b1b0fc73d7538977822b4437d51f'}]};
+      } else if (method === 'ctEventoCapaBibliotecaSalvarSeguraPROD') {
+        expect(args).toHaveLength(2);
+        expect(args[1]).toEqual({eventId:COVER_FIXTURE_EVENT,assetId:COVER_FIXTURE_ASSET,
+          expectedVersion:'a'.repeat(64),motivo:'Aplicar arte aprovada neste evento'});
+        state.saves++;
+        if (state.hold) await state.hold;
+        state.applied = true;
+        result = {ok:true,eventId:COVER_FIXTURE_EVENT,assetId:COVER_FIXTURE_ASSET,version:'b'.repeat(64)};
+      } else throw new Error('Método fora do contrato de capa: ' + method);
+    } catch (err) { mockFailure(route, err); ok = false; error = err.message; }
+    await route.fulfill({status:200,contentType:'text/html; charset=utf-8',
+      body:'<!doctype html><script>window.top.postMessage('+envelope(id,ok,result,error)+',"*");<\/script>'});
+  });
+  await seed(page);
+  await page.goto('/eventos-v2/', {waitUntil:'domcontentloaded'});
+}
+
+async function openCoverFixture(page) {
+  await page.locator('[data-approved-event-cover="' + COVER_FIXTURE_EVENT + '"]').click();
+  await expect(page.locator('#ctCoverAssets img')).toBeVisible();
+  await expect.poll(() => page.locator('#ctCoverAssets img').evaluate(image => image.complete && image.naturalWidth)).toBe(900);
+}
+
+test.describe('Biblioteca de capas aprovada — fixtures isoladas', () => {
+  test.skip(!BRANCH_MODE, 'Somente branch isolada com sessão e RPC sintéticos.');
+
+  test('miniatura integral, teclado e cancelamento não salvam nem publicam', async ({page}, info) => {
+    const state = {}; await installCoverMock(page, state); await openCoverFixture(page);
+    await expect(page.locator('#ctCoverAssets img')).toHaveCSS('object-fit', 'contain');
+    await expect(page.locator('#ctCoverSave')).toBeDisabled();
+    await expect(page.locator('.ct-cover-picker')).toContainText('não publica o evento nem abre as vendas');
+    await expect(page.locator('.ct-cover-picker input[type="file"], .ct-cover-picker input[type="url"]')).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.locator('.ct-cover-picker').evaluate(dialog => dialog.scrollWidth <= dialog.clientWidth)).toBe(true);
+    const screenshot = info.outputPath('approved-cover-preview.png');
+    await page.screenshot({path:screenshot,fullPage:true});
+    await info.attach('approved-cover-preview', {path:screenshot,contentType:'image/png'});
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.ct-cover-picker')).not.toBeVisible();
+    await expect(page.locator('[data-approved-event-cover="' + COVER_FIXTURE_EVENT + '"]')).toBeFocused();
+    expect(state.saves).toBe(0); expect(state.applied).toBe(false);
+    expect(state.calls).toEqual(['ctEventosOperacionalListarSeguraPROD','ctEventoCapaBibliotecaListarSeguraPROD']);
+  });
+
+  test('salvar bloqueia duplo clique e Escape; confirma somente capa', async ({page}) => {
+    let release; const state = {hold:new Promise(resolve => { release = resolve; })};
+    try {
+      await installCoverMock(page, state); await openCoverFixture(page);
+      await page.locator('#ctCoverAssets input[type="radio"]').check();
+      await page.locator('#ctCoverReason').fill('Aplicar arte aprovada neste evento');
+      await expect(page.locator('#ctCoverSave')).toBeEnabled();
+      await page.locator('#ctCoverSave').evaluate(button => { button.click(); button.click(); });
+      await expect.poll(() => state.saves).toBe(1);
+      await expect(page.locator('#ctCoverSave')).toBeDisabled();
+      await expect(page.locator('#ctCoverClose')).toBeDisabled();
+      await page.keyboard.press('Escape'); await expect(page.locator('.ct-cover-picker')).toBeVisible();
+      release();
+      await expect(page.locator('#ctCoverStatus')).toContainText('Capa salva. O status do evento e as vendas não foram alterados.');
+      await expect(page.locator('#ctCoverSave')).toBeDisabled();
+      await page.locator('#ctCoverClose').click(); await expect(page.locator('.ct-cover-picker')).not.toBeVisible();
+      expect(state.saves).toBe(1);
+      expect(state.calls).toEqual(['ctEventosOperacionalListarSeguraPROD','ctEventoCapaBibliotecaListarSeguraPROD','ctEventoCapaBibliotecaSalvarSeguraPROD']);
+    } finally { release(); }
+  });
+});
+// END isolated approved-cover scenarios.

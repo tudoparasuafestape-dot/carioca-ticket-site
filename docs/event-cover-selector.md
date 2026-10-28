@@ -32,6 +32,7 @@ Não executar testes contra produção. Não chamar RPC ERA, comprar, criar vend
 - `node tests/event-cover-picker.runtime.cjs`: PASS — 8 cenários sintéticos, nenhuma rede.
 - `node --check assets/event-cover-picker.js` e `git diff --check`: PASS.
 - Browser: bloqueado no lançamento do Chromium (`socket() failed: Operation not permitted`), antes de qualquer página/assertion. Script isolado preparado para 390/1366 px; nenhuma screenshot gerada e nenhuma validação visual alegada. Não houve contorno/escalonamento.
+- CI existente: dois cenários específicos da capa adicionados em `tests/e2e/producer-event-governance.spec.js`, selecionado nos projetos desktop/mobile. Imagem e RPC inteiramente simulados, captura anexada como `approved-cover-preview.png`. Nenhum workflow alterado; execução ainda pendente nesta revisão.
 - Testes backend e patches mínimos: entregues separadamente no pacote backend.
 
 Nenhum merge, deploy, RPC de produção ou vínculo do evento real foi executado nesta implementação.
