@@ -82,7 +82,7 @@ test.describe('Portal do Produtor — primeira pintura profissional', () => {
     await expect(page.locator('#workspaceMenu')).not.toHaveAttribute('open', '');
     await expect(page.locator('#workspaceMenuToggle')).toBeFocused();
     await page.locator('#workspaceMenuToggle').click();
-    await page.locator('.hello').click();
+    await page.locator('.top-title').click();
     await expect(page.locator('#workspaceMenu')).not.toHaveAttribute('open', '');
   });
 });

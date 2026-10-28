@@ -21,7 +21,7 @@ const root=path.resolve(__dirname,'..');
   await toggle.click();assert(await menu.evaluate(e=>e.open));
   await page.keyboard.press('Tab');assert(await menu.evaluate(e=>e.contains(document.activeElement)));
   await page.keyboard.press('Escape');assert(!(await menu.evaluate(e=>e.open)));assert(await toggle.evaluate(e=>e===document.activeElement));
-  await toggle.click();await page.locator('.hello').click();assert(!(await menu.evaluate(e=>e.open)));
+  await toggle.click();await page.locator('.top-title').click();assert(!(await menu.evaluate(e=>e.open)));
   await toggle.click();assert(await page.locator('#commercialPolicyLink').isHidden());
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'viewport overflow at '+width);
   await page.locator('#centralMobileLink').click({force:true});assert(await menu.evaluate(e=>e.open),'disabled handoff keeps disclosure open');

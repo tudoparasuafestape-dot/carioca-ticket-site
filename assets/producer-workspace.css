@@ -33,6 +33,7 @@
 .portal .event-name{font-size:clamp(21px,2.5vw,29px);letter-spacing:-.025em;overflow-wrap:anywhere}
 .portal .metric{background:#17191e;box-shadow:none;border-color:#303238}
 @media(max-width:760px){
+ .portal .topbar{position:static}
  .portal .topbar-inner{min-height:74px;gap:10px;padding:10px 0}
  .portal .top-title{font-size:14px}.portal .top-caption{font-size:10px}
  .portal .top-brand{gap:7px}.portal .top-logo-box,.portal .top-logo-image{width:34px;height:34px}
