@@ -71,6 +71,32 @@ async function screenshot(page, name, fullPage = false) {
   await capture(page, path.join(EVIDENCE, name + '.png'), fullPage);
 }
 
+test('home routes Herminho to validated v2 pages without changing legacy events', async ({ page }) => {
+  // Somente a identidade do evento é real: todos os demais dados são sintéticos.
+  const H='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
+  const special={...events[0],id:H,nome:'Evento simulado para conferir URLs aprovadas'};
+  const state=await fixture(page,{result:(_attempt,nowMs)=>({
+    sucesso:true,...temporalEnvelope('home',nowMs),eventos:[special,events[1]]
+  })});
+  await loaded(page);
+  const card=page.locator('.catalog-card[data-event-id="'+H+'"]');
+  const detail='/evento-v2/?evento='+encodeURIComponent(H);
+  const buy='/checkout-v2/?evento='+encodeURIComponent(H);
+  await expect(card.locator('.catalog-photo')).toHaveAttribute('href',detail);
+  await expect(card.locator('.catalog-title a')).toHaveAttribute('href',detail);
+  await expect(card.locator('.event-secondary')).toHaveAttribute('href',detail);
+  await expect(card.locator('.btn-primary')).toHaveAttribute('href',buy);
+  const legacy=page.locator('.catalog-card[data-event-id="'+events[1].id+'"]');
+  await expect(legacy.locator('.event-secondary')).toHaveAttribute('href','/evento/?evento='+events[1].id);
+  await expect(legacy.locator('.btn-primary')).toHaveAttribute('href','/checkout/?evento='+events[1].id);
+  const shareSource=fs.readFileSync(path.join(ROOT,'assets/public-share.js'),'utf8');
+  expect(shareSource).toContain('url:eventPublicUrl(card.dataset.eventId)');
+  expect(shareSource).toContain('url:eventPublicUrl(id)');
+  expect(shareSource).toContain('function eventPublicUrl(id)');
+  expect(state.errors).toEqual([]);
+  expect(state.blocked).toEqual([]);
+});
+
 test('initial dark theme, explicit system changes and preference persistence', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   const state = await fixture(page);
