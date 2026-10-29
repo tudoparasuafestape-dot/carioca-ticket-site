@@ -1,5 +1,27 @@
 # Padrão de compartilhamento com capa por evento — proposta de implementação (LAB)
 
+## Estado da implementação de laboratório — 29/10/2026
+
+O gerador **já foi implementado** em `scripts/generate-event-social-previews.mjs` e testado por `tests/event-social-previews.offline.mjs`. A rotina produz somente arquivos locais, rejeitando escrita dentro do checkout do repositório e sem qualquer acesso a rede, Apps Script ou Asaas. O CI `event-social-preview-lab.yml` executa os testes isolados.
+
+**Uso sintético somente em ambiente de laboratório:**
+
+```bash
+node tests/event-social-previews.offline.mjs
+node scripts/generate-event-social-previews.mjs /tmp/manifesto-aprovado.json /tmp/ct-social-previews
+```
+
+O manifesto aceita um array de objetos contendo exclusivamente:
+`fonte='CT_PUBLIC_APPROVAL_V1'`, `eventoId`, `titulo`, `descricao`,
+`imagemSocialHttps`, `destinoPublicoHttps`, `publicado=true`,
+`modoAcesso='PUBLICO'`, `elegivel=true` e `gateVendasAtivo=true`.
+
+**Não confundir campos do manifesto com autenticação**: qualquer pessoa pode escrever esse JSON; a etapa seguinte precisa emitir o manifesto somente por meio de validação autoritativa, sem entradas manuais e com trilha de auditoria. O gerador aceita apenas imagens JPEG/PNG em `https://cariocaticket.com.br/assets/eventos/` e destinos do mesmo domínio nas rotas `/evento/` ou `/evento-v2/`, com ID conferido.
+
+Foi adicionada uma regressão usando **apenas como exemplo offline** o asset estático JPEG `assets/eventos/herminho-tbt-20261107-a2f84c198ed5b283.jpg` existente no repositório. Isso não representa uma liberação de publicação real nem comprova resposta HTTP pública da imagem.
+
+**Ainda NÃO está integrado ao cadastro/publicação automática e não existe nova URL pública de compartilhamento.** Nenhum arquivo em `/compartilhar/` é gerado no site atual.
+
 ## Defeito reproduzido / explicação
 - `evento-v2/index.html` é uma página estática, com título inicial genérico e sem `og:image` específico de evento. O navegador carrega a capa posteriormente via JavaScript; crawlers de WhatsApp e de redes sociais não dependem dessa renderização.
 - `evento/index.html` tem Open Graph genérico apontando para imagem institucional, portanto não supre a prévia por evento.
