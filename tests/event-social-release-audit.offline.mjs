@@ -18,7 +18,8 @@ function workspace(fn){
 }
 function candidate(dir){
   const output=path.join(dir,'candidate');
-  buildSealedCandidate(fixture.attestation,output,{now:NOW,env});
+  const sealed=buildSealedCandidate(fixture.attestation,output,{now:NOW,env});
+  assert.equal(sealed.auditedStatus,'LAB_AUDITED_NOT_PUBLISHED');
   return output;
 }
 function audit(dir,att=fixture.attestation,settings={}){
