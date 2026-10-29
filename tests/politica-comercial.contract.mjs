@@ -91,6 +91,35 @@ for(const s of [
   if(!checkout.includes(s))throw new Error('Checkout sem gate de transparencia comercial: '+s);
 }
 
+// Regressão P0: cotação pendente não pode parecer preço final nem permitir cobrança.
+for(const token of [
+  'id="feeRetry"',
+  "checkoutUiWrite(el.summaryPrice,'Calculando total...')",
+  "checkoutUiWrite(el.feeTotal,'Calculando total...')",
+  "checkoutUiWrite(el.summaryPrice,'Total indisponível')",
+  "checkoutUiWrite(el.feeTotal,'Total indisponível')",
+  "el.payButton.disabled=true;",
+  "el.payButton.disabled=!catalogLease.isFresh()||(state.politicaComercialAtiva&&state.feeReady!==true)",
+  "payload.politicaSubtotalVisto=feeConsent.subtotal",
+  "payload.politicaTotalVisto=feeConsent.total",
+  "el.feeRetry.onclick=function()"
+]){
+  if(!checkout.includes(token))throw new Error('Checkout P0 fee UX sem trava: '+token);
+}
+const eventPage=read('evento-v2/index.html');
+for(const token of [
+  'function retryInitialHerminho()',
+  'initialRetryCount>=1',
+  "if(retryInitialHerminho())return;",
+  'if(!retryInitialHerminho())showError(',
+  'staleMaxAgeMs:600000',
+  "eventRpc.ctCheckoutPublicoCarregarEventoPROD(state.eventoId)",
+  "precoInicial=String(precoInicial)+' + taxas'",
+  "eventRpc.ctEventoPublicoCarregarPROD(state.eventoId)"
+]){
+  if(!eventPage.includes(token))throw new Error('Evento P0 sem recuperacao/aviso: '+token);
+}
+
 const finance=read('produtor/financeiro/index.html');
 if(!finance.includes('href="/produtor/politica-comercial/"'))throw new Error('Financeiro produtor sem acesso a politica comercial');
 

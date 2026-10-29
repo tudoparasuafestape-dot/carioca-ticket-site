@@ -895,6 +895,10 @@
           });
           if(menorPrecoCatalogo!==null)precoInicial=money(menorPrecoCatalogo);
         }
+        // O ingresso exibido é o valor-base; a taxa é calculada pelo backend no checkout.
+        if(state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'&&precoInicial){
+          precoInicial=String(precoInicial)+' + taxas';
+        }
         display('startingPrice',precoInicial,'Consulte');
         ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){$(id).removeAttribute('aria-disabled');});
         var buy='/checkout-v2/?evento='+encodeURIComponent(state.eventoId)+queryCampanha();
@@ -914,13 +918,14 @@
             if(menor===null||p<menor)menor=p;
           });
           var lots=(t.lotes||[]).map(function(l){
-            return '<span class="lot" lang="pt-BR">'+esc(l.nome)+' · '+esc(l.preco)+'</span>';
+            var avisoTaxa=state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'?' + taxas':'';
+            return '<span class="lot" lang="pt-BR">'+esc(l.nome)+' · '+esc(l.preco)+avisoTaxa+'</span>';
           }).join('');
           tickets.push(
             '<div class="ticket">'+
               '<div class="ticket-top">'+
                 '<div><h3 lang="pt-BR">'+esc(t.nome)+'</h3><p lang="'+(t.descricao?'pt-BR':locale())+'">'+esc(t.descricao||tr('Ingresso para este evento.'))+'</p></div>'+
-                '<div class="ticket-price"><small>'+esc(tr('a partir de'))+'</small><strong>'+(menor===null?esc(tr('Consulte')):money(menor))+'</strong></div>'+
+                '<div class="ticket-price"><small>'+esc(tr('a partir de'))+'</small><strong>'+(menor===null?esc(tr('Consulte')):money(menor)+(state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'?' + taxas':''))+'</strong></div>'+
               '</div>'+
               '<div class="lots">'+lots+'</div>'+
             '</div>'
@@ -995,10 +1000,22 @@
         }
       }
 
+      // P0 Herminho: uma falha transitória no primeiro catálogo não pode exibir
+      // "Evento indisponível" por alguns segundos antes de recarregar.
+      // Mantém o loading e uma única repetição; falhas permanentes seguem fechadas.
+      var initialRetryCount=0;
+      function retryInitialHerminho(){
+        if(state.eventoId!=='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'||
+           state.temporalInitialRendered||initialRetryCount>=1)return false;
+        initialRetryCount+=1;
+        setTimeout(function(){load(false);},120);
+        return true;
+      }
+
       var loadRunning=false;
 
       var eventRefreshTimer=null,eventRefreshWanted=false,eventRequestStarted=-Infinity;
-      var eventLease=window.CTPublicCatalogClock&&window.CTPublicCatalogClock.eligibilityContract==='CT_PUBLIC_ELIGIBILITY_EXCLUSIVE_V1'&&window.CTPublicCatalogClock.create({maxAgeMs:300000,onExpire:function(reason){
+      var eventLease=window.CTPublicCatalogClock&&window.CTPublicCatalogClock.eligibilityContract==='CT_PUBLIC_ELIGIBILITY_EXCLUSIVE_V1'&&window.CTPublicCatalogClock.create({maxAgeMs:300000,staleMaxAgeMs:600000,onExpire:function(reason){
         staleEventOffer();if(reason==='expired')scheduleEventRefresh();
       }});
       var eventNotice=document.createElement('p');eventNotice.id='eventTemporalNotice';eventNotice.setAttribute('role','status');
@@ -1114,16 +1131,20 @@
               if(!res||res.sucesso!==true){
                 state.data=null;
                 if(eventLease)eventLease.invalidate('unavailable');
+                // Respostas temporárias da leitura pública merecem uma única
+                // nova tentativa, sem confundir o comprador com "evento indisponível".
+                if((!res||res.temporario===true)&&retryInitialHerminho())return;
                 showError(res&&res.mensagem?res.mensagem:'Este evento não está disponível no momento.');
                 return;
               }
               if(!validEnvelope){
                 if(eventLease)eventLease.invalidate('unavailable');
                 if(availabilityOnly)eventTemporalFailure();
-                else showError('Este evento não está disponível no momento.',true);
+                else if(!retryInitialHerminho())showError('Não foi possível validar a disponibilidade do evento agora. Tente novamente.',true);
                 return;
               }
               state.temporalFailed=false;
+              initialRetryCount=0;
               var firstRender=!state.temporalInitialRendered;
               try{
                 if(availabilityOnly&&!firstRender&&!state.temporalNeedsFullRender)renderCommercial(res);
@@ -1139,6 +1160,7 @@
             .withFailureHandler(function(error){
               finishEventLoad();if(eventLease)eventLease.invalidate('unavailable');
               if(availabilityOnly){eventTemporalFailure();return;}
+              if(retryInitialHerminho())return;
               var code=error&&error.code;
               if(['CT_PUBLIC_RPC_TIMEOUT','CT_PUBLIC_RPC_REMOTE_ERROR','CT_PUBLIC_RPC_SUBMIT_ERROR'].indexOf(code)<0)code='CT_PUBLIC_RPC_ERROR';
               if(window.console&&typeof console.warn==='function')console.warn('[CT_EVENT_LOAD]',{
