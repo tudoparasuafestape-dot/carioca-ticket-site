@@ -4,6 +4,10 @@ on:
     paths:
       - 'scripts/generate-event-social-previews.mjs'
       - 'tests/event-social-previews.offline.mjs'
+      - 'tests/event-social-public-catalog.offline.mjs'
+      - 'tests/event-social-release.offline.mjs'
+      - 'scripts/derive-event-social-manifest.mjs'
+      - 'scripts/build-event-social-release-lab.mjs'
       - 'docs/architecture/event-social-preview-publication.md'
       - '.github/workflows/event-social-preview-lab.yml'
   workflow_dispatch:
@@ -19,4 +23,7 @@ jobs:
         with:
           node-version: '22'
       - name: Validate static Open Graph generation and denial cases
-        run: node tests/event-social-previews.offline.mjs
+        run: |
+          node tests/event-social-previews.offline.mjs
+          node tests/event-social-public-catalog.offline.mjs
+          node tests/event-social-release.offline.mjs
