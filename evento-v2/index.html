@@ -1131,6 +1131,9 @@
               if(!res||res.sucesso!==true){
                 state.data=null;
                 if(eventLease)eventLease.invalidate('unavailable');
+                // Respostas temporárias da leitura pública merecem uma única
+                // nova tentativa, sem confundir o comprador com "evento indisponível".
+                if((!res||res.temporario===true)&&retryInitialHerminho())return;
                 showError(res&&res.mensagem?res.mensagem:'Este evento não está disponível no momento.');
                 return;
               }
