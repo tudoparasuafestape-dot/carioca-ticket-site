@@ -168,7 +168,7 @@ for(const name of ['buyHero','buySide','buyMobile','buyClosing']){
   assert.equal(fx.nodes[name].href,'/checkout-v2/?evento='+encodeURIComponent(H),'checkout continua com gate de oferta e preço');
 }
 assert.match(fx.sandbox.eventNotice.textContent,/confirmados no checkout seguro/);
-assert(eventPage.includes('if(canNavigateHerminhoCheckout()){scheduleEventRefresh();return;}'),
+assert.ok(eventPage.includes('if(canNavigateHerminhoCheckout()){scheduleEventRefresh();return;}'),
   'guarda de eventos permite somente a navegação quando há um catálogo previamente válido');
 fx.doc.visibilityState='visible';fx.events.document.visibilitychange();fx.events.window.focus();
 assert.equal(fx.stats().invalidations,1,'focus duplicado não invalida novamente');
@@ -192,9 +192,9 @@ notValidated.doc.visibilityState='hidden';notValidated.events.document.visibilit
 for(const name of ['buyHero','buySide','buyMobile','buyClosing']){
   assert.equal(notValidated.nodes[name].href,undefined,'a primeira leitura não autorizada não abre checkout');
 }
-assert(eventPage.includes("event.preventDefault();staleEventOffer();scheduleEventRefresh();"),
+assert.ok(eventPage.includes("event.preventDefault();staleEventOffer();scheduleEventRefresh();"),
   'outros eventos e contexto sem lote mantêm bloqueio temporal');
-assert(!eventPage.includes('ctCheckoutPixPublicoIniciarPROD('),
+assert.ok(!eventPage.includes('ctCheckoutPixPublicoIniciarPROD('),
   'página de evento nunca cria pagamento');
 
 const legacy=resumeFixture('EVT-SYNTHETIC-LEGACY');
