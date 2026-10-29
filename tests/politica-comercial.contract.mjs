@@ -126,4 +126,61 @@ if(!finance.includes('href="/produtor/politica-comercial/"'))throw new Error('Fi
 if(master.includes('/transfers')||producer.includes('/transfers'))throw new Error('Politica comercial nao pode transferir dinheiro');
 if(master.includes('ctAsaasProvider')||producer.includes('ctAsaasProvider'))throw new Error('UI comercial nao pode acionar provider');
 
+
+// Regressão offline da retomada do evento após troca de aba: sem tráfego real.
+const eventPage=read('evento-v2/index.html');
+const H='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
+const start=eventPage.indexOf('      function staleEventOffer(){');
+const end=eventPage.indexOf('      function load(availabilityOnly){',start);
+if(start<0||end<0)throw new Error('Funções temporais da página não encontradas');
+const vm=await import('node:vm');
+const assert=await import('node:assert/strict');
+function resumeFixture(id){
+  const events={window:{},document:{}},timer=[],nodes={};
+  for(const name of ['buyHero','buySide','buyMobile','buyClosing']){
+    nodes[name]={href:'/checkout-v2/',attributes:{href:'/checkout-v2/'},removeAttribute(k){delete this.attributes[k];if(k==='href')delete this.href;},setAttribute(k,v){this.attributes[k]=v}};
+  }
+  nodes.startingPrice={textContent:'R$ 20,00 + taxas'};
+  nodes.tickets={textContent:'Individual — Antecipado'};
+  const doc={visibilityState:'visible',addEventListener(name,fn){events.document[name]=fn}};
+  let fresh=true,invalidations=0,loads=0;
+  const sandbox={
+    state:{eventoId:id,temporalInitialRendered:true,data:{sucesso:true}},
+    document:doc, window:{CTAdvanceSales:null,addEventListener(name,fn){events.window[name]=fn}},
+    eventLease:{isFresh:()=>fresh,invalidate(){fresh=false;invalidations++}},
+    eventNotice:{textContent:''},eventRetry:{hidden:false},
+    $:name=>nodes[name],tr:x=>x,
+    loadRunning:false,eventRefreshWanted:false,eventRefreshTimer:null,eventRequestStarted:0,
+    performance:{now:()=>1000},
+    setTimeout(fn,ms){const t={fn,ms};timer.push(t);return t},
+    clearTimeout(t){const i=timer.indexOf(t);if(i>=0)timer.splice(i,1)},
+    load(availabilityOnly){assert.equal(availabilityOnly,true);loads++}
+  };
+  vm.runInNewContext(eventPage.slice(start,end),sandbox,{timeout:1000});
+  return{sandbox,nodes,doc,events,timer,setFresh(v){fresh=v},stats(){return{loads,invalidations}}};
+}
+const fx=resumeFixture(H);
+fx.doc.visibilityState='hidden';fx.events.document.visibilitychange();
+assert.equal(fx.stats().invalidations,1,'a primeira suspensão invalida a autorização');
+assert.equal(fx.nodes.startingPrice.textContent,'R$ 20,00 + taxas','a vitrine informativa não vira Consulte');
+assert.equal(fx.nodes.tickets.textContent,'Individual — Antecipado');
+for(const name of ['buyHero','buySide','buyMobile','buyClosing']){
+  assert.equal(fx.nodes[name].attributes['aria-disabled'],'true','links bloqueados enquanto revalida');
+  assert.equal(fx.nodes[name].href,undefined,'nenhum link de compra habilitado sem oferta fresca');
+}
+fx.doc.visibilityState='visible';fx.events.document.visibilitychange();fx.events.window.focus();
+assert.equal(fx.stats().invalidations,1,'focus duplicado não invalida novamente');
+assert.equal(fx.timer.length,1,'um único refresco pendente');
+assert.equal(fx.timer[0].ms,50,'sem espera artificial de 5 segundos');
+fx.timer.shift().fn();assert.equal(fx.stats().loads,1,'reconsulta catálogo ao retornar');
+fx.setFresh(true);fx.events.window.focus();
+assert.equal(fx.stats().invalidations,1,'oferta recém validada preservada no focus');
+assert.equal(fx.timer.length,0,'sem segunda consulta em foco duplicado');
+
+const legacy=resumeFixture('EVT-SYNTHETIC-LEGACY');
+legacy.events.window.focus();
+assert.equal(legacy.stats().invalidations,1,'outras páginas preservam revalidação anterior');
+assert.equal(legacy.timer.length,1);
+assert.equal(legacy.timer[0].ms,4000,'intervalo legado preservado fora de Herminho');
+
 console.log('CT_SITE_POLITICA_COMERCIAL_CONTRACT_OK');
