@@ -45,6 +45,10 @@ function deriveApprovedManifest(snapshot,{now=Date.now()}={}){
   for(const event of snapshot.eventos){
     if(!event||typeof event!=='object'||!ID.test(event.id)||ids.has(event.id))deny('ID de evento invalido/duplicado');
     ids.add(event.id);
+    // Explicit deny-by-default even for signed catalogs: no private, restricted,
+    // inactive or unpublished event may be transformed into a public preview.
+    if(event.modoAcesso!=='PUBLICO'||event.status!=='ATIVO')
+      deny('evento sem acesso PUBLICO e status ATIVO explicitos');
     // Require per-event verified temporal eligibility. Legacy entries without an
     // explicit end are intentionally rejected (do not leak private/ended events).
     const t=event.temporal;
