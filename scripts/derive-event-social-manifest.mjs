@@ -57,7 +57,10 @@ function deriveApprovedManifest(snapshot,{now=Date.now()}={}){
     const nome=text(event.nome,220,'nome do evento');
     const visual=event.visual||{};
     const cover=approvedImage(visual.capaUrl||visual.posterUrl);
-    const detail=HOST+'/evento-v2/?evento='+encodeURIComponent(event.id);
+    // Route parity with the currently approved public homepage. Other events
+    // continue using their existing first-party detail page until homologated.
+    const v2=event.id==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
+    const detail=HOST+(v2?'/evento-v2/?evento=':'/evento/?evento=')+encodeURIComponent(event.id);
     // Do not import anything confidential, arbitrary HTML, payment details or
     // untrusted links from administrative objects.
     const summary=[
