@@ -441,3 +441,6 @@
 /* Keep the home logo link comfortably reachable on touch screens. */
 .ct-home header .brand { min-height:44px; min-width:44px; }
 
+
+/* Exact approved Herminho art only; other events keep their existing layout. */
+.ct-home .catalog-photo:has(img[src="https://cariocaticket.com.br/assets/eventos/herminho-horizontal-905fe9374a491192.png"]) { aspect-ratio:1600/838; }
