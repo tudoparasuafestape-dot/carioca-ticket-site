@@ -12,6 +12,13 @@ Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>log.voices,
 Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__clipboard=text;}}});
 Object.defineProperty(navigator,'share',{value:async data=>{window.__share=data;}});
 })()"""
+def wait_expression(page, expression, timeout=30000):
+ import time
+ deadline=time.monotonic()+timeout/1000
+ while time.monotonic()<deadline:
+  if page.evaluate(expression):return
+  page.wait_for_timeout(50)
+ raise AssertionError('Timed out waiting for: '+expression)
 def run(name,fn):
  try:fn();results.append({'test':name,'status':'passed'})
  except Exception as e:results.append({'test':name,'status':'failed','error':str(e),'traceback':traceback.format_exc()});print('FAIL',name,traceback.format_exc())
@@ -67,9 +74,9 @@ with sync_playwright() as p:
      assert page.locator('#shareHero').evaluate('n=>n===document.activeElement')
      for i in range(3):page.locator('#shareHero').click();page.locator('#shareMenuClose').click()
      page.locator('#shareHero').click();page.locator('#copyLinkAction').click()
-     page.wait_for_function("window.__clipboard==='https://cariocaticket.com.br/compartilhar/PREVIEW-EVENT/'")
+     wait_expression(page, "window.__clipboard==='https://cariocaticket.com.br/compartilhar/PREVIEW-EVENT/'")
      page.locator('#shareHero').click();page.locator('#shareNativeAction').click()
-     page.wait_for_function("window.__share && window.__share.url==='https://cariocaticket.com.br/compartilhar/PREVIEW-EVENT/'")
+     wait_expression(page, "window.__share && window.__share.url==='https://cariocaticket.com.br/compartilhar/PREVIEW-EVENT/'")
      page.locator('#directions-copy').click();assert 'Rua de teste, 123' in page.evaluate('window.__clipboard')
      page.locator('#description-listen').click();page.wait_for_timeout(50)
      assert page.evaluate('__speech.said[0].lang')=='pt-BR'
@@ -139,10 +146,10 @@ with sync_playwright() as p:
    assert before==page.locator('#buyHero').get_attribute('href')
    assert not page.locator('#campaignNotice').inner_text().startswith('Você')
    page.locator('#shareHero').click();page.locator('#copyLinkAction').click()
-   assert page.evaluate('window.__clipboard')==ORIGIN+'/evento-v2/?evento=PREVIEW-EVENT'
+   wait_expression(page, "window.__clipboard==='https://cariocaticket.com.br/compartilhar/PREVIEW-EVENT/'")
    page.go_back();page.locator('#app').wait_for(state='visible')
    print("CONTINUITY_BACK",page.evaluate("({locale:CTPublicI18n.getLocale(),stored:localStorage.getItem('ct-home-locale'),seed:sessionStorage.getItem('__fixtureLocaleSeeded'),selected:document.getElementById('event-language').value,url:location.href})"))
-   page.wait_for_function("document.getElementById('event-language').value==='zh-Hans'",timeout=5000)
+   wait_expression(page, "document.getElementById('event-language').value==='zh-Hans'",timeout=5000)
    assert page.locator('#event-language').input_value()=='zh-Hans',page.evaluate("({locale:CTPublicI18n.getLocale(),stored:localStorage.getItem('ct-home-locale'),seed:sessionStorage.getItem('__fixtureLocaleSeeded'),url:location.href})")
    assert not errors,errors
    assert not requests,requests
