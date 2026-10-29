@@ -1,0 +1,47 @@
+{
+  "fixtureOnly": true,
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA3emBi49ybCPvl6ugyCtmd8DuC+IJ2jYw9W6UvXJCuZo=\n-----END PUBLIC KEY-----\n",
+  "attestation": {
+    "version": 1,
+    "issuer": "ct-public-catalog-authoritative",
+    "audience": "ct-social-preview-release-v1",
+    "keyId": "fixture-contract-v1",
+    "revision": 41,
+    "issuedAt": "2026-10-29T16:14:22.000Z",
+    "expiresAt": "2026-10-29T16:15:22.000Z",
+    "snapshot": {
+      "sucesso": true,
+      "temporalVersion": 1,
+      "eligibilityContract": "CT_PUBLIC_ELIGIBILITY_EXCLUSIVE_V1",
+      "serverNow": "2026-10-29T16:14:20.000Z",
+      "temporalEvaluatedAt": "2026-10-29T16:14:19.000Z",
+      "validUntil": "2026-10-29T16:15:45.000Z",
+      "nextTransitionAt": null,
+      "cacheStale": false,
+      "eventos": [
+        {
+          "id": "EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A",
+          "nome": "TBT do Astro — Aniversário de Herminho",
+          "status": "ATIVO",
+          "modoAcesso": "PUBLICO",
+          "visual": {
+            "capaUrl": "https://cariocaticket.com.br/assets/eventos/herminho-tbt-20261107-a2f84c198ed5b283.jpg"
+          },
+          "data": "07/11/2026",
+          "horario": "20h",
+          "local": "Clube 10 de Novembro",
+          "cidade": "Recife",
+          "uf": "PE",
+          "temporal": {
+            "state": "TEMPORAL_V1",
+            "temporalVersion": 1,
+            "fusoHorario": "America/Recife",
+            "inicioEm": "2026-10-01T12:00:00.000Z",
+            "fimEm": "2026-11-08T06:00:00.000Z"
+          }
+        }
+      ]
+    },
+    "signature": "wKysYZUdD3IFWono2aOK9bFHPD8NP0gm1rROrOjdQurWPEacb2X3nH35dgUJAjbSguiKfP_V80TNUse2TG6TDA"
+  }
+}
