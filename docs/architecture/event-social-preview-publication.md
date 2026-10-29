@@ -29,6 +29,22 @@ O construtor offline direto `build-event-social-release-lab.mjs` permanece dispo
 
 **Ainda falta para automação real:** implementar/exportar o contrato de snapshot público no backend PROD com testes, extrair resposta por canal confiável, associar a atualização à publicação/despublicação, ativar geração/revogação no pipeline controlado e verificar conteúdo bruto via HTTPS e cache das redes. **Nenhuma destas operações foi ativada em produção.**
 
+## Próxima prioridade realizada — auditoria de prévias antes da publicação (LAB)
+
+Foi implementado o componente de **aceitação pré-publicação** em `scripts/audit-event-social-release-lab.mjs`, com regressões isoladas em `tests/event-social-release-audit.offline.mjs`.
+
+A função `auditEventSocialRelease(candidate, attestation, {now, env, previousRevision})`:
+
+1. **Verifica primeiro o atestado Ed25519**, sua validade, identidade, revisão e o contrato temporal autoritativo — **não aceita manifesto local como prova de permissão**.
+2. Compara `manifest.json`, `release.json` e a listagem **completa** das páginas geradas contra o conjunto de eventos autorizados. Bloqueia arquivos adicionais, páginas antigas, diretórios não previstos e links divergentes.
+3. Exige que o HTML bruto de cada prévia seja **idêntico** ao renderizado com o manifesto validado. Isso verifica `og:title`, `og:description`, `og:image`, URL de compartilhamento, Twitter Card e destino da página real, sem depender de JavaScript no navegador.
+4. Confere a existência física e assinatura JPEG/PNG da capa aprovada em `assets/eventos`; bloqueia symlinks, imagem fora da pasta, tamanho suspeito e conteúdo adulterado. A capa nunca é substituída por imagem inventada.
+5. Para um catálogo público autorizado **vazio**, exige ausência completa de páginas em `compartilhar/`, evitando reaproveitar eventos despublicados.
+
+O workflow `event-social-preview-lab.yml` executa a nova suíte offline. **A auditoria só retorna `LAB_AUDITED_NOT_PUBLISHED` e não faz deploy.** Ela ainda **não comprova HTTP 200 da imagem no domínio público**, nem como um serviço específico (WhatsApp/Telegram/Facebook) tratará cache e prévias. Isso deverá ser validado após a implantação controlada e aprovação.
+
+**Uso previsto:** assinatura por emissor autorizado → release candidato completo → auditoria de conteúdo OG e capas → revisão humana/homologação → autorização explícita de merge/deploy → prova HTTP e teste de compartilhamento. O backend PROD, checkout, Pix, QR, preços e ingressos não sofreram alterações.
+
 ## Estado da implementação de laboratório — 29/10/2026
 
 O gerador **já foi implementado** em `scripts/generate-event-social-previews.mjs` e testado por `tests/event-social-previews.offline.mjs`. A rotina produz somente arquivos locais, rejeitando escrita dentro do checkout do repositório e sem qualquer acesso a rede, Apps Script ou Asaas. O CI `event-social-preview-lab.yml` executa os testes isolados.
