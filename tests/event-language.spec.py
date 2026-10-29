@@ -67,9 +67,9 @@ with sync_playwright() as p:
      assert page.locator('#shareHero').evaluate('n=>n===document.activeElement')
      for i in range(3):page.locator('#shareHero').click();page.locator('#shareMenuClose').click()
      page.locator('#shareHero').click();page.locator('#copyLinkAction').click()
-     assert page.evaluate('window.__clipboard')==f'{ORIGIN}/{route}/?evento=PREVIEW-EVENT'
+     page.wait_for_function("window.__clipboard==='https://cariocaticket.com.br/compartilhar/PREVIEW-EVENT/'")
      page.locator('#shareHero').click();page.locator('#shareNativeAction').click()
-     assert page.evaluate('window.__share.url')==f'{ORIGIN}/{route}/?evento=PREVIEW-EVENT'
+     page.wait_for_function("window.__share && window.__share.url==='https://cariocaticket.com.br/compartilhar/PREVIEW-EVENT/'")
      page.locator('#directions-copy').click();assert 'Rua de teste, 123' in page.evaluate('window.__clipboard')
      page.locator('#description-listen').click();page.wait_for_timeout(50)
      assert page.evaluate('__speech.said[0].lang')=='pt-BR'

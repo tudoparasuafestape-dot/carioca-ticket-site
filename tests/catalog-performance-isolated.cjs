@@ -27,6 +27,7 @@ function warmSources() {
   for (const variant of ['before', 'after']) for (const file of files) {
     // These new controls did not exist in the historical catalog baseline.
     if(variant==='before'&&(/^assets\/public-privacy\.(js|css)$/.test(file)||file==='assets/public-catalog-clock.js'))continue;
+    if(variant==='before'&&file==='assets/public-share-index.js'&&!source('before','index.html').toString('utf8').includes('/assets/public-share-index.js'))continue;
     source(variant,file);
   }
 }
@@ -61,6 +62,8 @@ async function fixture(browser, variant, count, options = {}) {
   await context.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
     if (url.origin === ORIGIN && request.method() === 'GET') {
+      if (url.pathname === '/assets/whatsapp-brand.svg') return route.fulfill({contentType:'image/svg+xml',body:cover});
+      if (url.pathname === '/assets/social-event-pages.json') return route.fulfill({contentType:'application/json',body:JSON.stringify({schema:'CT_PUBLISHED_SHARE_INDEX_V1',revision:'a'.repeat(64),generatedAt:new Date().toISOString(),entries:[],fallbacks:rows(count).map(e=>({eventId:e.id,detailUrl:'https://cariocaticket.com.br/evento/?evento='+encodeURIComponent(e.id),reason:'NO_VERIFIABLE_END'}))})});
       if (url.pathname === '/away') return route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Fixture</title><a href="/">Home</a>' });
       // The unchanged home prefetches this document. Keep it a blank fixture;
       // never load or execute the producer portal in a catalog benchmark.
@@ -260,6 +263,7 @@ async function regression(browser) {
   const retainedShareIndex = shareIds.indexOf(retainedShareId);
   assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), shareIds[0]);
   await share.page.locator('.catalog-card:not([inert]) [data-public-share="event"] button').click();
+  await share.page.waitForFunction(() => shareCalls.length === 1);
   await filter(share.page, 'Recife'); await ready(share.page, 7);
   assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), '0');
   assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
@@ -355,4 +359,5 @@ async function regression(browser) {
     console.log('PASS: isolated catalog benchmark and ' + report.regressions + ' regression groups; zero forwarded requests.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
 

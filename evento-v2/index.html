@@ -774,7 +774,7 @@
 
         try{
           await copiarLinkCompartilhamento(url);
-          mostrarShareToast(url==='https://cariocaticket.com.br/'?'Link da Carioca Ticket copiado.':'Link do evento copiado!');
+          mostrarShareToast('Link do evento copiado!');
         }catch(_){
           mostrarShareToast('Não foi possível copiar. Tente novamente.');
         }
@@ -788,7 +788,7 @@
         fecharMenuCompartilhamento();
         try{
           await copiarLinkCompartilhamento(url);
-          mostrarShareToast(url==='https://cariocaticket.com.br/'?'Link da Carioca Ticket copiado.':'Link do evento copiado!');
+          mostrarShareToast('Link do evento copiado!');
         }catch(_){
           mostrarShareToast('Não foi possível copiar. Tente novamente.');
         }

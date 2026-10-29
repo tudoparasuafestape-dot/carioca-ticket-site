@@ -53,6 +53,8 @@ async function fixture(browser, route, mobile, options = {}) {
   const e = catalog(event).evento, destination = [e.local, e.endereco, e.cidade, e.uf, 'Brasil'].join(', ');
   fixtures.resources['https://maps.google.com/maps?output=embed&q=' + encodeURIComponent(destination)] = { contentType: 'text/html', body: '<!doctype html><p>Mapa simulado offline</p>' };
   const guard = await installIsolatedNetwork(context, { root: ROOT, origin: ORIGIN, ...fixtures });
+  // Registered after generic static guard: fulfill this exact synthetic GET only.
+  await context.route(ORIGIN+'/assets/social-event-pages.json', async route=>{assert.equal(route.request().method(),'GET');await route.fulfill({contentType:'application/json',body:JSON.stringify({schema:'CT_PUBLISHED_SHARE_INDEX_V1',revision:'a'.repeat(64),generatedAt:new Date(FIXTURE_NOW).toISOString(),entries:[],fallbacks:[]})});});
   await page.goto(ORIGIN + route + (route === '/' ? '' : '?evento=' + event));
   if (route.includes('checkout')) await page.locator('#loading').waitFor({ state: 'hidden' });
   else if (route !== '/') await page.locator('#app').waitFor({ state: 'visible' });
@@ -78,8 +80,21 @@ async function assertEndedPresentation(page) {
   assert(await page.locator('.secure-list').isHidden());
   assert(!/portaria|R\$\s*30|garanta|comprar|compre agora|escolha seu ingresso|pague com|pronto para viver/i.test(await page.locator('body').innerText()));
   assert((await page.locator('#longDescription').textContent()).includes('edição de 11/10/2026'));
-  const message = new URL(await page.locator('#shareWhatsAppAction').getAttribute('href')).searchParams.get('text');
-  assert(message.includes('Evento encerrado'));
+  // Event shares resolve a fresh index on activation; no stale precomputed URL.
+  assert.equal(await page.locator('#shareWhatsAppAction').getAttribute('href'), null);
+  assert.equal(await page.locator('#shareWhatsAppAction').getAttribute('role'), 'button');
+  assert.equal(await page.locator('#shareWhatsAppAction').getAttribute('tabindex'), '0');
+  // Exercise actual asynchronous consumer against an empty published fixture.
+  // The popup is a local double: no WhatsApp navigation can escape this test.
+  await page.evaluate(()=>{window.__closedShare={navigated:[],closed:0};window.open=()=>({opener:null,document:{createElement:t=>document.createElement(t),head:document.createElement('head')},location:{replace:u=>window.__closedShare.navigated.push(u)},close:()=>window.__closedShare.closed++});});
+  await page.locator('#shareHero').click();
+  await page.locator('#shareWhatsAppAction').click();
+  await page.waitForFunction(()=>window.__closedShare.closed===1);
+  assert.deepEqual(await page.evaluate(()=>window.__closedShare.navigated),[]);
+  assert.equal(await page.locator('#shareWhatsAppAction').getAttribute('aria-busy'),null);
+  assert.match(await page.locator('.ct-whatsapp-control [role="status"]').innerText(),/indisponível|unavailable|No se puede|暂时无法/);
+  await page.locator('#shareMenuClose').click();
+
 }
 async function aliasFixture(browser, js) {
   const context = await browser.newContext({ offline: true, serviceWorkers: 'block', javaScriptEnabled: js, viewport: { width: 390, height: 900 } });
@@ -89,6 +104,8 @@ async function aliasFixture(browser, js) {
   const fixtures = createFixtures({ now });
   fixtures.handlers['publicRpc:ctEventoPublicoCarregarPROD'] = async args => { assert.equal(args[0], SAMBA); return catalog(SAMBA, 'detail', await now()); };
   const guard = await installIsolatedNetwork(context, { root: ROOT, origin: ORIGIN, ...fixtures });
+  // Registered after generic static guard: fulfill this exact synthetic GET only.
+  await context.route(ORIGIN+'/assets/social-event-pages.json', async route=>{assert.equal(route.request().method(),'GET');await route.fulfill({contentType:'application/json',body:JSON.stringify({schema:'CT_PUBLISHED_SHARE_INDEX_V1',revision:'a'.repeat(64),generatedAt:new Date(FIXTURE_NOW).toISOString(),entries:[],fallbacks:[]})});});
   await page.goto(ORIGIN + '/roda-de-samba/');
   if (js) {
     await page.locator('#app').waitFor({ state: 'visible' });
@@ -202,3 +219,4 @@ async function aliasFixture(browser, js) {
     console.log('PASS ' + report.length + ' isolated browser cases; zero requests forwarded.');
   } finally { fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 2)); await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+

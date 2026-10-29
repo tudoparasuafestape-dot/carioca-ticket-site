@@ -45,7 +45,7 @@ document.addEventListener('click', function(event) {
   document.getElementById('preview-notice').textContent = 'Destino bloqueado nesta prévia. Nenhuma compra ou acesso externo foi feito.';
 }, true);
 </script>`;
-const csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'";
+const csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'";
 function send(res, code, type, body) {
   res.writeHead(code, { 'Content-Type': type, 'Content-Security-Policy': csp, 'Cache-Control': 'no-store' });
   res.end(body);
@@ -54,6 +54,8 @@ module.exports = http.createServer((req, res) => {
   if (req.headers.host !== `127.0.0.1:${port}`) return send(res, 403, 'text/plain', 'Loopback only');
   if (req.method !== 'GET') return send(res, 405, 'text/plain', 'Writes blocked');
   const url = new URL(req.url, origin);
+  // Synthetic published index only; exact loopback GET, never operational RPC.
+  if (url.pathname === '/assets/social-event-pages.json') return send(res,200,'application/json',JSON.stringify({schema:'CT_PUBLISHED_SHARE_INDEX_V1',revision:'a'.repeat(64),generatedAt:new Date().toISOString(),entries:[{eventId:'PREVIEW-EVENT',sharePath:'/compartilhar/PREVIEW-EVENT/',detailUrl:'https://cariocaticket.com.br/evento/?evento=PREVIEW-EVENT',endsAt:new Date(Date.now()+86400000).toISOString()}],fallbacks:[]}));
   if (url.pathname === '/__fixture/music.svg' || url.pathname === '/__fixture/creative.svg') return send(res, 200, 'image/svg+xml', cover('music'));
   if (['/pwa-register.js', '/assets/ct-analytics.js'].includes(url.pathname)) return send(res, 200, 'text/javascript', '// Disabled in isolated preview');
   if (['/', '/evento/', '/evento-v2/'].includes(url.pathname)) {
@@ -63,10 +65,10 @@ module.exports = http.createServer((req, res) => {
     html = html.replace(/(<body[^>]*>)/, '$1<aside id="preview-notice" style="padding:8px 16px;background:#ffd66d;color:#171717;text-align:center;font:13px system-ui">Prévia local · dados sintéticos · compras e destinos externos bloqueados</aside>');
     return send(res, 200, 'text/html; charset=utf-8', html);
   }
-  const allowed = /^\/assets\/(public-catalog-clock\.js|public-i18n\.js|event-i18n\.(?:js|css)|home-location\.(?:js|css)|event-(?:directions|map-preview|uber)\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-(?:share|privacy)\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
+  const allowed = /^\/assets\/(public-share-index\.js|whatsapp-brand\.svg|public-catalog-clock\.js|public-i18n\.js|event-i18n\.(?:js|css)|home-location\.(?:js|css)|event-(?:directions|map-preview|uber)\.(?:js|css)|event-ride-destinations\.js|event-accessibility\.css|event-description-speech\.js|home(?:\.css|-install\.js|-theme\.js|-navigation\.js|-controls\.js|-i18n\.js|-advertisements\.js|-event-rail\.js|-municipalities\.json|-ad-(?:tpssf|priscila)\.png)|public-event-catalog\.js|public-(?:share|privacy)\.(?:js|css)|carioca-ticket-(?:simbolo|logo|icon-192)\.png)$/;
   if (!allowed.test(url.pathname)) return send(res, 403, 'text/plain', 'Destination blocked in synthetic preview');
   const file = path.join(root, url.pathname.slice(1));
-  const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';
+  const type = file.endsWith('.svg') ? 'image/svg+xml' : file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.json') ? 'application/json' : 'image/png';
   send(res, 200, type, fs.readFileSync(file));
 }).listen(port, '127.0.0.1', () => console.log(`Synthetic event preview: ${origin}/evento/?evento=PREVIEW-EVENT`));
 
