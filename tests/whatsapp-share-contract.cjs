@@ -27,7 +27,7 @@ blocked=false;link.listeners.click[0]({stopPropagation(){},preventDefault(){thro
 window.CTPublicI18n={};locale='en-US';listeners['ct:public-language']();assert.equal(link.textContent,labels[locale]);
 for(const file of ['evento/index.html','evento-v2/index.html']) {
  const html=fs.readFileSync(path.join(root,file),'utf8');
- assert(html.includes('<script src="/assets/public-share.js?v=20261010-whatsapp1"></script>'));
+ assert(html.includes('<script src="/assets/social-event-pages.js?v=20261029-social-og1"></script><script src="/assets/public-share.js?v=20261029-social-og1"></script>'));
  assert(html.includes('id="shareWhatsAppAction"'));assert(html.includes('window.CTPublicShare.eventWhatsApp('));assert.equal((html.match(/clearEventWhatsApp/g)||[]).length,2);
  for(const [,body] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(body);
 }
