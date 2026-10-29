@@ -8,8 +8,9 @@ import {buildSealedCandidate} from '../scripts/build-event-social-sealed-release
 
 const EVENT='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
 const NOW=Date.parse('2026-10-29T16:14:22.000Z');
-const issuerSecret=Buffer.alloc(32,71); // Synthetic fixture key; NEVER a production secret.
-const env={CT_SOCIAL_PREVIEW_VERIFY_KEY_B64:issuerSecret.toString('base64'),CT_SOCIAL_PREVIEW_KEY_ID:'lab-fixture-v1'};
+const {privateKey,publicKey}=crypto.generateKeyPairSync('ed25519'); // Runtime fixture ONLY.
+const {publicKey:untrustedKey}=crypto.generateKeyPairSync('ed25519');
+const env={CT_SOCIAL_PREVIEW_PUBLIC_KEY_PEM:publicKey.export({type:'spki',format:'pem'}),CT_SOCIAL_PREVIEW_KEY_ID:'lab-fixture-v1'};
 const event={
  id:EVENT,nome:'TBT do Astro — Aniversário de Herminho',
  visual:{capaUrl:'https://cariocaticket.com.br/assets/eventos/herminho-tbt-20261107-a2f84c198ed5b283.jpg'},
@@ -27,14 +28,14 @@ function sign(revision=1,overrides={}){
     snapshot
   };
   Object.assign(body,overrides);
-  const signature=crypto.createHmac('sha256',issuerSecret).update(canonical(body),'utf8').digest('base64url');
+  const signature=crypto.sign(null,Buffer.from(canonical(body),'utf8'),privateKey).toString('base64url');
   return {...body,signature};
 }
 assert.equal(verifyAttestation(sign(),{now:NOW,env}).manifest[0].eventoId,EVENT);
 const bad=[
   {source:sign(),options:{env:{}}},
   {source:sign(),options:{env:{...env,CT_SOCIAL_PREVIEW_KEY_ID:'other'}}},
-  {source:{...sign(),signature:'x'.repeat(43)}},
+  {source:{...sign(),signature:'x'.repeat(86)}},
   {source:{...sign(),revision:2}},
   {source:sign(1,{audience:'other'})},
   {source:sign(1,{issuer:'untrusted'})},
@@ -45,7 +46,7 @@ const bad=[
   {source:sign(),options:{now:Date.parse('2026-10-29T16:16:00.000Z')}},
   {source:sign(),options:{previousRevision:1}},
   {source:sign(),options:{previousRevision:2}},
-  {source:sign(),options:{env:{...env,CT_SOCIAL_PREVIEW_VERIFY_KEY_B64:Buffer.alloc(32,75).toString('base64')}}},
+  {source:sign(),options:{env:{...env,CT_SOCIAL_PREVIEW_PUBLIC_KEY_PEM:untrustedKey.export({type:'spki',format:'pem'})}}},
   {source:{...sign(),unexpected:'data'}}
 ];
 for(const {source,options={}} of bad){
