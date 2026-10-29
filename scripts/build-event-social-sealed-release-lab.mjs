@@ -5,6 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {verifyAttestation} from './verify-event-social-attestation.mjs';
 import {buildRelease} from './build-event-social-release-lab.mjs';
+import {auditEventSocialRelease} from './audit-event-social-release-lab.mjs';
 
 function deny(x){throw new Error('SOCIAL_SEALED_RELEASE_DENIED: '+x);}
 function buildSealedCandidate(attestation,target,{now=Date.now(),env=process.env,previousReceipt=null}={}){
@@ -16,8 +17,11 @@ function buildSealedCandidate(attestation,target,{now=Date.now(),env=process.env
   }
   const verified=verifyAttestation(attestation,{now,env,previousRevision:prior});
   const release=buildRelease(verified.snapshot,target,{now});
+  // Mandatory verification of the COMPLETE raw HTML, authorized image bytes
+  // and absence of stale pages before returning a sealed candidate.
+  const audit=auditEventSocialRelease(target,attestation,{now,env,previousRevision:prior});
   return Object.freeze({
-    ...release,signedRevision:verified.revision,
+    ...release,auditedStatus:audit.status,signedRevision:verified.revision,
     attestedAt:verified.issuedAt,attestationExpiresAt:verified.expiresAt
   });
 }
