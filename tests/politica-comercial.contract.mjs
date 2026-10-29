@@ -129,7 +129,7 @@ if(master.includes('ctAsaasProvider')||producer.includes('ctAsaasProvider'))thro
 
 // Regressão offline da retomada do evento após troca de aba: sem tráfego real.
 const H='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
-const start=eventPage.indexOf('      function staleEventOffer(){');
+const start=eventPage.indexOf('      function canNavigateHerminhoCheckout(){');
 const end=eventPage.indexOf('      function load(availabilityOnly){',start);
 if(start<0||end<0)throw new Error('Funções temporais da página não encontradas');
 const vm=await import('node:vm');
@@ -144,11 +144,11 @@ function resumeFixture(id){
   const doc={visibilityState:'visible',addEventListener(name,fn){events.document[name]=fn}};
   let fresh=true,invalidations=0,loads=0;
   const sandbox={
-    state:{eventoId:id,temporalInitialRendered:true,data:{sucesso:true}},
+    state:{eventoId:id,temporalInitialRendered:true,data:{sucesso:true,tipos:[{lotes:[{id:'LOT-LOCAL'}]}]}},
     document:doc, window:{CTAdvanceSales:null,addEventListener(name,fn){events.window[name]=fn}},
     eventLease:{isFresh:()=>fresh,invalidate(){fresh=false;invalidations++}},
     eventNotice:{textContent:''},eventRetry:{hidden:false},
-    $:name=>nodes[name],tr:x=>x,
+    $:name=>nodes[name],tr:x=>x,queryCampanha:()=>'',
     loadRunning:false,eventRefreshWanted:false,eventRefreshTimer:null,eventRequestStarted:0,
     performance:{now:()=>1000},
     setTimeout(fn,ms){const t={fn,ms};timer.push(t);return t},
@@ -164,9 +164,12 @@ assert.equal(fx.stats().invalidations,1,'a primeira suspensão invalida a autori
 assert.equal(fx.nodes.startingPrice.textContent,'R$ 20,00 + taxas','a vitrine informativa não vira Consulte');
 assert.equal(fx.nodes.tickets.textContent,'Individual — Antecipado');
 for(const name of ['buyHero','buySide','buyMobile','buyClosing']){
-  assert.equal(fx.nodes[name].attributes['aria-disabled'],'true','links bloqueados enquanto revalida');
-  assert.equal(fx.nodes[name].href,undefined,'nenhum link de compra habilitado sem oferta fresca');
+  assert.equal(fx.nodes[name].attributes['aria-disabled'],undefined,'navegação ao checkout não é venda');
+  assert.equal(fx.nodes[name].href,'/checkout-v2/?evento='+encodeURIComponent(H),'checkout continua com gate de oferta e preço');
 }
+assert.match(fx.sandbox.eventNotice.textContent,/confirmados no checkout seguro/);
+assert(eventPage.includes('if(canNavigateHerminhoCheckout()){scheduleEventRefresh();return;}'),
+  'guarda de eventos permite somente a navegação quando há um catálogo previamente válido');
 fx.doc.visibilityState='visible';fx.events.document.visibilitychange();fx.events.window.focus();
 assert.equal(fx.stats().invalidations,1,'focus duplicado não invalida novamente');
 assert.equal(fx.timer.length,1,'um único refresco pendente');
@@ -175,6 +178,24 @@ fx.timer.shift().fn();assert.equal(fx.stats().loads,1,'reconsulta catálogo ao r
 fx.setFresh(true);fx.events.window.focus();
 assert.equal(fx.stats().invalidations,1,'oferta recém validada preservada no focus');
 assert.equal(fx.timer.length,0,'sem segunda consulta em foco duplicado');
+
+const noTickets=resumeFixture(H);
+noTickets.sandbox.state.data={sucesso:true,tipos:[]};
+noTickets.doc.visibilityState='hidden';noTickets.events.document.visibilitychange();
+for(const name of ['buyHero','buySide','buyMobile','buyClosing']){
+  assert.equal(noTickets.nodes[name].attributes['aria-disabled'],'true','sem lotes a página não deve oferecer navegação');
+  assert.equal(noTickets.nodes[name].href,undefined,'sem lote nenhum CTA de compra deve existir');
+}
+const notValidated=resumeFixture(H);
+notValidated.sandbox.state.temporalInitialRendered=false;
+notValidated.doc.visibilityState='hidden';notValidated.events.document.visibilitychange();
+for(const name of ['buyHero','buySide','buyMobile','buyClosing']){
+  assert.equal(notValidated.nodes[name].href,undefined,'a primeira leitura não autorizada não abre checkout');
+}
+assert(eventPage.includes("event.preventDefault();staleEventOffer();scheduleEventRefresh();"),
+  'outros eventos e contexto sem lote mantêm bloqueio temporal');
+assert(!eventPage.includes('ctCheckoutPixPublicoIniciarPROD('),
+  'página de evento nunca cria pagamento');
 
 const legacy=resumeFixture('EVT-SYNTHETIC-LEGACY');
 legacy.events.window.focus();
