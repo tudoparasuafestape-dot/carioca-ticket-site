@@ -31,7 +31,7 @@ test('tampering, replay, expiry or wrong public key fails closed',()=>{
   reject({...a,snapshot:{...a.snapshot,cacheStale:true}});
   reject({...a,snapshot:{...a.snapshot,eventos:[]}});
   reject({...a,keyId:'another-key'});
-  reject({...a,signature:a.signature.slice(0,-1)+'A'});
+  reject({...a,signature:a.signature.slice(0,-1)+(a.signature.endsWith('A')?'B':'A')});
   reject(a,{previousRevision:41});
   reject(a,{now:Date.parse('2026-10-29T16:15:23.000Z')});
   reject(a,{env:{...env,CT_SOCIAL_PREVIEW_KEY_ID:'not-authorized'}});
