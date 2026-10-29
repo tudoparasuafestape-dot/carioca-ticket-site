@@ -1,5 +1,10 @@
 (function () {
   'use strict';
+  function eventPublicUrl(id) {
+    // Mesmo destino do link Ver evento no catálogo da home.
+    var route=String(id||'')==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'?'/evento-v2/':'/evento/';
+    return 'https://cariocaticket.com.br'+route+'?evento='+encodeURIComponent(id);
+  }
   var destinations = {
     home: { url:'https://cariocaticket.com.br/', title:'Carioca Ticket', label:'shareSite' },
     program: { url:'https://cariocaticket.com.br/parceiro/programa/', title:'Programa Parceiro Carioca Ticket', label:'shareProgram' }
@@ -64,7 +69,7 @@
       mountWhatsApp(link, { event:true, title:clean(event.nome) || 'Carioca Ticket',
         date:[clean(event.data), clean(event.horario)].filter(Boolean).join(' · '),
         venue:[clean(event.local), clean(event.cidade), clean(event.uf)].filter(Boolean).join(' · '),
-        url:'https://cariocaticket.com.br/evento/?evento=' + encodeURIComponent(id) }, onClick);
+        url:eventPublicUrl(id) }, onClick);
     },
     clearEventWhatsApp: function (link) {
       if (link) { whatsAppLinks.delete(link); link.hidden = true; link.removeAttribute('href'); }
@@ -143,7 +148,7 @@
       eventTitle.textContent = ' ' + title.textContent;
       eventTitle.lang = title.lang || document.documentElement.lang; eventTitle.setAttribute('translate', 'no');
       actions.appendChild(host);
-      mount(host, { url:'https://cariocaticket.com.br/evento/?evento=' + encodeURIComponent(card.dataset.eventId), title:title.textContent, date:card.dataset.shareDate || '', venue:card.dataset.shareVenue || '', event:true, label:'shareEvent' });
+      mount(host, { url:eventPublicUrl(card.dataset.eventId), title:title.textContent, date:card.dataset.shareDate || '', venue:card.dataset.shareVenue || '', event:true, label:'shareEvent' });
     });
   }
   if (grid) { new MutationObserver(mountCards).observe(grid, { childList:true }); mountCards(); }
