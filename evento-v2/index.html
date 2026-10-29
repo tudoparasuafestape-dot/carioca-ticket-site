@@ -260,7 +260,9 @@
   <link rel="stylesheet" href="/assets/event-map-preview.css?v=20261010-privacy1">
   <script src="/assets/event-map-preview.js?v=20261010-privacy1"></script>
   <script src="/assets/event-description-speech.js?v=20261009" defer></script>
-  <script src="/assets/public-share.js?v=20261010-whatsapp1"></script>
+  <link rel="stylesheet" href="/assets/public-share.css?v=20261029-compact1">
+  <script src="/assets/public-share-index.js?v=20261029-index1"></script>
+  <script src="/assets/public-share.js?v=20261029-compact1"></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
   <script src="/assets/public-catalog-clock.js?v=20261021-eligibility-exclusive1"></script>
@@ -738,7 +740,7 @@
       $('shareMenu').addEventListener('keydown',function(event){
         if(event.key==='Escape'){event.preventDefault();fecharMenuCompartilhamento();}
         if(event.key==='Tab'){
-          var buttons=Array.prototype.slice.call($('shareMenu').querySelectorAll('button:not([disabled]),a[href]'));
+          var buttons=Array.prototype.slice.call($('shareMenu').querySelectorAll('button:not([disabled]),a[href],a[role="button"]'));
           buttons=buttons.filter(function(node){return !node.hidden;});
           var first=buttons[0],last=buttons[buttons.length-1];
           if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
@@ -748,13 +750,17 @@
 
       async function compartilharNativo(){
         var e=state.data&&state.data.evento||{};
-        var url=linkCanonicoEvento();
+        var shareId=state.eventoId, shareData=state.data;
+        var url=window.CTPublicShare ? await window.CTPublicShare.resolveEventUrl(state.eventoId) : 'https://cariocaticket.com.br/';
+        if(state.eventoId!==shareId||state.data!==shareData)return;
+        if(url==='https://cariocaticket.com.br/'){mostrarShareToast('Compartilhamento deste evento indisponível no momento. Atualize e tente novamente.');return;}
         var detalhes=[e.data,e.local,e.cidade].filter(Boolean).join(' · ');
         var titulo=(e.nome||tr('Evento'))+' · Carioca Ticket';
         var texto=tr('Confira {event}{details} na Carioca Ticket.',{event:e.nome||tr('este evento'),details:detalhes?' — '+detalhes:''});
 
         if(window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId)){titulo+=' — Evento encerrado';texto='Evento encerrado. Informações de referência da Roda de Samba Estilo Carioca.';}
 
+        if(url==='https://cariocaticket.com.br/'){titulo='Carioca Ticket';texto='Confira a agenda na Carioca Ticket.';}
         fecharMenuCompartilhamento();
 
         if(navigator.share){
@@ -768,20 +774,23 @@
 
         try{
           await copiarLinkCompartilhamento(url);
-          mostrarShareToast('Link do evento copiado!');
+          mostrarShareToast(url==='https://cariocaticket.com.br/'?'Link da Carioca Ticket copiado.':'Link do evento copiado!');
         }catch(_){
-          mostrarShareToast('Use a barra do navegador para copiar o link.');
+          mostrarShareToast('Não foi possível copiar. Tente novamente.');
         }
       }
 
       async function copiarLinkDireto(){
-        var url=linkCanonicoEvento();
+        var shareId=state.eventoId, shareData=state.data;
+        var url=window.CTPublicShare ? await window.CTPublicShare.resolveEventUrl(state.eventoId) : 'https://cariocaticket.com.br/';
+        if(state.eventoId!==shareId||state.data!==shareData)return;
+        if(url==='https://cariocaticket.com.br/'){mostrarShareToast('Compartilhamento deste evento indisponível no momento. Atualize e tente novamente.');return;}
         fecharMenuCompartilhamento();
         try{
           await copiarLinkCompartilhamento(url);
-          mostrarShareToast('Link do evento copiado!');
+          mostrarShareToast(url==='https://cariocaticket.com.br/'?'Link da Carioca Ticket copiado.':'Link do evento copiado!');
         }catch(_){
-          mostrarShareToast('Use a barra do navegador para copiar o link.');
+          mostrarShareToast('Não foi possível copiar. Tente novamente.');
         }
       }
 
@@ -1252,6 +1261,7 @@
   <script src="/assets/ct-analytics.js?v=20261010-privacy1" data-ct-public-privacy="required" defer></script>
 </body>
 </html>
+
 
 
 

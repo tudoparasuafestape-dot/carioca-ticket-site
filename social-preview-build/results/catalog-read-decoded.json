@@ -1,0 +1,95 @@
+{
+  "sucesso": true,
+  "atualizadoEm": "2026-10-29T21:40:35.100Z",
+  "versaoModulo": "1.0.0",
+  "eligibilityContract": "CT_PUBLIC_ELIGIBILITY_EXCLUSIVE_V1",
+  "eventos": [
+    {
+      "id": "EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A",
+      "temporal": {
+        "state": "TEMPORAL_V1",
+        "inicioEm": "2026-11-07T23:00:00.000Z",
+        "fimEm": "2026-11-08T09:00:00.000Z",
+        "fusoHorario": "America/Sao_Paulo",
+        "temporalVersion": 1
+      },
+      "nome": "TBT do Astro — Aniversário de Herminho",
+      "data": "07/11/2026",
+      "horario": "20h00 às 06h00",
+      "local": "Clube 10 de Novembro.",
+      "cidade": "Recife",
+      "uf": "PE",
+      "visual": {
+        "capaUrl": "https://cariocaticket.com.br/assets/eventos/herminho-horizontal-905fe9374a491192.png",
+        "posterUrl": "https://cariocaticket.com.br/assets/eventos/herminho-horizontal-905fe9374a491192.png",
+        "descricaoCurta": "Garanta seu ingresso com segurança pela Carioca Ticket.",
+        "categoria": "Evento",
+        "destaque": ""
+      },
+      "links": {
+        "evento": "https://cariocaticket.com.br/evento/?evento=EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A",
+        "comprar": "https://cariocaticket.com.br/checkout/?evento=EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A"
+      }
+    },
+    {
+      "id": "EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD",
+      "temporal": {
+        "state": "LEGADO_SEM_FIM",
+        "inicioEm": null,
+        "fimEm": null,
+        "fusoHorario": null,
+        "temporalVersion": null
+      },
+      "nome": "Roda de Samba Estilo Carioca",
+      "data": "11/10/2026",
+      "horario": "15h às 22h",
+      "local": "Vevets Recepções",
+      "cidade": "Jaboatão dos Guararapes",
+      "uf": "PE",
+      "visual": {
+        "capaUrl": "https://drive.google.com/thumbnail?id=1a6QG19j4KpkvA4lTXvirY-pm8ymu2aBF&sz=w1600",
+        "posterUrl": "https://drive.google.com/thumbnail?id=1a6QG19j4KpkvA4lTXvirY-pm8ymu2aBF&sz=w1600",
+        "descricaoCurta": "Uma edição especial da Roda de Samba Estilo Carioca celebrando os 30 anos da Banda Sem Razão.",
+        "categoria": "Samba & Pagode",
+        "destaque": "30 anos da Banda Sem Razão"
+      },
+      "links": {
+        "evento": "https://cariocaticket.com.br/evento/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD",
+        "comprar": "https://cariocaticket.com.br/checkout/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD"
+      }
+    },
+    {
+      "id": "EVT-23112026-ERA-BEAUTY-EAC4B673",
+      "temporal": {
+        "state": "LEGADO_SEM_FIM",
+        "inicioEm": null,
+        "fimEm": null,
+        "fusoHorario": null,
+        "temporalVersion": null
+      },
+      "nome": "ERA BEAUTY",
+      "data": "23/11/2026",
+      "horario": "09h00 às 17h00",
+      "local": "SEBRAE PE",
+      "cidade": "Recife",
+      "uf": "PE",
+      "visual": {
+        "capaUrl": "https://cariocaticket.com.br/assets/eventos/era-beauty-capa-oficial-20261008.jpg",
+        "posterUrl": "https://cariocaticket.com.br/assets/eventos/era-beauty-capa-oficial-20261008.jpg",
+        "descricaoCurta": "Encontro de mulheres empreendedoras da área da beleza.",
+        "categoria": "Beleza & Negócios",
+        "destaque": "Beleza • Negócios • Mulheres"
+      },
+      "links": {
+        "evento": "https://cariocaticket.com.br/evento/?evento=EVT-23112026-ERA-BEAUTY-EAC4B673",
+        "comprar": "https://cariocaticket.com.br/checkout/?evento=EVT-23112026-ERA-BEAUTY-EAC4B673"
+      }
+    }
+  ],
+  "total": 3,
+  "temporalVersion": 1,
+  "temporalEvaluatedAt": "2026-10-29T21:40:35.100Z",
+  "serverNow": "2026-10-29T21:40:35.100Z",
+  "validUntil": "2026-10-29T21:45:35.100Z",
+  "nextTransitionAt": "2026-11-08T09:00:00.000Z"
+}

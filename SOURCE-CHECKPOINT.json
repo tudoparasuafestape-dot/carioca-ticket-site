@@ -1,0 +1,14 @@
+{
+  "checkedAt":"2026-10-29T21:55:39Z",
+  "siteMain":"0a46af41d83ac2457abf925e7bd012bf969a1be3",
+  "sitePR242":"6b93b2a5b2af79787e9f44b790f03d7e292eef2b",
+  "backendPR378":"76eaad3cf08ef2ccc99cd3bab4a34dcf964e74b5",
+  "catalogReadAt":"2026-10-29T21:40:35.100Z",
+  "catalogReadValidUntil":"2026-10-29T21:45:35.100Z",
+  "catalogCaptureUse":"historical offline fixture only",
+  "productionWritten":false,
+  "workflowActivated":false,
+  "backendDeploymentRequiredForAlternative":false,
+  "visualBrowserQA":"unavailable; not claimed",
+  "automaticTrigger":"not activated; standing authorization and quota required"
+}
