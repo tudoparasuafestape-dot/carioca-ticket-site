@@ -1,5 +1,13 @@
 # Padrão de compartilhamento com capa por evento — proposta de implementação (LAB)
 
+## Atualização — transições seguras de prévias sociais (LAB)
+
+- `scripts/derive-event-social-manifest.mjs` agora exige **explicitamente** `modoAcesso='PUBLICO'` e `status='ATIVO'` em cada evento, mesmo quando o atestado está assinado. Isso impede que uma inconsistência no payload seja transformada em autorização por padrão. Os testes negativos cobrem evento privado, restrito, inativo e campos ausentes.
+- `scripts/plan-event-social-transition-lab.mjs` compara dois **candidatos completos já auditados**, cada um com atestado Ed25519 válido. Rejeita revisão repetida/antiga, HTML adulterado, atestado novo vencido e ausência da prova histórica. Identifica somente `wouldAdd`, `wouldRemove`, `wouldRefresh` e `unchanged`, sem escrever, apagar, publicar ou acessar rede.
+- `tests/event-social-transition.offline.mjs` exercita remoção de Herminho por catálogo vazio **sintético**, adição, atualização, manutenção, replay e adulteração. O workflow isolado executa essa regressão.
+- A assinatura histórica comprova **integridade do candidato antigo, não que ele foi realmente implantado**. Antes de vincular qualquer plano à operação, o último release publicado e a última revisão consumida precisam vir de um registro de implantação imutável e confiável; entrada manual não basta. A primeira publicação (bootstrap) permanece bloqueada no planejador até projeto/autorização separados.
+- Nenhum gatilho de aprovação/publicação, endpoint PROD, alteração no Apps Script, integração GitHub Pages ou prova de crawler foi habilitado. As listas do plano são **informativas** e não comandos de exclusão. Link público, vendas e checkout permanecem intactos.
+
 ## Próxima camada implementada — atestado Ed25519 e revisão (LAB)
 
 Foi confirmado que `ctEventosPublicosListarPROD()` na `main` do backend segue sem envelope temporal explícito; a implantação ativa do Apps Script ainda não foi inspecionada. Para evitar que um JSON manual seja confundido com autorização:
