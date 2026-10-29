@@ -1196,7 +1196,10 @@
           state.feeQuotedAt=0;
           state.feePreview=null;
           el.feeSummary.classList.add('hidden');
+          el.feeRetry.classList.add('hidden');
           el.summaryPrice.textContent=money(valorIngressos||0);
+          el.payButton.disabled=state.busy||state.temporalRecoveryPending||!catalogLease.isFresh()||
+            (advanceSalesClosed()&&!savedIdempotency(state.paymentMethod));
           return;
         }
 
