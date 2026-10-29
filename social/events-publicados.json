@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "policy": "public-catalog-only",
+  "events": [
+    {
+      "id": "EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A",
+      "title": "TBT do Astro — Aniversário de Herminho",
+      "description": "07/11/2026 · 20h às 02h · Clube 10 de Novembro · Recife/PE. Ingressos oficiais pela Carioca Ticket.",
+      "cover": "/assets/eventos/herminho-tbt-20261107-a2f84c198ed5b283.jpg",
+      "detail": "/evento-v2/",
+      "public": true
+    }
+  ]
+}
