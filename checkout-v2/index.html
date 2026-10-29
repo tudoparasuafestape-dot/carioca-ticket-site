@@ -288,7 +288,8 @@
         <div class="promo-line"><span id="feeLabel" data-checkout-text="Taxa Carioca Ticket">Taxa Carioca Ticket</span><span id="feePlatform">R$ 0,00</span></div>
         <div id="feeAdditionalRow" class="promo-line hidden"><span data-checkout-text="Encargos comerciais adicionais">Encargos comerciais adicionais</span><span id="feeAdditional">R$ 0,00</span></div>
         <div class="promo-line total"><span data-checkout-text="Total a pagar">Total a pagar</span><span id="feeTotal">R$ 0,00</span></div>
-        <div id="feeNote" class="help" style="margin-top:8px"></div>
+        <div id="feeNote" class="help" style="margin-top:8px" role="status" aria-live="polite"></div>
+        <button id="feeRetry" class="secondary hidden" type="button" style="margin-top:9px;min-height:38px">Atualizar total</button>
       </div>
       <div id="couponBox" class="coupon-box">
         <button id="couponToggle" class="coupon-toggle" type="button" data-checkout-text="Tem um cupom?">Tem um cupom?</button>
@@ -460,7 +461,7 @@
       [
         'loading','loadingTitle','loadingText','eventName','eventMeta','eventDescription','eventBack','checkoutCover','checkoutCoverImage','salePanel','buyerPanel','payActionPanel',
         'typeSelect','lotSelect','quantity','summary','summaryTitle','summaryAccess','summaryPrice','participants',
-        'feeSummary','feeBase','feeLabel','feePlatform','feeAdditionalRow','feeAdditional','feeTotal','feeNote',
+        'feeSummary','feeBase','feeLabel','feePlatform','feeAdditionalRow','feeAdditional','feeTotal','feeNote','feeRetry',
         'couponBox','couponToggle','couponArea','couponCode','couponApply','couponMessage','couponReplace','couponReplaceNo','couponReplaceYes','promoSummary','promoOriginal','promoLabel','promoDiscount','promoTotal','couponRemove',
         'buyerName','buyerCpf','buyerWhatsapp','buyerEmail','buyerEmailLabel','buyerEmailHelp','marketing','paymentPix','paymentCard','payButton','payHelp',
         'pixPanel','pixStatus','qrImage','pixCode','copyButton','refreshButton','expiryText',
@@ -880,7 +881,7 @@
               catalogRetry.hidden=true;
               if(!(res.tipos||[]).some(function(t){return(t.lotes||[]).length;}))
                 checkoutUiWrite(catalogNotice,'Não há ingressos disponíveis para venda online neste momento.');
-              el.payButton.disabled=!catalogLease.isFresh();
+              el.payButton.disabled=!catalogLease.isFresh()||(state.politicaComercialAtiva&&state.feeReady!==true);
               if(window.CTCheckoutLanguage)window.CTCheckoutLanguage.apply(el.salePanel);
             }catch(error){if(catalogLease)catalogLease.invalidate('render-failed');recoveryOrFailure();return;}
             if(firstRender){
@@ -1118,6 +1119,12 @@
         var q=quantity();
         el.quantity.value=q;
         if(!state.type||!state.lot){
+          ++state.feeSeq;
+          if(state.feeTimer){clearTimeout(state.feeTimer);state.feeTimer=null;}
+          state.feeBusy=false;state.feeReady=false;state.feePreview=null;state.feeRevision='';state.feeQuotedAt=0;
+          el.payButton.disabled=true;
+          el.feeRetry.classList.add('hidden');
+          el.feeSummary.classList.add('hidden');
           el.summary.classList.add('hidden');
           // Preserve participant fields while an expired lot awaits a replacement.
           return;
@@ -1155,6 +1162,18 @@
         updateFreeCheckoutUI();
       }
 
+      function showFeeQuoteError(){
+        state.feeBusy=false;state.feeReady=false;state.feeRevision='';
+        state.feeQuotedAt=0;state.feePreview=null;
+        el.payButton.disabled=true;
+        el.feeSummary.classList.remove('hidden');
+        checkoutUiWrite(el.feePlatform,'Indisponível');
+        checkoutUiWrite(el.feeTotal,'Total indisponível');
+        checkoutUiWrite(el.summaryPrice,'Total indisponível');
+        checkoutUiWrite(el.feeNote,'Não foi possível confirmar o valor final. Clique em Atualizar total; nenhuma cobrança será criada.');
+        el.feeRetry.classList.remove('hidden');
+      }
+
       function atualizarTaxa(valorIngressos,precoUnitario,quantidadeVendas){
         if(state.temporalRecoveryPending)return;
         if(!catalogLease||!catalogLease.isFresh()){temporalStale();scheduleCatalogRefresh();return;}
@@ -1183,6 +1202,18 @@
 
         state.feeBusy=true;
         state.feeReady=false;
+        state.feeRevision='';state.feeQuotedAt=0;state.feePreview=null;
+        // Não exibir R$ 20 como total se a cobrança final pode ser R$ 22.
+        // O servidor permanece fonte exclusiva para taxa e consentimento.
+        el.payButton.disabled=true;
+        el.feeRetry.classList.add('hidden');
+        el.feeSummary.classList.remove('hidden');
+        el.feeBase.textContent=money(valorIngressos||0);
+        checkoutUiWrite(el.feePlatform,'Calculando...');
+        el.feeAdditionalRow.classList.add('hidden');
+        checkoutUiWrite(el.feeTotal,'Calculando total...');
+        checkoutUiWrite(el.summaryPrice,'Calculando total...');
+        checkoutUiWrite(el.feeNote,'Verificando taxa e total com segurança antes do pagamento.');
 
         /*
          * Preview e apenas UX; o backend recalcula o valor autoritativo no pagamento.
@@ -1202,14 +1233,19 @@
             state.feeQuotedAt=Date.now();
 
             var resumo=res&&res.resumo?res.resumo:null;
-            if(!res||res.sucesso!==true||!resumo){
-              state.feeReady=false;
-              el.feeSummary.classList.add('hidden');
-              el.summaryPrice.textContent=money(valorIngressos||0);
+            if(!res||res.sucesso!==true||!resumo||!state.feeRevision||
+               typeof resumo.subtotalIngressos!=='number'||
+               typeof resumo.totalComprador!=='number'||
+               !Number.isFinite(resumo.subtotalIngressos)||!Number.isFinite(resumo.totalComprador)||
+               resumo.subtotalIngressos<0||resumo.totalComprador<0){
+              showFeeQuoteError();
               return;
             }
 
             state.feeReady=true;
+            el.feeRetry.classList.add('hidden');
+            el.payButton.disabled=state.busy||state.temporalRecoveryPending||!catalogLease.isFresh()||
+              (advanceSalesClosed()&&!savedIdempotency(state.paymentMethod));
 
             var subtotal=Number(resumo.subtotalIngressos||valorIngressos||0);
             var taxaCt=Number(resumo.taxaCtTotal||0);
@@ -1251,13 +1287,7 @@
           })
           .withFailureHandler(function(){
             if(seq!==state.feeSeq)return;
-            state.feeBusy=false;
-            state.feeReady=false;
-            state.feeRevision='';
-            state.feeQuotedAt=0;
-            state.feePreview=null;
-            el.feeSummary.classList.add('hidden');
-            el.summaryPrice.textContent=money(valorIngressos||0);
+            showFeeQuoteError();
           })
             .ctPoliticaComercialPreviewPublicoPROD({
               eventoId:state.eventId,
@@ -1945,6 +1975,7 @@
       el.couponReplaceNo.onclick=function(){el.couponReplace.classList.add('hidden');el.couponCode.value=state.promotion&&state.promotion.cupom?String(state.promotion.cupom.codigo||''):'';};
       el.couponReplaceYes.onclick=function(){if(state.cupomDoLink&&String(el.couponCode.value||'').trim().toUpperCase()!==state.cupomDoLink)state.autoCupomDispensado=true;state.promotion=null;el.couponReplace.classList.add('hidden');applyCoupon();};
       el.couponRemove.onclick=function(){if(state.cupomDoLink)state.autoCupomDispensado=true;el.couponCode.value='';clearCoupon(false);updateSummary();};
+      el.feeRetry.onclick=function(){if(!state.busy&&!state.temporalRecoveryPending)updateSummary();};
       el.payButton.onclick=createPayment;
       el.copyButton.onclick=copyPix;
       el.refreshButton.onclick=reconcile;
