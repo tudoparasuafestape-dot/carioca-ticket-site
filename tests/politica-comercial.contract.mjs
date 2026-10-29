@@ -128,7 +128,6 @@ if(master.includes('ctAsaasProvider')||producer.includes('ctAsaasProvider'))thro
 
 
 // Regressão offline da retomada do evento após troca de aba: sem tráfego real.
-const eventPage=read('evento-v2/index.html');
 const H='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
 const start=eventPage.indexOf('      function staleEventOffer(){');
 const end=eventPage.indexOf('      function load(availabilityOnly){',start);
