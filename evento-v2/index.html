@@ -1053,6 +1053,12 @@
         ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){
           $(id).removeAttribute('href');$(id).setAttribute('aria-disabled','true');
         });
+        if(state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'&&state.temporalInitialRendered&&state.data){
+          // Vitrine informativa preservada; botoes seguem bloqueados sem lease.
+          eventNotice.textContent='Atualizando disponibilidade dos ingressos...';
+          eventRetry.hidden=true;
+          return;
+        }
         $('startingPrice').textContent=tr('Consulte');
         $('tickets').textContent=tr('Consulte');
         eventNotice.textContent=tr('Consulte');
@@ -1068,11 +1074,12 @@
         if(loadRunning){eventRefreshWanted=true;return;}
         if(eventRefreshTimer!==null)return;
         // Bound automatic/repeated resume requests even for very short leases.
-        var wait=Math.max(50,5000-(performance.now()-eventRequestStarted));
+        var interval=state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'?50:5000;
+        var wait=Math.max(50,interval-(performance.now()-eventRequestStarted));
         eventRefreshTimer=setTimeout(function(){
           eventRefreshTimer=null;
           if(document.visibilityState==='hidden')return;
-          if(performance.now()-eventRequestStarted<5000){scheduleEventRefresh();return;}
+          if(performance.now()-eventRequestStarted<interval){scheduleEventRefresh();return;}
           load(true);
         },wait);
       }
@@ -1080,19 +1087,37 @@
         loadRunning=false;
         if(eventRefreshWanted){eventRefreshWanted=false;scheduleEventRefresh();}
       }
+      var herminhoOfferSuspended=false;
       function suspendEventOffer(){
+        if(state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'){
+          if(herminhoOfferSuspended)return;
+          herminhoOfferSuspended=true;
+        }
         if(eventLease)eventLease.invalidate('suspended');
         if(state.eventoId)staleEventOffer();
       }
       function resumeEventOffer(){
+        if(document.visibilityState==='hidden')return;
+        if(state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'){
+          var precisaRetomar=herminhoOfferSuspended||!eventLease||!eventLease.isFresh();
+          herminhoOfferSuspended=false;
+          if(precisaRetomar&&state.eventoId)scheduleEventRefresh();
+          return;
+        }
         suspendEventOffer();
-        if(document.visibilityState!=='hidden'&&state.eventoId)scheduleEventRefresh();
+        if(state.eventoId)scheduleEventRefresh();
       }
       window.addEventListener('pagehide',suspendEventOffer);
       window.addEventListener('focus',resumeEventOffer);
       window.addEventListener('pageshow',function(event){if(event.persisted)resumeEventOffer();});
       window.addEventListener('online',resumeEventOffer);
-      document.addEventListener('visibilitychange',resumeEventOffer);
+      document.addEventListener('visibilitychange',function(){
+        if(state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'&&document.visibilityState==='hidden'){
+          suspendEventOffer();
+        }else{
+          resumeEventOffer();
+        }
+      });
 
       function load(availabilityOnly){
         availabilityOnly=availabilityOnly===true;
@@ -1128,6 +1153,10 @@
             .withSuccessHandler(function(res){
               finishEventLoad();
               var validEnvelope=eventLease&&eventLease.accept(res,ticket);
+              if(validEnvelope&&state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'){
+                eventRefreshWanted=false;
+                if(eventRefreshTimer!==null){clearTimeout(eventRefreshTimer);eventRefreshTimer=null;}
+              }
               if(!res||res.sucesso!==true){
                 state.data=null;
                 if(eventLease)eventLease.invalidate('unavailable');
