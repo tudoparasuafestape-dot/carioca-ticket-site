@@ -10,6 +10,7 @@ const T=Date.parse('2026-10-29T16:14:00.000Z');
 const instant=n=>new Date(T+n).toISOString();
 const event={
   id:H,nome:'TBT do Astro — Aniversário de Herminho',
+  modoAcesso:'PUBLICO',status:'ATIVO',
   data:'07/11/2026',horario:'20h00 às 02h00',local:'Clube 10 de Novembro',cidade:'Recife',uf:'PE',
   visual:{capaUrl:'https://cariocaticket.com.br/assets/eventos/herminho-tbt-20261107-a2f84c198ed5b283.jpg'},
   temporal:{state:'TEMPORAL_V1',temporalVersion:1,fusoHorario:'America/Recife',
@@ -37,6 +38,11 @@ const deny=[
  {temporalEvaluatedAt:instant(5000)},{nextTransitionAt:instant(1000)},
  {validUntil:instant(350000)},
  // Individual event cannot be trusted if missing/invalid.
+ {eventos:[{...event,modoAcesso:'PRIVADO_CONVITE'}]},
+ {eventos:[{...event,modoAcesso:'RESTRITO'}]},
+ {eventos:[{...event,modoAcesso:undefined}]},
+ {eventos:[{...event,status:'INATIVO'}]},
+ {eventos:[{...event,status:undefined}]},
  {eventos:[{...event,temporal:null}]},
  {eventos:[{...event,temporal:{...event.temporal,state:'LEGADO_SEM_FIM'}}]},
  {eventos:[{...event,temporal:{...event.temporal,fimEm:instant(-100)}}]},
