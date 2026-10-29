@@ -1372,13 +1372,21 @@
          * nunca cria pedido/cobranca antes de a UI confirmar o mesmo total
          * comercial que esta sendo exibido para a selecao atual.
          */
+        var quoteSummary=state.feePreview&&state.feePreview.resumo;
+        var feeConsent=state.politicaComercialAtiva&&state.feeRevision&&quoteSummary&&
+          typeof quoteSummary.subtotalIngressos==='number'&&
+          typeof quoteSummary.totalComprador==='number'&&
+          isFinite(quoteSummary.subtotalIngressos)&&isFinite(quoteSummary.totalComprador)&&
+          quoteSummary.subtotalIngressos>=0&&quoteSummary.totalComprador>=0
+          ?{revisao:state.feeRevision,subtotal:quoteSummary.subtotalIngressos,total:quoteSummary.totalComprador}
+          :null;
         if(
           state.feeBusy||
           state.feeReady!==true||
           (
             state.politicaComercialAtiva&&
             (
-              !state.feeQuotedAt||
+              !feeConsent||!state.feeQuotedAt||
               (Date.now()-state.feeQuotedAt)>30000
             )
           )
@@ -1435,6 +1443,11 @@
           politicaRevisaoVista:state.feeRevision,
           idempotenciaChave:getOrCreateIdempotency()
         };
+        // Consent only: the server still recalculates authoritative amounts.
+        if(feeConsent){
+          payload.politicaSubtotalVisto=feeConsent.subtotal;
+          payload.politicaTotalVisto=feeConsent.total;
+        }
 
         google.script.run
           .withSuccessHandler(function(res){
@@ -1977,6 +1990,7 @@
   <script src="/assets/ct-analytics.js?v=20261010-privacy1" data-ct-public-privacy="required" defer></script>
 </body>
 </html>
+
 
 
 
