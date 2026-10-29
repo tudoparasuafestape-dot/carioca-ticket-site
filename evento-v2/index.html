@@ -131,6 +131,9 @@
     .share-btn:hover{transform:translateY(-1px);background:rgba(217,166,46,.12);border-color:rgba(255,214,109,.55)}
     .share-btn:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
     .share-icon{width:18px;height:18px;display:block}
+    .event-cover-column{min-width:0}
+    .event-cover-share{display:flex;justify-content:center;margin-top:16px}
+    .event-cover-share .share-btn{border-radius:999px;color:var(--gold2);background:#111318}
     .share-toast{
       position:fixed;z-index:90;left:50%;bottom:92px;transform:translateX(-50%);
       padding:11px 15px;border-radius:999px;background:#111820;color:#fff;
@@ -260,7 +263,9 @@
   <link rel="stylesheet" href="/assets/event-map-preview.css?v=20261010-privacy1">
   <script src="/assets/event-map-preview.js?v=20261010-privacy1"></script>
   <script src="/assets/event-description-speech.js?v=20261009" defer></script>
-  <script src="/assets/public-share.js?v=20261010-whatsapp1"></script>
+  <link rel="stylesheet" href="/assets/public-share.css?v=20261029-compact1">
+  <script src="/assets/public-share-index.js?v=20261029-index1"></script>
+  <script src="/assets/public-share.js?v=20261029-compact1"></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
   <script src="/assets/public-catalog-clock.js?v=20261021-eligibility-exclusive1"></script>
@@ -426,6 +431,7 @@
     <div id="campaignNotice" class="campaign-notice hidden"></div>
     <section class="hero">
       <div class="shell hero-grid">
+        <div class="event-cover-column">
         <div id="cover" class="cover">
           <div id="coverFallback" class="cover-fallback">
             <div>
@@ -437,6 +443,13 @@
           </div>
           <img id="coverImage" class="hidden" alt="Foto oficial do evento" loading="eager" decoding="async" data-event-i18n-alt="Foto oficial do evento">
           <div class="cover-shade"></div>
+        </div>
+          <div class="event-cover-share">
+            <button id="shareHero" class="share-btn" type="button" aria-label="Compartilhar este evento" data-public-i18n-aria-label="event.Compartilhar este evento">
+              <svg class="share-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18 16a3 3 0 0 0-2.39 1.19L8.91 13.7a3.14 3.14 0 0 0 0-3.4l6.7-3.49A3 3 0 1 0 15 5a3.2 3.2 0 0 0 .09.7L8.4 9.19a3 3 0 1 0 0 5.62l6.69 3.49A3.2 3.2 0 0 0 15 19a3 3 0 1 0 3-3Z"/></svg>
+              <span data-public-i18n="event.Compartilhar">Compartilhar</span>
+            </button>
+          </div>
         </div>
 
         <div class="event-copy">
@@ -458,10 +471,6 @@
             </div>
             <div class="hero-actions">
               <a id="buyHero" class="cta" href="#" data-public-i18n="event.Comprar ingresso →">Comprar ingresso →</a>
-              <button id="shareHero" class="share-btn" type="button" aria-label="Compartilhar este evento" data-public-i18n-aria-label="event.Compartilhar este evento">
-                <svg class="share-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18 16a3 3 0 0 0-2.39 1.19L8.91 13.7a3.14 3.14 0 0 0 0-3.4l6.7-3.49A3 3 0 1 0 15 5a3.2 3.2 0 0 0 .09.7L8.4 9.19a3 3 0 1 0 0 5.62l6.69 3.49A3.2 3.2 0 0 0 15 19a3 3 0 1 0 3-3Z"/></svg>
-                <span data-public-i18n="event.Compartilhar">Compartilhar</span>
-              </button>
             </div>
           </div>
 
@@ -738,7 +747,7 @@
       $('shareMenu').addEventListener('keydown',function(event){
         if(event.key==='Escape'){event.preventDefault();fecharMenuCompartilhamento();}
         if(event.key==='Tab'){
-          var buttons=Array.prototype.slice.call($('shareMenu').querySelectorAll('button:not([disabled]),a[href]'));
+          var buttons=Array.prototype.slice.call($('shareMenu').querySelectorAll('button:not([disabled]),a[href],a[role="button"]'));
           buttons=buttons.filter(function(node){return !node.hidden;});
           var first=buttons[0],last=buttons[buttons.length-1];
           if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
@@ -748,13 +757,17 @@
 
       async function compartilharNativo(){
         var e=state.data&&state.data.evento||{};
-        var url=linkCanonicoEvento();
+        var shareId=state.eventoId, shareData=state.data;
+        var url=window.CTPublicShare ? await window.CTPublicShare.resolveEventUrl(state.eventoId) : 'https://cariocaticket.com.br/';
+        if(state.eventoId!==shareId||state.data!==shareData)return;
+        if(url==='https://cariocaticket.com.br/'){mostrarShareToast('Compartilhamento deste evento indisponível no momento. Atualize e tente novamente.');return;}
         var detalhes=[e.data,e.local,e.cidade].filter(Boolean).join(' · ');
         var titulo=(e.nome||tr('Evento'))+' · Carioca Ticket';
         var texto=tr('Confira {event}{details} na Carioca Ticket.',{event:e.nome||tr('este evento'),details:detalhes?' — '+detalhes:''});
 
         if(window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId)){titulo+=' — Evento encerrado';texto='Evento encerrado. Informações de referência da Roda de Samba Estilo Carioca.';}
 
+        if(url==='https://cariocaticket.com.br/'){titulo='Carioca Ticket';texto='Confira a agenda na Carioca Ticket.';}
         fecharMenuCompartilhamento();
 
         if(navigator.share){
@@ -770,18 +783,21 @@
           await copiarLinkCompartilhamento(url);
           mostrarShareToast('Link do evento copiado!');
         }catch(_){
-          mostrarShareToast('Use a barra do navegador para copiar o link.');
+          mostrarShareToast('Não foi possível copiar. Tente novamente.');
         }
       }
 
       async function copiarLinkDireto(){
-        var url=linkCanonicoEvento();
+        var shareId=state.eventoId, shareData=state.data;
+        var url=window.CTPublicShare ? await window.CTPublicShare.resolveEventUrl(state.eventoId) : 'https://cariocaticket.com.br/';
+        if(state.eventoId!==shareId||state.data!==shareData)return;
+        if(url==='https://cariocaticket.com.br/'){mostrarShareToast('Compartilhamento deste evento indisponível no momento. Atualize e tente novamente.');return;}
         fecharMenuCompartilhamento();
         try{
           await copiarLinkCompartilhamento(url);
           mostrarShareToast('Link do evento copiado!');
         }catch(_){
-          mostrarShareToast('Use a barra do navegador para copiar o link.');
+          mostrarShareToast('Não foi possível copiar. Tente novamente.');
         }
       }
 
@@ -1252,6 +1268,7 @@
   <script src="/assets/ct-analytics.js?v=20261010-privacy1" data-ct-public-privacy="required" defer></script>
 </body>
 </html>
+
 
 
 

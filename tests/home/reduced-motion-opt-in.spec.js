@@ -721,13 +721,17 @@ test('canceling the native share stub keeps automatic events paused until explic
       } });
       Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { window.motionClipboardCalls++; } } });
     });
+    await page.route('**/assets/social-event-pages.json', route => {
+      if(route.request().method()!=='GET'||new URL(route.request().url()).origin!=='http://127.0.0.1:4174')return route.abort();
+      return route.fulfill({contentType:'application/json',body:JSON.stringify({schema:'CT_PUBLISHED_SHARE_INDEX_V1',revision:'a'.repeat(64),generatedAt:'2026-10-09T12:00:00.000Z',entries:events.map(event=>({eventId:event.id,sharePath:'/compartilhar/'+encodeURIComponent(event.id)+'/',detailUrl:'https://cariocaticket.com.br/evento/?evento='+encodeURIComponent(event.id),endsAt:'2035-12-31T23:59:59.000Z'})),fallbacks:[]})});
+    });
     const state = await setup(page);
     await reveal(page, EVENTS);
     await expectPlaying(page, EVENTS);
     const share = page.locator('.catalog-card:not([inert]) [data-public-share="event"]');
-    const button = share.getByRole('button');
+    const button = share.locator('button[type="button"]');
     await button.tap();
-    expect(await page.evaluate(() => window.motionShareCalls.length)).toBe(1);
+    await expect.poll(()=>page.evaluate(() => window.motionShareCalls.length)).toBe(1);
     await expect(button).toBeDisabled();
     await expect(page.locator(EVENTS.toggle)).toBeDisabled();
     await expect(page.locator(EVENTS.previous)).toBeDisabled();

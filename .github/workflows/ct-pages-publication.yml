@@ -1,0 +1,57 @@
+# LOCAL PROPOSAL ONLY: do not install/enable before scoped production approval.
+name: Carioca Ticket complete Pages publication
+on:
+  workflow_dispatch:
+    inputs:
+      first_publication:
+        description: Explicitly approved initial receipt creation; only accepted on HTTP404
+        type: boolean
+        default: false
+# Add schedule ONLY after standing data-only publication approval:
+# schedule:
+#   - cron: '*/5 * * * *'
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: ct-pages-production
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate local build modules
+        run: node --test social-preview-build/*.test.*
+      - name: Read prior published watermark
+        # Must fail if prior state is unknown, not silently pretend first deployment.
+        env:
+          FIRST_PUBLICATION: ${{ inputs.first_publication }}
+        run: |
+          status=$(curl --silent --show-error --max-time 30 --proto '=https' -w '%{http_code}' https://cariocaticket.com.br/assets/social-publication-receipt.json -o "$RUNNER_TEMP/previous.json")
+          if [ "$status" = 404 ] && [ "$FIRST_PUBLICATION" = true ]; then
+            printf '{"schema":"CT_FIRST_PUBLICATION_404_APPROVED"}' > "$RUNNER_TEMP/previous.json"
+            echo 'CT_INITIAL_RECEIPT_404=1' >> "$GITHUB_ENV"
+          elif [ "$status" != 200 ]; then
+            echo "Unknown prior publication state: $status" >&2; exit 1
+          fi
+      - name: Build full site from two fresh governed catalog reads
+        env:
+          CT_APPROVED_PUBLICATION: '1'
+        run: node social-preview-build/prepare-pages-candidate.mjs "$GITHUB_WORKSPACE" "$RUNNER_TEMP/ct-pages" "$RUNNER_TEMP/previous.json"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/ct-pages
+      - name: Publish complete artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

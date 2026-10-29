@@ -1,9 +1,9 @@
 (function () {
   'use strict';
-  function eventPublicUrl(id) {
-    // Mesmo destino do link Ver evento no catálogo da home.
-    var route=String(id||'')==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'?'/evento-v2/':'/evento/';
-    return 'https://cariocaticket.com.br'+route+'?evento='+encodeURIComponent(id);
+  function eventPublicUrl() { return 'https://cariocaticket.com.br/'; }
+  async function resolveShareUrl(id) {
+    try { return window.CTPublishedShareIndex ? await window.CTPublishedShareIndex.resolve(id) : eventPublicUrl(); }
+    catch (_) { return eventPublicUrl(); }
   }
   var destinations = {
     home: { url:'https://cariocaticket.com.br/', title:'Carioca Ticket', label:'shareSite' },
@@ -32,16 +32,47 @@
   var whatsAppLinks = new WeakMap();
   var whatsAppBound = new WeakSet();
   var whatsAppLabels = { 'pt-BR':'Compartilhar no WhatsApp', 'en-US':'Share on WhatsApp', es:'Compartir en WhatsApp', 'zh-Hans':'通过 WhatsApp 分享' };
+  var sharingLabels = { 'pt-BR':'Compartilhamento', 'en-US':'Sharing', es:'Compartir', 'zh-Hans':'分享' };
+  function renderWhatsAppControl(link, language) {
+    var control = link.parentElement;
+    if (!control || !control.classList.contains('ct-whatsapp-control')) {
+      control = document.createElement('span');
+      control.className = 'ct-whatsapp-control';
+      var heading = document.createElement('span');
+      heading.className = 'ct-whatsapp-heading';
+      link.parentNode.insertBefore(control, link);
+      control.appendChild(heading);
+      control.appendChild(link);
+      // Local Font Awesome 6.7.2 brand asset; attribution lives with the SVG.
+      var icon = document.createElement('img');
+      icon.src = '/assets/whatsapp-brand.svg';
+      icon.alt = ''; icon.width = 24; icon.height = 24;
+      icon.setAttribute('aria-hidden', 'true');
+      link.replaceChildren(icon);
+    }
+    control.firstElementChild.textContent = sharingLabels[language];
+    control.firstElementChild.lang = language;
+    control.hidden = false;
+    link.title = whatsAppLabels[language];
+  }
+  function unavailableShare() { return { 'pt-BR':'Compartilhamento deste evento indisponível no momento. Atualize e tente novamente.', 'en-US':'Sharing this event is currently unavailable. Refresh and try again.', es:'No se puede compartir este evento ahora. Actualiza e inténtalo de nuevo.', 'zh-Hans':'暂时无法分享此活动。请刷新后重试。' }[locale()]; }
+  function shareUnavailable(link) {
+    var status = link.parentElement.querySelector('[role="status"]');
+    if (!status) { status = document.createElement('span'); status.setAttribute('role', 'status'); link.parentElement.appendChild(status); }
+    status.textContent = unavailableShare();
+  }
   function updateWhatsApp(link) {
     var entry = whatsAppLinks.get(link);
     if (!entry) return;
     var destination = entry.destination;
     var language = locale();
-    var message = destination.event ? eventText(destination) + ' ' + destination.url : destination.title + ' ' + destination.url;
-    link.textContent = whatsAppLabels[language];
+    var message = destination.event ? 'Carioca Ticket ' + eventPublicUrl() : destination.title + ' ' + destination.url;
+    if (destination.url === destinations.program.url) link.textContent = whatsAppLabels[language];
+    else renderWhatsAppControl(link, language);
     link.lang = language;
     link.setAttribute('aria-label', whatsAppLabels[language] + (destination.event ? ': ' + destination.title : ''));
-    link.href = 'https://wa.me/?text=' + encodeURIComponent(message);
+    if (destination.event) { link.removeAttribute('href'); link.setAttribute('role', 'button'); link.tabIndex = 0; }
+    else link.href = 'https://wa.me/?text=' + encodeURIComponent(message);
     link.hidden = false;
   }
   function mountWhatsApp(link, destination, onClick) {
@@ -50,12 +81,44 @@
       whatsAppBound.add(link);
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      link.addEventListener('click', function (event) {
+      link.addEventListener('keydown', function (event) {
+        if (link.getAttribute('role') === 'button' && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); link.click(); }
+      });
+      link.addEventListener('click', async function (event) {
         event.stopPropagation();
         if (activeShare || link.closest('[inert]') || !whatsAppLinks.has(link)) { event.preventDefault(); return; }
-        updateWhatsApp(link);
-        var callback = whatsAppLinks.get(link).onClick;
-        if (callback) callback();
+        var entry = whatsAppLinks.get(link);
+        if (!entry.destination.event) {
+          updateWhatsApp(link);
+          if (entry.onClick) entry.onClick();
+          return;
+        }
+        event.preventDefault();
+        activeShare = true;
+        link.setAttribute('aria-busy', 'true');
+        var popup = null;
+        try {
+          // Existing _blank behavior, reserved inside the user gesture for async validation.
+          popup = window.open('about:blank', '_blank');
+          if (!popup) {
+            var status = link.parentElement.querySelector('[role="status"]');
+            if (!status) { status = document.createElement('span'); status.setAttribute('role', 'status'); link.parentElement.appendChild(status); }
+            status.textContent = 'Não foi possível abrir o WhatsApp. Permita a abertura de uma nova guia e tente novamente.';
+            return;
+          }
+          popup.opener = null;
+          var referrer = popup.document.createElement('meta');
+          referrer.name = 'referrer'; referrer.content = 'no-referrer';
+          popup.document.head.appendChild(referrer);
+          var url = await resolveShareUrl(entry.destination.eventId);
+          if (whatsAppLinks.get(link) !== entry || !link.isConnected || link.closest('[inert]')) { popup.close(); return; }
+          if (url === eventPublicUrl()) { popup.close(); shareUnavailable(link); return; }
+          var message = eventText(entry.destination) + ' ' + url;
+          popup.location.replace('https://wa.me/?text=' + encodeURIComponent(message));
+          if (entry.onClick) entry.onClick();
+        } catch (_) { if (popup) popup.close(); }
+        finally { activeShare = false; link.removeAttribute('aria-busy'); }
+
       });
     }
     whatsAppLinks.set(link, { destination:destination, onClick:onClick });
@@ -63,16 +126,19 @@
   }
   // Public data only. No current query string, form fields or recipient number.
   window.CTPublicShare = {
+    resolveEventUrl: resolveShareUrl,
     eventWhatsApp: function (link, event, id, onClick) {
       function clean(value) { return typeof value === 'string' ? value.trim() : ''; }
       if (!link || !event || !clean(id)) return;
-      mountWhatsApp(link, { event:true, title:clean(event.nome) || 'Carioca Ticket',
+      mountWhatsApp(link, { event:true, eventId:clean(id), title:clean(event.nome) || 'Carioca Ticket',
         date:[clean(event.data), clean(event.horario)].filter(Boolean).join(' · '),
         venue:[clean(event.local), clean(event.cidade), clean(event.uf)].filter(Boolean).join(' · '),
         url:eventPublicUrl(id) }, onClick);
     },
     clearEventWhatsApp: function (link) {
-      if (link) { whatsAppLinks.delete(link); link.hidden = true; link.removeAttribute('href'); }
+      if (link) { whatsAppLinks.delete(link); link.hidden = true; link.removeAttribute('href');
+        if (link.parentElement && link.parentElement.classList.contains('ct-whatsapp-control')) link.parentElement.hidden = true;
+      }
     }
   };
   var activeShare = false;
@@ -80,7 +146,7 @@
     if (!destination || mounted.has(host)) return;
     var button = host.querySelector('button'), label = host.querySelector('[data-share-label]');
     var feedback = host.querySelector('[role="status"]'), input = host.querySelector('input');
-    var pending = false, message = '';
+    var pending = false, message = '', resolvedFallback = null;
     // Keep the lifecycle target stable even if filters re-render the card while
     // the native share sheet or clipboard promise is still open.
     var activityTarget = host.closest('#event-feature') || host;
@@ -92,8 +158,8 @@
     function labels() {
       label.textContent = text(destination.label);
       input.setAttribute('aria-label', destination.event ? copy().label : text('shareLink'));
-      feedback.textContent = message ? (destination.event ? copy()[message === 'shareCopied' ? 'copied' : 'failed'] : text(message)) : '';
-      input.value = destination.event ? eventText(destination) + ' ' + destination.url : destination.url;
+      feedback.textContent = message === 'shareUnavailable' ? unavailableShare() : (message ? (destination.event ? copy()[message === 'shareCopied' ? 'copied' : 'failed'] : text(message)) : '');
+      input.value = destination.event ? ((resolvedFallback && resolvedFallback !== eventPublicUrl()) ? eventText(destination) + ' ' + resolvedFallback : 'Carioca Ticket ' + eventPublicUrl()) : destination.url;
       host.classList.toggle('has-feedback', !!message);
       updateWhatsApp(whatsApp);
     }
@@ -107,13 +173,18 @@
       activeShare = true;
       pending = true; button.disabled = true; button.setAttribute('aria-busy', 'true');
       notify('start');
-      message = ''; feedback.textContent = ''; input.hidden = true;
+      message = ''; resolvedFallback = null; feedback.textContent = ''; input.hidden = true;
       // Only fixed destinations or IDs/titles already in the public catalog.
       // Never forward the current URL, attribution/query parameters or session data.
-      var payload = { title:destination.title, url:destination.url };
-      if (destination.event) payload.text = eventText(destination);
-      var clipboardText = destination.event ? payload.text + ' ' + destination.url : destination.url;
       try {
+      var resolvedUrl = destination.event ? await resolveShareUrl(destination.eventId) : destination.url;
+      if (host.closest('[inert]') || !host.isConnected) return;
+      resolvedFallback = resolvedUrl;
+      var deniedEvent = destination.event && resolvedUrl === eventPublicUrl();
+      if (deniedEvent) { message = 'shareUnavailable'; return; }
+      var payload = { title:deniedEvent ? 'Carioca Ticket' : destination.title, url:resolvedUrl };
+      if (destination.event) payload.text = deniedEvent ? 'Carioca Ticket' : eventText(destination);
+      var clipboardText = destination.event ? payload.text + ' ' + resolvedUrl : resolvedUrl;
         var supported = false;
         try { supported = typeof navigator.share === 'function' && (!navigator.canShare || navigator.canShare(payload)); } catch (_) {}
         if (supported) {
@@ -148,7 +219,7 @@
       eventTitle.textContent = ' ' + title.textContent;
       eventTitle.lang = title.lang || document.documentElement.lang; eventTitle.setAttribute('translate', 'no');
       actions.appendChild(host);
-      mount(host, { url:eventPublicUrl(card.dataset.eventId), title:title.textContent, date:card.dataset.shareDate || '', venue:card.dataset.shareVenue || '', event:true, label:'shareEvent' });
+      mount(host, { eventId:card.dataset.eventId, url:eventPublicUrl(card.dataset.eventId), title:title.textContent, date:card.dataset.shareDate || '', venue:card.dataset.shareVenue || '', event:true, label:'shareEvent' });
     });
   }
   if (grid) { new MutationObserver(mountCards).observe(grid, { childList:true }); mountCards(); }
@@ -159,6 +230,7 @@
   document.addEventListener('ct:public-language', refreshWhatsApp);
   window.addEventListener('storage', function (event) { if (!event.key || event.key === 'ct-home-locale') refreshWhatsApp(); });
 }());
+
 
 
 

@@ -1,0 +1,42 @@
+name: Event social preview lab (offline)
+on:
+  pull_request:
+    paths:
+      - 'scripts/generate-event-social-previews.mjs'
+      - 'tests/event-social-previews.offline.mjs'
+      - 'tests/event-social-public-catalog.offline.mjs'
+      - 'tests/event-social-release.offline.mjs'
+      - 'scripts/derive-event-social-manifest.mjs'
+      - 'scripts/build-event-social-release-lab.mjs'
+      - 'scripts/verify-event-social-attestation.mjs'
+      - 'scripts/build-event-social-sealed-release-lab.mjs'
+      - 'scripts/audit-event-social-release-lab.mjs'
+      - 'scripts/plan-event-social-transition-lab.mjs'
+      - 'tests/event-social-attestation.offline.mjs'
+      - 'tests/event-social-interoperability.offline.mjs'
+      - 'tests/event-social-release-audit.offline.mjs'
+      - 'tests/event-social-transition.offline.mjs'
+      - 'tests/fixtures/social-preview-ed25519-contract.json'
+      - 'docs/architecture/event-social-preview-publication.md'
+      - '.github/workflows/event-social-preview-lab.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-social-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate static Open Graph generation and denial cases
+        run: |
+          node tests/event-social-previews.offline.mjs
+          node tests/event-social-public-catalog.offline.mjs
+          node tests/event-social-release.offline.mjs
+          node tests/event-social-attestation.offline.mjs
+          node tests/event-social-interoperability.offline.mjs
+          node tests/event-social-release-audit.offline.mjs
+          node tests/event-social-transition.offline.mjs

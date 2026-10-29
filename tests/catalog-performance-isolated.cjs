@@ -27,6 +27,7 @@ function warmSources() {
   for (const variant of ['before', 'after']) for (const file of files) {
     // These new controls did not exist in the historical catalog baseline.
     if(variant==='before'&&(/^assets\/public-privacy\.(js|css)$/.test(file)||file==='assets/public-catalog-clock.js'))continue;
+    if(variant==='before'&&file==='assets/public-share-index.js'&&!source('before','index.html').toString('utf8').includes('/assets/public-share-index.js'))continue;
     source(variant,file);
   }
 }
@@ -61,6 +62,8 @@ async function fixture(browser, variant, count, options = {}) {
   await context.route('**/*', async route => {
     const request = route.request(), url = new URL(request.url());
     if (url.origin === ORIGIN && request.method() === 'GET') {
+      if (url.pathname === '/assets/whatsapp-brand.svg') return route.fulfill({contentType:'image/svg+xml',body:cover});
+      if (url.pathname === '/assets/social-event-pages.json') return route.fulfill({contentType:'application/json',body:JSON.stringify({schema:'CT_PUBLISHED_SHARE_INDEX_V1',revision:'a'.repeat(64),generatedAt:new Date().toISOString(),entries:[],fallbacks:rows(count).map(e=>({eventId:e.id,detailUrl:'https://cariocaticket.com.br/evento/?evento='+encodeURIComponent(e.id),reason:'NO_VERIFIABLE_END'}))})});
       if (url.pathname === '/away') return route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Fixture</title><a href="/">Home</a>' });
       // The unchanged home prefetches this document. Keep it a blank fixture;
       // never load or execute the producer portal in a catalog benchmark.
@@ -125,7 +128,7 @@ async function filter(page, value) {
 async function benchmark(browser, variant, count) {
   const f = await fixture(browser, variant, count, { presentationDelay: 500, rpcDelay: 250, imageDelay: 100 });
   await ready(f.page, count);
-  await f.page.locator('.catalog-card').first().locator('img').evaluate(img => img.decode());
+  await f.page.locator('.catalog-card').first().locator('.catalog-photo img').evaluate(img => img.decode());
   const first = await snapshot(f.page);
   const firstCoverAt = await f.page.evaluate(() => performance.now());
   const initialImageRequests = f.state.imageRequests.length;
@@ -177,7 +180,7 @@ async function regression(browser) {
       assert.equal(await f.page.locator('.catalog-photo img[src]').count(), 2);
       await f.page.locator('#events-grid').focus(); await f.page.keyboard.press('End');
       assert.equal(await f.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), 'SYNTHETIC-' + (n - 1));
-      await f.page.locator('.catalog-card:not([inert]) img').evaluate(img => img.decode());
+      await f.page.locator('.catalog-card:not([inert]) .catalog-photo img').evaluate(img => img.decode());
       await f.page.keyboard.press('Home');
       await f.page.keyboard.press('ArrowLeft');
       assert.equal(await f.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), 'SYNTHETIC-' + (n - 1));
@@ -186,7 +189,7 @@ async function regression(browser) {
     await filter(f.page, 'Recife'); await ready(f.page, Math.floor(n / 2));
     await filter(f.page, ''); await ready(f.page, n);
     if (n > 5) {
-      const unseen = f.page.locator('[data-event-id="SYNTHETIC-5"] img');
+      const unseen = f.page.locator('[data-event-id="SYNTHETIC-5"] .catalog-photo img');
       assert.equal(await unseen.getAttribute('src'), null);
       await filter(f.page, 'sintético 5 10/10/2027'); await ready(f.page, 1);
       assert.equal(await unseen.getAttribute('src'), ORIGIN + '/__fixture/cover-5.svg');
@@ -260,6 +263,7 @@ async function regression(browser) {
   const retainedShareIndex = shareIds.indexOf(retainedShareId);
   assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), shareIds[0]);
   await share.page.locator('.catalog-card:not([inert]) [data-public-share="event"] button').click();
+  await share.page.waitForFunction(() => shareCalls.length === 1);
   await filter(share.page, 'Recife'); await ready(share.page, 7);
   assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), '0');
   assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
@@ -296,7 +300,7 @@ async function regression(browser) {
   await drag.page.mouse.move(point.x + 90, point.y, { steps: 6 });
   await drag.page.mouse.up();
   assert.equal(await drag.page.locator('#events-grid').getAttribute('data-active-index'), '2');
-  await drag.page.locator('.catalog-card:not([inert]) img').evaluate(img => img.decode());
+  await drag.page.locator('.catalog-card:not([inert]) .catalog-photo img').evaluate(img => img.decode());
   point = await dragStart(); await drag.page.mouse.move(point.x - 90, point.y, { steps: 4 });
   await drag.page.locator('#events-grid').dispatchEvent('pointercancel', { pointerId: 1, pointerType: 'mouse', isPrimary: true });
   await drag.page.mouse.up();
@@ -316,13 +320,13 @@ async function regression(browser) {
     await lateCover.page.waitForFunction(() => document.querySelector('.catalog-card:not([inert]) .catalog-image-fallback').textContent === CTHome.t('coverMissing'));
   } catch (error) {
     console.error('Synthetic broken cover failure', await loadingCover.evaluate(card => {
-      const fallback = card.querySelector('.catalog-image-fallback'), img = card.querySelector('img');
+      const fallback = card.querySelector('.catalog-image-fallback'), img = card.querySelector('.catalog-photo img');
       return { fallback: fallback.textContent, fallbackHidden: fallback.hidden, imageHidden: img.hidden, complete: img.complete, naturalWidth: img.naturalWidth };
     }));
     throw error;
   }
   assert.equal(await loadingCover.locator('.catalog-image-fallback').isVisible(), true);
-  assert.equal(await loadingCover.locator('img').evaluate(img => img.hidden && img.naturalWidth === 0), true);
+  assert.equal(await loadingCover.locator('.catalog-photo img').evaluate(img => img.hidden && img.naturalWidth === 0), true);
   assert.equal(await loadingCover.locator('.catalog-title').textContent(), 'Evento sintético 2');
   assert.equal(await loadingCover.locator('.btn-primary').getAttribute('href'), '/checkout/?evento=SYNTHETIC-2');
   await lateCover.finish(); passed++;
@@ -355,4 +359,5 @@ async function regression(browser) {
     console.log('PASS: isolated catalog benchmark and ' + report.regressions + ' regression groups; zero forwarded requests.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
 

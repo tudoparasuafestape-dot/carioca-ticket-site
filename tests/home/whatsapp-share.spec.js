@@ -9,15 +9,21 @@ const languages = {
   es: ['Compartir en WhatsApp', 'Descubre este evento en Carioca Ticket.'],
   'zh-Hans': ['通过 WhatsApp 分享', '在 Carioca Ticket 查看此活动。']
 };
-const eventData = { id:'PUBLIC & festa/中文', nome:'Festa <img src=x> & amigos', data:'20/12/2030', horario:'18h', local:'Casa da música', cidade:'Recife', uf:'PE', token:'PRIVATE-TOKEN', convite:'PRIVATE-INVITE' };
+const eventData = { id:'PUBLIC-FESTA-2030', nome:'Festa <img src=x> & amigos', data:'20/12/2030', horario:'18h', local:'Casa da música', cidade:'Recife', uf:'PE', token:'PRIVATE-TOKEN', convite:'PRIVATE-INVITE' };
 async function prepare(page, surface, locale) {
   await page.clock.install({ time: new Date('2030-12-20T12:00:00Z') });
   const network = [];
+  await page.route('**/assets/social-event-pages.json', route => {
+    if (route.request().method() !== 'GET' || new URL(route.request().url()).origin !== ORIGIN) return route.abort();
+    return route.fulfill({ contentType:'application/json', body:JSON.stringify({schema:'CT_PUBLISHED_SHARE_INDEX_V1',revision:'a'.repeat(64),generatedAt:'2030-12-20T12:00:00.000Z',entries:[eventData.id,'NEW-ID'].map(eventId=>({eventId,sharePath:'/compartilhar/'+eventId+'/',detailUrl:'https://cariocaticket.com.br/evento/?evento='+eventId,endsAt:'2030-12-21T12:00:00.000Z'})),fallbacks:[]}) });
+  });
+  await page.route('**/assets/whatsapp-brand.svg', route => route.fulfill({contentType:'image/svg+xml',body:fs.readFileSync(path.join(ROOT,'assets/whatsapp-brand.svg'))}));
   const errors = []; page.on('pageerror',error=>errors.push(error.message));
   await page.addInitScript(({locale,eventData,surface,detailEnvelope,detailTtl}) => {
     localStorage.setItem('ct-home-locale', locale);
     localStorage.setItem('ct-home-font', '150');
-    window.shareCalls = []; window.copyCalls = [];
+    window.shareCalls = []; window.copyCalls = []; window.popupCalls=[];
+    window.open = (url,target) => { const call={url,target,closed:false,replaced:null}; window.popupCalls.push(call); return {opener:null,document:{createElement:()=>({}),head:{appendChild:()=>{}}},location:{replace:value=>{call.replaced=value;}},close:()=>{call.closed=true;}}; };
     Object.defineProperty(navigator, 'share', { configurable:true, value:async value => { window.shareCalls.push(value); } });
     Object.defineProperty(navigator, 'clipboard', { configurable:true, value:{ writeText:async value => { window.copyCalls.push(value); } } });
     // Synthetic responses only; submitting a real form is never allowed here.
@@ -61,15 +67,13 @@ for (const surface of ['home','card','program','evento','evento-v2']) for (const
   test(`WhatsApp explicit public navigation / ${surface} / ${locale}`, async ({page},testInfo) => {
     await page.setViewportSize({width:320,height:1100});
     const {link,network,errors}=await prepare(page,surface,locale);
-    await expect(link).toBeVisible(); await expect(link).toHaveText(label);
+    await expect(link).toBeVisible(); if(surface==='program') await expect(link).toHaveText(label); else await expect(link).toHaveAttribute('title',label);
+    await expect(link).toHaveAttribute('aria-label', ['card','evento','evento-v2'].includes(surface)?label+': '+eventData.nome:label);
+    if(surface!=='program') { await expect(link.locator('img')).toHaveAttribute('src','/assets/whatsapp-brand.svg'); await expect(link.locator('img')).toHaveAttribute('aria-hidden','true'); await expect.poll(()=>link.locator('img').evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true); }
     await expect(link).toHaveAttribute('target','_blank'); await expect(link).toHaveAttribute('rel','noopener noreferrer');
-    const url=new URL(await link.getAttribute('href'));
-    expect(url.origin).toBe('https://wa.me'); expect(url.pathname).toBe('/'); expect([...url.searchParams.keys()]).toEqual(['text']);
-    const message=url.searchParams.get('text');
-    if (['card','evento','evento-v2'].includes(surface)) {
-      expect(message).toBe([eventData.nome,eventData.data+' · '+eventData.horario,eventData.local+' · '+eventData.cidade+' · '+eventData.uf,cta].join(' · ')+' https://cariocaticket.com.br/evento/?evento='+encodeURIComponent(eventData.id));
-    } else expect(message).toBe(surface==='home'?'Carioca Ticket https://cariocaticket.com.br/':'Programa Parceiro Carioca Ticket https://cariocaticket.com.br/parceiro/programa/');
-    expect(message).not.toMatch(/PRIVATE|undefined|null/);
+    const isEvent=['card','evento','evento-v2'].includes(surface);
+    if(isEvent) { await expect(link).not.toHaveAttribute('href'); await expect(link).toHaveAttribute('role','button'); }
+    else { const url=new URL(await link.getAttribute('href')); expect(url.origin).toBe('https://wa.me'); expect(url.pathname).toBe('/'); expect([...url.searchParams.keys()]).toEqual(['text']); expect(url.searchParams.get('text')).toBe(surface==='home'?'Carioca Ticket https://cariocaticket.com.br/':'Programa Parceiro Carioca Ticket https://cariocaticket.com.br/parceiro/programa/'); }
     expect(await page.evaluate(()=>window.whatsAppClicks || 0)).toBe(0);
     for (const width of [320,1440]) for (const theme of ['light','dark']) {
       await page.setViewportSize({width,height:1100});
@@ -83,13 +87,22 @@ for (const surface of ['home','card','program','evento','evento-v2']) for (const
     await blockNavigation(page);
     await link.focus(); await expect(link).toBeFocused(); await page.keyboard.press('Enter');
     expect(await page.evaluate(()=>window.whatsAppClicks)).toBe(1);
+    if(isEvent) {
+      await expect.poll(()=>page.evaluate(()=>popupCalls[0]&&popupCalls[0].replaced)).toBeTruthy();
+      const url=new URL(await page.evaluate(()=>popupCalls[0].replaced));
+      expect(url.origin).toBe('https://wa.me'); expect(url.pathname).toBe('/'); expect([...url.searchParams.keys()]).toEqual(['text']);
+      const message=url.searchParams.get('text');
+      expect(message).toBe([eventData.nome,eventData.data+' · '+eventData.horario,eventData.local+' · '+eventData.cidade+' · '+eventData.uf,cta].join(' · ')+' https://cariocaticket.com.br/compartilhar/'+eventData.id+'/');
+      expect(message).not.toMatch(/PRIVATE|undefined|null/);
+      expect(await page.evaluate(()=>popupCalls[0].url)).toBe('about:blank');
+    }
     expect(await page.evaluate(()=>[shareCalls.length,copyCalls.length])).toEqual([0,0]);
     expect(network.filter(url=>url.includes('wa.me')||url.includes('whatsapp'))).toEqual([]);
     expect(errors).toEqual([]);
     if (surface.startsWith('evento')) {
       await expect(page.locator('#shareMenu')).toBeHidden();
       await page.locator('#shareHero').click(); await expect(link).toBeVisible();
-      await page.locator('#shareNativeAction').click(); expect(await page.evaluate(()=>shareCalls.length)).toBe(1);
+      await page.locator('#shareNativeAction').click(); await expect.poll(()=>page.evaluate(()=>shareCalls.length)).toBe(1); expect(await page.evaluate(()=>shareCalls[0].url)).toBe('https://cariocaticket.com.br/compartilhar/'+eventData.id+'/');
     }
   });
 }
@@ -97,24 +110,37 @@ for (const surface of ['home','card','program','evento','evento-v2']) for (const
 test('WhatsApp card updates language and ignores inert cards',async({page})=>{
   const {link}=await prepare(page,'card','pt-BR');
   await page.evaluate(()=>CTHome.setLocale('en-US'));
-  await expect(link).toHaveText(languages['en-US'][0]);
-  expect(new URL(await link.getAttribute('href')).searchParams.get('text')).toContain(languages['en-US'][1]);
+  await expect(link).toHaveAttribute('aria-label',languages['en-US'][0]+': '+eventData.nome);
+  await expect(link).not.toHaveAttribute('href');
+  await link.click(); await expect.poll(()=>page.evaluate(()=>popupCalls[0]&&popupCalls[0].replaced)).toBeTruthy();
+  expect(new URL(await page.evaluate(()=>popupCalls[0].replaced)).searchParams.get('text')).toContain(languages['en-US'][1]);
   await link.evaluate(link=>link.closest('.catalog-card').setAttribute('inert',''));
   const prevented=await link.evaluate(link=>!link.dispatchEvent(new MouseEvent('click',{bubbles:false,cancelable:true})));
-  expect(prevented).toBe(true);
+  expect(prevented).toBe(true); expect(await page.evaluate(()=>popupCalls.length)).toBe(1);
 });
 
 test('event link clears stale data and remounts without duplicate click callbacks',async({page})=>{
   const {link}=await prepare(page,'evento','pt-BR');
   await page.evaluate(()=>{
     const link=document.getElementById('shareWhatsAppAction'); window.callbackCalls=0;
-    for(let i=0;i<3;i++) { CTPublicShare.clearEventWhatsApp(link); CTPublicShare.eventWhatsApp(link,{nome:'Somente nome',token:'PRIVATE'},'NEW & ID',()=>window.callbackCalls++); }
+    for(let i=0;i<3;i++) { CTPublicShare.clearEventWhatsApp(link); CTPublicShare.eventWhatsApp(link,{nome:'Somente nome',token:'PRIVATE'},'NEW-ID',()=>window.callbackCalls++); }
   });
-  const message=new URL(await link.getAttribute('href')).searchParams.get('text');
-  expect(message).toBe('Somente nome · Confira este evento na Carioca Ticket. https://cariocaticket.com.br/evento/?evento=NEW%20%26%20ID');
+  await expect(link).not.toHaveAttribute('href');
   await blockNavigation(page);
-  await link.click(); expect(await page.evaluate(()=>callbackCalls)).toBe(1);
+  await link.click(); await expect.poll(()=>page.evaluate(()=>callbackCalls)).toBe(1);
+  const message=new URL(await page.evaluate(()=>popupCalls[0].replaced)).searchParams.get('text');
+  expect(message).toBe('Somente nome · Confira este evento na Carioca Ticket. https://cariocaticket.com.br/compartilhar/NEW-ID/');
+  expect(message).not.toMatch(/PRIVATE|undefined|null/);
   await page.evaluate(()=>CTPublicShare.clearEventWhatsApp(document.getElementById('shareWhatsAppAction')));
   await expect(link).toBeHidden(); await expect(link).not.toHaveAttribute('href');
 });
 
+
+test('invalid event identity fails closed without sharing a stale destination',async({page})=>{
+ const {link}=await prepare(page,'evento','pt-BR');
+ await page.evaluate(()=>CTPublicShare.eventWhatsApp(document.getElementById('shareWhatsAppAction'),{nome:'Invalid identity'},'PUBLIC & festa/中文'));
+ await link.click(); await expect.poll(()=>page.evaluate(()=>popupCalls[0]&&popupCalls[0].closed)).toBe(true);
+ expect(await page.evaluate(()=>popupCalls[0].replaced)).toBe(null);
+ await expect(link.locator('..').locator('[role="status"]')).toContainText('indisponível');
+ expect(await page.evaluate(()=>[shareCalls.length,copyCalls.length])).toEqual([0,0]);
+});

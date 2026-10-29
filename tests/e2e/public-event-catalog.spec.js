@@ -38,7 +38,7 @@ async function fixture(page, options = {}) {
       const file = path.resolve(ROOT, relative);
       if (!file.startsWith(ROOT + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile())
         return route.fulfill({ status: 404, body: 'Local fixture: missing asset' });
-      const type = file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.webp') ? 'image/webp' : 'image/png';
+      const type = file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.webp') ? 'image/webp' : file.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
       return route.fulfill({ contentType: type, body: fs.readFileSync(file) });
     }
     if (url.origin !== 'https://script.google.com') return route.abort();
@@ -80,8 +80,8 @@ test('a single public catalog appears early, with complete covers and validated 
   }
   await page.locator('#event-rail-previous').click();
   await expect(page.locator('#events-grid')).toHaveAttribute('data-active-index', '0');
-  await expect(page.locator('.catalog-card').first().locator('img')).toBeVisible();
-  expect(await page.locator('.catalog-card').first().locator('img').evaluate(img => getComputedStyle(img).objectFit)).toBe('contain');
+  await expect(page.locator('.catalog-card').first().locator('.catalog-photo img')).toBeVisible();
+  expect(await page.locator('.catalog-card').first().locator('.catalog-photo img').evaluate(img => getComputedStyle(img).objectFit)).toBe('contain');
   const cover = await page.locator('.catalog-photo').first().boundingBox();
   // Search, share and explicit rotation controls remain above a cover visible in the first viewport.
   expect(cover.y).toBeLessThan(page.viewportSize().height - 160);
@@ -108,7 +108,7 @@ test('third event lazy cover loads after horizontal navigation without hiding th
   await fixture(page, { result: (attempt, nowMs) => positiveCatalog(threeEvents, nowMs) });
   await expect(page.locator('.catalog-card')).toHaveCount(3);
   const card = page.locator('[data-event-id="EVT-LOCAL-THIRD"]');
-  const image = card.locator('img');
+  const image = card.locator('.catalog-photo img');
   await expect(image).toHaveAttribute('loading', 'lazy');
   await page.locator('#events-grid').focus();
   await page.keyboard.press('End');
@@ -220,7 +220,10 @@ test('new public IDs render without allowlists; unsafe content stays text and im
   await expect(page.locator('.catalog-card')).toHaveCount(1);
   await expect(page.locator('.catalog-title')).toHaveText(event.nome);
   await expect(page.locator('.catalog-description')).toHaveText('Informação válida • Negócios');
-  await expect(page.locator('.catalog-card img')).toHaveCount(0);
+  await expect(page.locator('.catalog-card img')).toHaveCount(1);
+  await expect(page.locator('.catalog-card .ct-whatsapp-share img')).toHaveCount(1);
+  await expect(page.locator('.catalog-card .ct-whatsapp-share img')).toHaveAttribute('src', '/assets/whatsapp-brand.svg');
+  await expect(page.locator('.catalog-card .ct-whatsapp-share img')).toHaveAttribute('aria-hidden', 'true');
   await expect(page.getByRole('link', { name: 'Comprar ingresso: ' + event.nome })).toHaveAttribute('href', '/checkout/?evento=' + encodeURIComponent(event.id));
 });
 

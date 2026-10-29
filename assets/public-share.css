@@ -10,3 +10,14 @@
 
 .ct-public-share .ct-whatsapp-share { margin-left:6px; text-decoration:none; max-width:100%; box-sizing:border-box; text-align:center; vertical-align:middle; }
 
+
+/* Compact WhatsApp presentation; sharing destinations and click guards stay in public-share.js. */
+.ct-whatsapp-control { display:inline-flex; flex-direction:column; align-items:flex-start; gap:6px; margin-left:6px; vertical-align:bottom; }
+.ct-whatsapp-control[hidden] { display:none !important; }
+.ct-whatsapp-heading { display:block; font:inherit; font-size:.8125rem; line-height:1.4; color:inherit; }
+.ct-whatsapp-control .ct-whatsapp-share { display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; width:44px; min-width:44px; height:44px; min-height:44px; padding:9px; margin:0; border:1px solid #128c50; border-radius:10px; background:#25d366; color:#07351b; text-decoration:none; }
+.ct-whatsapp-control .ct-whatsapp-share img { display:block; width:24px; height:24px; }
+.ct-whatsapp-control .ct-whatsapp-share:focus-visible { outline:3px solid var(--home-focus,var(--gold2,#f0c95d)); outline-offset:3px; }
+.ct-whatsapp-control .ct-whatsapp-share:hover { background:#40df7b; }
+.ct-whatsapp-control .ct-whatsapp-share[hidden] { display:none !important; }
+.share-menu-actions > .ct-whatsapp-control { margin-left:0; }
