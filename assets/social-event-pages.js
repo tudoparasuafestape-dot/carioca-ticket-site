@@ -1,0 +1,1 @@
+(function(root){'use strict';var pages={"EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A":"/compartilhar/EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A/"};root.CTSocialEventPages=Object.freeze({url:function(id){var v=pages[String(id||'')];return v||'';}});}(typeof window==='object'?window:this));
