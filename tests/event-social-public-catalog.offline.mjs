@@ -27,6 +27,11 @@ assert.equal(valid[0].eventoId,H);
 assert.equal(valid[0].destinoPublicoHttps,'https://cariocaticket.com.br/evento-v2/?evento='+H);
 assert.equal(valid[0].modoAcesso,'PUBLICO');
 assert.equal(valid[0].imagemSocialHttps,event.visual.capaUrl);
+// Event date, time and venue must not disappear when official short copy exists.
+const annotated=deriveApprovedManifest({...snapshot,eventos:[{...event,
+  visual:{...event.visual,descricaoCurta:'Uma noite especial com atrações'}}]},{now:T+1000});
+for(const fragment of ['07/11/2026','20h00','Clube 10 de Novembro','Uma noite especial com atrações'])
+  assert(annotated[0].descricao.includes(fragment),'prévia deve conter: '+fragment);
 const other={...event,id:'EVT-PUBLICO-FICTICIO',nome:'Teste'};
 const legacyRoute=deriveApprovedManifest({...snapshot,eventos:[other]},{now:T+1000});
 assert.equal(legacyRoute[0].destinoPublicoHttps,'https://cariocaticket.com.br/evento/?evento=EVT-PUBLICO-FICTICIO');
