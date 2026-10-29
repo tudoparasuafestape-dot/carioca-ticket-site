@@ -26,8 +26,8 @@ jobs:
         run: node scripts/sync-public-social-manifest.cjs
       - name: Gerar prévias estáticas sem tocar pagamento
         run: |
-          node scripts/generate-social-previews.mjs
-          node scripts/generate-social-previews.mjs --check
+          node scripts/generate-social-previews.mjs --prune
+          node scripts/generate-social-previews.mjs --check --prune
           node tests/social-preview.contract.mjs
       - name: Criar PR Draft para aprovação humana (nunca merge/deploy)
         uses: peter-evans/create-pull-request@v7
