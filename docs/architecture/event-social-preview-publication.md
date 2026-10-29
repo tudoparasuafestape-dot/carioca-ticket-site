@@ -1,17 +1,17 @@
 # Padrão de compartilhamento com capa por evento — proposta de implementação (LAB)
 
-## Próxima camada implementada — atestado assinado e revisão (LAB)
+## Próxima camada implementada — atestado Ed25519 e revisão (LAB)
 
-Foi confirmado no GitHub que `ctEventosPublicosListarPROD()` da `main` do backend continua sem os campos temporais exclusivos; a resposta **real da implantação PROD ainda não foi inspecionada**. Portanto, não há fonte real autorizada para o gerador de produção. Para impedir que um JSON manual seja confundido com autorização:
+Foi confirmado que `ctEventosPublicosListarPROD()` na `main` do backend segue sem envelope temporal explícito; a implantação ativa do Apps Script ainda não foi inspecionada. Para evitar que um JSON manual seja confundido com autorização:
 
-- `scripts/verify-event-social-attestation.mjs` exige atestado com `version=1`, `issuer='ct-public-catalog-authoritative'`, `audience='ct-social-preview-release-v1'`, `keyId`, `issuedAt`, `expiresAt`, `revision`, `snapshot` e assinatura HMAC-SHA256 de 32 bytes sobre serialização canônica de todos os campos, exceto a assinatura.
-- A chave de **verificação** neste laboratório vem somente de `CT_SOCIAL_PREVIEW_VERIFY_KEY_B64` (32 bytes em base64) e `CT_SOCIAL_PREVIEW_KEY_ID`, fornecidos no runtime, nunca do repositório. Nos testes existe apenas uma chave de fixture **sem valor em produção**.
-- Assinatura é verificada em tempo constante; o atestado vale no máximo **120 segundos**, deve ter relógio coerente e revisão crescente em relação ao recibo anterior informado. **A assinatura não substitui** a validação do contrato temporal/eligibilidade contida no snapshot.
-- `scripts/build-event-social-sealed-release-lab.mjs` é o futuro caminho de entrada para releases; chama a verificação antes de preparar candidato completo. Testes rejeitam assinatura incorreta, campos adulterados, snapshot vencido, falta de chave e repetição de revisão.
+- `scripts/verify-event-social-attestation.mjs` verifica `version=1`, `issuer='ct-public-catalog-authoritative'`, `audience='ct-social-preview-release-v1'`, `keyId`, `issuedAt`, `expiresAt`, `revision`, `snapshot` e assinatura **Ed25519**, feita sobre serialização canônica de todos os campos menos a assinatura.
+- Apenas a **chave pública** é necessária na etapa de geração: `CT_SOCIAL_PREVIEW_PUBLIC_KEY_PEM` e `CT_SOCIAL_PREVIEW_KEY_ID`. A chave privada será exclusiva do futuro emissor confiável, nunca versionada no GitHub nem oferecida ao gerador. Nos testes os pares Ed25519 são gerados em memória e descartados.
+- Assinatura, esquema, identidade/audiência, revisão crescente e validade (até 120 segundos) são checados antes de gerar qualquer arquivo; a assinatura **não substitui** os gates públicos e o contrato temporal fresco do snapshot.
+- `scripts/build-event-social-sealed-release-lab.mjs` exige o atestado assinado. `tests/event-social-attestation.offline.mjs` testa adulteração, chaves erradas, ausência de chave pública, data expirada, snapshot stale, revogação e revisão repetida.
 
-**Limitações de segurança que permanecem:** a proteção contra replay **não é completa sem uma fonte de revisão anterior imutável e confiável** (um recibo em JSON fornecido pelo operador poderia ser manipulado). A implantação deve obter e guardar essa revisão no canal de publicação protegido; também deve gerar o atestado **dentro do backend confiável**, não aceitar atestados assinados por quem prepara a publicação. HMAC é simétrico: quem possui a chave pode tanto assinar quanto verificar. Para separação real de privilégios entre backend e CI de publicação, preferir futuramente assinatura assimétrica (chave privada somente no backend, chave pública no CI), antes do go-live.
+**Limitações ainda obrigatórias antes do go-live:** o controle de revisão anterior só é forte se a revisão vier de registro protegido e não manipulável pelo publicador; um `previousReceipt` em JSON manual não fornece essa garantia. Também não existe emissor Ed25519 PROD, coleta autenticada da resposta do Apps Script ou prova de que o backend real entrega o contrato temporal. **A PR não publica nada.**
 
-**Não existe assinador de produção nem emissão de atestado ativa.** O gerador direto `build-event-social-release-lab.mjs` ainda existe para fixtures, e não pode ser instalado no pipeline de publicação: só o entrypoint verificado pode chegar à etapa de publicação, após isolar credenciais, assinar resposta autoritativa, proteger revisão, comprovar imagem 200 e homologar o processo.
+O construtor offline direto `build-event-social-release-lab.mjs` permanece disponível apenas para testes. Nunca deve ser ligado diretamente a um pipeline de publicação; somente a entrada verificada poderá ser usada, após isolamento de credenciais, revisão autoritativa, verificação da capa no domínio e autorização.
 
 ## Continuidade implementada — contrato do catálogo e revogação (LAB)
 
