@@ -12,7 +12,7 @@ const {privateKey,publicKey}=crypto.generateKeyPairSync('ed25519'); // Runtime f
 const {publicKey:untrustedKey}=crypto.generateKeyPairSync('ed25519');
 const env={CT_SOCIAL_PREVIEW_PUBLIC_KEY_PEM:publicKey.export({type:'spki',format:'pem'}),CT_SOCIAL_PREVIEW_KEY_ID:'lab-fixture-v1'};
 const event={
- id:EVENT,nome:'TBT do Astro — Aniversário de Herminho',
+ id:EVENT,nome:'TBT do Astro — Aniversário de Herminho',modoAcesso:'PUBLICO',status:'ATIVO',
  visual:{capaUrl:'https://cariocaticket.com.br/assets/eventos/herminho-tbt-20261107-a2f84c198ed5b283.jpg'},
  temporal:{state:'TEMPORAL_V1',temporalVersion:1,fusoHorario:'America/Recife',inicioEm:'2026-10-01T12:00:00.000Z',fimEm:'2026-11-08T06:00:00.000Z'}
 };
@@ -43,6 +43,8 @@ const bad=[
   {source:sign(1,{issuedAt:'2026-10-29T16:16:21.000Z'})},
   {source:sign(1,{snapshot:{...snapshot,cacheStale:true}})},
   {source:sign(1,{snapshot:{...snapshot,eventos:[{...event,temporal:null}]}})},
+  {source:sign(1,{snapshot:{...snapshot,eventos:[{...event,modoAcesso:'PRIVADO_CONVITE'}]}})},
+  {source:sign(1,{snapshot:{...snapshot,eventos:[{...event,status:'INATIVO'}]}})},
   {source:sign(),options:{now:Date.parse('2026-10-29T16:16:00.000Z')}},
   {source:sign(),options:{previousRevision:1}},
   {source:sign(),options:{previousRevision:2}},
