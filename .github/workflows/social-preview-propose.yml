@@ -1,0 +1,48 @@
+name: Propor prévias sociais de eventos publicados (sem deploy)
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  social-catalog:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Dependências apenas para navegador de leitura
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Ler somente agenda pública já elegível; abortar diante de falha
+        run: node scripts/sync-public-social-manifest.cjs
+      - name: Gerar prévias estáticas sem tocar pagamento
+        run: |
+          node scripts/generate-social-previews.mjs
+          node scripts/generate-social-previews.mjs --check
+          node tests/social-preview.contract.mjs
+      - name: Criar PR Draft para aprovação humana (nunca merge/deploy)
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bot/preview-social-eventos-publicados
+          base: main
+          draft: true
+          delete-branch: false
+          commit-message: "chore(social): prévias de eventos públicos para aprovação"
+          title: "[Draft automático] Atualizar capas de compartilhamento dos eventos"
+          body: |
+            Gerado de cards da agenda pública elegível, sem sessão ou dados pessoais.
+            Verificar imagem OG, privacidade do evento, janela temporal e destino antes do merge.
+            Nenhum checkout/Asaas/Pix foi alterado.
+          add-paths: |
+            social/events-publicados.json
+            compartilhar/
+            assets/social-event-pages.js
