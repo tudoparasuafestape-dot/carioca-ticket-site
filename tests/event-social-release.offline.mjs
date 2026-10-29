@@ -7,7 +7,7 @@ import {buildRelease} from '../scripts/build-event-social-release-lab.mjs';
 const H='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
 const NOW='2026-10-29T16:14:20.000Z';
 const event={
-  id:H,nome:'TBT do Astro — Aniversário de Herminho',data:'07/11/2026',horario:'20h',
+  id:H,nome:'TBT do Astro — Aniversário de Herminho',modoAcesso:'PUBLICO',status:'ATIVO',data:'07/11/2026',horario:'20h',
   local:'Clube 10 de Novembro',cidade:'Recife',uf:'PE',
   visual:{capaUrl:'https://cariocaticket.com.br/assets/eventos/herminho-tbt-20261107-a2f84c198ed5b283.jpg'},
   temporal:{state:'TEMPORAL_V1',temporalVersion:1,fusoHorario:'America/Recife',
