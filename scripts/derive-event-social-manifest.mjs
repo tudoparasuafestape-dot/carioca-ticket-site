@@ -73,7 +73,11 @@ function deriveApprovedManifest(snapshot,{now=Date.now()}={}){
       typeof event.local==='string'?event.local.trim():'',
       [event.cidade,event.uf].filter(v=>typeof v==='string'&&v.trim()).join(' / ')
     ].filter(Boolean).join(' · ');
-    const description=text((visual.descricaoCurta&&String(visual.descricaoCurta).trim())||summary||'Compre ingressos pela Carioca Ticket.',350,'descricao');
+    // Keep date/time/place visible even when editorial copy is provided.
+    // A single public OG description is bounded to 350 characters.
+    const editorial=typeof visual.descricaoCurta==='string'?visual.descricaoCurta.trim():'';
+    const description=text(([summary,editorial].filter(Boolean).join(' · ')||
+      'Compre ingressos pela Carioca Ticket.').slice(0,350),350,'descricao');
     manifest.push({
       fonte:SOURCE,eventoId:event.id,titulo:nome,descricao:description,
       imagemSocialHttps:cover,destinoPublicoHttps:detail,
