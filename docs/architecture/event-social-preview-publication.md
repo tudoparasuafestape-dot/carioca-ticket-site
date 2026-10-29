@@ -1,5 +1,21 @@
 # Padrão de compartilhamento com capa por evento — proposta de implementação (LAB)
 
+## Continuidade implementada — contrato do catálogo e revogação (LAB)
+
+**Fonte auditada no backend:** `CTEventoPublicoExperienciaPROD.js` → `ctEventosPublicosListarPROD()`. Essa função lê o gate de vendas `ctCheckoutPublicoGateStatusPROD()`, revalida cada evento publicado por `ctCheckoutPublicoGateExigirEventoAtivoPROD_`, verifica `ctEventoAcessoResolverPROD_(..., {somenteLeituraAtual:true})` com `modoAcesso='PUBLICO'` e `exibirCatalogo=true`, e exige evento `status='ATIVO'`. Esse retorno é a origem apropriada para a integração, **não** a listagem administrativa.
+
+**Lacuna comprovada:** a implementação de `ctEventosPublicosListarPROD()` no GitHub `main` do backend **não inclui diretamente** `temporalVersion`, `eligibilityContract`, `serverNow`, `temporalEvaluatedAt`, `validUntil`, `nextTransitionAt` nem `event.temporal` em cada linha. Pode existir uma versão PROD diferente, mas **não podemos afirmar compatibilidade sem ler a resposta real da implantação**. O código deste laboratório falha fechado na ausência desse contrato; NÃO gerar prévias reais usando somente os campos `id/nome/capa` retornados pelo backend da `main`.
+
+**Novo código:**
+- `scripts/derive-event-social-manifest.mjs`: recebe um snapshot *obtido por processo confiável e auditado* do catálogo público, exige contrato temporal exclusivo V1, validade recente, rejeita `cacheStale`, IDs repetidos, eventos encerrados ou sem `TEMPORAL_V1`, e usa apenas capa estática oficial em `assets/eventos`. Lote antigo `LEGADO_SEM_FIM` é rejeitado enquanto não houver decisão explícita de segurança.
+- `scripts/build-event-social-release-lab.mjs`: cria um candidato **completo** de release fora do repositório. Valida existência real e assinatura JPEG/PNG do arquivo da capa, emite HTML OG e recibo de IDs. Cada release só contém eventos elegíveis no snapshot atual; um catálogo público vazio e fresco produz release vazio, para futura despublicação/revogação.
+- `tests/event-social-public-catalog.offline.mjs` e `tests/event-social-release.offline.mjs`: fixtures de autorização, recusa de resposta stale/incompleta, compatibilidade de rota do Herminho, imagem, release vazio e ausência de escritas após falha.
+- Workflow de CI offline atualizado para executar todos esses testes.
+
+**Invariantes de publicação:** não copiar páginas de um release antigo; se a consulta pública falhar, não publicar candidato novo; nunca tratar um arquivo JSON de usuário como prova de autorização. Um arquivo `manifest.json` pode ser falsificado e o laboratório é incapaz de provar sozinho a autenticidade de sua origem. **A automação em produção exige uma etapa confiável que obtenha a resposta diretamente de fonte autoritativa e ateste origem, sem edição manual.**
+
+**Ainda falta para automação real:** implementar/exportar o contrato de snapshot público no backend PROD com testes, extrair resposta por canal confiável, associar a atualização à publicação/despublicação, ativar geração/revogação no pipeline controlado e verificar conteúdo bruto via HTTPS e cache das redes. **Nenhuma destas operações foi ativada em produção.**
+
 ## Estado da implementação de laboratório — 29/10/2026
 
 O gerador **já foi implementado** em `scripts/generate-event-social-previews.mjs` e testado por `tests/event-social-previews.offline.mjs`. A rotina produz somente arquivos locais, rejeitando escrita dentro do checkout do repositório e sem qualquer acesso a rede, Apps Script ou Asaas. O CI `event-social-preview-lab.yml` executa os testes isolados.
