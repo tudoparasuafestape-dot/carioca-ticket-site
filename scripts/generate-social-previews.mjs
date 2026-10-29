@@ -88,6 +88,23 @@ outputs.set(path.join(root,'assets/social-event-pages.js'),
   'root.CTSocialEventPages=Object.freeze({url:function(id){'+
   'var v=pages[String(id||\'\')];return v||\'\';}});'+
   '}(typeof window===\'object\'?window:this));\n');
+// Remoção de previews despublicados somente em PR de sincronização. Nunca
+// publicar metadados de um evento que saiu do catálogo público verificado.
+if(process.argv.includes('--prune')){
+  const dir=path.join(root,'compartilhar');
+  if(fs.existsSync(dir))for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
+    if(!entry.isDirectory()||!safeId(entry.name)||seen.has(entry.name))continue;
+    const page=path.join(dir,entry.name,'index.html');
+    if(!fs.existsSync(page))continue;
+    const html=fs.readFileSync(page,'utf8');
+    if(!html.includes('<meta property="og:site_name" content="Carioca Ticket">')||
+       !html.includes('/compartilhar/'+entry.name+'/'))throw Error('Preview não reconhecido: '+entry.name);
+    if(checking)throw Error('Preview retirado do catálogo ainda existe: '+entry.name);
+    fs.unlinkSync(page);
+    fs.rmdirSync(path.dirname(page));
+  }
+}
+
 for(const [target,value] of outputs){
   if(checking){
     assert(fs.existsSync(target),'Prévia ausente: '+path.relative(root,target));
