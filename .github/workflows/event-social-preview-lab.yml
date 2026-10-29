@@ -1,0 +1,22 @@
+name: Event social preview lab (offline)
+on:
+  pull_request:
+    paths:
+      - 'scripts/generate-event-social-previews.mjs'
+      - 'tests/event-social-previews.offline.mjs'
+      - 'docs/architecture/event-social-preview-publication.md'
+      - '.github/workflows/event-social-preview-lab.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-social-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate static Open Graph generation and denial cases
+        run: node tests/event-social-previews.offline.mjs
