@@ -1029,6 +1029,10 @@
           // PR222 closed-event links are informational anchors, never sale links.
           if(state.temporalInitialRendered&&window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId))return;
           if(!eventLease||!eventLease.isFresh()){
+            // O evento não cria pedido nem recebe pagamento: navegar para o checkout
+            // é seguro porque catálogo, preço, disponibilidade e pagamento são
+            // validados novamente pelo checkout e backend antes de qualquer Pix.
+            if(canNavigateHerminhoCheckout()){scheduleEventRefresh();return;}
             event.preventDefault();staleEventOffer();scheduleEventRefresh();
           }
         }
@@ -1039,9 +1043,19 @@
           if(event.key==='Enter'||event.key===' ')guardEventOffer(event);
         },true);
       });
+      // Fallback SOMENTE de navegação: válido após ao menos uma resposta pública
+      // confirmada, com lote presente, e apenas para a festa do Herminho.
+      // Não autoriza compra, reserva, preço ou estoque; o checkout revalida tudo.
+      function canNavigateHerminhoCheckout(){
+        var d=state.data;
+        return state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A' &&
+          state.temporalInitialRendered===true && d && d.sucesso===true &&
+          Array.isArray(d.tipos) &&
+          d.tipos.some(function(t){return Array.isArray(t.lotes)&&t.lotes.length>0;}) &&
+          !(window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId));
+      }
       function staleEventOffer(){
-        // Expiring a sale lease must not erase the pinned-main ended-event notice.
-        // This branch never grants purchase eligibility or restores a checkout URL.
+        // O encerramento explícito continua sendo a prioridade absoluta.
         if(state.temporalInitialRendered&&window.CTAdvanceSales&&window.CTAdvanceSales.closed(state.eventoId)){
           ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){
             $(id).href='#tickets';$(id).removeAttribute('aria-disabled');
@@ -1049,6 +1063,17 @@
           $('startingPrice').textContent='Evento encerrado';
           $('tickets').textContent=window.CTAdvanceSales.message;
           eventNotice.textContent='';return;
+        }
+        if(canNavigateHerminhoCheckout()){
+          // Apenas leva à etapa que possui contrato temporal próprio. Mantém
+          // preço antigo como informativo, sem alegar disponibilidade vigente.
+          var checkout='/checkout-v2/?evento='+encodeURIComponent(state.eventoId)+queryCampanha();
+          ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){
+            $(id).href=checkout;$(id).removeAttribute('aria-disabled');
+          });
+          eventNotice.textContent='Preço e disponibilidade serão confirmados no checkout seguro.';
+          eventRetry.hidden=true;
+          return;
         }
         ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){
           $(id).removeAttribute('href');$(id).setAttribute('aria-disabled','true');
@@ -1066,7 +1091,9 @@
       function eventTemporalFailure(){
         state.temporalFailed=true;
         staleEventOffer();eventRetry.hidden=false;
-        eventNotice.textContent=tr('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.');
+        eventNotice.textContent=canNavigateHerminhoCheckout()
+          ?'Atualização temporariamente indisponível. Confira o preço e a disponibilidade no checkout seguro.'
+          :tr('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.');
       }
       function scheduleEventRefresh(){
         if(document.visibilityState==='hidden')return;
@@ -1158,6 +1185,14 @@
                 if(eventRefreshTimer!==null){clearTimeout(eventRefreshTimer);eventRefreshTimer=null;}
               }
               if(!res||res.sucesso!==true){
+                // Falha temporária numa reconsulta não apaga o catálogo exibido
+                // nem impede a navegação ao checkout, que valida por conta própria.
+                if(availabilityOnly&&canNavigateHerminhoCheckout()&&
+                   (!res||res.temporario===true)){
+                  if(eventLease)eventLease.invalidate('unavailable');
+                  eventTemporalFailure();
+                  return;
+                }
                 state.data=null;
                 if(eventLease)eventLease.invalidate('unavailable');
                 // Respostas temporárias da leitura pública merecem uma única
