@@ -92,7 +92,8 @@ test('home routes Herminho to validated v2 pages without changing legacy events'
   const shareSource=fs.readFileSync(path.join(ROOT,'assets/public-share.js'),'utf8');
   expect(shareSource).toContain('url:eventPublicUrl(card.dataset.eventId)');
   expect(shareSource).toContain('url:eventPublicUrl(id)');
-  expect(shareSource).toContain('function eventPublicUrl(id)');
+  expect(shareSource).toContain('async function resolveShareUrl(id)');
+  expect(shareSource).toContain('window.CTPublishedShareIndex.resolve(id)');
   expect(state.errors).toEqual([]);
   expect(state.blocked).toEqual([]);
 });
@@ -222,7 +223,7 @@ for (const theme of ['light', 'dark']) {
         for (const field of ['nome', 'data', 'horario', 'local', 'cidade', 'uf']) await expect(card).toContainText(event[field]);
         await expect(card.getByRole('link', { name: 'Ver evento', exact: true, includeHidden: true })).toHaveAttribute('href', '/evento/?evento=' + event.id);
         await expect(card.getByRole('link', { name: 'Comprar ingresso: ' + event.nome, includeHidden: true })).toHaveAttribute('href', '/checkout/?evento=' + event.id);
-        expect(await card.locator('img').evaluate(img => getComputedStyle(img).objectFit)).toBe('contain');
+        expect(await card.locator('.catalog-photo img').evaluate(img => getComputedStyle(img).objectFit)).toBe('contain');
       }
       await expect(page.locator('.catalog-card')).not.toContainText(['R$']);
       expect(state.errors).toEqual([]);
@@ -599,9 +600,12 @@ async function unlocalizedVisibleCopy(page) {
         const label = whatsAppLabels[CTHome.locale];
         const card = link.closest('.catalog-card');
         const expectedAria = label + (card ? ': ' + card.querySelector('.catalog-title a').textContent : '');
-        if (link.textContent !== label || link.lang !== CTHome.locale || link.getAttribute('aria-label') !== expectedAria) return [{ tag:'A', text:link.textContent, error:'WhatsApp translation or accessible name mismatch' }];
+        const heading = link.parentElement.querySelector('.ct-whatsapp-heading');
+        const sharingLabels = {'pt-BR':'Compartilhamento','en-US':'Sharing',es:'Compartir','zh-Hans':'分享'};
+        const icon = link.querySelector('img');
+        if (link.textContent !== '' || link.title !== label || !heading || heading.textContent !== sharingLabels[CTHome.locale] || heading.lang !== CTHome.locale || !icon || icon.getAttribute('src') !== '/assets/whatsapp-brand.svg' || icon.getAttribute('aria-hidden') !== 'true' || link.lang !== CTHome.locale || link.getAttribute('aria-label') !== expectedAria) return [{ tag:'A', text:link.textContent, error:'WhatsApp translation or accessible name mismatch' }];
       }
-      const dynamic = '.ct-whatsapp-share, #event-rail-position, #event-rail-announcement, #active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
+      const dynamic = '.ct-whatsapp-share, .ct-whatsapp-heading, #event-rail-position, #event-rail-announcement, #active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
       const sourceOnly = '.language-choice span[translate="no"], .catalog-original[translate="no"], .ad-campaign-title[translate="no"], [data-share-event-title][translate="no"], .active-place[translate="no"], #active-filters > span[translate="no"], #category-choices button[translate="no"], #city-options button[translate="no"]';
       const privacyTitles={'pt-BR':'Privacidade na navegação','en-US':'Browsing privacy',es:'Privacidad al navegar','zh-Hans':'浏览隐私'};
       const privacyTitle=document.querySelector('#ct-privacy-title');
@@ -662,7 +666,7 @@ for (const locale of Object.keys(dictionaries)) {
       await expect(card.locator('.catalog-photo')).toHaveAccessibleName(dictionary.viewEvent + ': ' + event.nome);
       const labelLanguages = await card.locator('.btn-primary').evaluate(node => node.getAttribute('aria-labelledby').split(' ').map(id => document.getElementById(id).closest('[lang]').lang));
       expect(labelLanguages).toEqual([locale, 'pt-BR']);
-      await expect(card.locator('img')).toHaveAttribute('alt', '');
+      await expect(card.locator('.catalog-photo img')).toHaveAttribute('alt', '');
     }
     await page.locator('#accessibility-toggle').click();
     await page.locator('.menu-toggle').click();
