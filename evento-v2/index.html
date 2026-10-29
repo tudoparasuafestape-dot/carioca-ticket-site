@@ -882,7 +882,20 @@
 
       function renderCommercial(res){
         state.data=res;
-        display('startingPrice',res.menorPreco,'Consulte');
+        // Exceção temporária e isolada: o catálogo comercial já validado pelo checkout
+        // não informa menorPreco, mas fornece os lotes e seus preços oficiais.
+        var precoInicial=res.menorPreco;
+        if(state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'&&!precoInicial){
+          var menorPrecoCatalogo=null;
+          (res.tipos||[]).forEach(function(tipo){
+            (tipo.lotes||[]).forEach(function(lote){
+              var preco=Number(lote.precoNumero);
+              if(Number.isFinite(preco)&&preco>=0&&(menorPrecoCatalogo===null||preco<menorPrecoCatalogo))menorPrecoCatalogo=preco;
+            });
+          });
+          if(menorPrecoCatalogo!==null)precoInicial=money(menorPrecoCatalogo);
+        }
+        display('startingPrice',precoInicial,'Consulte');
         ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){$(id).removeAttribute('aria-disabled');});
         var buy='/checkout-v2/?evento='+encodeURIComponent(state.eventoId)+queryCampanha();
         ['buyHero','buySide','buyMobile','buyClosing'].forEach(function(id){$(id).href=buy;});
@@ -1094,7 +1107,7 @@
 
           eventRequestStarted=performance.now();
           var ticket=eventLease&&eventLease.begin();
-          google.script.run
+          var eventRpc=google.script.run
             .withSuccessHandler(function(res){
               finishEventLoad();
               var validEnvelope=eventLease&&eventLease.accept(res,ticket);
@@ -1134,8 +1147,14 @@
               });
               var reference={CT_PUBLIC_RPC_TIMEOUT:'E01',CT_PUBLIC_RPC_REMOTE_ERROR:'E02',CT_PUBLIC_RPC_SUBMIT_ERROR:'E03'}[code]||'E00';
               showError('Não foi possível carregar o evento agora. Tente novamente em alguns instantes.',true,reference);
-            })
-            .ctEventoPublicoCarregarPROD(state.eventoId);
+            });
+          // Somente Herminho usa o catálogo do checkout que retorna a validade
+          // temporal obrigatória. Outros eventos mantêm o RPC já publicado.
+          if(state.eventoId==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'){
+            eventRpc.ctCheckoutPublicoCarregarEventoPROD(state.eventoId);
+          }else{
+            eventRpc.ctEventoPublicoCarregarPROD(state.eventoId);
+          }
         });
       }
 
