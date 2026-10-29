@@ -63,7 +63,7 @@
       // O evento Herminho possui vitrine/checkout v2 homologados com compra real.
       // Os outros eventos mantêm sua rota anterior até validação individual.
       var isHerminho = event.id === 'EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
-      var detail = (isHerminho ? '/evento-v2/' : '/evento/') + '?evento=' + encodeURIComponent(event.id);
+      var detail = (isHerminho ? '/evento-v2/?evento=' : '/evento/?evento=') + encodeURIComponent(event.id);
       var article = node('article', 'catalog-card');
       article.dataset.eventId = event.id;
       // Only public catalog facts, never attribution, invitation or session data.
@@ -117,7 +117,7 @@
       if (text(visual.descricaoCurta)) body.appendChild(original(node('p', 'catalog-description', visual.descricaoCurta)));
       var actions = node('div', 'catalog-actions');
       var buy = node('a', 'btn btn-primary');
-      buy.href = (isHerminho ? '/checkout-v2/' : '/checkout/') + '?evento=' + encodeURIComponent(event.id);
+      buy.href = (isHerminho ? '/checkout-v2/?evento=' : '/checkout/?evento=') + encodeURIComponent(event.id);
       var buyLabel = node('span', 'sr-only', tr('buy', 'Comprar ingresso') + ':');
       var buyText = node('span', '', tr('buy', 'Comprar ingresso'));
       buyText.dataset.i18n = 'buy';
