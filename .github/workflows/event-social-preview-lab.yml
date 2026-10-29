@@ -11,6 +11,8 @@ on:
       - 'scripts/verify-event-social-attestation.mjs'
       - 'scripts/build-event-social-sealed-release-lab.mjs'
       - 'tests/event-social-attestation.offline.mjs'
+      - 'tests/event-social-interoperability.offline.mjs'
+      - 'tests/fixtures/social-preview-ed25519-contract.json'
       - 'docs/architecture/event-social-preview-publication.md'
       - '.github/workflows/event-social-preview-lab.yml'
   workflow_dispatch:
@@ -31,3 +33,4 @@ jobs:
           node tests/event-social-public-catalog.offline.mjs
           node tests/event-social-release.offline.mjs
           node tests/event-social-attestation.offline.mjs
+          node tests/event-social-interoperability.offline.mjs
