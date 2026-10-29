@@ -1,0 +1,32 @@
+name: Event social preview (isolated)
+on:
+  pull_request:
+    paths:
+      - 'social/**'
+      - 'compartilhar/**'
+      - 'scripts/generate-social-previews.mjs'
+      - 'assets/social-event-pages.js'
+      - 'assets/public-share.js'
+      - 'index.html'
+      - 'evento/index.html'
+      - 'evento-v2/index.html'
+      - 'tests/social-preview.contract.mjs'
+      - 'tests/whatsapp-share-contract.cjs'
+      - '.github/workflows/event-social-preview-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  preview-og:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verificar arte, metadados e saídas geradas sem redes ou Pix
+        run: |
+          node --check scripts/generate-social-previews.mjs
+          node scripts/generate-social-previews.mjs --check
+          node tests/social-preview.contract.mjs
+          node tests/whatsapp-share-contract.cjs
