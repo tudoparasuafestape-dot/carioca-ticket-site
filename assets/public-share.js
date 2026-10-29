@@ -1,7 +1,10 @@
 (function () {
   'use strict';
   function eventPublicUrl(id) {
-    // Mesmo destino do link Ver evento no catálogo da home.
+    // Preview social apenas se a página OG estática constar do catálogo gerado.
+    // Não criar link /compartilhar/ para evento sem HTML publicado.
+    var social=window.CTSocialEventPages&&window.CTSocialEventPages.url(id);
+    if(social)return 'https://cariocaticket.com.br'+social;
     var route=String(id||'')==='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A'?'/evento-v2/':'/evento/';
     return 'https://cariocaticket.com.br'+route+'?evento='+encodeURIComponent(id);
   }
