@@ -25,6 +25,24 @@ assert.match(valid.html,/<script>window.location.replace\(/);
 assert(!valid.html.includes('ctCheckoutPixPublicoIniciarPROD'));
 assert(!valid.html.includes('CPF'));
 
+// Integração sintética com um asset oficial existente no repositório.
+// Não confirma elegibilidade da implantação PROD nem cria página pública.
+const herminhoId='EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A';
+const herminhoCover='herminho-tbt-20261107-a2f84c198ed5b283.jpg';
+const localCover=path.resolve('assets/eventos',herminhoCover);
+assert(fs.existsSync(localCover),'Capa oficial do Herminho deve estar no repositório');
+assert(fs.statSync(localCover).size>50_000,'Capa oficial precisa ser arquivo real');
+const jpgHeader=fs.readFileSync(localCover).subarray(0,3);
+assert.equal(jpgHeader[0],0xff);assert.equal(jpgHeader[1],0xd8);assert.equal(jpgHeader[2],0xff);
+const example=render({...publicEvent,
+  eventoId:herminhoId,titulo:'TBT do Astro — Aniversário de Herminho',
+  descricao:'07/11/2026, Clube 10 de Novembro, Recife/PE',
+  imagemSocialHttps:'https://cariocaticket.com.br/assets/eventos/'+herminhoCover,
+  destinoPublicoHttps:'https://cariocaticket.com.br/evento-v2/?evento='+herminhoId});
+assert(example.html.includes('og:image" content="https://cariocaticket.com.br/assets/eventos/'+herminhoCover+'"'));
+assert(example.html.includes('/compartilhar/'+herminhoId+'/'));
+assert(example.html.includes('TBT do Astro'));
+
 const bad=[
   {publicado:false}, {modoAcesso:'PRIVADO'}, {modoAcesso:'RESTRITO'},
   {elegivel:false}, {gateVendasAtivo:false}, {fonte:'ADMIN_EVENTOS'},
