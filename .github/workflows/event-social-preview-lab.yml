@@ -8,6 +8,9 @@ on:
       - 'tests/event-social-release.offline.mjs'
       - 'scripts/derive-event-social-manifest.mjs'
       - 'scripts/build-event-social-release-lab.mjs'
+      - 'scripts/verify-event-social-attestation.mjs'
+      - 'scripts/build-event-social-sealed-release-lab.mjs'
+      - 'tests/event-social-attestation.offline.mjs'
       - 'docs/architecture/event-social-preview-publication.md'
       - '.github/workflows/event-social-preview-lab.yml'
   workflow_dispatch:
@@ -27,3 +30,4 @@ jobs:
           node tests/event-social-previews.offline.mjs
           node tests/event-social-public-catalog.offline.mjs
           node tests/event-social-release.offline.mjs
+          node tests/event-social-attestation.offline.mjs
