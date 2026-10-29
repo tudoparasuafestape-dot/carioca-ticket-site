@@ -283,7 +283,8 @@
   <link rel="stylesheet" href="/assets/event-map-preview.css?v=20261010-privacy1">
   <script src="/assets/event-map-preview.js?v=20261010-privacy1"></script>
   <script src="/assets/event-description-speech.js?v=20261009" defer></script>
-  <script src="/assets/public-share.js?v=20261010-whatsapp1"></script>
+  <script src="/assets/social-event-pages.js?v=20261029-social-og1"></script>
+  <script src="/assets/public-share.js?v=20261029-social-og1"></script>
   <script src="/pwa-register.js" defer></script>
   <link rel="stylesheet" href="/assets/public-privacy.css?v=20261010-1">
   <script src="/assets/public-privacy.js?v=20261010-1" defer></script>
@@ -658,6 +659,9 @@
       }
 
       function linkCanonicoEvento(){
+        // O HTML estático OG é usado apenas quando a página já foi gerada.
+        var social=window.CTSocialEventPages&&window.CTSocialEventPages.url(state.eventoId);
+        if(social)return window.location.origin+social;
         var base=window.location.origin+window.location.pathname;
         return base+'?evento='+encodeURIComponent(state.eventoId);
       }
