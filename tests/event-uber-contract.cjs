@@ -5,7 +5,7 @@ const event={id:ID,local:'Vevets Recepções',endereco:'Rua Arenópolis, 82 - Ca
 class Node {constructor(){this.attrs={};this.hidden=false;this.textContent='';}setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];}}
 const nodes=Object.fromEntries(['directions-uber','directions-uber-note','directions-uber-label','directions-details'].map(id=>[id,new Node()]));
 const listeners={},context={window:{localStorage:{getItem:()=> 'pt-BR'},addEventListener:(k,v)=>listeners[k]=v},document:{getElementById:id=>nodes[id],addEventListener:(k,v)=>listeners[k]=v}};
-for(const file of ['event-ride-destinations.js','event-uber.js'])vm.runInNewContext(fs.readFileSync('assets/'+file,'utf8'),context);
+for(const file of ['event-directions.js','event-ride-destinations.js','event-uber.js'])vm.runInNewContext(fs.readFileSync('assets/'+file,'utf8'),context);
 const api=context.window.CTEventUber,link=nodes['directions-uber'],note=nodes['directions-uber-note'];
 const registry=context.window.CTEventRideDestinations;
 assert(Object.isFrozen(registry));assert(Object.isFrozen(registry[ID]));
@@ -17,13 +17,13 @@ api.render(event,ID);assert.equal(link.hidden,false);assert.equal(note.hidden,fa
 for(const locale of ['en-US','es','zh-Hans']){context.window.CTPublicI18n={getLocale:()=>locale};listeners['ct:public-language']();assert.equal(link.attrs.lang,locale);assert.equal(note.attrs.lang,locale);}
 delete context.window.CTPublicI18n;context.window.localStorage={getItem(){throw Error('denied')}};listeners.pageshow();assert.equal(link.attrs.lang,'pt-BR');
 for(const bad of [null,{}, {...event,id:'OTHER'}, {...event,id:''}, {...event,local:'Outro salão'}, {...event,endereco:'Rua Arenópolis, 83'}, {...event,endereco:'Rua Arenópolis, 82'}, {...event,endereco:'Rua Arenópolis, 82 - Outro bairro'}, {...event,cidade:'Recife'}, {...event,uf:'RJ'}, {...event,endereco:''}, {...event,local:'Online'}, {...event,endereco:'https://example.test'}, {...event,endereco:['Rua Arenópolis, 82']}]){
- api.render(event,ID);api.render(bad,ID);assert.equal(link.hidden,true);assert.equal(link.attrs.href,undefined);assert.equal(note.hidden,true);
+ api.render(event,ID);api.render(bad,ID);const valid=bad && bad.id===ID && context.window.CTEventDirections.resolve(bad);assert.equal(link.hidden,!valid);assert.equal(link.attrs.href,valid?'https://m.uber.com/':undefined);assert.equal(note.hidden,!valid);
 }
-assert.equal(api.buildUrl(event,'OTHER'),'');assert.equal(api.buildUrl({...event,id:'__proto__'},'__proto__'),'');
+assert.equal(api.buildUrl(event,'OTHER'),'');assert.equal(api.buildUrl({...event,id:'__proto__'},'__proto__'),'https://m.uber.com/');
 assert.equal(api.buildUrl({...event,latitude:10,longitude:20},ID),url.href); // unreviewed payload coordinates cannot override
 assert.equal(api.buildUrl({...event,endereco:'Rua ARENOPOLIS,82 - Candeias',uf:'pe'},ID),url.href);
 for(const patch of [{approved:false},{revision:''},{latitude:NaN},{latitude:Infinity},{latitude:91},{longitude:181},{latitude:'-8.1932272'},{latitude:0,longitude:0},{addressLine1:''},{addressLine2:'x'.repeat(501)}]){
- context.window.CTEventRideDestinations={[ID]:{...registry[ID],...patch}};assert.equal(api.buildUrl(event,ID),'');
+ context.window.CTEventRideDestinations={[ID]:{...registry[ID],...patch}};assert.equal(api.buildUrl(event,ID),'https://m.uber.com/');
 }
 context.window.CTEventRideDestinations=registry;
 nodes['directions-details'].hidden=true;api.render(event,ID);assert.equal(link.hidden,true);nodes['directions-details'].hidden=false;
@@ -31,11 +31,11 @@ api.render(event,ID);api.clear();listeners.pageshow();assert.equal(link.hidden,t
 for(const route of ['evento','evento-v2']){
  const html=fs.readFileSync(route+'/index.html','utf8');
  assert.equal((html.match(/id="directions-uber"/g)||[]).length,1);
- assert.match(html,/id="directions-uber" hidden target="_self" rel="noreferrer"/);
+ assert.match(html,/id="directions-uber" hidden target="_self" rel="noopener noreferrer"/);
  assert.match(html,/CTEventUber\.render\(e,state\.eventoId\)/);
  // Only the reviewed temporal render invalidation may precede stale-link cleanup.
  assert.match(html,/function showError\(msg,retryable,reference\)\{\s*state\.temporalNeedsFullRender=true;\s*if\(window.CTEventUber\)window.CTEventUber.clear\(\);/);
- assert.match(html,/event-ride-destinations\.js\?v=20261010-3/);
+ assert.match(html,/event-ride-destinations\.js\?v=20261030-herminho1/);
  assert(html.indexOf('event-ride-destinations.js')<html.indexOf('event-uber.js'));
 }
 console.log('PASS: approved event/address binding, current URL encoding, no coordinate guessing, invalid pin/ID guards, locale/storage handling, stale-state cleanup, both templates');
@@ -49,6 +49,6 @@ assert.equal(eraDrop.latitude,-8.0651289);assert.equal(eraDrop.longitude,-34.905
 assert.equal(eraDrop.addressLine1,'Sebrae - Recife');assert.match(eraDrop.addressLine2,/Rua Tabaiares, 360/);
 api.render(era,ERA);assert.equal(link.hidden,false);
 assert.equal(api.buildUrl(era,ID),'');assert.equal(api.buildUrl(event,ERA),'');
-for(const change of [{id:'ERA-OTHER'},{local:'Outro Sebrae'},{endereco:'Rua Tabajaras, 361 - Ilha do Retiro'},{endereco:'Rua Tabaiares, 360 - Ilha do Retiro'},{cidade:'Jaboatão dos Guararapes'},{uf:'PB'}])assert.equal(api.buildUrl({...era,...change},ERA),'');
-assert.equal(Object.keys(registry).length,2);
+for(const change of [{id:'ERA-OTHER'},{local:'Outro Sebrae'},{endereco:'Rua Tabajaras, 361 - Ilha do Retiro'},{endereco:'Rua Tabaiares, 360 - Ilha do Retiro'},{cidade:'Jaboatão dos Guararapes'},{uf:'PB'}])assert.equal(api.buildUrl({...era,...change},ERA),change.id?'':'https://m.uber.com/');
+assert.equal(Object.keys(registry).length,3);
 console.log('PASS: ERA approved venue identity, exact live address binding, distinct destination and no cross-event pin reuse');
