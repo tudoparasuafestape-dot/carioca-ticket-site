@@ -14,6 +14,22 @@
     es: ['Ir con Waze', 'Revisa el destino en Waze antes de iniciar la navegación.'],
     'zh-Hans': ['使用 Waze 导航', '开始导航前，请在 Waze 中确认目的地。']
   };
+  var fallbackLabels = {
+    'pt-BR': ['Abrir Uber', 'O destino não está preenchido no Uber. Copie o endereço acima e cole no aplicativo antes de pedir a viagem.'],
+    'en-US': ['Open Uber', 'The destination is not filled in Uber. Copy the address above and paste it in the app before requesting a ride.'],
+    es: ['Abrir Uber', 'El destino no está rellenado en Uber. Copia la dirección de arriba y pégala en la app antes de solicitar el viaje.'],
+    'zh-Hans': ['打开 Uber', 'Uber 中尚未填写目的地。请复制上方地址并粘贴到应用中，再叫车。']
+  };
+  var searchLabels = {
+    'pt-BR': ['Abrir Waze', 'Busque o endereço no Waze e confira o resultado antes de iniciar a navegação.'],
+    'en-US': ['Open Waze', 'Search for the address in Waze and check the result before starting navigation.'],
+    es: ['Abrir Waze', 'Busca la dirección en Waze y revisa el resultado antes de iniciar la navegación.'],
+    'zh-Hans': ['打开 Waze', '请在 Waze 中搜索地址并确认结果后再开始导航。']
+  };
+  function address(event, requestedId) {
+    if (!event || !text(event.id) || text(event.id) !== text(requestedId)) return null;
+    return window.CTEventDirections && window.CTEventDirections.resolve(event);
+  }
   function text(value) { return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : ''; }
   function signature(value) { return text(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s*,\s*/g, ','); }
   function resolve(event, requestedId) {
@@ -36,16 +52,27 @@
   }
   function buildUrl(event, requestedId) {
     var point = resolve(event, requestedId);
-    if (!point) return '';
+    if (!address(event, requestedId)) return '';
+    if (!point) return 'https://m.uber.com/';
     var drop = { latitude: point.latitude, longitude: point.longitude,
       addressLine1: text(point.addressLine1), addressLine2: text(point.addressLine2) };
     return 'https://m.uber.com/looking?pickup=my_location&drop%5B0%5D=' + encodeURIComponent(JSON.stringify(drop));
   }
   function buildWazeUrl(event, requestedId) {
-    // Share Uber's reviewed destination policy; never derive coordinates from a map viewport.
+    var destination = address(event, requestedId);
+    if (!destination) return '';
     var point = resolve(event, requestedId);
-    if (!point) return '';
-    return 'https://waze.com/ul?ll=' + encodeURIComponent(point.latitude + ',' + point.longitude) + '&navigate=yes';
+    return point ? 'https://waze.com/ul?ll=' + encodeURIComponent(point.latitude + ',' + point.longitude) + '&navigate=yes' : destination.wazeUrl;
+  }
+  function buildMapUrl(event, requestedId) {
+    var destination = address(event, requestedId);
+    if (!destination) return '';
+    var point = resolve(event, requestedId);
+    return point ? 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(point.latitude + ',' + point.longitude) : destination.mapUrl;
+  }
+  // Only the active, address-bound approved destination can authorize a pin preview.
+  function mapPreviewDestination(href, canonicalAddress) {
+    return active && href === active.mapUrl && canonicalAddress === active.address ? active.preview : null;
   }
   function locale() {
     try {
@@ -54,6 +81,8 @@
     } catch (_) { return 'pt-BR'; }
   }
   function clear() {
+    var map = document.getElementById('directions-map');
+    if (active && map) map.removeAttribute('href');
     active = null;
     var link = document.getElementById('directions-uber');
     var note = document.getElementById('directions-uber-note');
@@ -70,7 +99,7 @@
     var label = document.getElementById('directions-uber-label');
     var note = document.getElementById('directions-uber-note');
     if (!link || !label || !note) return;
-    var lang = locale(), words = labels[lang];
+    var lang = locale(), words = active.prefilled ? labels[lang] : fallbackLabels[lang];
     link.setAttribute('lang', lang); note.setAttribute('lang', lang);
     label.textContent = words[0]; note.textContent = words[1];
     // Keep the accessible name identical to the visible action (voice control).
@@ -80,7 +109,8 @@
     var wazeNote = document.getElementById('directions-waze-note');
     if (waze && wazeLabel && wazeNote) {
       waze.setAttribute('lang', lang); wazeNote.setAttribute('lang', lang);
-      wazeLabel.textContent = wazeLabels[lang][0]; wazeNote.textContent = wazeLabels[lang][1];
+      var wazeWords = active.prefilled ? wazeLabels[lang] : searchLabels[lang];
+      wazeLabel.textContent = wazeWords[0]; wazeNote.textContent = wazeWords[1];
       waze.removeAttribute('aria-label');
     }
   }
@@ -92,12 +122,18 @@
     if (!link || !note || !details || details.hidden) return;
     var url = buildUrl(event, requestedId);
     if (!url) return;
-    active = true;
+    var point = resolve(event, requestedId), destination = address(event, requestedId);
+    active = { prefilled: !!point, address: destination.destination, mapUrl: buildMapUrl(event, requestedId),
+      preview: point ? point.latitude + ',' + point.longitude : destination.destination };
+    var map = document.getElementById('directions-map');
+    if (map) map.setAttribute('href', buildMapUrl(event, requestedId));
+    link.setAttribute('rel', 'noopener noreferrer');
     link.setAttribute('href', url); link.hidden = false; note.hidden = false;
     var waze = document.getElementById('directions-waze');
     var wazeNote = document.getElementById('directions-waze-note');
     var wazeUrl = buildWazeUrl(event, requestedId);
     if (waze && wazeNote && wazeUrl) {
+      waze.setAttribute('rel', 'noopener noreferrer');
       waze.setAttribute('href', wazeUrl); waze.hidden = false; wazeNote.hidden = false;
     }
     refreshLanguage();
@@ -105,5 +141,5 @@
   document.addEventListener('ct:public-language', refreshLanguage);
   window.addEventListener('storage', function (event) { if (!event.key || event.key === 'ct-home-locale') refreshLanguage(); });
   window.addEventListener('pageshow', refreshLanguage);
-  window.CTEventUber = Object.freeze({ render: render, clear: clear, buildUrl: buildUrl, buildWazeUrl: buildWazeUrl });
+  window.CTEventUber = Object.freeze({ render: render, clear: clear, buildUrl: buildUrl, buildWazeUrl: buildWazeUrl, buildMapUrl: buildMapUrl, mapPreviewDestination: mapPreviewDestination });
 }());
