@@ -262,8 +262,10 @@ async function regression(browser) {
   const retainedShareId = rows(15).find(event => event.cidade === 'Recife').id;
   const retainedShareIndex = shareIds.indexOf(retainedShareId);
   assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), shareIds[0]);
-  await share.page.locator('.catalog-card:not([inert]) [data-public-share="event"] button').click();
+  await share.page.locator('.catalog-card:not([inert]) .ct-event-share-opener').click();
+  await share.page.locator('.catalog-card:not([inert]) .ct-share-dialog-action').first().click();
   await share.page.waitForFunction(() => shareCalls.length === 1);
+  await share.page.locator('.catalog-card:not([inert]) .ct-share-dialog-head button').click();
   await filter(share.page, 'Recife'); await ready(share.page, 7);
   assert.equal(await share.page.locator('#events-grid').getAttribute('data-active-index'), '0');
   assert.equal(await share.page.locator('.catalog-card:not([inert])').getAttribute('data-event-id'), retainedShareId);
@@ -359,5 +361,6 @@ async function regression(browser) {
     console.log('PASS: isolated catalog benchmark and ' + report.regressions + ' regression groups; zero forwarded requests.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
 
 

@@ -25,9 +25,12 @@ async function geometry(page, selector) {
   }));
 }
 async function verticalTouch(page, selector) {
+  // Hit the requested artwork, not a newly adjacent share control after layout changes.
+  await page.locator(selector).scrollIntoViewIfNeeded();
   const before = await page.evaluate(() => scrollY);
   const box = await page.locator(selector).boundingBox();
   const x = box.x + box.width / 2, y = Math.min(page.viewportSize().height - 40, Math.max(180, box.y + Math.min(box.height / 2, 120)));
+  expect(await page.evaluate(({selector,x,y})=>!!document.elementFromPoint(x,y)?.closest(selector),{selector,x,y})).toBe(true);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Input.dispatchTouchEvent', { type:'touchStart', touchPoints:[{ x,y }] });
   for(let i=1; i<=8; i++) await cdp.send('Input.dispatchTouchEvent', { type:'touchMove', touchPoints:[{ x, y:y-i*12 }] });
@@ -168,3 +171,4 @@ test('backgrounding clears interrupted touch contact without inventing a permane
   await hidden(false);await page.clock.runFor(5500);expect(await active()).not.toBe(before);
   await expect(ad.locator('.ad-playback-state')).toHaveAttribute('data-i18n','adPlayingState');
 });
+

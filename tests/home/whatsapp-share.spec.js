@@ -111,6 +111,8 @@ for (const surface of ['home','card','program','evento','evento-v2']) for (const
 test('WhatsApp card updates language and ignores inert cards',async({page})=>{
   const {link}=await prepare(page,'card','pt-BR');
   await page.evaluate(()=>CTHome.setLocale('en-US'));
+  // Language refresh replaces catalog nodes; reopen the new event's chooser.
+  await page.locator('.ct-event-share-opener').click();
   await expect(link).toHaveAttribute('aria-label',languages['en-US'][0]+': '+eventData.nome);
   await expect(link).not.toHaveAttribute('href');
   await link.click(); await expect.poll(()=>page.evaluate(()=>popupCalls[0]&&popupCalls[0].replaced)).toBeTruthy();
@@ -179,7 +181,7 @@ for (const surface of ['card','evento','evento-v2']) test(`One filled share open
 
 test('catalog chooser native copy denial close pending and cleanup remain isolated',async({page})=>{
   const {errors}=await prepare(page,'card','pt-BR');
-  const dialog=page.locator('dialog'),opener=page.locator('.ct-event-share-opener');
+  const dialog=page.locator('.ct-share-dialog'),opener=page.locator('.ct-event-share-opener');
   const native=dialog.locator('.ct-share-dialog-action').first(),copy=dialog.locator('.ct-share-dialog-action').last();
   await copy.click(); await expect.poll(()=>page.evaluate(()=>copyCalls.length)).toBe(1); expect(await page.evaluate(()=>shareCalls.length)).toBe(0);
   await native.click(); await expect.poll(()=>page.evaluate(()=>shareCalls.length)).toBe(1);
