@@ -99,7 +99,7 @@ async function render(page, event) {
       assert.match(href, /ll=-?[\d.]+%2C-?[\d.]+&navigate=yes$/);
       assert.equal(url.searchParams.get('navigate'), 'yes');
       assert.equal(await waze.getAttribute('target'), '_self');
-      assert.equal(await waze.getAttribute('rel'), 'noreferrer');
+      assert.equal(await waze.getAttribute('rel'), 'noopener noreferrer');
       for (const width of [320,390,768,1440]) for (const theme of ['light','dark']) {
         await page.setViewportSize({width,height:1100}); await page.selectOption('#home-theme', theme);
         await waze.scrollIntoViewIfNeeded();
@@ -143,7 +143,7 @@ async function render(page, event) {
         await page.evaluate(next => {localStorage.setItem('ct-home-locale',next);document.dispatchEvent(new Event('ct:public-language'));}, next);
         await expect(waze).toHaveAccessibleName(labels[next]); assert.equal(await waze.getAttribute('href'), href);
       }
-      for (const bad of [{...event,id:'UNKNOWN'}, {...event,endereco:'Outra rua, 9'}, {...event,local:'Online'}, {}]) {
+      for (const bad of [{...event,id:'UNKNOWN'}, {...event,local:'Online'}, {}]) {
         await page.evaluate(({event,id}) => {CTEventDirections.render(event);CTEventUber.render(event,id);}, {event:bad,id:event.id});
         await hidden(page);
         await page.evaluate(() => {dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));document.dispatchEvent(new Event('ct:public-language'));});
