@@ -881,15 +881,28 @@
 
 
       function refreshEventLocation(res){
-        var before=state.data&&state.data.evento||{}, next=res.evento||{};
-        if(['id','local','endereco','cidade','uf'].every(function(key){return before[key]===next[key];}))return;
-        // Only an accepted fresh public response can update the canonical destination.
-        // Keep checkout/prices and the rest of the presentation on their existing path.
-        display('venue',[next.local,next.endereco].filter(Boolean).join(' · '),'A confirmar');
-        display('city',[next.cidade,next.uf].filter(Boolean).join(' / '),'A confirmar');
-        if(window.CTEventDirections)window.CTEventDirections.render(next);
-        if(window.CTEventUber)window.CTEventUber.render(next,state.eventoId);
-        if(window.CTEventMapPreview)window.CTEventMapPreview.renderPublicDirections();
+        try{
+          var before=state.data&&state.data.evento||{}, next=res.evento||{};
+          if(!refreshEventLocation.failed&&['id','local','endereco','cidade','uf'].every(function(key){return before[key]===next[key];}))return;
+          // Only an accepted fresh public response can update the canonical destination.
+          display('venue',[next.local,next.endereco].filter(Boolean).join(' · '),'A confirmar');
+          display('city',[next.cidade,next.uf].filter(Boolean).join(' / '),'A confirmar');
+          if(window.CTEventDirections)window.CTEventDirections.render(next);
+          if(window.CTEventUber)window.CTEventUber.render(next,state.eventoId);
+          if(window.CTEventMapPreview)window.CTEventMapPreview.renderPublicDirections();
+          var map=$('directions-map');if(map)map.hidden=false;
+          var section=$('event-directions');if(section)section.hidden=false;
+          refreshEventLocation.failed=false;
+        }catch(_){
+          refreshEventLocation.failed=true;
+          // An optional location widget must never interrupt existing prices/checkout.
+          // Cleanup is best effort and separately guarded, including broken renderers.
+          try{if(window.CTEventUber)window.CTEventUber.clear();}catch(_){}
+          try{if(window.CTEventMapPreview)window.CTEventMapPreview.clear();}catch(_){}
+          ['event-directions','directions-details','directions-map-preview','directions-map','directions-uber','directions-waze'].forEach(function(id){
+            try{var node=$(id);if(node){node.hidden=true;node.removeAttribute('href');if(id==='directions-map-preview')node.replaceChildren();}}catch(_){}
+          });
+        }
       }
 
       function renderCommercial(res){
