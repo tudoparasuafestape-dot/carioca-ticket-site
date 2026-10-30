@@ -22,7 +22,13 @@ async function prepare(page, surface, locale) {
   await page.addInitScript(({locale,eventData,surface,detailEnvelope,detailTtl}) => {
     localStorage.setItem('ct-home-locale', locale);
     localStorage.setItem('ct-home-font', '150');
-    window.shareCalls = []; window.copyCalls = []; window.popupCalls=[];
+    window.shareCalls = []; window.copyCalls = []; window.popupCalls=[]; window.handoffCalls=[];
+    document.addEventListener('click', event => {
+      const a=event.target.closest && event.target.closest('a');
+      if(!window.allowHandoff && a && a.target==='_self' && a.href.startsWith('https://wa.me/')) {
+        event.preventDefault(); window.handoffCalls.push({url:a.href,target:a.target,rel:a.rel,referrerPolicy:a.referrerPolicy});
+      }
+    },true);
     window.open = (url,target) => { const call={url,target,closed:false,replaced:null}; window.popupCalls.push(call); return {opener:null,document:{createElement:()=>({}),head:{appendChild:()=>{}}},location:{replace:value=>{call.replaced=value;}},close:()=>{call.closed=true;}}; };
     Object.defineProperty(navigator, 'share', { configurable:true, value:async value => { window.shareCalls.push(value); } });
     Object.defineProperty(navigator, 'clipboard', { configurable:true, value:{ writeText:async value => { window.copyCalls.push(value); } } });
@@ -89,13 +95,14 @@ for (const surface of ['home','card','program','evento','evento-v2']) for (const
     await link.focus(); await expect(link).toBeFocused(); await page.keyboard.press('Enter');
     expect(await page.evaluate(()=>window.whatsAppClicks)).toBe(1);
     if(isEvent) {
-      await expect.poll(()=>page.evaluate(()=>popupCalls[0]&&popupCalls[0].replaced)).toBeTruthy();
-      const url=new URL(await page.evaluate(()=>popupCalls[0].replaced));
+      await expect.poll(()=>page.evaluate(()=>handoffCalls[0]&&handoffCalls[0].url)).toBeTruthy();
+      const url=new URL(await page.evaluate(()=>handoffCalls[0].url));
       expect(url.origin).toBe('https://wa.me'); expect(url.pathname).toBe('/'); expect([...url.searchParams.keys()]).toEqual(['text']);
       const message=url.searchParams.get('text');
       expect(message).toBe([eventData.nome,eventData.data+' · '+eventData.horario,eventData.local+' · '+eventData.cidade+' · '+eventData.uf,cta].join(' · ')+' https://cariocaticket.com.br/compartilhar/'+eventData.id+'/');
       expect(message).not.toMatch(/PRIVATE|undefined|null/);
-      expect(await page.evaluate(()=>popupCalls[0].url)).toBe('about:blank');
+      expect(await page.evaluate(()=>popupCalls.length)).toBe(0);
+      expect(await page.evaluate(()=>({target:handoffCalls[0].target,rel:handoffCalls[0].rel,referrerPolicy:handoffCalls[0].referrerPolicy}))).toEqual({target:'_self',rel:'noopener noreferrer',referrerPolicy:'no-referrer'});
     }
     expect(await page.evaluate(()=>[shareCalls.length,copyCalls.length])).toEqual([0,0]);
     expect(network.filter(url=>url.includes('wa.me')||url.includes('whatsapp'))).toEqual([]);
@@ -115,11 +122,11 @@ test('WhatsApp card updates language and ignores inert cards',async({page})=>{
   await page.locator('.ct-event-share-opener').click();
   await expect(link).toHaveAttribute('aria-label',languages['en-US'][0]+': '+eventData.nome);
   await expect(link).not.toHaveAttribute('href');
-  await link.click(); await expect.poll(()=>page.evaluate(()=>popupCalls[0]&&popupCalls[0].replaced)).toBeTruthy();
-  expect(new URL(await page.evaluate(()=>popupCalls[0].replaced)).searchParams.get('text')).toContain(languages['en-US'][1]);
+  await link.click(); await expect.poll(()=>page.evaluate(()=>handoffCalls[0]&&handoffCalls[0].url)).toBeTruthy();
+  expect(new URL(await page.evaluate(()=>handoffCalls[0].url)).searchParams.get('text')).toContain(languages['en-US'][1]);
   await link.evaluate(link=>link.closest('.catalog-card').setAttribute('inert',''));
   const prevented=await link.evaluate(link=>!link.dispatchEvent(new MouseEvent('click',{bubbles:false,cancelable:true})));
-  expect(prevented).toBe(true); expect(await page.evaluate(()=>popupCalls.length)).toBe(1);
+  expect(prevented).toBe(true); expect(await page.evaluate(()=>handoffCalls.length)).toBe(1); expect(await page.evaluate(()=>popupCalls.length)).toBe(0);
 });
 
 test('event link clears stale data and remounts without duplicate click callbacks',async({page})=>{
@@ -131,7 +138,7 @@ test('event link clears stale data and remounts without duplicate click callback
   await expect(link).not.toHaveAttribute('href');
   await blockNavigation(page);
   await link.click(); await expect.poll(()=>page.evaluate(()=>callbackCalls)).toBe(1);
-  const message=new URL(await page.evaluate(()=>popupCalls[0].replaced)).searchParams.get('text');
+  const message=new URL(await page.evaluate(()=>handoffCalls[0].url)).searchParams.get('text');
   expect(message).toBe('Somente nome · Confira este evento na Carioca Ticket. https://cariocaticket.com.br/compartilhar/NEW-ID/');
   expect(message).not.toMatch(/PRIVATE|undefined|null/);
   await page.evaluate(()=>CTPublicShare.clearEventWhatsApp(document.getElementById('shareWhatsAppAction')));
@@ -142,8 +149,8 @@ test('event link clears stale data and remounts without duplicate click callback
 test('invalid event identity fails closed without sharing a stale destination',async({page})=>{
  const {link}=await prepare(page,'evento','pt-BR');
  await page.evaluate(()=>CTPublicShare.eventWhatsApp(document.getElementById('shareWhatsAppAction'),{nome:'Invalid identity'},'PUBLIC & festa/中文'));
- await link.click(); await expect.poll(()=>page.evaluate(()=>popupCalls[0]&&popupCalls[0].closed)).toBe(true);
- expect(await page.evaluate(()=>popupCalls[0].replaced)).toBe(null);
+ await link.click(); await expect(link.locator('..').locator('[role="status"]')).toContainText('indisponível');
+ expect(await page.evaluate(()=>[popupCalls.length,handoffCalls.length])).toEqual([0,0]);
  await expect(link.locator('..').locator('[role="status"]')).toContainText('indisponível');
  expect(await page.evaluate(()=>[shareCalls.length,copyCalls.length])).toEqual([0,0]);
 });
@@ -197,4 +204,84 @@ test('catalog chooser native copy denial close pending and cleanup remain isolat
   await opener.click();await expect(dialog).toBeVisible();
   await page.evaluate(()=>document.querySelector('.catalog-card').remove());await expect(dialog).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+// Combined real catalog/share DOM lifecycle: the old foreground-popup strategy
+// dispatches visibilitychange before its resolver finishes and loses its card.
+test('mobile foreground-popup regression: fresh resolution does not lose catalog', async({page})=>{
+ const {link}=await prepare(page,'card','pt-BR');
+ await page.evaluate(()=>{
+   window.resolveRelease=null;
+   CTPublishedShareIndex.resolve=()=>new Promise(resolve=>window.resolveRelease=resolve);
+   window.open=()=>{window.popupCalls.push('foreground');Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));return {document:{createElement:()=>({}),head:{appendChild(){}}},location:{replace(){}},close(){}}};
+ });
+ await link.click(); await expect.poll(()=>page.evaluate(()=>!!resolveRelease)).toBe(true);
+ await expect(page.locator('.catalog-card')).toHaveCount(1);
+ expect(await page.evaluate(()=>popupCalls.length)).toBe(0);
+ await page.evaluate(id=>resolveRelease('https://cariocaticket.com.br/compartilhar/'+id+'/'),eventData.id);
+ await expect.poll(()=>page.evaluate(()=>handoffCalls.length)).toBe(1);
+ await expect(page.locator('.catalog-card')).toHaveCount(1);
+ await expect(page.locator('#event-count')).not.toContainText('indisponível');
+});
+for(const interruption of ['hidden','focus','close','inert']) test('pending WhatsApp blocks late handoff after '+interruption,async({page})=>{
+ const {link}=await prepare(page,'card','pt-BR');
+ await page.evaluate(()=>{CTPublishedShareIndex.resolve=()=>new Promise(resolve=>window.resolveRelease=resolve)});
+ await link.click(); await expect.poll(()=>page.evaluate(()=>!!resolveRelease)).toBe(true);
+ await page.evaluate(kind=>{
+   if(kind==='hidden'){Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'))}
+   if(kind==='focus')window.dispatchEvent(new Event('focus'));
+   if(kind==='close')document.querySelector('.ct-share-dialog').close();
+   if(kind==='inert')document.querySelector('.catalog-card').inert=true;
+ },interruption);
+ await page.evaluate(id=>resolveRelease('https://cariocaticket.com.br/compartilhar/'+id+'/'),eventData.id);
+ await page.evaluate(async()=>{await Promise.resolve();await Promise.resolve()});
+ expect(await page.evaluate(()=>[handoffCalls.length,popupCalls.length])).toEqual([0,0]);
+});
+
+test('same-tab handoff sends no referrer and browser Back reloads governed catalog',async({page})=>{
+ const {link}=await prepare(page,'card','pt-BR'); let requestHeaders=null;
+ await page.route('https://wa.me/**',async route=>{requestHeaders=await route.request().allHeaders();await route.fulfill({contentType:'text/html',body:'<!doctype html><title>Isolated WhatsApp destination</title><p>Stub only</p>'})});
+ await page.evaluate(()=>window.allowHandoff=true);
+ await link.click(); await expect(page).toHaveURL(/^https:\/\/wa\.me\//);
+ expect(requestHeaders.referer).toBeUndefined();
+ await page.goBack({waitUntil:'domcontentloaded'});
+ await page.clock.runFor(5100);
+ await expect(page.locator('.catalog-card')).toHaveCount(1);
+ await expect(page.locator('.ct-event-share-opener')).toBeVisible();
+ await expect(page.locator('#event-count')).not.toContainText('indisponível');
+});
+
+for(const locale of Object.keys(languages)) test('catalog resume distinguishes revalidating from actual failure / '+locale,async({page})=>{
+ await page.clock.install({time:new Date('2030-12-20T12:00:00Z')});
+ await page.addInitScript(locale=>localStorage.setItem('ct-home-locale',locale),locale);
+ let fail=false,releaseFailure;
+ await fixture(page,{result:(_attempt,nowMs)=>fail?new Promise(resolve=>{releaseFailure=resolve}):{sucesso:true,...temporalEnvelope('home',nowMs),eventos:[{...events[0],...eventData,temporal:legacyNoEndTemporal()}]}});
+ await expect(page.locator('.catalog-card')).toHaveCount(1);
+ const labels=await page.evaluate(()=>({consulting:CTHome.t('consulting'),loading:CTHome.t('loading'),unavailable:CTHome.t('unavailable')}));
+ fail=true; await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+ await expect(page.locator('.catalog-card')).toHaveCount(0);
+ await expect(page.locator('#event-count')).toHaveText(labels.consulting);
+ await expect(page.locator('#catalog-status-message')).toHaveText(labels.loading);
+ await expect(page.locator('#events-grid')).toHaveAttribute('aria-busy','true');
+ await expect(page.locator('#catalog-retry')).toBeHidden();
+ await page.clock.runFor(5100);
+ await expect.poll(()=>typeof releaseFailure).toBe('function');
+ releaseFailure({sucesso:false});
+ await expect(page.locator('#event-count')).toHaveText(labels.unavailable);
+ await expect(page.locator('#catalog-retry')).toBeVisible();
+ await expect(page.locator('.catalog-card')).toHaveCount(0);
+});
+
+test('WhatsApp close and resolver completion in same task cannot hand off',async({page})=>{
+ const {link}=await prepare(page,'card','pt-BR');
+ await page.evaluate(()=>{CTPublishedShareIndex.resolve=()=>new Promise(resolve=>window.resolveRelease=resolve)});
+ await link.click();await expect.poll(()=>page.evaluate(()=>!!resolveRelease)).toBe(true);
+ await page.evaluate(id=>{
+   const dialog=document.querySelector('.ct-share-dialog');
+   dialog.close();
+   // Resolver settles before the queued close event clears registry/inert state.
+   resolveRelease('https://cariocaticket.com.br/compartilhar/'+id+'/');
+ },eventData.id);
+ await expect(link).not.toHaveAttribute('aria-busy');
+ expect(await page.evaluate(()=>[handoffCalls.length,popupCalls.length])).toEqual([0,0]);
 });

@@ -294,7 +294,13 @@
       if (initialRequest) initialRequest.cancel();
       initialRequest = null;
       if (lease) lease.invalidate(reason);
-      unavailable();
+      // Resume requires fresh evidence, not a fabricated network-failure message.
+      // Keep all stale offers removed while the existing bounded refresh waits.
+      clearView(); phase = 'loading';
+      status.hidden = false; retry.hidden = true;
+      grid.setAttribute('aria-busy', 'true');
+      count.textContent = tr('consulting', 'Consultando a agenda…');
+      message.textContent = tr('loading', 'Carregando eventos…');
       if (!document.hidden && reason !== 'pagehide') queueRefresh();
     };
     // A delayed timer must not leave an expired detail, checkout or share CTA
@@ -415,3 +421,4 @@
   if (document.readyState === 'complete') initialize();
   else document.addEventListener('DOMContentLoaded', initialize, { once: true });
 }());
+
