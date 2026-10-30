@@ -220,8 +220,14 @@
     if (details && !details.hidden && address && link) {
       try {
         var target = new URL(link.href);
-        if (target.origin === 'https://www.google.com' && target.pathname === '/maps/dir/' &&
-            target.searchParams.get('destination') === address.value) destination = address.value;
+        if (target.origin === 'https://www.google.com' && target.pathname === '/maps/dir/') {
+          if (target.searchParams.get('destination') === address.value) destination = address.value;
+          else if (window.CTEventUber && typeof window.CTEventUber.mapPreviewDestination === 'function') {
+            // Never trust arbitrary coordinates in the DOM. The active component
+            // binds this exact URL to the current canonical address and reviewed pin.
+            destination = window.CTEventUber.mapPreviewDestination(link.href, address.value);
+          }
+        }
       } catch (_) {}
     }
     render(host, destination);
