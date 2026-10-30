@@ -52,7 +52,7 @@ test.describe('Jornada publica com fixtures', () => {
 
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expectOfficialTopUrl(page, /^\/$/);
-    await expect(page.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible();
+    await expect(page.locator('.catalog-title a').filter({hasText:'Roda de Samba Estilo Carioca'}).first()).toBeVisible();
 
     const manifestHref = await page.locator('link[rel="manifest"]').getAttribute('href');
     expect(manifestHref).toBe('/manifest.webmanifest');
@@ -170,8 +170,9 @@ test.describe('Jornada publica com fixtures', () => {
     await voltarEventos.click();
 
     await expectOfficialTopUrl(page, /^\/$/);
-    await expect(page.getByText('Roda de Samba Estilo Carioca').first()).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('.catalog-title a').filter({hasText:'Roda de Samba Estilo Carioca'}).first()).toBeVisible({ timeout: 30000 });
 
     assertNoTechnicalFailures(state);
   });
 });
+
