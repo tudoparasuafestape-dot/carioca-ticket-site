@@ -271,3 +271,17 @@ for(const locale of Object.keys(languages)) test('catalog resume distinguishes r
  await expect(page.locator('#catalog-retry')).toBeVisible();
  await expect(page.locator('.catalog-card')).toHaveCount(0);
 });
+
+test('WhatsApp close and resolver completion in same task cannot hand off',async({page})=>{
+ const {link}=await prepare(page,'card','pt-BR');
+ await page.evaluate(()=>{CTPublishedShareIndex.resolve=()=>new Promise(resolve=>window.resolveRelease=resolve)});
+ await link.click();await expect.poll(()=>page.evaluate(()=>!!resolveRelease)).toBe(true);
+ await page.evaluate(id=>{
+   const dialog=document.querySelector('.ct-share-dialog');
+   dialog.close();
+   // Resolver settles before the queued close event clears registry/inert state.
+   resolveRelease('https://cariocaticket.com.br/compartilhar/'+id+'/');
+ },eventData.id);
+ await expect(link).not.toHaveAttribute('aria-busy');
+ expect(await page.evaluate(()=>[handoffCalls.length,popupCalls.length])).toEqual([0,0]);
+});

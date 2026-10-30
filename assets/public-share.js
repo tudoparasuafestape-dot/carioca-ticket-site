@@ -100,6 +100,9 @@
           // Validate in the current visible document. A foreground blank tab
           // would invalidate the catalog lease and detach this control on mobile.
           var url = await resolveShareUrl(entry.destination.eventId);
+          // close() clears .open synchronously; the close event may still be queued.
+          var dialog = link.closest('dialog');
+          if (dialog && !dialog.open) return;
           if (document.hidden || whatsAppLinks.get(link) !== entry || !link.isConnected || link.closest('[inert]')) return;
           if (url === eventPublicUrl()) { shareUnavailable(link); return; }
           var message = eventText(entry.destination) + ' ' + url;
