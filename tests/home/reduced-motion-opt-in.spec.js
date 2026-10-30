@@ -729,7 +729,8 @@ test('canceling the native share stub keeps automatic events paused until explic
     await reveal(page, EVENTS);
     await expectPlaying(page, EVENTS);
     const share = page.locator('.catalog-card:not([inert]) [data-public-share="event"]');
-    const button = share.locator('button[type="button"]');
+    await share.locator('.ct-event-share-opener').tap();
+    const button = share.locator('.ct-share-dialog-action').first();
     await button.tap();
     await expect.poll(()=>page.evaluate(() => window.motionShareCalls.length)).toBe(1);
     await expect(button).toBeDisabled();
@@ -741,6 +742,8 @@ test('canceling the native share stub keeps automatic events paused until explic
 
     await page.evaluate(() => window.cancelMotionShare());
     await expect(button).toBeEnabled();
+    await share.locator('.ct-share-dialog-head button').tap();
+    await expect(share.locator('dialog')).toBeHidden();
     await expect(page.locator(EVENTS.toggle)).toBeEnabled();
     await expectPaused(page, EVENTS);
     await expect(share.locator('[role="status"]')).toHaveText('');
@@ -757,3 +760,4 @@ test('canceling the native share stub keeps automatic events paused until explic
     await assertIsolated(state);
   } finally { await context.close(); }
 });
+

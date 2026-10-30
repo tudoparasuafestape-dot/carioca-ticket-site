@@ -55,6 +55,7 @@ async function prepare(page, surface, locale) {
     await page.locator('#shareHero').click();
     return { link:page.locator('#shareWhatsAppAction'), network, errors };
   }
+  if (surface === 'card') await page.locator('.ct-event-share-opener').click();
   return {link:page.locator('[data-public-share="'+(surface==='card'?'event':surface)+'"] .ct-whatsapp-share'),network,errors};
 }
 async function blockNavigation(page) {
@@ -143,4 +144,55 @@ test('invalid event identity fails closed without sharing a stale destination',a
  expect(await page.evaluate(()=>popupCalls[0].replaced)).toBe(null);
  await expect(link.locator('..').locator('[role="status"]')).toContainText('indisponível');
  expect(await page.evaluate(()=>[shareCalls.length,copyCalls.length])).toEqual([0,0]);
+});
+
+
+for (const surface of ['card','evento','evento-v2']) test(`One filled share opener below art / ${surface}`, async({page},testInfo)=>{
+  const {errors}=await prepare(page,surface,'pt-BR');
+  const card=surface==='card';
+  const opener=page.locator(card?'.ct-event-share-opener':'#shareHero');
+  if(card) await page.keyboard.press('Escape'); else await page.locator('#shareMenuClose').click();
+  for(const width of [320,1440]) for(const theme of ['light','dark']) {
+    await page.setViewportSize({width,height:1100});
+    await page.evaluate(theme=>{document.documentElement.dataset.homeTheme=theme;document.documentElement.style.fontSize='16px';},theme);
+    await opener.scrollIntoViewIfNeeded();
+    const cover=page.locator(card?'.catalog-photo':'#cover'),buy=page.locator(card?'.catalog-actions .btn-primary':'#buyHero');
+    const art=await cover.boundingBox(),button=await opener.boundingBox();
+    expect(button.y).toBeGreaterThanOrEqual(art.y+art.height-1);
+    expect(Math.abs(button.x+button.width/2-art.x-art.width/2)).toBeLessThan(2);
+    expect(button.height).toBeGreaterThanOrEqual(44);
+    const colors=el=>{const s=getComputedStyle(el);return [s.backgroundColor,s.backgroundImage,s.color]};
+    expect(await opener.evaluate(colors)).toEqual(await buy.evaluate(colors));
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+    await page.screenshot({path:testInfo.outputPath(`whatsapp-one-share-${surface}-${width}-${theme}.png`)});
+    await opener.click();
+    const modal=page.locator(card?'dialog[open]':'#shareMenu');await expect(modal).toBeVisible();
+    await page.screenshot({path:testInfo.outputPath(`whatsapp-one-share-dialog-${surface}-${width}-${theme}.png`)});
+    if(card) {
+      await page.keyboard.press('Tab');expect(await modal.evaluate(d=>d.contains(document.activeElement))).toBe(true);
+      await page.keyboard.press('Escape');await expect(modal).toHaveCount(0);
+    } else await page.locator('#shareMenuClose').click();
+    await expect(opener).toBeFocused();
+  }
+  expect(errors).toEqual([]);
+});
+
+test('catalog chooser native copy denial close pending and cleanup remain isolated',async({page})=>{
+  const {errors}=await prepare(page,'card','pt-BR');
+  const dialog=page.locator('dialog'),opener=page.locator('.ct-event-share-opener');
+  const native=dialog.locator('.ct-share-dialog-action').first(),copy=dialog.locator('.ct-share-dialog-action').last();
+  await copy.click(); await expect.poll(()=>page.evaluate(()=>copyCalls.length)).toBe(1); expect(await page.evaluate(()=>shareCalls.length)).toBe(0);
+  await native.click(); await expect.poll(()=>page.evaluate(()=>shareCalls.length)).toBe(1);
+  await page.evaluate(()=>Object.defineProperty(navigator,'share',{configurable:true,value:async()=>{throw new DOMException('Cancelled','AbortError')}}));
+  await native.click();expect(await page.evaluate(()=>copyCalls.length)).toBe(1);
+  await page.evaluate(()=>CTPublishedShareIndex.resolve=async()=> 'https://cariocaticket.com.br/');
+  await copy.click();await expect(dialog.locator('p[role=status]')).toContainText('indisponível');expect(await page.evaluate(()=>copyCalls.length)).toBe(1);
+  await page.evaluate(()=>CTPublishedShareIndex.resolve=()=>new Promise(resolve=>window.releaseShare=resolve));
+  await copy.click();await expect.poll(()=>page.evaluate(()=>typeof releaseShare)).toBe('function');
+  await page.keyboard.press('Escape');await expect(opener).toBeFocused();
+  await page.evaluate(()=>releaseShare('https://cariocaticket.com.br/compartilhar/PUBLIC-FESTA-2030/'));
+  await expect(native).toBeEnabled();expect(await page.evaluate(()=>copyCalls.length)).toBe(1);
+  await opener.click();await expect(dialog).toBeVisible();
+  await page.evaluate(()=>document.querySelector('.catalog-card').remove());await expect(dialog).toHaveCount(0);
+  expect(errors).toEqual([]);
 });

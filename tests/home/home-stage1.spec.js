@@ -601,11 +601,23 @@ async function unlocalizedVisibleCopy(page) {
         const card = link.closest('.catalog-card');
         const expectedAria = label + (card ? ': ' + card.querySelector('.catalog-title a').textContent : '');
         const heading = link.parentElement.querySelector('.ct-whatsapp-heading');
-        const sharingLabels = {'pt-BR':'Compartilhamento','en-US':'Sharing',es:'Compartir','zh-Hans':'分享'};
+        const sharingLabels = {'pt-BR':'Compartilhar','en-US':'Share',es:'Compartir','zh-Hans':'分享'};
         const icon = link.querySelector('img');
         if (link.textContent !== '' || link.title !== label || !heading || heading.textContent !== sharingLabels[CTHome.locale] || heading.lang !== CTHome.locale || !icon || icon.getAttribute('src') !== '/assets/whatsapp-brand.svg' || icon.getAttribute('aria-hidden') !== 'true' || link.lang !== CTHome.locale || link.getAttribute('aria-label') !== expectedAria) return [{ tag:'A', text:link.textContent, error:'WhatsApp translation or accessible name mismatch' }];
       }
-      const dynamic = '.ct-whatsapp-share, .ct-whatsapp-heading, #event-rail-position, #event-rail-announcement, #active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
+      // Verify all new dynamic chooser text before excluding it from static annotation checks.
+      const chooserWords = {
+        'pt-BR':['Compartilhar','Compartilhar evento','Fechar','Compartilhar…','WhatsApp, Instagram e outros apps','Copiar link','Ideal para colar no Story ou em uma mensagem'],
+        'en-US':['Share','Share event','Close','Share…','WhatsApp, Instagram and other apps','Copy link','Paste into a Story or a message'],
+        es:['Compartir','Compartir evento','Cerrar','Compartir…','WhatsApp, Instagram y otras apps','Copiar enlace','Para pegar en una historia o un mensaje'],
+        'zh-Hans':['分享','分享活动','关闭','分享…','WhatsApp、Instagram 及其他应用','复制链接','粘贴到动态或消息中']
+      }[CTHome.locale];
+      for (const host of document.querySelectorAll('[data-public-share="event"]')) {
+        const opener=host.querySelector('.ct-event-share-opener'), dialog=host.querySelector('dialog');
+        const actions=dialog && dialog.querySelectorAll('.ct-share-dialog-action');
+        if (!opener || opener.textContent!==chooserWords[0] || !dialog || dialog.querySelector('strong').textContent!==chooserWords[1] || dialog.querySelector('.ct-share-dialog-head button').getAttribute('aria-label')!==chooserWords[2] || actions.length!==2 || actions[0].querySelector('[data-share-label]').textContent!==chooserWords[3] || actions[0].querySelector('small').textContent!==chooserWords[4] || actions[1].firstElementChild.textContent!==chooserWords[5] || actions[1].querySelector('small').textContent!==chooserWords[6]) return [{error:'Event chooser translation mismatch'}];
+      }
+      const dynamic = '.ct-event-share-opener, .ct-share-dialog-head, .ct-share-dialog-action, .ct-whatsapp-share, .ct-whatsapp-heading, #event-rail-position, #event-rail-announcement, #active-place, #event-count, #event-search-feedback, #catalog-status-message, #location-status, #period-dates, .catalog-image-fallback, .catalog-photo .sr-only, .catalog-actions .sr-only';
       const sourceOnly = '.language-choice span[translate="no"], .catalog-original[translate="no"], .ad-campaign-title[translate="no"], [data-share-event-title][translate="no"], .active-place[translate="no"], #active-filters > span[translate="no"], #category-choices button[translate="no"], #city-options button[translate="no"]';
       const privacyTitles={'pt-BR':'Privacidade na navegação','en-US':'Browsing privacy',es:'Privacidad al navegar','zh-Hans':'浏览隐私'};
       const privacyTitle=document.querySelector('#ct-privacy-title');
@@ -640,7 +652,7 @@ for (const locale of Object.keys(dictionaries)) {
     const unlabeledAttributes = await page.locator('[aria-label], [placeholder]').evaluateAll(nodes => nodes.filter(node => {
       if (node.id === 'events-grid' || node.classList.contains('catalog-card')) return false; // Dynamic interpolated labels are asserted below.
       // Event-share fallback labels are translated by their isolated component.
-      if (node.matches('[data-public-share="event"] input, .ct-whatsapp-share')) return false; // WhatsApp names were checked by unlocalizedVisibleCopy.
+      if (node.matches('[data-public-share="event"] input, .ct-whatsapp-share, .ct-share-dialog-head button')) return false; // WhatsApp names were checked by unlocalizedVisibleCopy.
       const aria = node.getAttribute('aria-label'), placeholder = node.getAttribute('placeholder');
       return (aria && !node.dataset.i18nAriaLabel && aria !== 'Carioca Ticket') || (placeholder && !node.dataset.i18nPlaceholder);
     }).map(node => ({ id: node.id, aria: node.getAttribute('aria-label'), placeholder: node.getAttribute('placeholder') })));
@@ -935,6 +947,7 @@ for (const width of [320, 375, 390]) for (const enlarged of [false, true]) {
     expect(state.blocked).toEqual([]);
   });
 }
+
 
 
 

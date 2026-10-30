@@ -32,7 +32,7 @@
   var whatsAppLinks = new WeakMap();
   var whatsAppBound = new WeakSet();
   var whatsAppLabels = { 'pt-BR':'Compartilhar no WhatsApp', 'en-US':'Share on WhatsApp', es:'Compartir en WhatsApp', 'zh-Hans':'通过 WhatsApp 分享' };
-  var sharingLabels = { 'pt-BR':'Compartilhamento', 'en-US':'Sharing', es:'Compartir', 'zh-Hans':'分享' };
+  var sharingLabels = { 'pt-BR':'Compartilhar', 'en-US':'Share', es:'Compartir', 'zh-Hans':'分享' };
   function renderWhatsAppControl(link, language) {
     var control = link.parentElement;
     if (!control || !control.classList.contains('ct-whatsapp-control')) {
@@ -142,11 +142,21 @@
     }
   };
   var activeShare = false;
+  var catalogDialogs = new Map();
+  var dialogSequence = 0;
+  var chooserCopy = {
+    'pt-BR': ['Compartilhar', 'Compartilhar evento', 'Fechar', 'Compartilhar…', 'WhatsApp, Instagram e outros apps', 'Copiar link', 'Ideal para colar no Story ou em uma mensagem'],
+    'en-US': ['Share', 'Share event', 'Close', 'Share…', 'WhatsApp, Instagram and other apps', 'Copy link', 'Paste into a Story or a message'],
+    es: ['Compartir', 'Compartir evento', 'Cerrar', 'Compartir…', 'WhatsApp, Instagram y otras apps', 'Copiar enlace', 'Para pegar en una historia o un mensaje'],
+    'zh-Hans': ['分享', '分享活动', '关闭', '分享…', 'WhatsApp、Instagram 及其他应用', '复制链接', '粘贴到动态或消息中']
+  };
   function mount(host, destination) {
     if (!destination || mounted.has(host)) return;
     var button = host.querySelector('button'), label = host.querySelector('[data-share-label]');
     var feedback = host.querySelector('[role="status"]'), input = host.querySelector('input');
     var pending = false, message = '', resolvedFallback = null;
+    var chooserEpoch = 0;
+    var chooser = null, opener, chooserTitle, closeButton, copyButton, nativeHelp, copyHelp, openerLabel;
     // Keep the lifecycle target stable even if filters re-render the card while
     // the native share sheet or clipboard promise is still open.
     var activityTarget = host.closest('#event-feature') || host;
@@ -154,9 +164,16 @@
     var whatsApp = document.createElement('a');
     whatsApp.className = 'ct-whatsapp-share';
     host.insertBefore(whatsApp, feedback);
-    mountWhatsApp(whatsApp, destination, function () { notify('interaction'); });
+    function afterWhatsApp() { notify('interaction'); if (chooser && chooser.open) chooser.close(); }
+    mountWhatsApp(whatsApp, destination, afterWhatsApp);
     function labels() {
       label.textContent = text(destination.label);
+      if (chooser) {
+        var words = chooserCopy[locale()];
+        openerLabel.textContent = words[0]; chooserTitle.textContent = words[1];
+        closeButton.setAttribute('aria-label', words[2]); label.textContent = words[3];
+        nativeHelp.textContent = words[4]; copyButton.firstElementChild.textContent = words[5]; copyHelp.textContent = words[6];
+      }
       input.setAttribute('aria-label', destination.event ? copy().label : text('shareLink'));
       feedback.textContent = message === 'shareUnavailable' ? unavailableShare() : (message ? (destination.event ? copy()[message === 'shareCopied' ? 'copied' : 'failed'] : text(message)) : '');
       input.value = destination.event ? ((resolvedFallback && resolvedFallback !== eventPublicUrl()) ? eventText(destination) + ' ' + resolvedFallback : 'Carioca Ticket ' + eventPublicUrl()) : destination.url;
@@ -167,7 +184,8 @@
     input.addEventListener('focus', function () { input.select(); });
     // A share/copy/select gesture must not become a carousel drag or card click.
     host.addEventListener('pointerdown', function (event) { event.stopPropagation(); notify('interaction'); });
-    button.addEventListener('click', async function (event) {
+    async function performShare(event, copyOnly) {
+      var epoch = chooserEpoch;
       event.preventDefault(); event.stopPropagation();
       if (pending || activeShare || host.closest('[inert]')) return;
       activeShare = true;
@@ -178,7 +196,7 @@
       // Never forward the current URL, attribution/query parameters or session data.
       try {
       var resolvedUrl = destination.event ? await resolveShareUrl(destination.eventId) : destination.url;
-      if (host.closest('[inert]') || !host.isConnected) return;
+      if (host.closest('[inert]') || !host.isConnected || (chooser && (!chooser.open || epoch !== chooserEpoch))) return;
       resolvedFallback = resolvedUrl;
       var deniedEvent = destination.event && resolvedUrl === eventPublicUrl();
       if (deniedEvent) { message = 'shareUnavailable'; return; }
@@ -187,17 +205,65 @@
       var clipboardText = destination.event ? payload.text + ' ' + resolvedUrl : resolvedUrl;
         var supported = false;
         try { supported = typeof navigator.share === 'function' && (!navigator.canShare || navigator.canShare(payload)); } catch (_) {}
-        if (supported) {
+        if (supported && !copyOnly) {
           try { await navigator.share(payload); return; }
           catch (error) { if (error && error.name === 'AbortError') return; }
         }
+        if (host.closest('[inert]') || !host.isConnected || (chooser && (!chooser.open || epoch !== chooserEpoch))) return;
         try { await navigator.clipboard.writeText(clipboardText); message = 'shareCopied'; }
         catch (_) { message = 'shareFailed'; input.hidden = false; }
       } finally {
         pending = false; activeShare = false; button.disabled = false; button.removeAttribute('aria-busy'); labels();
-        notify('end');
+        if (!chooser || !chooser.open) notify('end');
       }
-    });
+    }
+    button.addEventListener('click', function (event) { performShare(event, false); });
+    if (destination.event) {
+      chooser = document.createElement('dialog');
+      chooser.className = 'ct-public-share ct-share-dialog';
+      chooser.setAttribute('inert', '');
+      var head = document.createElement('div'); head.className = 'ct-share-dialog-head';
+      chooserTitle = document.createElement('strong');
+      chooserTitle.id = 'ct-share-title-' + (++dialogSequence);
+      chooser.setAttribute('aria-labelledby', chooserTitle.id);
+      closeButton = document.createElement('button'); closeButton.type = 'button'; closeButton.textContent = '×';
+      closeButton.addEventListener('click', function () { chooser.close(); });
+      head.appendChild(chooserTitle); head.appendChild(closeButton); chooser.appendChild(head);
+      label.classList.remove('sr-only'); label.removeAttribute('data-i18n');
+      var nativeText = document.createElement('span'); nativeText.appendChild(label);
+      nativeHelp = document.createElement('small'); nativeText.appendChild(nativeHelp); button.appendChild(nativeText);
+      button.classList.add('ct-share-dialog-action');
+      chooser.appendChild(button); chooser.appendChild(whatsApp.parentElement);
+      copyButton = document.createElement('button'); copyButton.type = 'button'; copyButton.className = 'ct-share-dialog-action';
+      copyButton.appendChild(document.createElement('span')); copyHelp = document.createElement('small'); copyButton.appendChild(copyHelp);
+      copyButton.addEventListener('click', function (event) { performShare(event, true); });
+      chooser.appendChild(copyButton); chooser.appendChild(feedback); chooser.appendChild(input);
+      // Native dialog top layer avoids carousel clipping while retaining inert-card ancestry.
+      host.appendChild(chooser);
+      opener = document.createElement('button'); opener.type = 'button'; opener.className = 'ct-event-share-opener';
+      opener.setAttribute('aria-haspopup', 'dialog');
+      opener.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 16a3 3 0 0 0-2.39 1.19L8.91 13.7a3.14 3.14 0 0 0 0-3.4l6.7-3.49A3 3 0 1 0 15 5a3.2 3.2 0 0 0 .09.7L8.4 9.19a3 3 0 1 0 0 5.62l6.69 3.49A3.2 3.2 0 0 0 15 19a3 3 0 1 0 3-3Z"/></svg><span></span>';
+      openerLabel = opener.lastElementChild; host.appendChild(opener);
+      opener.addEventListener('click', function (event) {
+        event.preventDefault(); event.stopPropagation();
+        if (activeShare || host.closest('[inert]') || !host.isConnected || chooser.open) return;
+        chooserEpoch++; message = ''; resolvedFallback = null; input.hidden = true;
+        mountWhatsApp(whatsApp, destination, afterWhatsApp);
+        var previousStatus = whatsApp.parentElement.querySelector('[role="status"]');
+        if (previousStatus) previousStatus.textContent = '';
+        labels(); chooser.removeAttribute('inert'); chooser.showModal(); notify('start'); closeButton.focus();
+      });
+      chooser.addEventListener('close', function () {
+        chooserEpoch++; chooser.setAttribute('inert', '');
+        window.CTPublicShare.clearEventWhatsApp(whatsApp); if (!pending) notify('end');
+        if (host.isConnected && !host.closest('[inert]')) opener.focus();
+      });
+      chooser.addEventListener('click', function (event) { if (event.target === chooser) {
+        var rect = chooser.getBoundingClientRect();
+        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) chooser.close();
+      } });
+      catalogDialogs.set(host, chooser);
+    }
     mounted.set(host, labels);
     labels(); host.hidden = false;
   }
@@ -208,6 +274,9 @@
   // the catalog loader, filtering, event destination or checkout destination.
   var grid = document.getElementById('events-grid');
   function mountCards() {
+    catalogDialogs.forEach(function (dialog, host) {
+      if (!host.isConnected) { if (dialog.open) dialog.close(); dialog.remove(); catalogDialogs.delete(host); }
+    });
     grid.querySelectorAll('.catalog-card').forEach(function (card) {
       var title = card.querySelector('.catalog-title a'), actions = card.querySelector('.catalog-actions');
       if (!title || !actions || !card.dataset.eventId || card.querySelector('[data-public-share="event"]')) return;
@@ -218,7 +287,9 @@
       var eventTitle = host.querySelector('[data-share-event-title]');
       eventTitle.textContent = ' ' + title.textContent;
       eventTitle.lang = title.lang || document.documentElement.lang; eventTitle.setAttribute('translate', 'no');
-      actions.appendChild(host);
+      var photo = card.querySelector('.catalog-photo');
+      if (!photo) return;
+      card.insertBefore(host, photo.nextSibling);
       mount(host, { eventId:card.dataset.eventId, url:eventPublicUrl(card.dataset.eventId), title:title.textContent, date:card.dataset.shareDate || '', venue:card.dataset.shareVenue || '', event:true, label:'shareEvent' });
     });
   }

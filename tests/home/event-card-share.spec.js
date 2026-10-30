@@ -47,6 +47,16 @@ async function prepare(page, count, mode='native', customRows) {
   return { state, data };
 }
 function current(page) { return page.locator('.catalog-card:not([inert]) [data-public-share="event"]'); }
+async function openChooser(page) {
+  const host = current(page);
+  await host.locator('.ct-event-share-opener').click();
+  await expect(host.locator('dialog')).toBeVisible();
+  return host.locator('.ct-share-dialog-action').first();
+}
+async function closeChooser(page) {
+  await current(page).locator('.ct-share-dialog-head button').click();
+  await expect(current(page).locator('dialog')).toBeHidden();
+}
 async function settled(page, index) { await expect(page.locator('#events-grid')).toHaveAttribute('data-active-index', String(index)); }
 
 for (const count of [1, 2, 15]) for (const width of [320, 412, 1440]) {
@@ -57,8 +67,14 @@ for (const count of [1, 2, 15]) for (const width of [320, 412, 1440]) {
     const before = page.url();
     expect(await page.evaluate(() => shareCalls.length + copies.length)).toBe(0);
     for (let i=0; i<count; i++) {
-      const host = current(page), button = host.locator('button');
-      await expect(button).toHaveAccessibleName('Compartilhar evento: ' + data[i].nome);
+      const host = current(page), opener = host.locator('.ct-event-share-opener');
+      await expect(opener).toHaveAccessibleName('Compartilhar');
+      const openerSize = await opener.boundingBox();
+      expect(openerSize.width).toBeGreaterThanOrEqual(44); expect(openerSize.height).toBeGreaterThanOrEqual(44);
+      expect(await opener.evaluate(node => !!node.closest('a'))).toBe(false);
+      const button = await openChooser(page);
+      await expect(button.locator('[data-share-event-title]')).toHaveText(data[i].nome);
+      await expect(button).toContainText('Compartilhar…');
       await expect(button).toBeVisible();
       const size = await button.boundingBox();
       expect(size.width).toBeGreaterThanOrEqual(44); expect(size.height).toBeGreaterThanOrEqual(44);
@@ -67,11 +83,13 @@ for (const count of [1, 2, 15]) for (const width of [320, 412, 1440]) {
       await expect.poll(()=>page.evaluate(() => shareCalls.at(-1))).toEqual(expected(data[i]));
       expect(page.url()).toBe(before);
       await expect(page.locator('.catalog-card:not([inert]) .btn-primary')).toHaveAttribute('href', '/checkout/?evento=' + data[i].id);
+      await closeChooser(page);
       if (count > 1) { await page.locator('#event-rail-next').click(); await settled(page, (i+1) % count); }
     }
     if (count > 1) {
-      await current(page).locator('button').click();
+      await (await openChooser(page)).click();
       await expect.poll(()=>page.evaluate(() => shareCalls.at(-1))).toEqual(expected(data[0]));
+      await closeChooser(page);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await page.evaluate(() => sessionStorage.getItem('share-session-fixture'))).toBe('unchanged');
@@ -88,8 +106,8 @@ for (const mode of ['absent', 'unsupported', 'can-share-throws', 'share-fails', 
     await page.setViewportSize({ width:320, height:915 });
     const { data } = await prepare(page, 2, mode);
     const host = current(page), before = page.url();
-    await host.locator('button').click();
-    await expect(host.locator('button')).toBeEnabled();
+    await (await openChooser(page)).click();
+    await expect(host.locator('.ct-share-dialog-action').first()).toBeEnabled();
     if (mode === 'cancel') {
       await expect(host.locator('[role="status"]')).toBeEmpty();
       await expect(host.locator('input')).toBeHidden();
@@ -105,6 +123,7 @@ for (const mode of ['absent', 'unsupported', 'can-share-throws', 'share-fails', 
       await expect(host.locator('[role="status"]')).toHaveText('Mensagem copiada.');
     }
     if (['absent', 'unsupported', 'can-share-throws', 'copy-fails'].includes(mode)) expect(await page.evaluate(() => shareCalls)).toEqual([]);
+    await closeChooser(page);
     await expect(page.locator('#event-rail-pause')).toHaveText('Retomar rotação');
     expect(page.url()).toBe(before);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -115,11 +134,12 @@ for (const mode of ['pending', 'copy-pending']) {
   test(`${mode}: pause through unresolved promise, repeated clicks and explicit resume`, async ({ page }) => {
     await page.clock.install();
     await prepare(page, 2, mode);
-    const button = current(page).locator('button');
+    const button = await openChooser(page);
     await button.click();
     await expect.poll(()=>page.evaluate(()=>typeof window.releaseShare)).toBe('function');
     await expect(button).toBeDisabled(); await expect(button).toHaveAttribute('aria-busy', 'true');
     await button.dispatchEvent('click');
+    await closeChooser(page);
     await page.locator('#event-search-input').focus(); await page.mouse.move(0, 0);
     await page.clock.runFor(16000); await settled(page, 0);
     await expect(page.locator('#event-rail-pause')).toBeDisabled();
@@ -140,12 +160,14 @@ for (const mode of ['pending', 'copy-pending']) {
 test('pending share survives catalog re-render without blocking later navigation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion:'reduce' });
   await prepare(page, 15, 'pending');
-  await current(page).locator('button').click();
+  await (await openChooser(page)).click();
   await expect.poll(()=>page.evaluate(()=>typeof window.releaseShare)).toBe('function');
+  await closeChooser(page);
   await page.locator('#event-search-input').fill('criativo');
   await page.locator('#event-search-form button').click();
   await expect(page.locator('.catalog-card')).toHaveCount(7);
-  await current(page).locator('button').click();
+  await current(page).locator('.ct-event-share-opener').click();
+  await expect(current(page).locator('dialog')).toBeHidden();
   expect(await page.evaluate(() => shareCalls.length)).toBe(1);
   await expect(page.locator('#event-rail-next')).toBeDisabled();
   await page.evaluate(() => releaseShare());
@@ -164,10 +186,10 @@ test('automatic last-to-first loop shares the first original, inactive cards can
   await settled(page, 1);
   for (let i=0; i<50; i++) await page.clock.runFor(100);
   await settled(page, 0);
-  expect(await page.getByRole('button', { name:/^Compartilhar evento:/ }).count()).toBe(1);
-  await page.locator('.catalog-card[inert] [data-public-share="event"] button').dispatchEvent('click');
+  expect(await page.getByRole('button', { name:'Compartilhar', exact:true }).count()).toBe(1);
+  await page.locator('.catalog-card[inert] [data-public-share="event"] .ct-event-share-opener').dispatchEvent('click');
   expect(await page.evaluate(() => shareCalls)).toEqual([]);
-  await current(page).locator('button').click();
+  await (await openChooser(page)).click();
   await expect.poll(()=>page.evaluate(() => shareCalls)).toEqual([expected(data[0])]);
 });
 
@@ -176,9 +198,11 @@ test('touch share is separate from swiping and buy, with original special-charac
   const page = await context.newPage();
   const data = [{ ...events[0], id:'PUBLIC_safe-EVENT_2030', nome:'Festa <especial> & amigos' }, ...rows(1)];
   const { state } = await prepare(page, 2, 'native', data);
-  await current(page).locator('button').tap();
+  await current(page).locator('.ct-event-share-opener').tap();
+  await current(page).locator('.ct-share-dialog-action').first().tap();
   await expect.poll(()=>page.evaluate(() => shareCalls)).toEqual([expected(data[0])]);
   await settled(page, 0); expect(page.url()).toBe(ORIGIN + '/?ref=PRIVATE-FIXTURE&token=DO-NOT-SHARE#filters');
+  await closeChooser(page);
   await page.locator('.catalog-card:not([inert]) .catalog-photo').scrollIntoViewIfNeeded();
   const target = await page.locator('.catalog-card:not([inert]) .catalog-photo').boundingBox();
   const cdp = await context.newCDPSession(page), x=target.x+target.width*.8, y=target.y+target.height*.5;
@@ -195,10 +219,10 @@ test('language changes retain the event source name and no duplicate controls af
   await page.emulateMedia({ reducedMotion:'reduce' });
   const { data } = await prepare(page, 2);
   await page.locator('#home-language').selectOption('en-US', { force:true });
-  await expect(current(page).locator('button')).toHaveAccessibleName('Share event: ' + data[0].nome);
+  await expect(current(page).locator('.ct-event-share-opener')).toHaveAccessibleName('Share');
   await expect(current(page).locator('[data-share-event-title]')).toHaveAttribute('lang', 'pt-BR');
   await expect(page.locator('[data-public-share="event"]')).toHaveCount(2);
-  await current(page).locator('button').click();
+  await (await openChooser(page)).click();
   await expect.poll(()=>page.evaluate(() => shareCalls)).toEqual([expected(data[0], 'Check out this event on Carioca Ticket.')]);
 });
 
@@ -212,7 +236,7 @@ for (const [locale, cta, label, feedback] of [
     const { data, state } = await prepare(page, 1, 'absent');
     await page.locator('#home-language').selectOption(locale, { force:true });
     const host = current(page);
-    await host.locator('button').click();
+    await (await openChooser(page)).click();
     const payload = expected(data[0], cta);
     await expect.poll(()=>page.evaluate(() => copies)).toEqual([payload.text + ' ' + payload.url]);
     await expect(host.locator('input')).toHaveAttribute('aria-label', label);
@@ -226,7 +250,7 @@ test('missing facts stay absent and unrelated private fields never enter the mes
   const data = [{ temporal:legacyNoEndTemporal(), id:'PUBLIC-safe', nome:'Festa <img src=x onerror=alert(1)> & amigos', data:'', horario:null, local:undefined, cidade:'', uf:'', token:'SECRET', convite:'PRIVATE-INVITE', links:{ evento:'https://invalid.example/?token=SECRET' } }];
   const { state } = await prepare(page, 1, 'copy-fails', data);
   const host = current(page);
-  await host.locator('button').click();
+  await (await openChooser(page)).click();
   await expect(host.locator('input')).toHaveValue(copied(data[0]));
   await expect(host.locator('input')).toBeVisible();
   expect(await host.locator('input').inputValue()).not.toMatch(/SECRET|PRIVATE|não informado|undefined|null/);
@@ -243,10 +267,11 @@ test('missing facts stay absent and unrelated private fields never enter the mes
    const data=[{...events[0],id:'PUBLIC /?&=# evento',nome:'Festa <especial> & amigos'}];
    const {state}=await prepare(page,1,'native',data);
    const host=current(page);
-   await host.locator('button').click(); await expect(host.locator('button')).toBeEnabled();
+   await (await openChooser(page)).click(); await expect(host.locator('.ct-share-dialog-action').first()).toBeEnabled();
    await expect(host.locator('[role="status"]')).toContainText('indisponível');
    expect(await page.evaluate(()=>shareCalls)).toEqual([]); expect(await page.evaluate(()=>copies)).toEqual([]);
    await expect(host.locator('input')).toBeHidden();
    await expect(page.locator('.catalog-card .btn-primary')).toHaveAttribute('href','/checkout/?evento='+encodeURIComponent(data[0].id));
    expect(state.errors).toEqual([]); expect(state.blocked).toEqual([]);
  });
+
