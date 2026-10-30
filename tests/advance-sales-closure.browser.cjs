@@ -85,11 +85,12 @@ async function assertEndedPresentation(page) {
   assert.equal(await page.locator('#shareWhatsAppAction').getAttribute('role'), 'button');
   assert.equal(await page.locator('#shareWhatsAppAction').getAttribute('tabindex'), '0');
   // Exercise actual asynchronous consumer against an empty published fixture.
-  // The popup is a local double: no WhatsApp navigation can escape this test.
-  await page.evaluate(()=>{window.__closedShare={navigated:[],closed:0};window.open=()=>({opener:null,document:{createElement:t=>document.createElement(t),head:document.createElement('head')},location:{replace:u=>window.__closedShare.navigated.push(u)},close:()=>window.__closedShare.closed++});});
+  // Denied evidence must create neither popup nor same-tab handoff; all navigation stays isolated.
+  await page.evaluate(()=>{window.__closedShare={navigated:[],opened:0};window.open=()=>{window.__closedShare.opened++;return null};if(!window.__closedShareGuard){window.__closedShareGuard=true;document.addEventListener('click',event=>{const a=event.target.closest&&event.target.closest('a');if(a&&a.href.startsWith('https://wa.me/')){event.preventDefault();window.__closedShare.navigated.push(a.href)}},true)}});
   await page.locator('#shareHero').click();
   await page.locator('#shareWhatsAppAction').click();
-  await page.waitForFunction(()=>window.__closedShare.closed===1);
+  await page.waitForFunction(()=>{const status=document.querySelector('.ct-whatsapp-control [role="status"]');return document.getElementById('shareWhatsAppAction').getAttribute('aria-busy')===null&&status&&/indisponível|unavailable|No se puede|暂时无法/.test(status.textContent)});
+  assert.equal(await page.evaluate(()=>window.__closedShare.opened),0);
   assert.deepEqual(await page.evaluate(()=>window.__closedShare.navigated),[]);
   assert.equal(await page.locator('#shareWhatsAppAction').getAttribute('aria-busy'),null);
   assert.match(await page.locator('.ct-whatsapp-control [role="status"]').innerText(),/indisponível|unavailable|No se puede|暂时无法/);
@@ -219,4 +220,5 @@ async function aliasFixture(browser, js) {
     console.log('PASS ' + report.length + ' isolated browser cases; zero requests forwarded.');
   } finally { fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 2)); await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
 
