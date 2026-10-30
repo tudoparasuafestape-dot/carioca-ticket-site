@@ -1,10 +1,10 @@
-const {chromium}=require('@playwright/test'),fs=require('node:fs'),assert=require('node:assert/strict');
+const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('node:assert/strict');
 const server=require('./event-uber-preview-server.cjs');
 const origin='http://127.0.0.1:42979',ID='EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD';
 const out='test-results/event-uber';fs.mkdirSync(out,{recursive:true});const report=[];
 const event={id:ID,local:'Vevets Recepções',endereco:'Rua Arenópolis, 82 - Candeias',cidade:'Jaboatão dos Guararapes',uf:'PE'};
 const expected={'pt-BR':'Ir de Uber','en-US':'Go with Uber',es:'Ir con Uber','zh-Hans':'乘坐 Uber'};
-(async()=>{const browser=await chromium.launch();try{
+(async()=>{const browser=await chromium.launch(process.env.CT_CHROMIUM_PATH ? {executablePath:process.env.CT_CHROMIUM_PATH} : {});try{
  for(const route of ['evento','evento-v2'])for(const locale of Object.keys(expected)){
   const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block',permissions:[]});
   await context.addInitScript(locale=>{localStorage.setItem('ct-home-locale',locale);Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{window.copied=value}}});},locale);
@@ -16,7 +16,7 @@ const expected={'pt-BR':'Ir de Uber','en-US':'Go with Uber',es:'Ir con Uber','zh
   assert.equal(await page.locator('#directions-uber-label').textContent(),expected[locale]);
   const href=await link.getAttribute('href'),url=new URL(href),drop=JSON.parse(url.searchParams.get('drop[0]'));
   assert.equal(url.origin,'https://m.uber.com');assert.equal(url.pathname,'/looking');assert.equal(drop.latitude,-8.1932272);assert.equal(drop.longitude,-34.9293376);
-  assert.equal(await link.getAttribute('target'),'_self');assert.equal(await link.getAttribute('rel'),'noreferrer');
+  assert.equal(await link.getAttribute('target'),'_self');assert.equal(await link.getAttribute('rel'),'noopener noreferrer');
   assert.equal(await link.getAttribute('aria-describedby'),'directions-uber-note');
   await link.focus();assert.equal(await page.evaluate(()=>document.activeElement.id),'directions-uber');
   for(const width of [320,390,768,1440])for(const theme of ['light','dark']){
@@ -28,7 +28,7 @@ const expected={'pt-BR':'Ir de Uber','en-US':'Go with Uber',es:'Ir con Uber','zh
   await page.locator('#directions-copy').click();assert.equal(await page.evaluate(()=>copied),await page.locator('#directions-address').inputValue());
   assert.equal(await link.getAttribute('href'),href);
   for(const bad of [{...event,id:'OTHER'},{...event,endereco:'Rua Arenópolis, 83'},{...event,local:'Online'},{}]){
-   await page.evaluate(({e,id})=>CTEventUber.render(e,id),{e:bad,id:ID});assert(await link.isHidden());assert.equal(await link.getAttribute('href'),null);
+   await page.evaluate(({e,id})=>CTEventUber.render(e,id),{e:bad,id:ID});if(bad.id===ID && bad.local!=='Online'){assert(await link.isVisible());assert.equal(await link.getAttribute('href'),'https://m.uber.com/')}else{assert(await link.isHidden());assert.equal(await link.getAttribute('href'),null);}
   }
   await page.evaluate(({e,id})=>{CTEventDirections.render(e);CTEventUber.render(e,id);},{e:event,id:ID});assert(await link.isVisible());
   await page.evaluate(()=>CTEventUber.clear());await page.evaluate(()=>dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));assert(await link.isHidden());
@@ -48,7 +48,7 @@ const expected={'pt-BR':'Ir de Uber','en-US':'Go with Uber',es:'Ir con Uber','zh
  }
  for(const scenario of ['unknown','changed','old-fixture']){
   const context=await browser.newContext({serviceWorkers:'block'});await context.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());const page=await context.newPage();
-  await page.goto(`${origin}/evento/?evento=${ID}&scenario=${scenario}`);await page.locator('#app').waitFor({state:'visible'});assert(await page.locator('#directions-uber').isHidden());assert.equal(await page.locator('#directions-uber').getAttribute('href'),null);await context.close();
+  await page.goto(`${origin}/evento/?evento=${ID}&scenario=${scenario}`);await page.locator('#app').waitFor({state:'visible'});if(scenario==='unknown'){assert(await page.locator('#directions-uber').isHidden());assert.equal(await page.locator('#directions-uber').getAttribute('href'),null)}else{assert(await page.locator('#directions-uber').isVisible());assert.equal(await page.locator('#directions-uber').getAttribute('href'),'https://m.uber.com/')}await context.close();
  }
  for(const route of ['evento','evento-v2']){
   const context=await browser.newContext({serviceWorkers:'block',permissions:[]});
