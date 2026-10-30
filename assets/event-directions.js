@@ -20,12 +20,27 @@
       !/\b(?:confirmar|definir|informar|nao informad[oa]|nao se aplica|em breve|pendente|aguarde|a ser confirmad[oa]|a ser definid[oa]|divulgad[oa]|enviad[oa]|online|on-line|on line|virtual|remot[oa]|zoom|google meet|teams|link|e-?mail)\b/.test(normalized) &&
       !/^(?:n\/a|[-–—.]+)$/.test(normalized);
   }
-  function render(event) {
+  // One canonical public address resolver for every provider and every render.
+  // Presence/format checks are not a guarantee of a verified venue entrance.
+  function resolve(event) {
     event = event || {};
-    var venue = clean(event.local);
-    var address = clean(event.endereco);
-    var city = clean(event.cidade);
-    var state = clean(event.uf);
+    var venue = clean(event.local), address = clean(event.endereco);
+    var city = clean(event.cidade), state = clean(event.uf);
+    var valid = usable(venue) && usable(address) && usable(city) &&
+      /[A-Za-zÀ-ž]{2}/.test(address) &&
+      /(?:\d|\bs\s*\/\s*n\b|\bsem n[uú]mero\b)/i.test(address) &&
+      /^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/i.test(state);
+    if (!valid) return null;
+    var destination = [venue, address, city, state.toUpperCase(), 'Brasil'].join(', ');
+    try {
+      var encoded = encodeURIComponent(destination);
+      var mapUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encoded;
+      if (mapUrl.length > 2048) return null;
+      return { destination: destination, mapUrl: mapUrl,
+        wazeUrl: 'https://waze.com/ul?q=' + encoded };
+    } catch (_) { return null; }
+  }
+  function render(event) {
     var details = document.getElementById('directions-details');
     var unavailable = document.getElementById('directions-unavailable');
     var input = document.getElementById('directions-address');
@@ -34,17 +49,10 @@
     var status = document.getElementById('directions-status');
     var revision = {}; 
     if (!details || !unavailable || !input || !map || !copy || !status) return;
-    // Presence checks do not establish event modality or verify a physical location.
-    var valid = usable(venue) && usable(address) && usable(city) &&
-      /^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/i.test(state);
-    var destination = [venue, address, city, state.toUpperCase(), 'Brasil'].join(', ');
-    var mapUrl = '';
-    if (valid) {
-      try {
-        mapUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(destination);
-        valid = mapUrl.length <= 2048;
-      } catch (_) { valid = false; }
-    }
+    var resolved = resolve(event);
+    var valid = !!resolved;
+    var destination = resolved ? resolved.destination : '';
+    var mapUrl = resolved ? resolved.mapUrl : '';
     details.hidden = !valid;
     unavailable.hidden = valid;
     input.value = '';
@@ -78,6 +86,6 @@
     var status = document.getElementById('directions-status');
     if (status && status._directionsMessage) setStatus(status, status._directionsMessage);
   });
-  window.CTEventDirections = { render: render };
+  window.CTEventDirections = Object.freeze({ render: render, resolve: resolve });
 }());
 

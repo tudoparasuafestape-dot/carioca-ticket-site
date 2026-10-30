@@ -10,6 +10,7 @@ const { createFixtures } = require('./fixtures/public-canary.cjs');
 const { temporalEnvelope, legacyNoEndTemporal } = require('./fixtures/public-temporal-envelope.cjs');
 const ROOT = path.resolve(__dirname, '..'), ORIGIN = 'http://127.0.0.1:4179';
 const SAMBA = 'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD', ERA = 'EVT-23112026-ERA-BEAUTY-EAC4B673';
+const APPROVED_MAP_PINS = { [SAMBA]: '-8.1932272,-34.9293376', [ERA]: '-8.0651289,-34.9050337' };
 const MESSAGE = 'Evento encerrado.';
 const ORDER = 'ORDER-SYNTHETIC', TOKEN = 'TOKEN-SYNTHETIC', KEY = 'KEY-SYNTHETIC-PRE-CLOSURE';
 const OUT = process.env.CT_EVIDENCE_DIR || 'test-results/advance-sales';
@@ -52,6 +53,7 @@ async function fixture(browser, route, mobile, options = {}) {
   };
   const e = catalog(event).evento, destination = [e.local, e.endereco, e.cidade, e.uf, 'Brasil'].join(', ');
   fixtures.resources['https://maps.google.com/maps?output=embed&q=' + encodeURIComponent(destination)] = { contentType: 'text/html', body: '<!doctype html><p>Mapa simulado offline</p>' };
+  fixtures.resources['https://maps.google.com/maps?output=embed&q=' + encodeURIComponent(APPROVED_MAP_PINS[event])] = { contentType: 'text/html', body: '<!doctype html><p>Mapa aprovado simulado offline</p>' };
   const guard = await installIsolatedNetwork(context, { root: ROOT, origin: ORIGIN, ...fixtures });
   // Registered after generic static guard: fulfill this exact synthetic GET only.
   await context.route(ORIGIN+'/assets/social-event-pages.json', async route=>{assert.equal(route.request().method(),'GET');await route.fulfill({contentType:'application/json',body:JSON.stringify({schema:'CT_PUBLISHED_SHARE_INDEX_V1',revision:'a'.repeat(64),generatedAt:new Date(FIXTURE_NOW).toISOString(),entries:[],fallbacks:[]})});});
@@ -149,6 +151,8 @@ async function aliasFixture(browser, js) {
         const uber = await f.page.locator('#directions-uber').getAttribute('href'), waze = await f.page.locator('#directions-waze').getAttribute('href');
         assert.equal(JSON.parse(new URL(uber).searchParams.get('drop[0]')).latitude, -8.1932272); assert(waze.includes('waze.com'));
         await f.page.locator('#event-directions').scrollIntoViewIfNeeded(); await f.page.locator('#directions-map-preview iframe').waitFor();
+        assert.equal(new URL(await f.page.locator('#directions-map-preview iframe').getAttribute('src')).searchParams.get('q'), APPROVED_MAP_PINS[SAMBA]);
+        await f.page.frameLocator('#directions-map-preview iframe').getByText('Mapa aprovado simulado offline', { exact: true }).waitFor();
         for (const locale of ['en-US', 'es', 'zh-Hans', 'pt-BR']) {
           await f.page.evaluate(value => CTPublicI18n.setLocale(value), locale);
           await assertEndedPresentation(f.page);
@@ -220,5 +224,6 @@ async function aliasFixture(browser, js) {
     console.log('PASS ' + report.length + ' isolated browser cases; zero requests forwarded.');
   } finally { fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 2)); await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
 
 
