@@ -5,7 +5,7 @@ class Node {constructor(){this.attrs={};this.hidden=false;this.textContent='';}s
 const nodes=Object.fromEntries(['directions-uber','directions-uber-label','directions-uber-note','directions-waze','directions-waze-label','directions-waze-note','directions-details'].map(id=>[id,new Node()]));
 const listeners={},fail=()=>{throw Error('External action forbidden in synthetic contract');};
 const context={window:{localStorage:{getItem:()=> 'pt-BR'},addEventListener:(k,v)=>listeners[k]=v,open:fail,fetch:fail},document:{getElementById:id=>nodes[id],addEventListener:(k,v)=>listeners[k]=v},fetch:fail,XMLHttpRequest:fail,WebSocket:fail};
-for(const file of ['event-ride-destinations.js','event-uber.js'])vm.runInNewContext(fs.readFileSync(path.join(root,'assets',file),'utf8'),context);
+for(const file of ['event-directions.js','event-ride-destinations.js','event-uber.js'])vm.runInNewContext(fs.readFileSync(path.join(root,'assets',file),'utf8'),context);
 const api=context.window.CTEventUber,registry=context.window.CTEventRideDestinations,waze=nodes['directions-waze'],note=nodes['directions-waze-note'];
 const expected={'pt-BR':'Ir com Waze','en-US':'Go with Waze',es:'Ir con Waze','zh-Hans':'使用 Waze 导航'};
 let checks=0;
@@ -23,15 +23,15 @@ for(const [id,point] of Object.entries(registry)){
  delete context.window.CTPublicI18n;context.window.localStorage={getItem(){throw Error('disabled storage')}};listeners.pageshow();assert.equal(waze.attrs.lang,'pt-BR');checks++;
  // Only the approved source is used; untrusted payload pins and map center cannot override it.
  assert.equal(api.buildWazeUrl({...event,latitude:20,longitude:40,mapaUrl:'https://maps.example/?ll=10,20',destinoTransporte:{latitude:20,longitude:40}},id),raw);checks++;
- for(const invalid of [null,{}, {...event,id:'OTHER'}, {...event,id:'__proto__'}, {...event,local:'Other'}, {...event,endereco:'Other'}, {...event,cidade:'Other'}, {...event,uf:'XX'}, {...event,endereco:''}]){api.render(event,id);api.render(invalid,id);absent();assert.equal(api.buildWazeUrl(invalid,id),'');}
+ for(const invalid of [null,{}, {...event,id:'OTHER'}, {...event,id:'__proto__'}, {...event,local:'Other'}, {...event,endereco:'Other'}, {...event,cidade:'Other'}, {...event,uf:'XX'}, {...event,endereco:''}]){api.render(event,id);api.render(invalid,id);const valid=invalid&&invalid.id===id&&context.window.CTEventDirections.resolve(invalid);if(valid){assert.equal(waze.attrs.href,valid.wazeUrl);assert.equal(waze.hidden,false)}else{absent();assert.equal(api.buildWazeUrl(invalid,id),'')}}
  api.render(event,id);api.render(event,'OTHER');absent();
  for(const patch of [{approved:false},{revision:''},{latitude:NaN},{latitude:Infinity},{latitude:91},{longitude:-181},{latitude:'-8'},{latitude:0,longitude:0},{addressLine1:''},{addressLine2:'x'.repeat(501)}]){
-  context.window.CTEventRideDestinations={[id]:{...point,...patch}};assert.equal(api.buildWazeUrl(event,id),'');api.render(event,id);absent();
+  context.window.CTEventRideDestinations={[id]:{...point,...patch}};assert.equal(api.buildWazeUrl(event,id),context.window.CTEventDirections.resolve(event).wazeUrl);api.render(event,id);assert.equal(waze.hidden,false);
  }
  context.window.CTEventRideDestinations=registry;
  nodes['directions-details'].hidden=true;api.render(event,id);absent();nodes['directions-details'].hidden=false;
  api.render(event,id);api.clear();listeners.pageshow();absent();
- context.window.CTEventRideDestinations=undefined;api.render(event,id);absent();context.window.CTEventRideDestinations=registry;
+ context.window.CTEventRideDestinations=undefined;api.render(event,id);assert.equal(waze.hidden,false);assert.equal(waze.attrs.href,context.window.CTEventDirections.resolve(event).wazeUrl);context.window.CTEventRideDestinations=registry;
 }
 // A future reviewed registry item needs no Waze-specific exception or allow-list.
 const id='SYNTHETIC-FUTURE-EVENT',point={...Object.values(registry)[0],latitude:12.34,longitude:-56.78};
@@ -39,12 +39,12 @@ context.window.CTEventRideDestinations={[id]:point};assert.equal(new URL(api.bui
 for(const route of ['evento','evento-v2']){
  const html=fs.readFileSync(path.join(root,route,'index.html'),'utf8');
  assert.equal((html.match(/id="directions-waze"/g)||[]).length,1);
- assert.match(html,/id="directions-waze" hidden target="_self" rel="noreferrer" aria-describedby="directions-waze-note"/);
+ assert.match(html,/id="directions-waze" hidden target="_self" rel="noopener noreferrer" aria-describedby="directions-waze-note"/);
  assert.match(html,/id="directions-uber"[^\n]*\n\s*<a id="directions-waze"/);
  assert.match(html,/id="directions-waze-note" hidden/);
  assert.match(html,/<img class="waze-mark" src="\/assets\/waze-mark\.svg" width="28" height="26" alt="" aria-hidden="true"><span id="directions-waze-label">/);
  assert.equal((html.match(/class="waze-mark"/g)||[]).length,1);
- assert.match(html,/event-uber\.js\?v=20261010-4/);assert.match(html,/event-uber\.css\?v=20261010-5/);checks++;
+ assert.match(html,/event-uber\.js\?v=20261030-pin1/);assert.match(html,/event-uber\.css\?v=20261010-5/);checks++;
 }
 console.log(`PASS: ${checks} Waze synthetic groups; exact Uber destination, URL encoding, 4 locales, stale state, no destination, invalid coordinates, future registry record, both templates. Zero network/navigation.`);
 
