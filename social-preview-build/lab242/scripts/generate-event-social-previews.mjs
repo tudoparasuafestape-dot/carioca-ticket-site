@@ -25,7 +25,8 @@ function verifiedUrl(value, field){
   if(u.searchParams.has('token')||u.searchParams.has('sig')||u.searchParams.has('auth'))fail(field+' contem token');
   return u;
 }
-function render(event){
+function render(event,imageMetadata){
+  if(imageMetadata!==undefined&&(!imageMetadata||!['image/png','image/jpeg'].includes(imageMetadata.mime)||![imageMetadata.width,imageMetadata.height].every(n=>Number.isInteger(n)&&n>0&&n<=65535)))fail('image metadata invalid');
   if(!event||typeof event!=='object'||Array.isArray(event))fail('evento invalido');
   if(event.fonte!==REQUIRED_SOURCE||event.publicado!==true||
     event.modoAcesso!=='PUBLICO'||event.elegivel!==true||
@@ -35,7 +36,7 @@ function render(event){
   const title=clean(event.titulo,220,'titulo');
   const description=clean(event.descricao,350,'descricao');
   const image=verifiedUrl(event.imagemSocialHttps,'imagem');
-  if(!/^\/assets\/eventos\/[A-Za-z0-9._-]+\.(?:jpe?g|png)$/i.test(image.pathname)||image.search)
+  if(!(/^\/assets\/eventos\/[A-Za-z0-9._-]+\.(?:jpe?g|png)$/i.test(image.pathname)||(imageMetadata&&/^\/assets\/social-previews\/[a-f0-9]{64}\.jpg$/.test(image.pathname)))||image.search)
     fail('capa precisa ser um asset estatico JPEG/PNG aprovado do evento');
   const target=verifiedUrl(event.destinoPublicoHttps,'destino');
   if(!/^\/evento(?:-v2)?\/$/.test(target.pathname)||target.searchParams.get('evento')!==id||
@@ -52,7 +53,9 @@ function render(event){
     meta('og:type','website'),meta('og:site_name','Carioca Ticket'),
     meta('og:title',title),meta('og:description',description),
     meta('og:url',share),meta('og:image',image.href),
-    meta('og:image:secure_url',image.href),meta('og:image:alt','Capa do evento: '+title),
+    meta('og:image:secure_url',image.href),
+    ...(imageMetadata?[meta('og:image:type',imageMetadata.mime),meta('og:image:width',imageMetadata.width),meta('og:image:height',imageMetadata.height)]:[]),
+    meta('og:image:alt','Capa do evento: '+title),
     meta('twitter:card','summary_large_image','name'),
     meta('twitter:title',title,'name'),meta('twitter:description',description,'name'),
     meta('twitter:image',image.href,'name'),
