@@ -2,6 +2,24 @@
 (function () {
   'use strict';
   window.CTEventRideDestinations = Object.freeze({
+    'EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A': Object.freeze({
+      revision: '2026-10-30-google-public-poi-venue-1',
+      approved: true,
+      // Public Google Maps place coordinates observed 2026-10-30; venue pin,
+      // NOT a verified entrance. No Geocoding API call or independent-pin claim.
+      source: 'google-maps-public-place',
+      sourceUrl: 'https://www.google.com/maps/place/Clube+10+de+Novembro/@-8.0804985,-34.9683533,17z/data=!3m1!4b1!4m6!3m5!1s0x7ab1c13f4f2c015:0x47c7892ad4272ea9!8m2!3d-8.0804985!4d-34.9683533!16s%2Fg%2F11g7zg4853',
+      addressEvidenceUrl: 'https://dome.recife.pe.gov.br/upload_dome/DO__028_22_02_2025-assinado.pdf',
+      precision: 'venue-not-entrance',
+      latitude: -8.0804985,
+      longitude: -34.9683533,
+      local: 'Clube 10 de Novembro.',
+      endereco: 'Rua Mestre Antônio Valeriano, 65–205, bairro do Totó, Recife - PE, CEP: 50940-700',
+      cidade: 'Recife',
+      uf: 'PE',
+      addressLine1: 'Clube 10 de Novembro',
+      addressLine2: 'Rua Mestre Antônio Valeriano, 65–205, Totó, Recife - PE, 50940-700, Brasil'
+    }),
     'EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD': Object.freeze({
       revision: '2026-10-10-approved-destination-2',
       approved: true,
