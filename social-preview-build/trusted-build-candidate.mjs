@@ -4,6 +4,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';import path from 'node:path';
 import{deriveApprovedManifest}from './derive-current397-trusted.mjs';
 import{render}from './lab242/scripts/generate-event-social-previews.mjs';
+import{imageMetadata}from './image-metadata.mjs';
+import{derivePreviewImage}from './derive-preview-image.mjs';
 import{decodeGoogleCatalogWrapper}from './google-htmlservice-wrapper-candidate.mjs';
 const deny=m=>{throw Error('CT_TRUSTED_BUILD_DENIED: '+m)};
 const canonical=v=>JSON.stringify(v&&typeof v==='object'?Array.isArray(v)?v.map(x=>JSON.parse(canonical(x))):Object.fromEntries(Object.keys(v).sort().map(k=>[k,JSON.parse(canonical(v[k]))])):v);
@@ -38,7 +40,7 @@ export function buildTrustedCandidate(first,second,{now=Date.now(),assetRoot}={}
  const a=validateSnapshot(first,now),b=validateSnapshot(second,now);
  if(Date.parse(second.serverNow)<Date.parse(first.serverNow))deny('source ordering');
  const revision=semanticHash(first);if(revision!==semanticHash(second))deny('source changed');
- const files={};
+ const files={},derivatives=new Map();
  for(const e of b.manifest){
   const p=render(e),asset=path.resolve(assetRoot,'.'+new URL(p.image).pathname),root=path.resolve(assetRoot,'assets/eventos')+path.sep;
   for(const directory of [path.resolve(assetRoot),path.resolve(assetRoot,'assets'),path.resolve(assetRoot,'assets/eventos')]){
@@ -47,7 +49,12 @@ export function buildTrustedCandidate(first,second,{now=Date.now(),assetRoot}={}
   if(!asset.startsWith(root)||!fs.existsSync(asset)||!fs.lstatSync(asset).isFile()||fs.lstatSync(asset).isSymbolicLink()||!fs.realpathSync(asset).startsWith(fs.realpathSync(root)+path.sep))deny('missing approved image');
   const bytes=fs.readFileSync(asset);if(bytes.length<512||bytes.length>8e6)deny('image size');
   if(/\.png$/i.test(asset)?!bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])):!(bytes[0]===255&&bytes[1]===216&&bytes[2]===255))deny('image signature');
-  files['compartilhar/'+p.id+'/index.html']=p.html;
+  imageMetadata(bytes,asset);
+  const sourceHash=crypto.createHash('sha256').update(bytes).digest('hex');
+  if(!derivatives.has(sourceHash))derivatives.set(sourceHash,derivePreviewImage(bytes));
+  const derivative=derivatives.get(sourceHash);
+  files['compartilhar/'+p.id+'/index.html']=render({...e,imagemSocialHttps:'https://cariocaticket.com.br/'+derivative.path},derivative.metadata).html;
+  files[derivative.path]=derivative.body;
  }
  const index={schema:'CT_PUBLISHED_SHARE_INDEX_V1',revision,generatedAt:second.serverNow,
   fallbacks:b.excluded.filter(e=>e.reason==='NO_VERIFIABLE_END').map(e=>({eventId:e.eventId,detailUrl:'https://cariocaticket.com.br/evento/?evento='+encodeURIComponent(e.eventId),reason:e.reason})),
@@ -72,7 +79,7 @@ export function writeFreshStage(candidate,destination){
  if(fs.existsSync(destination))deny('destination exists');
  fs.mkdirSync(destination,{recursive:false,mode:0o700});
  try{for(const [relative,body]of Object.entries(candidate.files)){
-  if(!/^(?:compartilhar\/[A-Za-z0-9_-]+\/index\.html|assets\/social-event-pages\.json)$/.test(relative))deny('output path');
+  if(!/^(?:compartilhar\/[A-Za-z0-9_-]+\/index\.html|assets\/social-event-pages\.json|assets\/social-previews\/[a-f0-9]{64}\.jpg)$/.test(relative))deny('output path');
   const out=path.join(destination,relative);fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,body,{flag:'wx'});
  }fs.writeFileSync(path.join(destination,'publication-receipt.json'),JSON.stringify(candidate.receipt,null,2),{flag:'wx'});
  }catch(e){fs.rmSync(destination,{recursive:true,force:true});throw e;}

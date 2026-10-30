@@ -23,6 +23,8 @@ export async function preparePages({siteRoot,output,fetchImpl,previousPublishedS
   fs.rmSync(path.join(output,'compartilhar'),{recursive:true,force:true});
   if(fs.existsSync(path.join(stage,'compartilhar')))fs.cpSync(path.join(stage,'compartilhar'),path.join(output,'compartilhar'),{recursive:true});
   fs.mkdirSync(path.join(output,'assets'),{recursive:true});
+  fs.rmSync(path.join(output,'assets/social-previews'),{recursive:true,force:true});
+  if(fs.existsSync(path.join(stage,'assets/social-previews')))fs.cpSync(path.join(stage,'assets/social-previews'),path.join(output,'assets/social-previews'),{recursive:true});
   fs.copyFileSync(path.join(stage,'assets/social-event-pages.json'),path.join(output,'assets/social-event-pages.json'));
   fs.copyFileSync(path.join(stage,'publication-receipt.json'),path.join(output,'assets/social-publication-receipt.json'));
   return receipt;
