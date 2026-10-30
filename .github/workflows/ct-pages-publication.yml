@@ -36,7 +36,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install bounded mechanical image converter
-        run: python3 -m pip install --disable-pip-version-check --only-binary=:all: --index-url https://pypi.org/simple 'Pillow==12.3.0'
+        run: |
+          python3 -m pip install --disable-pip-version-check --only-binary=:all: --index-url https://pypi.org/simple 'Pillow==12.3.0'
       - name: Validate local build modules
         run: node --test social-preview-build/*.test.*
       - name: Read prior published watermark

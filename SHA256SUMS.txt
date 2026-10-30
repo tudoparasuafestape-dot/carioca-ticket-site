@@ -1,4 +1,5 @@
-6cf232442565ec2b90fde1b9b60b4d895451b1a4b4d4f4007263b229d1215b84  .github/workflows/ct-pages-publication.yml
+07e4d53f452093d6fc4c9ce2c40c1ad8ab38a6efbe0fc979207c86a08db7898b  .github/workflows/ct-pages-publication.yml
+bc0e6fa2d2bf84c6df533603f935d5cb1013eab643a464a7f608b0abf88294ac  .github/workflows/ct-social-preview-build.yml
 f3b8a2863b10bce0aa7e09261fb7d3e55bf16f34b2857fc3e8b8c6866f330971  README-PUBLICATION.txt
 5e29ba678093ea7510771a860f2a36f7c9c414928c5b3d9f6021af24adc3c75d  SOURCE-CHECKPOINT.json
 2440767e74c80c0a665583d60fd8c43d9c130dafce73853f51d64bfb50a6a021  assets/public-share-index.js
