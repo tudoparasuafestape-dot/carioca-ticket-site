@@ -96,27 +96,23 @@
         event.preventDefault();
         activeShare = true;
         link.setAttribute('aria-busy', 'true');
-        var popup = null;
         try {
-          // Existing _blank behavior, reserved inside the user gesture for async validation.
-          popup = window.open('about:blank', '_blank');
-          if (!popup) {
-            var status = link.parentElement.querySelector('[role="status"]');
-            if (!status) { status = document.createElement('span'); status.setAttribute('role', 'status'); link.parentElement.appendChild(status); }
-            status.textContent = 'Não foi possível abrir o WhatsApp. Permita a abertura de uma nova guia e tente novamente.';
-            return;
-          }
-          popup.opener = null;
-          var referrer = popup.document.createElement('meta');
-          referrer.name = 'referrer'; referrer.content = 'no-referrer';
-          popup.document.head.appendChild(referrer);
+          // Validate in the current visible document. A foreground blank tab
+          // would invalidate the catalog lease and detach this control on mobile.
           var url = await resolveShareUrl(entry.destination.eventId);
-          if (whatsAppLinks.get(link) !== entry || !link.isConnected || link.closest('[inert]')) { popup.close(); return; }
-          if (url === eventPublicUrl()) { popup.close(); shareUnavailable(link); return; }
+          if (document.hidden || whatsAppLinks.get(link) !== entry || !link.isConnected || link.closest('[inert]')) return;
+          if (url === eventPublicUrl()) { shareUnavailable(link); return; }
           var message = eventText(entry.destination) + ' ' + url;
-          popup.location.replace('https://wa.me/?text=' + encodeURIComponent(message));
+          // Same-tab app handoff avoids popup blocking after async validation.
+          // No href is retained; every click must pass fresh evidence again.
+          var handoff = document.createElement('a');
+          handoff.href = 'https://wa.me/?text=' + encodeURIComponent(message);
+          handoff.target = '_self'; handoff.rel = 'noopener noreferrer';
+          handoff.referrerPolicy = 'no-referrer'; handoff.hidden = true;
+          document.body.appendChild(handoff);
+          try { handoff.click(); } finally { handoff.remove(); }
           if (entry.onClick) entry.onClick();
-        } catch (_) { if (popup) popup.close(); }
+        } catch (_) { shareUnavailable(link); }
         finally { activeShare = false; link.removeAttribute('aria-busy'); }
 
       });
