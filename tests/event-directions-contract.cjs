@@ -43,7 +43,7 @@ for(const route of ['evento','evento-v2']) {
  const html=fs.readFileSync(path.join(root,route,'index.html'),'utf8');
  assert.equal((html.match(/id="event-directions"/g)||[]).length,1);
  assert.match(html,/CTEventDirections\.render\(e\)/);
- assert.match(html,/event-directions\.js\?v=20261009-1/);
+ assert.match(html,/event-directions\.js\?v=20261030-auto1/);
  assert.match(html,/id="directions-map" target="_blank" rel="noopener noreferrer"/);
  assert.match(html,/id="directions-status" role="status" aria-live="polite"/);
  assert(!/uber:\/\/|99taxis:\/\/|m\.uber\.com/.test(html));
@@ -54,3 +54,5 @@ assert(!/fetch\(|XMLHttpRequest|navigator\.geolocation|window\.open|innerHTML|\.
 console.log(`${checks} isolated contract cases passed; inline scripts parsed on both event pages.`);
 })().catch(e=>{console.error(e);process.exitCode=1;});
 
+
+require('./event-directions-automatic.test.cjs');
