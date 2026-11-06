@@ -1,0 +1,100 @@
+# VALIDATION ONLY. No site publication, catalog reads, merge or settings changes.
+# The environment job can create GitHub deployment metadata even without a deploy.
+name: CT title guard validation (NO PUBLICATION)
+on:
+  push:
+    branches:
+      - candidate/title-only-publication-guard-20261106
+permissions:
+  contents: read
+concurrency:
+  group: ct-title-guard-validation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  offline_tests:
+    name: Offline tests only
+    if: github.repository == 'tudoparasuafestape-dot/carioca-ticket-site' && github.ref == 'refs/heads/candidate/title-only-publication-guard-20261106' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout only the triggering candidate commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned test dependencies from official PyPI
+        run: |
+          python3 -m pip install --disable-pip-version-check --only-binary=:all: --index-url https://pypi.org/simple 'Pillow==12.3.0' 'PyYAML==6.0.2'
+      - name: Syntax and workflow structure checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          for file in social-preview-build/*.mjs social-preview-build/*.cjs; do
+            test -f "$file" || continue
+            node --check "$file"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import yaml
+          root = Path('.github/workflows')
+          current = yaml.load((root / 'ct-title-guard-validation.yml').read_text(), Loader=yaml.BaseLoader)
+          publication = yaml.load((root / 'ct-pages-publication.yml').read_text(), Loader=yaml.BaseLoader)
+          assert current['on'] == {'push': {'branches': ['candidate/title-only-publication-guard-20261106']}}
+          assert current['permissions'] == {'contents': 'read'}
+          assert set(current['jobs']) == {'offline_tests', 'environment_admission'}
+          admission = current['jobs']['environment_admission']
+          assert admission['needs'] == 'offline_tests'
+          assert admission['permissions'] == {}
+          assert admission['environment'] == {'name': 'github-pages'}
+          assert len(admission['steps']) == 1 and 'uses' not in admission['steps'][0]
+          actions = [s['uses'] for j in current['jobs'].values() for s in j['steps'] if 'uses' in s]
+          assert actions == ['actions/checkout@v4', 'actions/setup-node@v4', 'actions/setup-python@v5']
+          assert set(publication['on']) == {'workflow_dispatch'}
+          assert publication['concurrency']['group'] == 'ct-pages-production'
+          print('PASS validation-only trigger, read-only permissions, no publication actions; publisher remains manual')
+          PY
+      - name: Run isolated test suites with live Node HTTP disabled
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A preload blocks accidental default HTTP/network use. Existing tests
+          # inject fake transports and the converter uses local image bytes only.
+          cat > "$RUNNER_TEMP/ct-validation-no-live-http.cjs" <<'JS'
+          const deny = () => { throw new Error('CT_VALIDATION_LIVE_NETWORK_DENIED'); };
+          globalThis.fetch = deny;
+          for (const name of ['node:http', 'node:https']) {
+            const api = require(name); api.request = deny; api.get = deny;
+          }
+          const net = require('node:net');
+          net.connect = deny; net.createConnection = deny; net.Socket.prototype.connect = deny;
+          JS
+          export NODE_OPTIONS="--require=$RUNNER_TEMP/ct-validation-no-live-http.cjs"
+          node --test social-preview-build/title-only-publication.test.mjs
+          existing=()
+          for file in social-preview-build/*.test.*; do
+            test "$file" = social-preview-build/title-only-publication.test.mjs || existing+=("$file")
+          done
+          test "${#existing[@]}" -gt 0
+          node --test "${existing[@]}"
+  environment_admission:
+    name: Environment admission only (NO PUBLICATION)
+    needs: offline_tests
+    if: needs.offline_tests.result == 'success' && github.repository == 'tudoparasuafestape-dot/carioca-ticket-site' && github.ref == 'refs/heads/candidate/title-only-publication-guard-20261106' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    environment:
+      name: github-pages
+    steps:
+      - name: Record admission without deploying or declaring a production URL
+        shell: bash
+        run: |
+          printf '%s\n' 'github-pages admitted this candidate validation job. NO PUBLICATION WAS EXECUTED.'
+          printf '%s\n' 'Only GitHub environment/deployment metadata may have been recorded; the site was not changed.'

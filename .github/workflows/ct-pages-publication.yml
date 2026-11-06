@@ -1,17 +1,26 @@
-# LOCAL PROPOSAL ONLY: do not install/enable before scoped production approval.
+# LOCAL REVIEW DRAFT. Do not install, push or dispatch without separate approval.
+# This version runs only from the fixed, separately reviewed guard branch.
+# If github-pages forbids that branch, STOP; never relax the environment policy.
 name: Carioca Ticket complete Pages publication
 on:
   workflow_dispatch:
     inputs:
-      first_publication:
-        description: Explicitly approved initial receipt creation; only accepted on HTTP404
+      title_only:
+        description: Only the reviewed PR248 title correction; no init or catalog changes
         type: boolean
-        default: false
-# Add schedule ONLY after standing data-only publication approval:
-# schedule:
-#   - cron: '*/5 * * * *'
+        default: true
+        required: true
+      expected_guard_sha:
+        description: Full reviewed commit SHA of this guard/workflow on the fixed guard branch
+        type: string
+        required: true
+      expected_merge_sha:
+        description: Authorized title merge SHA now on main; tree must equal reviewed PR248
+        type: string
+        required: true
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 concurrency:
@@ -19,46 +28,84 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      CT_APPROVED_TITLE_ONLY_PUBLICATION: '1'
+      CT_TITLE_ONLY: ${{ inputs.title_only }}
+      CT_EXPECTED_GUARD_SHA: ${{ inputs.expected_guard_sha }}
+      CT_EXPECTED_MERGE_SHA: ${{ inputs.expected_merge_sha }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Reject unexpected execution identity before checkout
+        env:
+          EXPECTED_REF: refs/heads/candidate/title-only-publication-guard-20261106
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'tudoparasuafestape-dot/carioca-ticket-site'
+          test "$GITHUB_REF" = "$EXPECTED_REF"
+          test "$CT_TITLE_ONLY" = true
+          [[ "$CT_EXPECTED_GUARD_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$CT_EXPECTED_MERGE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$GITHUB_SHA" = "$CT_EXPECTED_GUARD_SHA"
+      - name: Checkout separately reviewed guard, never copied into site
+        uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ inputs.expected_guard_sha }}
+          path: guard
+          persist-credentials: false
+      - name: Checkout exact authorized title merge, never floating main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_merge_sha }}
+          path: site
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install bounded mechanical image converter
+      - name: Install the existing bounded image converter
         run: |
           python3 -m pip install --disable-pip-version-check --only-binary=:all: --index-url https://pypi.org/simple 'Pillow==12.3.0'
-      - name: Validate local build modules
-        run: node --test social-preview-build/*.test.*
-      - name: Read prior published watermark
-        # Must fail if prior state is unknown, not silently pretend first deployment.
-        env:
-          FIRST_PUBLICATION: ${{ inputs.first_publication }}
+      - name: Run offline tests before any publication reads
         run: |
-          status=$(curl --silent --show-error --max-time 30 --proto '=https' -w '%{http_code}' https://cariocaticket.com.br/assets/social-publication-receipt.json -o "$RUNNER_TEMP/previous.json")
-          if [ "$status" = 404 ] && [ "$FIRST_PUBLICATION" = true ]; then
-            printf '{"schema":"CT_FIRST_PUBLICATION_404_APPROVED"}' > "$RUNNER_TEMP/previous.json"
-            echo 'CT_INITIAL_RECEIPT_404=1' >> "$GITHUB_ENV"
-          elif [ "$status" != 200 ]; then
-            echo "Unknown prior publication state: $status" >&2; exit 1
-          fi
-      - name: Build full site from two fresh governed catalog reads
+          node --test guard/social-preview-build/title-only-publication.test.mjs
+          node --test site/social-preview-build/*.test.*
+      - name: Verify exact Git tree, latest successful run and live critical bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node guard/social-preview-build/title-only-publication-cli.mjs capture "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-published"
+      - name: Build once using the existing two-read governed builder
         env:
           CT_APPROVED_PUBLICATION: '1'
-        run: node social-preview-build/prepare-pages-candidate.mjs "$GITHUB_WORKSPACE" "$RUNNER_TEMP/ct-pages" "$RUNNER_TEMP/previous.json"
-      - uses: actions/upload-pages-artifact@v3
+        run: |
+          test -z "${CT_INITIAL_RECEIPT_404:-}"
+          node site/social-preview-build/prepare-pages-candidate.mjs "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-pages" "$RUNNER_TEMP/ct-published/assets/social-publication-receipt.json"
+      - name: Fail-closed guard and seal the exact deploy archive
+        run: node guard/social-preview-build/title-only-publication-cli.mjs seal "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-published" "$RUNNER_TEMP/ct-pages" "$RUNNER_TEMP/artifact.tar" "$RUNNER_TEMP/title-seal.json"
+      # Same standard artifact.tar packaging contract as upload-pages-artifact@v3.
+      # Upload the preverified tar instead of allowing an action to retar a directory.
+      - name: Upload only the immutable, verified Pages archive
+        id: uploaded
+        uses: actions/upload-artifact@v4
         with:
-          path: ${{ runner.temp }}/ct-pages
-      - name: Publish complete artifact
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 7
+          if-no-files-found: error
+          overwrite: false
+      - name: Recheck exact archive, main and receipt immediately before deploy
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node guard/social-preview-build/title-only-publication-cli.mjs recheck "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-published" "$RUNNER_TEMP/ct-pages" "$RUNNER_TEMP/artifact.tar" "$RUNNER_TEMP/title-seal.json"
+      - name: Publish the same uploaded archive, without rebuild
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages
