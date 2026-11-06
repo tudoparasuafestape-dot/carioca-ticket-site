@@ -116,6 +116,7 @@
       font-weight:900;
     }
     .ticket-view{display:none;text-align:left}.ticket-view.show{display:block}
+    .event-title{margin:0 0 20px;color:var(--text);font-size:clamp(22px,6vw,28px);line-height:1.2;overflow-wrap:anywhere}
     .event-cover{height:170px;margin:-8px -2px 20px;position:relative;overflow:hidden;border-radius:18px;background:#090909}
     .event-cover img{width:100%;height:100%;object-fit:cover;display:block}
     .event-cover:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent,rgba(0,0,0,.72))}
@@ -180,6 +181,7 @@
         print-color-adjust:exact
       }
       .event-cover strong{font-size:20pt}
+      .event-title{margin:0 0 6mm;color:#111;font-size:20pt}
       .status{
         -webkit-print-color-adjust:exact;
         print-color-adjust:exact
@@ -295,7 +297,7 @@
         document.querySelector('.eyebrow').style.display='none';
         document.querySelector('h1').style.display='none';
         mensagem.style.display='none';
-        var cover=capa?'<div class="event-cover"><img src="'+esc(capa)+'" alt=""><strong>'+esc(e.nome||'Evento Carioca Ticket')+'</strong></div>':'';
+        var cover=capa?'<div class="event-cover"><img src="'+esc(capa)+'" alt=""><strong>'+esc(e.nome||'Evento Carioca Ticket')+'</strong></div>':'<h2 class="event-title">'+esc(e.nome||'Evento Carioca Ticket')+'</h2>';
         view.classList.add('show');
         view.innerHTML=cover+
           '<span class="status">● '+esc(t.status||'Ingresso válido')+'</span>'+
