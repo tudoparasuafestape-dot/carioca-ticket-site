@@ -200,13 +200,13 @@ test('offline HTTP 404 does not initialize receipt or create capture', async t =
     fetchImpl: u => String(u).includes('/assets/social-publication-receipt.json') ? Promise.resolve(new Response('', { status: 404 })) : baseFetch(u) }), /HTTP status/);
   assert.equal(fs.existsSync(output), false);
 });
-test('offline final recheck passes unchanged immutable tar, rejects archive tampering', async t => {
+test('offline final recheck passes unchanged sealed tar, rejects owner-writable archive tampering', async t => {
   const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
   writeSeal({ ...f.options, archive, seal });
   const opts = { ...f.options, archive, seal, token: 'fixture', fetchImpl: mockedFetch(f), clock: () => NOW };
   assert.equal((await recheckBeforeDeploy(opts)).verified, true);
-  // Simulate a process that deliberately overrides the read-only archive bit.
-  fs.chmodSync(archive, 0o600); fs.appendFileSync(archive, 'tamper'); await assert.rejects(recheckBeforeDeploy(opts), /archive changed/);
+  assert.equal(fs.statSync(archive).mode & 0o777, 0o644);
+  fs.appendFileSync(archive, 'tamper'); await assert.rejects(recheckBeforeDeploy(opts), /archive changed/);
 });
 test('final clock is sampled AFTER remote awaits, rejects elapsed validity', async t => {
   const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
@@ -244,4 +244,35 @@ test('deny substituting site SHA for main guard SHA at predeploy check', async t
     ? new Response(JSON.stringify({ ref: 'refs/heads/main', object: { type: 'commit', sha: f.policy.candidateSha } }))
     : baseFetch(url);
   await assert.rejects(recheckBeforeDeploy({ ...f.options, archive, seal, token: 'fixture', fetchImpl, clock: () => NOW }), /main changed/);
+});
+test('external TAR is 0644, seal stays 0400, payload/hash and same-file recheck stay identical', async t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  const expected = sealStage(f.options);
+  const written = writeSeal({ ...f.options, archive, seal });
+  assert.equal(fs.statSync(archive).mode & 0o777, 0o644);
+  assert.equal(fs.statSync(seal).mode & 0o777, 0o400);
+  assert.deepEqual(fs.readFileSync(archive), expected.archive);
+  assert.equal(written.archiveSha256, expected.seal.archiveSha256);
+  assert.equal(hash(fs.readFileSync(archive)), JSON.parse(fs.readFileSync(seal)).archiveSha256);
+  const before = fs.statSync(archive);
+  await recheckBeforeDeploy({ ...f.options, archive, seal, token: 'fixture', fetchImpl: mockedFetch(f), clock: () => NOW });
+  const after = fs.statSync(archive);
+  assert.equal(after.ino, before.ino); assert.equal(after.mtimeMs, before.mtimeMs);
+  assert.deepEqual(fs.readFileSync(archive), expected.archive);
+  assert.throws(() => writeSeal({ ...f.options, archive, seal }), /EEXIST/);
+});
+test('explicit transport/receipt modes survive a restrictive umask', t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  const previous = process.umask(0o077);
+  try { writeSeal({ ...f.options, archive, seal }); } finally { process.umask(previous); }
+  assert.equal(fs.statSync(archive).mode & 0o777, 0o644);
+  assert.equal(fs.statSync(seal).mode & 0o777, 0o400);
+});
+test('ZIP transport records 0644 for TAR and preserves every payload byte', t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  writeSeal({ ...f.options, archive, seal });
+  const script = "import sys,zipfile,hashlib,json; a,z=sys.argv[1:]; w=zipfile.ZipFile(z,'w'); w.write(a,'artifact.tar'); w.close(); r=zipfile.ZipFile(z); i=r.getinfo('artifact.tar'); print(json.dumps({'mode':(i.external_attr>>16)&0o777,'sha256':hashlib.sha256(r.read(i)).hexdigest()})); r.close()";
+  const zipped = JSON.parse(execFileSync('python3', ['-c', script, archive, path.join(f.dir, 'artifact.zip')], { encoding: 'utf8' }));
+  assert.equal(zipped.mode, 0o644);
+  assert.equal(zipped.sha256, hash(fs.readFileSync(archive)));
 });
