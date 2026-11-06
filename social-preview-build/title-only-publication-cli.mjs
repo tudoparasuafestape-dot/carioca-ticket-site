@@ -69,10 +69,15 @@ function newDirectory(destination) {
   check(fs.realpathSync(parent) === parent && !fs.existsSync(resolved), 'destination must be new and outside symlink');
   fs.mkdirSync(resolved, { mode: 0o700 }); return resolved;
 }
-function newFile(file, bytes) {
+function newFile(file, bytes, mode = 0o400) {
   const resolved = path.resolve(file), parent = path.dirname(resolved);
   check(fs.realpathSync(parent) === parent, 'output ancestor symlink');
-  fs.writeFileSync(resolved, bytes, { flag: 'wx', mode: 0o400 });
+  const fd = fs.openSync(resolved, 'wx', mode);
+  try {
+    fs.writeFileSync(fd, bytes);
+    // Normalize transport metadata despite umask, without reopening the path.
+    fs.fchmodSync(fd, mode);
+  } finally { fs.closeSync(fd); }
 }
 function regularBytes(file) {
   const st = fs.lstatSync(file);
@@ -102,7 +107,9 @@ export async function capturePublished({ repo, published, token, fetchImpl = fet
 export function writeSeal({ repo, stage, published, archive, seal, now = Date.now(), policy = POLICY }) {
   check(path.resolve(archive) !== path.resolve(seal), 'archive/seal path collision');
   const result = sealStage({ repo, stage, published, now, policy });
-  newFile(archive, result.archive); newFile(seal, JSON.stringify(result.seal, null, 2) + '\n');
+  // Pages transport follows the official action's regular 0644 TAR. Integrity
+  // remains bound to the sealed SHA-256 and the final same-file recheck.
+  newFile(archive, result.archive, 0o644); newFile(seal, JSON.stringify(result.seal, null, 2) + '\n');
   return { archiveSha256: result.seal.archiveSha256, files: Object.keys(result.seal.files).length };
 }
 export async function recheckBeforeDeploy({ repo, stage, published, archive, seal, token, fetchImpl = fetch, clock = Date.now, policy = POLICY }) {
