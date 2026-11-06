@@ -23,4 +23,10 @@ assert.ok(!html.includes('ctSegredosObterValorInternoPROD_'), 'frontend must nev
 assert.ok(!html.includes('/accounts'), 'frontend must never call Asaas accounts endpoint directly');
 assert.ok(!html.includes('$aact_prod_'), 'frontend must never contain child API-key material');
 
+assert.ok(html.includes('prov_emailOverride'), 'BIOCRED must allow an explicit unique Asaas account email override');
+assert.ok(html.includes('state.provisionData.email=state.provisionData.emailOverride'), 'email override must be sent as the Asaas account email');
+assert.ok(html.includes('emailOverrideValido'), 'provision button must require a syntactically valid explicit email override');
+assert.ok(html.includes('e-mail de conta que ainda não esteja associado a outra conta Asaas'), 'operator guidance for Asaas email uniqueness missing');
+assert.ok(!html.includes('jvfinpro@gmail.com'), 'client email must never be hard-coded in the frontend');
+
 console.log('BIOCRED financial canary contract: OK');
