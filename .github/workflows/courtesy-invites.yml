@@ -1,0 +1,28 @@
+name: Courtesy invitation UI (isolated)
+on:
+  pull_request:
+    paths: ['produtor/cortesias/**', 'cortesia/**', 'assets/courtesy-invite.js', 'tests/courtesy-invite.browser.cjs', 'tests/fixtures/courtesy-invites-backend.cjs', '.github/workflows/courtesy-invites.yml']
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  isolated-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Browser with declared UI API fixtures and no outgoing network
+        env:
+          CT_INVITE_BACKEND_MODE: fixture
+        run: node tests/courtesy-invite.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: courtesy-invite-screenshots
+          path: test-results/courtesy-invites
