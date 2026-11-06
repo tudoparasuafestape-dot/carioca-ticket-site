@@ -40,7 +40,7 @@ async function fixture(browser,locale,width,options={}){
    const fields=new URLSearchParams(req.postData()||'');assert.deepEqual([...fields.keys()].sort(),['codigo','ctMinhaCariocaAction','ctMinhaCariocaRequestId','sig']);
    assert.equal(fields.get('ctMinhaCariocaAction'),'consultarIngressoSeguro');assert.equal(fields.get('codigo'),CODE);assert.equal(fields.get('sig'),SIG);
    state.consultations.push({codigo:fields.get('codigo'),sig:fields.get('sig')});
-   const result={sucesso:true,ingresso:{nome:'Participante Sintético Cupom VIP',tipo:'Participante Premium',lote:'Cupom VIP',codigo:CODE,qrUrl:QR,status:'VÁLIDO'},evento:{nome:'Evento Original Sintético',data:'10/10/2026',horario:'20h',local:'Local Original',cidade:'Recife',uf:'PE'},seguranca:{autorizaEntrada:true,mensagem:'Instrução original do ingresso sintético.'}};
+   const result={sucesso:true,ingresso:{nome:'Participante Sintético Cupom VIP',tipo:'Participante Premium',lote:'Cupom VIP',codigo:CODE,qrUrl:QR,status:'VÁLIDO'},evento:{nome:options.title||'Evento Original Sintético',data:'10/10/2026',horario:'20h',local:'Local Original',cidade:'Recife',uf:'PE'},seguranca:{autorizaEntrada:true,mensagem:'Instrução original do ingresso sintético.'}};
    if(options.cover)result.visual={capaUrl:COVER};
    const payload=JSON.stringify({ctMinhaCariocaPost:true,id:fields.get('ctMinhaCariocaRequestId'),ok:true,resultado:result}).replace(/</g,'\\u003c');
    return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><script>window.top.postMessage('+payload+',"*")</script>'});
@@ -59,6 +59,7 @@ async function fixture(browser,locale,width,options={}){
    try{
     f=await fixture(browser,locale,width);const {page,state}=f;
     assert.equal(state.consultations.length,1);assert.equal(await page.locator('.qr').getAttribute('src'),QR);
+    assert.equal(await page.locator('.event-title').textContent(),'Evento Original Sintético');assert(await page.locator('.event-title').isVisible());
     assert((await page.locator('#ticket-view').textContent()).includes('Participante Sintético Cupom VIP'));
     await page.locator('#save-pdf').click();assert.equal(await page.evaluate(()=>window.__prints),1);
     await page.locator('#share-ticket').click();await page.locator('#share-ticket').click();assert.equal(await page.evaluate(()=>window.__shares.length),2);
@@ -67,11 +68,13 @@ async function fixture(browser,locale,width,options={}){
     await page.evaluate(()=>Object.defineProperty(navigator,'share',{value:undefined}));await page.locator('#share-ticket').click();assert.equal(await page.evaluate(()=>window.__copies[0]),signed);
     for(const target of ['en-US','zh-Hans',locale])await page.locator('#checkoutLanguage').selectOption(target);
     assert.equal(state.consultations.length,1);assert.equal(await page.locator('.qr').getAttribute('src'),QR);
+    assert.equal(await page.locator('.event-title').textContent(),'Evento Original Sintético');assert(await page.locator('.event-title').isVisible());
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'screen overflow');
     await page.screenshot({path:path.join(evidence,name+'.png'),fullPage:true});
     await page.emulateMedia({media:'print'});
     assert.equal(await page.locator('#checkoutLanguageControl').isVisible(),false);assert.equal(await page.locator('.actions').isVisible(),false);
     assert(await page.locator('.qr').isVisible());assert((await page.locator('.qr').boundingBox()).width>=240);
+    assert(await page.locator('.event-title').isVisible());assert.equal(await page.locator('.event-title').evaluate(el=>getComputedStyle(el).color),'rgb(17, 17, 17)');
     await page.screenshot({path:path.join(evidence,name+'-print.png'),fullPage:true});
     if(width===1440)await page.pdf({path:path.join(evidence,name+'.pdf'),format:'A4',printBackground:true});
     assert.deepEqual(state.errors,[]);assert.deepEqual(state.unexpected,[]);await f.context.close();f=null;results.push({name,passed:true});
@@ -83,7 +86,7 @@ async function fixture(browser,locale,width,options={}){
     f=await fixture(browser,locale,1440,{cover:true});const {page,state}=f;
     await page.emulateMedia({media:'print'});
     const cover=page.locator('.event-cover'),qr=page.locator('.qr');
-    assert(await cover.isVisible());assert.equal(await cover.locator('strong').textContent(),'Evento Original Sintético');
+    assert.equal(await page.locator('.event-title').count(),0);assert(await cover.isVisible());assert.equal(await cover.locator('strong').textContent(),'Evento Original Sintético');
     assert.equal(await cover.locator('img').getAttribute('src'),COVER);assert.equal(await qr.getAttribute('src'),QR);
     assert(await cover.locator('img').evaluate(img=>img.complete&&img.naturalWidth>0));
     assert(await qr.isVisible());assert((await qr.boundingBox()).width>=240);
@@ -93,7 +96,24 @@ async function fixture(browser,locale,width,options={}){
     assert.deepEqual(state.errors,[]);assert.deepEqual(state.unexpected,[]);results.push({name,passed:true});
    }catch(error){results.push({name,passed:false,error:error.stack});}finally{if(f)await f.context.close();}
   }
+  // Title-only regression: actual requested text plus a deliberately long synthetic name.
+  for(const [variant,title] of [['salon','Gestão para Salão de Beleza'],['long','Gestão para Salão de Beleza e Desenvolvimento Profissional para Empreendedores '+ 'NomeSemEspacos'.repeat(8)]])for(const width of [320,390,1440]){
+   const name='ticket-title-'+variant+'-'+width;let f;
+   try{
+    f=await fixture(browser,'pt-BR',width,{title});const {page,state}=f;
+    const heading=page.locator('.event-title');assert.equal(await heading.textContent(),title);assert(await heading.isVisible());
+    const box=await heading.boundingBox(),status=await page.locator('.status').boundingBox();
+    assert(box.x>=0&&box.x+box.width<=width+1,'title fits viewport');assert(box.y+box.height<=status.y,'title and status do not overlap');
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'no horizontal overflow');
+    assert.equal(await page.locator('.qr').getAttribute('src'),QR);assert.equal(state.consultations.length,1);
+    await page.screenshot({path:path.join(evidence,name+'.png'),fullPage:true});
+    await page.emulateMedia({media:'print'});assert(await heading.isVisible());assert.equal(await heading.evaluate(el=>getComputedStyle(el).color),'rgb(17, 17, 17)');
+    if(width===1440)await page.pdf({path:path.join(evidence,name+'.pdf'),format:'A4',printBackground:true});
+    assert.deepEqual(state.errors,[]);assert.deepEqual(state.unexpected,[]);results.push({name,passed:true});
+   }catch(error){results.push({name,passed:false,error:error.stack});if(f)await f.page.screenshot({path:path.join(evidence,name+'-failure.png'),fullPage:true}).catch(()=>{});}finally{if(f)await f.context.close();}
+  }
   for(const option of ['noStorage','noCore']){const f=await fixture(browser,'en-US',390,{[option]:true});try{assert.equal(await f.page.locator('#save-pdf').textContent(),'📄 Salvar em PDF');assert.equal(f.state.consultations.length,1);assert.deepEqual(f.state.errors,[]);assert.deepEqual(f.state.unexpected,[]);results.push({name:option,passed:true});}finally{await f.context.close();}}
  }finally{await browser.close();fs.writeFileSync(path.join(evidence,'ticket-results.json'),JSON.stringify(results,null,2));}
  console.log(JSON.stringify(results,null,2));if(results.some(r=>!r.passed))process.exitCode=1;
 })();
+

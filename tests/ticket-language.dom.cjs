@@ -188,12 +188,14 @@ let passed=0;
 for(const locale of ['pt-BR','en-US','es','zh-Hans']){
  const f=fixture(locale);assert.equal(f.submissions,1);f.respond();
  const view=f.document.getElementById('ticket-view');assert(view.textContent.includes('Participante Local'));assert(view.textContent.includes('Instrução original revisada no backend.'));
+ assert.equal(view.querySelector('.event-title').textContent,'Evento Original');
  const qr=view.querySelector('.qr');assert.equal(qr.getAttribute('src'),'https://qr.invalid/synthetic');
  const button=f.document.getElementById('save-pdf'),original=button;
  assert.equal(button.textContent,locale==='pt-BR'?'📄 Salvar em PDF':f.sandbox.CTCheckoutTranslations['📄 Salvar em PDF'][locale]);
  const whatsapp=f.document.getElementById('share-whatsapp').href;
  for(const target of ['es','zh-Hans','pt-BR',locale])f.sandbox.CTPublicI18n.setLocale(target);
  assert.equal(f.document.getElementById('save-pdf'),original);assert.equal(f.submissions,1);assert.equal(new URL(f.document.getElementById('share-whatsapp').href).searchParams.get('text').split('\n').at(-1),new URL(whatsapp).searchParams.get('text').split('\n').at(-1));
+ assert.equal(view.querySelector('.event-title').textContent,'Evento Original');
  assert.equal(qr.getAttribute('src'),'https://qr.invalid/synthetic');button.click();assert.equal(f.printed,1);
  assert(view.textContent.includes('CT-LOCAL-123'));passed++;
 }
@@ -205,3 +207,4 @@ for(const locale of ['pt-BR','en-US','es','zh-Hans']){
  const original=fixture(locale);original.respond('VÁLIDO ORIGINAL');for(const target of ['en-US','es','zh-Hans','pt-BR']){original.sandbox.CTPublicI18n.setLocale(target);assert.equal(original.document.querySelector('.status').textContent,'● VÁLIDO ORIGINAL');assert.equal(original.submissions,1);}passed++;
 }
 console.log('PASS '+passed+' ticket-language VM cases; synthetic signed links, zero network. Print invocation only; browser print layout unverified.');
+
