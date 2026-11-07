@@ -533,6 +533,7 @@ test('main is reread after all publisher reads and any change aborts capture', a
     return normal(u);
   } }), /main changed during/);
 });
+const DEPLOY_PAGES_PIN = '368f82528645a54fb793d4d04e342629a3f51346';
 const workflowSource = () => fs.readFileSync(new URL('../.github/workflows/ct-reader-only-publication.yml', import.meta.url), 'utf8');
 test('workflow is manual only on main, retains production lock and environment', () => {
   const w = workflowSource();
@@ -552,7 +553,7 @@ test('workflow keeps separate pinned checkouts and no shell interpolation of inp
 test('workflow builds once, seals then uploads same tar, rechecks and deploys without rebuild', () => {
   const w = workflowSource();
   assert.equal((w.match(/prepare-pages-candidate\.mjs/g) || []).length, 1);
-  const build=w.indexOf('prepare-pages-candidate.mjs'),seal=w.indexOf('publication-cli.mjs seal'),upload=w.indexOf('actions/upload-artifact@v4'),recheck=w.indexOf('publication-cli.mjs recheck'),deploy=w.indexOf('actions/deploy-pages@v4');
+  const build=w.indexOf('prepare-pages-candidate.mjs'),seal=w.indexOf('publication-cli.mjs seal'),upload=w.indexOf('actions/upload-artifact@v4'),recheck=w.indexOf('publication-cli.mjs recheck'),deploy=w.indexOf('actions/deploy-pages@' + DEPLOY_PAGES_PIN);
   assert.ok(build < seal && seal < upload && upload < recheck && recheck < deploy);
   assert.match(w, /path: \$\{\{ runner.temp \}\}\/artifact\.tar/);
   assert.doesNotMatch(w, /uses: actions\/upload-pages-artifact@|overwrite: true|continue-on-error:/);
@@ -572,4 +573,13 @@ test('workflow restores support only between build and seal', () => {
   const build=w.indexOf('prepare-pages-candidate.mjs'),restore=w.indexOf('publication-cli.mjs restore-support'),seal=w.indexOf('publication-cli.mjs seal');
   assert.ok(build < restore && restore < seal);
   assert.equal((w.match(/restore-support/g)||[]).length,1);
+});
+
+test('reader deployment updates only the official action pin, preserving every other workflow byte', () => {
+  const w = workflowSource();
+  const pinnedUse = 'actions/deploy-pages@' + DEPLOY_PAGES_PIN + ' # v5.0.1';
+  assert.equal(w.split(pinnedUse).length - 1, 1);
+  assert.doesNotMatch(w, /actions\/deploy-pages@v[0-9]/);
+  const priorWorkflow = w.replace(pinnedUse, 'actions/deploy-pages@v4');
+  assert.equal(hash(Buffer.from(priorWorkflow)), 'b8802a3070c259469c32924c76786994406c57a27c0ebbcfbedb206f177df659');
 });
