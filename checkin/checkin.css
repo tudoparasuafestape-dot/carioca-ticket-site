@@ -33,7 +33,8 @@ body {
   overflow-x: hidden;
 }
 
-body.resultado-aberto {
+body.resultado-aberto,
+body.validacao-aberta {
   overflow: hidden;
 }
 
@@ -284,9 +285,92 @@ input {
   border-color: var(--vermelho);
 }
 
-/*
-  TELA PROFISSIONAL EM TELA CHEIA
-*/
+/* Validation is visible immediately, including when the manual field was scrolled. */
+.tela-validacao {
+  position: fixed;
+  z-index: 99998;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-items: center;
+  overflow-y: auto;
+  padding:
+    max(18px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom))
+    max(18px, env(safe-area-inset-left));
+  color: #fff;
+  background: radial-gradient(circle at top, #302711, #111 70%);
+  text-align: center;
+}
+
+.tela-validacao.ativa {
+  display: grid;
+}
+
+.tela-validacao-conteudo {
+  width: min(100%, 560px);
+  margin: auto;
+}
+
+.tela-validacao-logo {
+  display: block;
+  width: clamp(150px, 48vw, 230px);
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 8px;
+}
+
+.tela-validacao-evento {
+  margin: 0 0 24px;
+  color: #f0cf6b;
+  font-size: clamp(16px, 4.8vw, 22px);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.tela-validacao-indicador {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 18px;
+  border: 4px solid #665727;
+  border-top-color: #f0cf6b;
+  border-radius: 50%;
+  animation: validacao-girar 1s linear infinite;
+}
+
+.tela-validacao h2 {
+  margin: 0;
+  font-size: clamp(28px, 7.8vw, 42px);
+  line-height: 1.12;
+}
+
+.tela-validacao-mensagem {
+  margin: 14px auto 0;
+  max-width: 360px;
+  color: #e2e2e2;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+@keyframes validacao-girar {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-height: 450px) and (orientation: landscape) {
+  .tela-validacao-logo { width: 130px; margin-bottom: 0; }
+  .tela-validacao-evento { margin-bottom: 12px; font-size: 16px; }
+  .tela-validacao-indicador { width: 30px; height: 30px; margin-bottom: 10px; }
+  .tela-validacao h2 { font-size: 28px; }
+  .tela-validacao-mensagem { margin-top: 8px; font-size: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tela-validacao-indicador { animation: none; }
+}
+
+/* TELA PROFISSIONAL EM TELA CHEIA */
 
 .tela-resultado {
   position: fixed;
