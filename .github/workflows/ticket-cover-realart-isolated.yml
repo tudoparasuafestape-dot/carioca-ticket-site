@@ -1,0 +1,39 @@
+name: Ticket cover fallback (isolated real-art CI)
+
+on:
+  push:
+    branches:
+      - candidate/ingresso-capa-realart-20261107
+
+permissions:
+  contents: read
+
+jobs:
+  cover-fallback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install existing pinned Playwright dependency
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Install print fonts
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+      - name: Validate dedicated browser suite syntax
+        run: node --check tests/ticket-cover-fallback.browser.cjs
+      - name: Real artwork with fictitious ticket, mobile and PDF validation
+        env:
+          CT_EVIDENCE_DIR: test-results/ticket-cover-realart
+        run: node tests/ticket-cover-fallback.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ticket-cover-realart-evidence
+          path: test-results/ticket-cover-realart
+          if-no-files-found: error
+          retention-days: 7
