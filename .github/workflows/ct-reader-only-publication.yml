@@ -1,0 +1,115 @@
+# LOCAL REVIEW DRAFT. Do not install, push or dispatch without separate approval.
+# This ADDITION runs only from its separately approved infrastructure commit on main.
+# The normal ct-pages-publication.yml is NOT replaced or modified.
+# Existing environment protection is honored without any settings changes.
+name: Carioca Ticket reader-only Pages publication
+on:
+  workflow_dispatch:
+    inputs:
+      reader_only:
+        description: Only the reviewed reader JavaScript; no init or catalog changes
+        type: boolean
+        default: true
+        required: true
+      expected_guard_sha:
+        description: Full separately approved main commit SHA containing this guard/workflow
+        type: string
+        required: true
+      expected_site_sha:
+        description: Authorized reader site commit SHA; tree must equal reviewed baseline plus exact reader and support changes
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+concurrency:
+  group: ct-pages-production
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'tudoparasuafestape-dot/carioca-ticket-site'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      CT_APPROVED_READER_ONLY_PUBLICATION: '1'
+      CT_READER_ONLY: ${{ inputs.reader_only }}
+      CT_EXPECTED_GUARD_SHA: ${{ inputs.expected_guard_sha }}
+      CT_EXPECTED_SITE_SHA: ${{ inputs.expected_site_sha }}
+    steps:
+      - name: Reject unexpected execution identity before checkout
+        env:
+          EXPECTED_REF: refs/heads/main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'tudoparasuafestape-dot/carioca-ticket-site'
+          test "$GITHUB_REF" = "$EXPECTED_REF"
+          test "$CT_READER_ONLY" = true
+          [[ "$CT_EXPECTED_GUARD_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$CT_EXPECTED_SITE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$GITHUB_SHA" = "$CT_EXPECTED_GUARD_SHA"
+      - name: Checkout separately reviewed guard, never copied into site
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_guard_sha }}
+          path: guard
+          persist-credentials: false
+      - name: Checkout exact authorized reader site commit, never floating main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_site_sha }}
+          path: site
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the existing bounded image converter
+        run: |
+          python3 -m pip install --disable-pip-version-check --only-binary=:all: --index-url https://pypi.org/simple 'Pillow==12.3.0'
+      - name: Run offline tests before any publication reads
+        run: |
+          node --test guard/social-preview-build/reader-publication.test.mjs
+          node --test site/social-preview-build/*.test.*
+      - name: Verify exact Git tree, latest successful run and live critical bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node guard/social-preview-build/reader-publication-cli.mjs capture "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-published"
+      - name: Build once using the existing two-read governed builder
+        env:
+          CT_APPROVED_PUBLICATION: '1'
+        run: |
+          test -z "${CT_INITIAL_RECEIPT_404:-}"
+          node site/social-preview-build/prepare-pages-candidate.mjs "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-pages" "$RUNNER_TEMP/ct-published/assets/social-publication-receipt.json"
+      - name: Restore unchanged published support files after exact candidate-byte verification
+        run: node guard/social-preview-build/reader-publication-cli.mjs restore-support "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-published" "$RUNNER_TEMP/ct-pages"
+      - name: Fail-closed guard and seal the exact deploy archive
+        run: node guard/social-preview-build/reader-publication-cli.mjs seal "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-published" "$RUNNER_TEMP/ct-pages" "$RUNNER_TEMP/artifact.tar" "$RUNNER_TEMP/reader-seal.json"
+      # Same standard artifact.tar packaging contract as upload-pages-artifact@v3.
+      # Upload the preverified tar instead of allowing an action to retar a directory.
+      - name: Upload only the immutable, verified Pages archive
+        id: uploaded
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 7
+          if-no-files-found: error
+          overwrite: false
+      - name: Recheck exact archive, main and receipt immediately before deploy
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node guard/social-preview-build/reader-publication-cli.mjs recheck "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-published" "$RUNNER_TEMP/ct-pages" "$RUNNER_TEMP/artifact.tar" "$RUNNER_TEMP/reader-seal.json"
+      - name: Publish the same uploaded archive, without rebuild
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages
