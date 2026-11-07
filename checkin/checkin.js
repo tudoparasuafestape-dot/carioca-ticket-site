@@ -34,6 +34,7 @@ document.addEventListener(
   'DOMContentLoaded',
   function() {
     criarTelaResultadoProfissional();
+    criarTelaValidacao();
     criarConfirmacaoEntradaProfissional();
     credencialCheckin = obterCredencialCheckin();
     registrarEventos();
@@ -330,6 +331,54 @@ function obterEventoIdContextoCheckin() {
     parametros.get('eventoId') ||
     ''
   ).trim();
+}
+
+
+function criarTelaValidacao() {
+  if (el('telaValidacao')) return;
+
+  const tela = document.createElement('section');
+  tela.id = 'telaValidacao';
+  tela.className = 'tela-validacao';
+  tela.setAttribute('aria-hidden', 'true');
+  tela.innerHTML =
+    '<div class="tela-validacao-conteudo">' +
+      '<img class="tela-validacao-logo" src="/assets/carioca-ticket-logo.png" ' +
+        'width="600" height="400" alt="Carioca Ticket">' +
+      '<p id="validacaoEvento" class="tela-validacao-evento"></p>' +
+      '<div class="tela-validacao-indicador" aria-hidden="true"></div>' +
+      '<div role="status" aria-live="polite" aria-atomic="true">' +
+        '<h2 id="validacaoTitulo"></h2>' +
+        '<p class="tela-validacao-mensagem">Aguarde o resultado antes de liberar a entrada.</p>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(tela);
+}
+
+function mostrarTelaValidacao() {
+  criarTelaValidacao();
+  const parametros = new URLSearchParams(window.location.search || '');
+  // Display-only context from Central Mobile; never changes the authorized event ID.
+  el('validacaoEvento').textContent =
+    String(parametros.get('eventoNome') || '').trim() ||
+    ('Evento: ' + obterEventoIdContextoCheckin());
+  el('telaValidacao').classList.add('ativa');
+  el('telaValidacao').setAttribute('aria-hidden', 'false');
+  el('validacaoTitulo').textContent = 'Aguardando validação';
+  document.body.classList.add('validacao-aberta');
+  const app = document.querySelector('.app');
+  if (app) app.inert = true;
+}
+
+function ocultarTelaValidacao() {
+  const tela = el('telaValidacao');
+  if (!tela) return;
+  tela.classList.remove('ativa');
+  tela.setAttribute('aria-hidden', 'true');
+  el('validacaoTitulo').textContent = '';
+  document.body.classList.remove('validacao-aberta');
+  const app = document.querySelector('.app');
+  if (app) app.inert = false;
 }
 
 
@@ -796,14 +845,8 @@ async function validarIngresso(
   el('btnValidar').textContent =
     'Validando...';
 
-  mostrarResultadoPequeno({
-    tipo: 'aviso',
-    titulo:
-      'Validando ingresso',
-    mensagem:
-      'Aguarde a confirmação da planilha.',
-    codigo: codigo
-  });
+  limparResultadoPequeno();
+  mostrarTelaValidacao();
 
   try {
     let resposta =
@@ -840,6 +883,7 @@ async function validarIngresso(
         );
 
       if (confirmarEntrada === true) {
+        mostrarTelaValidacao();
         confirmacaoSemRetorno = true;
         resposta =
           await chamarApiJsonp(
@@ -979,7 +1023,7 @@ async function validarIngresso(
         : 'Falha na comunicação',
       mensagem: confirmacaoSemRetorno
         ? 'A entrada pode ter sido registrada. Confira o código e o horário com a portaria antes de liberar a pessoa. Não repita a confirmação nem use outro ingresso para compensar.'
-        : (erro.message || 'Não foi possível consultar a planilha.'),
+        : (erro.message || 'Não foi possível validar o ingresso.'),
       codigo: codigo
     });
 
@@ -993,6 +1037,7 @@ async function validarIngresso(
     );
 
   } finally {
+    ocultarTelaValidacao();
     processando = false;
     el('btnValidar').textContent = 'Validar código';
     // Only the explicit result close can rearm the reader.
@@ -1075,6 +1120,7 @@ function criarConfirmacaoEntradaProfissional() {
 function confirmarEntradaProfissional(
   resposta
 ) {
+  ocultarTelaValidacao();
   criarConfirmacaoEntradaProfissional();
 
   return new Promise(
@@ -1204,6 +1250,7 @@ function confirmarEntradaProfissional(
 function mostrarTelaResultado(
   dados
 ) {
+  ocultarTelaValidacao();
   resultadoAberto = true;
   pausarLeitura();
   el('btnValidar').disabled = true;
@@ -1486,7 +1533,7 @@ function chamarApiJsonp(
       script.onerror =
         function() {
           finalizarComErro(
-            'O navegador não conseguiu acessar o Apps Script.'
+            'Não foi possível conectar ao serviço de validação.'
           );
         };
 

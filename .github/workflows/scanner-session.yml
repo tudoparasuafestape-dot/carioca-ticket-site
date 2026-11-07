@@ -26,7 +26,9 @@ jobs:
       - name: Mobile, landscape and desktop browser regression (network blocked)
         env:
           NODE_PATH: .scanner-test-runtime/node_modules
-        run: node tests/scanner-session.browser.cjs checkin/checkin.js
+        run: |
+          node tests/scanner-session.browser.cjs checkin/checkin.js
+          node tests/scanner-feedback.browser.cjs
       - name: Keep synthetic evidence
         if: always()
         uses: actions/upload-artifact@v4
