@@ -4,10 +4,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import childProcess from 'node:child_process';
+import { syncBuiltinESMExports } from 'node:module';
 import {
   POLICY, CRITICAL_RUNTIME, INDEX, RECEIPT, TITLE, hash, readTree, verifyGit,
   authenticatePublished, compareDerivatives, verifyStage, assertUnchanged, sealStage, makeTar,
 } from './title-only-publication-guard.mjs';
+import { inspectArchive, readArchive } from './official-pages-archive.mjs';
 import {
   validateExecution, publicationPolicy, capturePublished, writeSeal, recheckBeforeDeploy,
 } from './title-only-publication-cli.mjs';
@@ -161,9 +164,9 @@ test('allow excluded reordering only by identity+reason', t => {
   r.excluded.push({ eventId: 'EVT-OTHER', reason: 'ENDED' }); put(f.published, RECEIPT, bytes(r)); f.policy.publishedReceiptHash = hash(bytes(r));
   f.changeReceipt(c => c.excluded = [...r.excluded].reverse()); assert.doesNotThrow(() => validate(f));
 });
-test('archive is reproducible and GNU tar extracts exactly verified files', t => {
+test('official archive is inspected and GNU tar extracts exactly verified files', t => {
   const f = fixture(t), result = sealStage(f.options), tar = path.join(f.dir, 'artifact.tar'), unpacked = path.join(f.dir, 'unpacked');
-  assert.deepEqual(result.archive, sealStage(f.options).archive); fs.writeFileSync(tar, result.archive); fs.mkdirSync(unpacked);
+  assert.deepEqual(inspectArchive(result.archive, readTree(f.stage)).files, result.seal.files); fs.writeFileSync(tar, result.archive); fs.mkdirSync(unpacked);
   execFileSync('tar', ['-xf', tar, '-C', unpacked]); const extracted = readTree(unpacked), expected = readTree(f.stage);
   assert.deepEqual([...extracted.keys()].sort(), [...expected.keys()].sort());
   for (const [p, b] of expected) assert.deepEqual(extracted.get(p), b);
@@ -247,18 +250,19 @@ test('deny substituting site SHA for main guard SHA at predeploy check', async t
 });
 test('external TAR is 0644, seal stays 0400, payload/hash and same-file recheck stay identical', async t => {
   const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
-  const expected = sealStage(f.options);
+  const expected = verifyStage(f.options);
   const written = writeSeal({ ...f.options, archive, seal });
+  const originalBytes = fs.readFileSync(archive);
   assert.equal(fs.statSync(archive).mode & 0o777, 0o644);
   assert.equal(fs.statSync(seal).mode & 0o777, 0o400);
-  assert.deepEqual(fs.readFileSync(archive), expected.archive);
-  assert.equal(written.archiveSha256, expected.seal.archiveSha256);
+  assert.deepEqual(inspectArchive(originalBytes, expected.files).files, expected.manifest);
+  assert.equal(written.archiveSha256, hash(originalBytes));
   assert.equal(hash(fs.readFileSync(archive)), JSON.parse(fs.readFileSync(seal)).archiveSha256);
   const before = fs.statSync(archive);
   await recheckBeforeDeploy({ ...f.options, archive, seal, token: 'fixture', fetchImpl: mockedFetch(f), clock: () => NOW });
   const after = fs.statSync(archive);
   assert.equal(after.ino, before.ino); assert.equal(after.mtimeMs, before.mtimeMs);
-  assert.deepEqual(fs.readFileSync(archive), expected.archive);
+  assert.deepEqual(fs.readFileSync(archive), originalBytes);
   assert.throws(() => writeSeal({ ...f.options, archive, seal }), /EEXIST/);
 });
 test('explicit transport/receipt modes survive a restrictive umask', t => {
@@ -276,30 +280,161 @@ test('ZIP transport records 0644 for TAR and preserves every payload byte', t =>
   assert.equal(zipped.mode, 0o644);
   assert.equal(zipped.sha256, hash(fs.readFileSync(archive)));
 });
-test('every TAR member begins ./ while logical paths, content and metadata stay fixed', t => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ct-prefix-test-'));
-  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
-  const longPath = 'a'.repeat(110) + '/nested/file.txt';
-  const files = new Map([['index.html', Buffer.from('home')], ['assets/site.js', Buffer.from('site')], [longPath, Buffer.from('long')]]);
-  const archive = path.join(dir, 'prefix.tar'); fs.writeFileSync(archive, makeTar(files));
-  const script = "import tarfile,json,sys,hashlib; t=tarfile.open(sys.argv[1]); print(json.dumps([{'name':m.name,'type':m.type.decode(),'mode':m.mode,'uid':m.uid,'gid':m.gid,'mtime':m.mtime,'uname':m.uname,'gname':m.gname,'sha256':hashlib.sha256(t.extractfile(m).read()).hexdigest()} for m in t])); t.close()";
-  const rows = JSON.parse(execFileSync('python3', ['-c', script, archive], { encoding: 'utf8' }));
-  assert.equal(rows.length, files.size);
-  for (const row of rows) {
-    assert.ok(row.name.startsWith('./')); assert.equal(row.type, '0');
-    assert.equal(row.sha256, hash(files.get(row.name.slice(2))));
-    assert.equal(row.mode, 0o644); assert.equal(row.uid, 0); assert.equal(row.gid, 0);
-    assert.equal(row.mtime, 0); assert.equal(row.uname, ''); assert.equal(row.gname, '');
+test('official TAR contains expected root/directories, ./ names and natural runner metadata', () => {
+  const files = new Map([['index.html', Buffer.from('home')], ['assets/site.js', Buffer.from('site')]]);
+  const archive = makeTar(files), result = inspectArchive(archive, files);
+  assert.equal(result.members.length, 4);
+  assert.equal(result.members[0].name, './');
+  for (const row of result.members) {
+    assert.ok(row.name.startsWith('./'));
+    assert.equal(row.mode, row.type === '5' ? 0o755 : 0o644);
+    assert.equal(row.uid, process.getuid()); assert.equal(row.gid, process.getgid());
+    assert.ok(row.mtime > 0); assert.ok(row.uname); assert.ok(row.gname);
   }
 });
 test('archive prefix never admits unsafe logical paths', () => {
   for (const relative of ['../escape', '/absolute', './already-prefixed', 'a//b', 'a/../b', 'a\\b', 'a/%2e%2e/b']) {
-    assert.throws(() => makeTar(new Map([[relative, Buffer.from('bad')]])), /unsafe path/);
+    assert.throws(() => makeTar(new Map([[relative, Buffer.from('bad')]])), /unsafe logical path/);
   }
 });
-test('USTAR capacity with ./ is checked and overlong headers fail closed', () => {
-  const fitting = 'a'.repeat(153) + '/' + 'b'.repeat(100);
+test('official packer rejects extension paths rather than accepting GNU longname/PAX', () => {
+  const fitting = 'a'.repeat(60) + '/' + 'b'.repeat(35);
   assert.doesNotThrow(() => makeTar(new Map([[fitting, Buffer.from('fits')]])));
-  const overflow = 'a'.repeat(155) + '/' + 'b'.repeat(99);
-  assert.throws(() => makeTar(new Map([[overflow, Buffer.from('too long')]])), /archive path cannot fit/);
+  const overflow = 'a'.repeat(110) + '/file';
+  assert.throws(() => makeTar(new Map([[overflow, Buffer.from('unsupported')]])), /longname\/PAX/);
+});
+
+function checksum(header) {
+  header.fill(32, 148, 156);
+  const sum = [...header].reduce((a, b) => a + b, 0);
+  header.write(sum.toString(8).padStart(6, '0') + '\0 ', 148, 8, 'ascii');
+}
+function headerField(header, offset, length, value) {
+  header.fill(0, offset, offset + length); header.write(value, offset, length, 'ascii');
+}
+function numericField(header, offset, length, value) {
+  headerField(header, offset, length, value.toString(8).padStart(length - 1, '0') + '\0');
+}
+function archiveFixture() {
+  const files = new Map([['index.html', Buffer.from('home')], ['assets/app.js', Buffer.from('javascript')]]);
+  const archive = makeTar(files), info = inspectArchive(archive, files);
+  return { files, archive, members: info.members, file: info.members.find(m => m.type === '0'),
+    directory: info.members.find(m => m.type === '5' && m.relative) };
+}
+function changedHeader(f, member, change) {
+  const bytes = Buffer.from(f.archive), h = bytes.subarray(member.offset, member.offset + 512);
+  change(h); checksum(h); return bytes;
+}
+const badArchives = [
+  ['header checksum', f => { const b = Buffer.from(f.archive); b[0] ^= 1; return b; }],
+  ['high-bit checksum digit', f => { const b = Buffer.from(f.archive); b[148] |= 128; return b; }],
+  ['high-bit mode digit', f => changedHeader(f, f.file, h => h[100] |= 128)],
+  ['high-bit size digit', f => changedHeader(f, f.file, h => h[124] |= 128)],
+  ['absolute member name', f => changedHeader(f, f.file, h => headerField(h, 0, 100, '/index.html'))],
+  ['path traversal', f => changedHeader(f, f.file, h => headerField(h, 0, 100, './../index.html'))],
+  ['missing ./', f => changedHeader(f, f.file, h => headerField(h, 0, 100, 'index.html'))],
+  ['extra file', f => changedHeader(f, f.file, h => headerField(h, 0, 100, './extra.js'))],
+  ['extra directory', f => changedHeader(f, f.directory, h => headerField(h, 0, 100, './extra/'))],
+  ['duplicate file', f => changedHeader(f, f.members.filter(m => m.type === '0')[1], h => headerField(h, 0, 100, f.file.name))],
+  ['duplicate root directory', f => changedHeader(f, f.directory, h => headerField(h, 0, 100, './'))],
+  ['executable file mode', f => changedHeader(f, f.file, h => numericField(h, 100, 8, 0o755))],
+  ['private root mode', f => changedHeader(f, f.members[0], h => numericField(h, 100, 8, 0o700))],
+  ['symlink member', f => changedHeader(f, f.file, h => h[156] = 50)],
+  ['hardlink member', f => changedHeader(f, f.file, h => h[156] = 49)],
+  ['PAX member', f => changedHeader(f, f.file, h => h[156] = 120)],
+  ['GNU longname member', f => changedHeader(f, f.file, h => h[156] = 76)],
+  ['device member', f => changedHeader(f, f.file, h => h[156] = 51)],
+  ['nonempty link target', f => changedHeader(f, f.file, h => headerField(h, 157, 100, '/outside'))],
+  ['sparse/extension header bytes', f => changedHeader(f, f.file, h => h[345] = 1)],
+  ['oversized member', f => changedHeader(f, f.file, h => numericField(h, 124, 12, 64 * 1024 * 1024 + 1))],
+  ['truncated declared payload', f => changedHeader(f, f.file, h => numericField(h, 124, 12, 1024 * 1024))],
+  ['wrong payload byte', f => { const b = Buffer.from(f.archive); b[f.file.offset + 512] ^= 1; return b; }],
+  ['nonzero member padding', f => { const b = Buffer.from(f.archive); b[f.file.offset + 512 + f.file.size] = 1; return b; }],
+  ['missing EOF/framing', f => f.archive.subarray(0, -1024)],
+  ['data after EOF', f => { const b = Buffer.from(f.archive); b[b.length - 1] = 1; return b; }],
+  ['excessive EOF padding', f => Buffer.concat([f.archive, Buffer.alloc(10240)])],
+  ['foreign UID', f => changedHeader(f, f.file, h => numericField(h, 108, 8, process.getuid() + 1))],
+  ['foreign GID', f => changedHeader(f, f.file, h => numericField(h, 116, 8, process.getgid() + 1))],
+  ['foreign username', f => changedHeader(f, f.file, h => headerField(h, 265, 32, 'other-user'))],
+  ['inconsistent group name', f => changedHeader(f, f.file, h => headerField(h, 297, 32, 'other-group'))],
+  ['mtime zero', f => changedHeader(f, f.file, h => numericField(h, 136, 12, 0))],
+  ['future mtime', f => changedHeader(f, f.file, h => numericField(h, 136, 12, Math.floor(Date.now() / 1000) + 3600))],
+];
+for (const [name, mutate] of badArchives) test('strict official archive denies ' + name, () => {
+  const f = archiveFixture(); assert.throws(() => inspectArchive(mutate(f), f.files), /CT_TITLE_ARCHIVE_DENIED/);
+});
+test('official packer ignores inherited TAR_OPTIONS and produces only the expected members', () => {
+  const before = process.env.TAR_OPTIONS; process.env.TAR_OPTIONS = '--format=pax --owner=0';
+  try { const f = archiveFixture(); assert.equal(f.members[0].uid, process.getuid()); }
+  finally { if (before === undefined) delete process.env.TAR_OPTIONS; else process.env.TAR_OPTIONS = before; }
+});
+test('recheck invokes no tar process and does not rewrite the sealed archive', async t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  writeSeal({ ...f.options, archive, seal }); const before = fs.readFileSync(archive);
+  const original = childProcess.execFileSync; let calls = 0;
+  childProcess.execFileSync = (file, ...args) => { if (String(file).endsWith('/tar')) { calls++; throw Error('No tar during recheck'); } return original(file, ...args); };
+  syncBuiltinESMExports();
+  try { await recheckBeforeDeploy({ ...f.options, archive, seal, token: 'fixture', fetchImpl: mockedFetch(f), clock: () => NOW }); }
+  finally { childProcess.execFileSync = original; syncBuiltinESMExports(); }
+  assert.equal(calls, 0); assert.deepEqual(fs.readFileSync(archive), before);
+});
+for (const target of ['checkout/index.html', 'derived']) test('post-await recheck denies stage mutation: ' + target, async t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  writeSeal({ ...f.options, archive, seal });
+  await assert.rejects(recheckBeforeDeploy({ ...f.options, archive, seal, token: 'fixture', clock: () => NOW,
+    fetchImpl: mockedFetch(f, () => put(f.stage, target === 'derived' ? f.page : target, 'changed during fetch')) }), /stage changed during remote/);
+});
+function rewriteSeal(file, change) {
+  const r = JSON.parse(fs.readFileSync(file)); change(r);
+  fs.chmodSync(file, 0o600); fs.writeFileSync(file, JSON.stringify(r, null, 2) + '\n'); fs.chmodSync(file, 0o400);
+}
+for (const mutation of ['extra-key', 'identity']) test('recheck denies seal ' + mutation, async t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  writeSeal({ ...f.options, archive, seal });
+  rewriteSeal(seal, r => { if (mutation === 'extra-key') r.skip = true; else r.candidateSha = 'f'.repeat(40); });
+  await assert.rejects(recheckBeforeDeploy({ ...f.options, archive, seal, token: 'fixture', fetchImpl: mockedFetch(f), clock: () => NOW }), /seal changed|identity changed/);
+});
+test('coordinated archive+seal hash change cannot change runtime content', async t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  writeSeal({ ...f.options, archive, seal }); const b = fs.readFileSync(archive);
+  const member = inspectArchive(b, readTree(f.stage)).members.find(m => m.relative === 'checkout/index.html');
+  b[member.offset + 512] ^= 1; fs.writeFileSync(archive, b);
+  rewriteSeal(seal, r => r.archiveSha256 = hash(b));
+  await assert.rejects(recheckBeforeDeploy({ ...f.options, archive, seal, token: 'fixture', fetchImpl: mockedFetch(f), clock: () => NOW }), /file bytes differ/);
+});
+test('unsigned seal boundary: coordinated mtime+hash change inside allowed profile remains accepted', async t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  writeSeal({ ...f.options, archive, seal }); const b = fs.readFileSync(archive);
+  const h = b.subarray(0, 512); numericField(h, 136, 12, Math.floor(Date.now() / 1000) - 1); checksum(h);
+  fs.writeFileSync(archive, b); rewriteSeal(seal, r => r.archiveSha256 = hash(b));
+  assert.equal((await recheckBeforeDeploy({ ...f.options, archive, seal, token: 'fixture', fetchImpl: mockedFetch(f), clock: () => NOW })).verified, true);
+});
+test('archive reader rejects symlink/hardlink and checks size before allocation', t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  writeSeal({ ...f.options, archive, seal }); const link = path.join(f.dir, 'link.tar'); fs.symlinkSync(archive, link);
+  assert.throws(() => readArchive(link)); fs.unlinkSync(link); fs.linkSync(archive, link);
+  assert.throws(() => readArchive(archive), /type\/size\/links/); fs.unlinkSync(link);
+  const huge = path.join(f.dir, 'huge.tar'); const fd = fs.openSync(huge, 'wx'); fs.ftruncateSync(fd, 301 * 1024 * 1024); fs.closeSync(fd);
+  assert.throws(() => readArchive(huge), /type\/size\/links/);
+});
+test('consistent forged group names remain rejected against the runner group', () => {
+  const f = archiveFixture(), b = Buffer.from(f.archive);
+  for (const member of f.members) { const h = b.subarray(member.offset, member.offset + 512); headerField(h, 297, 32, 'forged-group'); checksum(h); }
+  assert.throws(() => inspectArchive(b, f.files), /group differs/);
+});
+test('archive reader rejects FIFO immediately without blocking at open', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ct-fifo-test-')); t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const fifo = path.join(dir, 'fifo.tar'); execFileSync('/usr/bin/mkfifo', [fifo]);
+  assert.throws(() => readArchive(fifo), /type\/size\/links/);
+});
+test('archive reader rejects one extra zero record even at minimum GNU padding boundary', () => {
+  const files = new Map([['index.html', Buffer.alloc(8192)]]), archive = makeTar(files);
+  assert.equal(inspectArchive(archive, files).trailingZeroBytes, 1024);
+  assert.throws(() => inspectArchive(Buffer.concat([archive, Buffer.alloc(10240)]), files), /EOF/);
+});
+for (const target of ['archive', 'seal']) test('post-await recheck denies mutation of ' + target, async t => {
+  const f = fixture(t), archive = path.join(f.dir, 'artifact.tar'), seal = path.join(f.dir, 'seal.json');
+  writeSeal({ ...f.options, archive, seal }); let changed = false;
+  await assert.rejects(recheckBeforeDeploy({ ...f.options, archive, seal, token: 'fixture', clock: () => NOW,
+    fetchImpl: mockedFetch(f, () => { if (!changed) { changed = true; if (target === 'archive') fs.appendFileSync(archive, 'changed'); else rewriteSeal(seal, r => r.extra = true); } }) }), /changed during remote checks/);
 });
