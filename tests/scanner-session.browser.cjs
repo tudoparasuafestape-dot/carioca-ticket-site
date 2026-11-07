@@ -22,7 +22,7 @@ for(const viewport of [{width:390,height:667},{width:844,height:390},{width:320,
  await page.waitForTimeout(2700);await page.evaluate(code=>aoLerQrCode(code),A);
  await page.waitForFunction(()=>document.getElementById('telaResultadoTitulo').textContent==='JÁ UTILIZADO');
  assert.equal(await page.evaluate(()=>window.testCalls.length),3);assert.deepEqual(await page.evaluate(()=>window.testWrites),[A]);
- assert(await page.locator('#telaResultadoProfissional').isVisible());await reachable();
+ await reachable();assert(await page.locator('#telaResultadoProfissional').isVisible());
  await page.screenshot({path:'test-results/scanner-used-'+viewport.width+'x'+viewport.height+'.png'});
  await page.locator('#botaoFecharResultado').click();
  // Distinct QR, cancel, explicit next, manual retry.
