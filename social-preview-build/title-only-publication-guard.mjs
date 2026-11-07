@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { packVerifiedFiles } from './official-pages-archive.mjs';
+export { packVerifiedFiles as makeTar } from './official-pages-archive.mjs';
 
 export const INDEX = 'assets/social-event-pages.json';
 export const RECEIPT = 'assets/social-publication-receipt.json';
@@ -238,38 +240,14 @@ export function assertUnchanged({ mainSha, receiptBytes, initialReceiptBytes, po
   check(Buffer.isBuffer(receiptBytes) && Buffer.isBuffer(initialReceiptBytes) && receiptBytes.equals(initialReceiptBytes), 'published receipt changed before deploy');
   check(hash(receiptBytes) === policy.publishedReceiptHash, 'published receipt corrupt before deploy');
 }
-// A deterministic USTAR archive from the already verified byte buffers. The
-// archive is the deploy payload; there is no second build or directory re-read.
-export function makeTar(files) {
-  const parts = [];
-  for (const [relative, bytes] of [...files].sort(([a], [b]) => a.localeCompare(b))) {
-    safePath(relative); check(Buffer.isBuffer(bytes), 'archive bytes required');
-    const header = Buffer.alloc(512);
-    // Keep logical paths/manifest unchanged; Pages expects rooted-relative TAR
-    // member names. Validate the original path before adding this archive prefix.
-    const archiveName = './' + relative;
-    let name = archiveName, prefix = '';
-    if (Buffer.byteLength(name) > 100) {
-      const split = archiveName.lastIndexOf('/', 155);
-      check(split > 0, 'archive path too long');
-      prefix = archiveName.slice(0, split); name = archiveName.slice(split + 1);
-      check(Buffer.byteLength(prefix) <= 155 && Buffer.byteLength(name) <= 100, 'archive path cannot fit USTAR');
-    }
-    const write = (value, offset, length) => { check(Buffer.byteLength(value) <= length, 'archive field overflow'); header.write(value, offset, length, 'ascii'); };
-    const octal = (value, offset, length) => write(value.toString(8).padStart(length - 1, '0') + '\0', offset, length);
-    write(name, 0, 100); octal(0o644, 100, 8); octal(0, 108, 8); octal(0, 116, 8);
-    octal(bytes.length, 124, 12); octal(0, 136, 12); header.fill(32, 148, 156); write('0', 156, 1);
-    write('ustar\0', 257, 6); write('00', 263, 2); write(prefix, 345, 155);
-    const sum = [...header].reduce((a, b) => a + b, 0);
-    write(sum.toString(8).padStart(6, '0') + '\0 ', 148, 8);
-    parts.push(header, bytes, Buffer.alloc((512 - bytes.length % 512) % 512));
-  }
-  parts.push(Buffer.alloc(1024));
-  return Buffer.concat(parts);
+// The official GNU command packages a private materialization of verified buffers.
+// The resulting archive is independently inspected before it can be sealed.
+export function sealMetadata(result, archiveSha256, policy = POLICY) {
+  return { schema: 'CT_TITLE_ONLY_SEAL_V1', baselineSha: policy.baselineSha,
+    candidateSha: policy.candidateSha, archiveSha256, files: result.manifest,
+    receipt: result.receipt };
 }
 export function sealStage(options) {
-  const result = verifyStage(options), archive = makeTar(result.files);
-  return { archive, seal: { schema: 'CT_TITLE_ONLY_SEAL_V1', baselineSha: (options.policy || POLICY).baselineSha,
-    candidateSha: (options.policy || POLICY).candidateSha, archiveSha256: hash(archive), files: result.manifest,
-    receipt: result.receipt } };
+  const result = verifyStage(options), archive = packVerifiedFiles(result.files);
+  return { archive, seal: sealMetadata(result, hash(archive), options.policy || POLICY) };
 }

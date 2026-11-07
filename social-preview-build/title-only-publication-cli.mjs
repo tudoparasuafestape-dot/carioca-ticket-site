@@ -5,8 +5,9 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
   POLICY, CRITICAL_RUNTIME, INDEX, RECEIPT, hash, safePath, verifyGit, readTree,
-  authenticatePublished, comparePublishedTree, assertUnchanged, compareDerivatives, sealStage,
+  authenticatePublished, comparePublishedTree, assertUnchanged, compareDerivatives, sealStage, verifyStage, sealMetadata,
 } from './title-only-publication-guard.mjs';
+import { inspectArchive, readArchive, readSeal } from './official-pages-archive.mjs';
 
 const ORIGIN = 'https://cariocaticket.com.br';
 const REPOSITORY = 'tudoparasuafestape-dot/carioca-ticket-site';
@@ -79,11 +80,6 @@ function newFile(file, bytes, mode = 0o400) {
     fs.fchmodSync(fd, mode);
   } finally { fs.closeSync(fd); }
 }
-function regularBytes(file) {
-  const st = fs.lstatSync(file);
-  check(st.isFile() && !st.isSymbolicLink() && st.nlink === 1, 'output is not a regular standalone file');
-  return fs.readFileSync(file);
-}
 export async function capturePublished({ repo, published, token, fetchImpl = fetch, policy = POLICY }) {
   const gitState = verifyGit(repo, policy);
   const initial = await readPublicationState({ token, fetchImpl, policy });
@@ -113,21 +109,29 @@ export function writeSeal({ repo, stage, published, archive, seal, now = Date.no
   return { archiveSha256: result.seal.archiveSha256, files: Object.keys(result.seal.files).length };
 }
 export async function recheckBeforeDeploy({ repo, stage, published, archive, seal, token, fetchImpl = fetch, clock = Date.now, policy = POLICY }) {
-  const record = JSON.parse(regularBytes(seal));
+  const recordBytes = readSeal(seal), record = JSON.parse(recordBytes);
   check(record.schema === 'CT_TITLE_ONLY_SEAL_V1' && record.baselineSha === policy.baselineSha && record.candidateSha === policy.candidateSha,
     'seal identity changed');
-  check(hash(regularBytes(archive)) === record.archiveSha256, 'sealed archive changed');
-  // Reconstruct from verified buffers only for comparison, NEVER replace/upload
-  // another archive. This detects stage or seal changes after verification.
-  const result = sealStage({ repo, stage, published, now: clock(), policy });
-  check(hash(result.archive) === record.archiveSha256 && JSON.stringify(result.seal) === JSON.stringify(record), 'stage/seal changed');
+  const archiveBytes = readArchive(archive, { requiredMode: 0o644 });
+  check(hash(archiveBytes) === record.archiveSha256, 'sealed archive changed');
+  // No tar process or repackaging here. Inspect this same sealed file against
+  // freshly verified Git/runtime/catalog bytes; metadata may be nondeterministic.
+  const result = verifyStage({ repo, stage, published, now: clock(), policy });
+  const inspected = inspectArchive(archiveBytes, result.files);
+  const expectedSeal = sealMetadata(result, inspected.archiveSha256, policy);
+  check(JSON.stringify(expectedSeal) === JSON.stringify(record), 'stage/seal changed');
   const initialFiles = readTree(published);
   // Last remote operations immediately precede the deploy step. Locking every
   // publisher is still required; these reads are not an atomic compare-and-swap.
   const state = await readPublicationState({ token, fetchImpl, policy });
   const current = await readStatic(RECEIPT, { fetchImpl });
   assertUnchanged({ ...state, receiptBytes: current, initialReceiptBytes: initialFiles.get(RECEIPT), policy });
-  compareDerivatives({ publishedReceiptBytes: current, publishedIndexBytes: initialFiles.get(INDEX), candidateFiles: readTree(stage), now: clock(), policy });
+  check(hash(readArchive(archive, { requiredMode: 0o644 })) === record.archiveSha256, 'archive changed during remote checks');
+  check(readSeal(seal).equals(recordBytes), 'seal changed during remote checks');
+  const finalFiles = readTree(stage);
+  const finalManifest = Object.fromEntries([...finalFiles].sort(([a], [b]) => a.localeCompare(b)).map(([p, b]) => [p, hash(b)]));
+  check(JSON.stringify(finalManifest) === JSON.stringify(result.manifest), 'stage changed during remote checks');
+  compareDerivatives({ publishedReceiptBytes: current, publishedIndexBytes: initialFiles.get(INDEX), candidateFiles: finalFiles, now: clock(), policy });
   return { verified: true, archiveSha256: record.archiveSha256 };
 }
 if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {
