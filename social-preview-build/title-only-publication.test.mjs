@@ -6,7 +6,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
   POLICY, CRITICAL_RUNTIME, INDEX, RECEIPT, TITLE, hash, readTree, verifyGit,
-  authenticatePublished, compareDerivatives, verifyStage, assertUnchanged, sealStage,
+  authenticatePublished, compareDerivatives, verifyStage, assertUnchanged, sealStage, makeTar,
 } from './title-only-publication-guard.mjs';
 import {
   validateExecution, publicationPolicy, capturePublished, writeSeal, recheckBeforeDeploy,
@@ -275,4 +275,31 @@ test('ZIP transport records 0644 for TAR and preserves every payload byte', t =>
   const zipped = JSON.parse(execFileSync('python3', ['-c', script, archive, path.join(f.dir, 'artifact.zip')], { encoding: 'utf8' }));
   assert.equal(zipped.mode, 0o644);
   assert.equal(zipped.sha256, hash(fs.readFileSync(archive)));
+});
+test('every TAR member begins ./ while logical paths, content and metadata stay fixed', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ct-prefix-test-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const longPath = 'a'.repeat(110) + '/nested/file.txt';
+  const files = new Map([['index.html', Buffer.from('home')], ['assets/site.js', Buffer.from('site')], [longPath, Buffer.from('long')]]);
+  const archive = path.join(dir, 'prefix.tar'); fs.writeFileSync(archive, makeTar(files));
+  const script = "import tarfile,json,sys,hashlib; t=tarfile.open(sys.argv[1]); print(json.dumps([{'name':m.name,'type':m.type.decode(),'mode':m.mode,'uid':m.uid,'gid':m.gid,'mtime':m.mtime,'uname':m.uname,'gname':m.gname,'sha256':hashlib.sha256(t.extractfile(m).read()).hexdigest()} for m in t])); t.close()";
+  const rows = JSON.parse(execFileSync('python3', ['-c', script, archive], { encoding: 'utf8' }));
+  assert.equal(rows.length, files.size);
+  for (const row of rows) {
+    assert.ok(row.name.startsWith('./')); assert.equal(row.type, '0');
+    assert.equal(row.sha256, hash(files.get(row.name.slice(2))));
+    assert.equal(row.mode, 0o644); assert.equal(row.uid, 0); assert.equal(row.gid, 0);
+    assert.equal(row.mtime, 0); assert.equal(row.uname, ''); assert.equal(row.gname, '');
+  }
+});
+test('archive prefix never admits unsafe logical paths', () => {
+  for (const relative of ['../escape', '/absolute', './already-prefixed', 'a//b', 'a/../b', 'a\\b', 'a/%2e%2e/b']) {
+    assert.throws(() => makeTar(new Map([[relative, Buffer.from('bad')]])), /unsafe path/);
+  }
+});
+test('USTAR capacity with ./ is checked and overlong headers fail closed', () => {
+  const fitting = 'a'.repeat(153) + '/' + 'b'.repeat(100);
+  assert.doesNotThrow(() => makeTar(new Map([[fitting, Buffer.from('fits')]])));
+  const overflow = 'a'.repeat(155) + '/' + 'b'.repeat(99);
+  assert.throws(() => makeTar(new Map([[overflow, Buffer.from('too long')]])), /archive path cannot fit/);
 });

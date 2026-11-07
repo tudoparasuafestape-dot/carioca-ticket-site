@@ -245,11 +245,14 @@ export function makeTar(files) {
   for (const [relative, bytes] of [...files].sort(([a], [b]) => a.localeCompare(b))) {
     safePath(relative); check(Buffer.isBuffer(bytes), 'archive bytes required');
     const header = Buffer.alloc(512);
-    let name = relative, prefix = '';
+    // Keep logical paths/manifest unchanged; Pages expects rooted-relative TAR
+    // member names. Validate the original path before adding this archive prefix.
+    const archiveName = './' + relative;
+    let name = archiveName, prefix = '';
     if (Buffer.byteLength(name) > 100) {
-      const split = relative.lastIndexOf('/', 155);
+      const split = archiveName.lastIndexOf('/', 155);
       check(split > 0, 'archive path too long');
-      prefix = relative.slice(0, split); name = relative.slice(split + 1);
+      prefix = archiveName.slice(0, split); name = archiveName.slice(split + 1);
       check(Buffer.byteLength(prefix) <= 155 && Buffer.byteLength(name) <= 100, 'archive path cannot fit USTAR');
     }
     const write = (value, offset, length) => { check(Buffer.byteLength(value) <= length, 'archive field overflow'); header.write(value, offset, length, 'ascii'); };
