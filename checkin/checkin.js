@@ -708,7 +708,7 @@ function retomarLeitura() {
 function aoLerQrCode(texto) {
   if (processando || resultadoAberto) return;
   const codigo = extrairCodigo(texto);
-  if (!codigo || codigo === codigoUltimaLeitura) return;
+  if (!codigo) return;
   const agora = Date.now();
   if (codigo === ultimoCodigo &&
       agora - ultimoCodigoEm < CONFIG.TEMPO_BLOQUEIO_LEITURA_MS) return;
@@ -1315,7 +1315,7 @@ function criarDadoTela(
 
 function iniciarContagemResultado() {
   el('telaResultadoContagem').textContent =
-    'Retire o QR Code da câmera e toque em Continuar check-in. Para consultar o mesmo ingresso, use o código manual.';
+    'Retire o QR Code da câmera e toque em Continuar check-in. Para consultar o mesmo ingresso, aguarde 3 segundos e leia novamente ou use o código manual.';
 }
 
 function atualizarTextoContagem(
@@ -1357,7 +1357,10 @@ function fecharTelaResultado() {
 
   limparResultadoPequeno();
 
-  // Keep the last QR blocked even if it is still in front of the camera.
+  // Give the operator time to remove the QR without suppressing future reads.
+  // A later read must consult the server again to show an already-used ticket.
+  ultimoCodigo = codigoUltimaLeitura;
+  ultimoCodigoEm = Date.now();
   el('btnValidar').disabled = !credencialCheckin || !obterEventoIdContextoCheckin();
   if (!cameraAtiva) el('codigoManual').focus();
   retomarLeitura();
