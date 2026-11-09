@@ -212,7 +212,14 @@
       color:#6f6a61;
       font-size:10px;
     }
-  </style>
+  
+/* Exact Tony event only; keep full artwork and title outside image. */
+.event-cover.ct-tony-full-cover{height:auto!important;border-radius:0!important}
+.event-cover.ct-tony-full-cover img{width:100%;height:auto!important;max-height:none;object-fit:contain!important}
+.event-cover.ct-tony-full-cover:after{display:none!important}
+.event-cover.ct-tony-full-cover strong{position:static!important;display:block;padding:14px 16px;background:#090909}
+@media print{.event-cover.ct-tony-full-cover img{max-height:65mm!important;object-fit:contain!important}.event-cover.ct-tony-full-cover strong{font-size:14pt!important;background:#fff!important;color:#111!important}}
+</style>
 <link rel="stylesheet" href="/assets/checkout-language.css">
 <script src="/assets/public-i18n.js"></script>
 <script src="/assets/checkout-translations.js"></script>
@@ -304,7 +311,7 @@
         document.querySelector('.eyebrow').style.display='none';
         document.querySelector('h1').style.display='none';
         mensagem.style.display='none';
-        var cover=capa?'<div class="event-cover"><img src="'+esc(capa)+'" alt=""><strong>'+esc(e.nome||'Evento Carioca Ticket')+'</strong></div>':'<h2 class="event-title">'+esc(e.nome||'Evento Carioca Ticket')+'</h2>';
+        var cover=capa?'<div class="event-cover'+(String(e.id||'')==='EVT-29112026-ANIVERSARIO-TONY-BURGUER-6-ANOS-4F761E02'?' ct-tony-full-cover':'')+'"><img src="'+esc(capa)+'" alt=""><strong>'+esc(e.nome||'Evento Carioca Ticket')+'</strong></div>':'<h2 class="event-title">'+esc(e.nome||'Evento Carioca Ticket')+'</h2>';
         if(approvedCover)cover+='<div class="event-approved-cover" data-cover-source="approved-event-fallback"><img src="'+approvedCover+'" width="1672" height="941" alt=""></div>';
         view.classList.add('show');
         view.innerHTML=cover+
