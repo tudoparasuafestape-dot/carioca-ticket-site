@@ -1,0 +1,25 @@
+{
+  "schema": "CT_PUBLISHED_SHARE_INDEX_V1",
+  "revision": "3b562007b1d295c57ff7e7b117346892144e88ddf4c567693d8f5ce19bddba1d",
+  "generatedAt": "2026-11-07T10:37:33.916Z",
+  "fallbacks": [
+    {
+      "eventId": "EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD",
+      "detailUrl": "https://cariocaticket.com.br/evento/?evento=EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD",
+      "reason": "NO_VERIFIABLE_END"
+    },
+    {
+      "eventId": "EVT-23112026-ERA-BEAUTY-EAC4B673",
+      "detailUrl": "https://cariocaticket.com.br/evento/?evento=EVT-23112026-ERA-BEAUTY-EAC4B673",
+      "reason": "NO_VERIFIABLE_END"
+    }
+  ],
+  "entries": [
+    {
+      "eventId": "EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A",
+      "sharePath": "/compartilhar/EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A/",
+      "detailUrl": "https://cariocaticket.com.br/evento-v2/?evento=EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A",
+      "endsAt": "2026-11-08T09:00:00.000Z"
+    }
+  ]
+}
