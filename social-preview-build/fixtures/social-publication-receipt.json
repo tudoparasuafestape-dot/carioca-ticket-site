@@ -1,0 +1,23 @@
+{
+  "schema": "CT_TRUSTED_BUILD_LAB_V1",
+  "mode": "TRUSTED_HTTP_CURRENT397_NOT_SIGNED242",
+  "status": "LOCAL_NOT_PUBLISHED",
+  "revision": "3b562007b1d295c57ff7e7b117346892144e88ddf4c567693d8f5ce19bddba1d",
+  "sourceServerNow": "2026-11-07T10:37:33.916Z",
+  "sourceValidUntil": "2026-11-07T10:42:33.916Z",
+  "excluded": [
+    {
+      "eventId": "EVT-11102026-RODA-DE-SAMBA-ESTILO-CARIOCA-9397A2FD",
+      "reason": "NO_VERIFIABLE_END"
+    },
+    {
+      "eventId": "EVT-23112026-ERA-BEAUTY-EAC4B673",
+      "reason": "NO_VERIFIABLE_END"
+    }
+  ],
+  "hashes": {
+    "compartilhar/EVT-07112026-TBT-DO-ASTRO-ANIVERSARIO-DE-HERMINHO-F103E26A/index.html": "6f93fcf2f0add73e2d1125b1984a4a2e9fbd442f24c7eff1592590fbed224098",
+    "assets/social-previews/e1e81875f7b3d9c69ef5622d01675d6ae4c1937f84609473ea72c905f556643f.jpg": "e1e81875f7b3d9c69ef5622d01675d6ae4c1937f84609473ea72c905f556643f",
+    "assets/social-event-pages.json": "127a0292c0f962ef17b49416c44592e11aebbbf9241e777ebed4efd15fbb1f38"
+  }
+}
