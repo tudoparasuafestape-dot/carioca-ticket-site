@@ -1,0 +1,20 @@
+name: Tony checkout publication guard (offline review)
+on:
+  pull_request:
+    paths:
+      - 'release/tony-checkout/**'
+      - '.github/workflows/ct-tony-checkout-only-publication.yml'
+      - '.github/workflows/ct-tony-checkout-route-review.yml'
+permissions:
+  contents: read
+jobs:
+  offline-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Synthetic negative controls only, no credentials or production
+        run: python3 -m unittest discover -s release/tony-checkout -p 'test_*.py' -v

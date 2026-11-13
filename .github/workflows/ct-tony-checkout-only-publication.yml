@@ -1,0 +1,98 @@
+# REVIEW DRAFT: installation/merge and each production action require owner approval.
+name: Tony checkout-only pinned Pages publication
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        options: [publish, rollback]
+        required: true
+      confirmation:
+        description: PUBLISH_TONY_CHECKOUT_ONLY or ROLLBACK_TONY_CHECKOUT_ONLY, after owner approval
+        type: string
+        required: true
+      expected_guard_sha:
+        description: Exact reviewed main SHA containing this workflow and guard
+        type: string
+        required: true
+      expected_current_deployment:
+        description: 7656353597 for publish; exact successful checkout deployment ID for approved rollback
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+  deployments: read
+  pages: write
+  id-token: write
+concurrency:
+  group: ct-pages-production
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main' && github.repository == 'tudoparasuafestape-dot/carioca-ticket-site'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CT_MODE: ${{ inputs.mode }}
+      CT_CONFIRMATION: ${{ inputs.confirmation }}
+      CT_EXPECTED_GUARD_SHA: ${{ inputs.expected_guard_sha }}
+      CT_EXPECTED_DEPLOYMENT: ${{ inputs.expected_current_deployment }}
+      CT_CANDIDATE_SHA: b4e817610dc90af77b631db44404cb90d166ba70
+    steps:
+      - name: Check immutable execution identity before checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$GITHUB_SHA" = "$CT_EXPECTED_GUARD_SHA"
+          [[ "$CT_EXPECTED_GUARD_SHA" =~ ^[a-f0-9]{40}$ ]]
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_guard_sha }}
+          path: guard
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: b4e817610dc90af77b631db44404cb90d166ba70
+          path: site
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Offline negative controls
+        run: python3 -m unittest discover -s guard/release/tony-checkout -p 'test_*.py'
+      - name: Verify GitHub baseline and prepare exact one-file artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 guard/release/tony-checkout/release_guard.py prepare "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-checkout"
+      - name: Preserve rollback evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkout-rollback-and-seal
+          path: |
+            ${{ runner.temp }}/ct-checkout/rollback.tar
+            ${{ runner.temp }}/ct-checkout/seal.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Upload sealed Pages TAR without rebuilding
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/ct-checkout/artifact.tar
+          retention-days: 30
+          if-no-files-found: error
+          overwrite: false
+      - name: Recheck active deployment and immutable artifact immediately before publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 guard/release/tony-checkout/release_guard.py recheck "$GITHUB_WORKSPACE/site" "$RUNNER_TEMP/ct-checkout"
+      - name: Deploy only the exact verified archive
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with:
+          artifact_name: github-pages
