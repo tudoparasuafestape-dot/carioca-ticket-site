@@ -734,9 +734,12 @@
               recoveryOrFailure();return;
             }
             state.catalog=res;
-            // This canary requires an authoritative quote even if catalog metadata is missing.
+            // These exact event scopes require an authoritative quote even if catalog metadata is missing.
             // The browser never supplies a fee rate or decides the amount to charge.
-            state.politicaComercialAtiva=state.eventId==='EVT-23112026-ERA-BEAUTY-EAC4B673';
+            state.politicaComercialAtiva=[
+              'EVT-23112026-ERA-BEAUTY-EAC4B673',
+              'EVT-29112026-ANIVERSARIO-TONY-BURGUER-6-ANOS-4F761E02'
+            ].indexOf(state.eventId)>=0;
             var firstRender=!state.temporalInitialRendered;
             try{
               if(availabilityOnly&&!firstRender){
