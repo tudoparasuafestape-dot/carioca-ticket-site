@@ -36,6 +36,10 @@ class Api:
   with response as r:
    require(r.status==200,'artifact storage status');data=r.read(MAX+1);require(len(data)<=MAX,'artifact oversized');return data
 
+def zip_read(z,name,limit=MAX):
+ require(z.getinfo(name).file_size<=limit,'expanded artifact oversized')
+ b=z.read(name);require(len(b)<=limit,'expanded artifact oversized');return b
+
 def identity(env):
  require(env.get('GITHUB_REPOSITORY')==REPO,'repository mismatch')
  require(env.get('GITHUB_REF')=='refs/heads/main' and env.get('GITHUB_EVENT_NAME')=='workflow_dispatch','manual main only')
@@ -73,7 +77,7 @@ def current_state(api,env):
   require(run.get('path')==WORKFLOW and bool(SHA.fullmatch(run.get('head_sha',''))) and d.get('sha')==run.get('head_sha'),'rollback may only reverse this reviewed workflow')
   arts=api.get('/actions/runs/'+str(runid)+'/artifacts?name=github-pages&per_page=100').get('artifacts',[])
   require(len(arts)==1 and not arts[0].get('expired'),'rollback current artifact unavailable')
-  z=zipfile.ZipFile(io.BytesIO(api.archive(arts[0]['id'])));require(z.namelist()==['artifact.tar'],'current artifact inventory');require(sha(z.read('artifact.tar'))==CANDIDATE_TAR,'current publication is not exact candidate')
+  z=zipfile.ZipFile(io.BytesIO(api.archive(arts[0]['id'])));require(z.namelist()==['artifact.tar'],'current artifact inventory');require(sha(zip_read(z,'artifact.tar'))==CANDIDATE_TAR,'current publication is not exact candidate')
  require(api.get('/git/ref/heads/main').get('object',{}).get('sha')==guard,'main changed during check')
  return {'deploymentId':d['id'],'runId':runid,'guardSha':guard,'mode':mode}
 
@@ -102,8 +106,8 @@ def run(command,repo,out,env=os.environ,api=None):
    require(len(arts)==1 and not arts[0].get('expired'),'retained rollback artifact unavailable')
    z=zipfile.ZipFile(io.BytesIO(api.archive(arts[0]['id'])))
    require(sorted(z.namelist())==['rollback.tar','seal.json'],'retained rollback inventory')
-   original=z.read('rollback.tar');require(sha(original)==TAR_SHA,'retained rollback bytes mismatch')
-   previous=json.loads(z.read('seal.json'));require(previous.get('artifactSha256')==CANDIDATE_TAR and previous.get('state',{}).get('mode')=='publish','retained seal mismatch')
+   original=zip_read(z,'rollback.tar');require(sha(original)==TAR_SHA,'retained rollback bytes mismatch')
+   previous=json.loads(zip_read(z,'seal.json',65536));require(previous.get('artifactSha256')==CANDIDATE_TAR and previous.get('state',{}).get('mode')=='publish','retained seal mismatch')
    selected=original;seal={'rollbackTarSha256':TAR_SHA,'reversesRunId':initial['runId']}
   require(current_state(api,env)==initial,'publication state changed while preparing')
   out.mkdir(mode=0o700);write_new(out/'artifact.tar',selected);write_new(out/'rollback.tar',original)
