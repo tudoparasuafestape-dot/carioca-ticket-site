@@ -19,7 +19,7 @@ concurrency:
 jobs:
   contratos:
     name: Contratos de regressao
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
   publico-producao:
     name: Jornada publica com fixtures ${{ matrix.viewport }}
     needs: contratos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -68,7 +68,7 @@ jobs:
   operacional-producao:
     name: Entradas operacionais com fixtures ${{ matrix.viewport }}
     needs: contratos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -96,7 +96,7 @@ jobs:
   facadas-branch:
     name: Facadas first-party branch ${{ matrix.viewport }}
     needs: contratos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -155,7 +155,7 @@ jobs:
   canario-real:
     name: Canarios funcionais com fixtures ${{ matrix.viewport }}
     needs: contratos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -183,7 +183,7 @@ jobs:
   seguranca-rede:
     name: Isolamento de rede e contratos PWA
     needs: contratos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -216,7 +216,7 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     name: Publicado - somente arquivos estaticos sem RPC
     needs: [contratos, publico-producao, operacional-producao, facadas-branch, canario-real, seguranca-rede]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -232,3 +232,4 @@ jobs:
           name: publicado-estatico
           path: test-results/published-static.json
           retention-days: 14
+
