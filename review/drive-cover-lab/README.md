@@ -40,3 +40,11 @@ Destino já existente confirmado em16/11/2026: Railway CT V2 STAGING / serviço 
 
 ### Correções após revisão independente
 I/O de Drive fica fora do lock global: pré-checagens de pasta e planilha owner-only, reserva sob lock, liberação, upload/readback de metadata/checksumSHA256, reacquire+reauth+CAS exato da reserva antes da confirmação. Resultado incerto continua reservado. Registro também exige MIME Google Sheets e ID exato. Limites conservadores do protótipo: 50MB total, 10MB por produtor, 10 pedidos por produtor por hora e 100 registros por evento, incluindo reservas incertas. Não são política comercial final, não ativar sem revisão. ACL pode mudar externamente após leitura; usar recursos dedicados com único proprietário e nenhum outro escritor. SDK/oauth/escopos/capacidade de Sheets e equivalência400 continuam não exercitados remotamente.
+
+
+## Decoder, reconciliação e promoção (novo bloco de revisão)
+Decoder Python/Pillow13 real em processo limitado, 11 testes e full decode da capa Fábrica aprovada passaram localmente. Requer ambiente POSIXPython, não roda dentro AppsScript. CI instala wheel oficial PyPI com SHA256fixado; testes não usam rede. Não sanitiza ou remove metadados, não promete ausência de malware.
+
+Reconciliação implementada no adapter: busca limitada por appProperties+parent, exige exatamente um resultado completo e hash/mime/tamanho/ACL, CAS antes de QUARANTINED; zero/múltiplos/índice incompleto nunca dispara novo upload ou apaga reserva. Promoção aceita só eventId/assetId do cliente; exige provedor servidor de aprovação editorial vinculado a hash/asset e validador/probe servidor, full decode, bytes/hash/mime, prova pública fresca e OGreal. URL limitada ao fileIdDrive original. Revalida aprovação sob lock e faz CAS. Não muda permissões nem seleciona capa do evento.
+
+Composição do decoder com Drive, provedor de aprovação e probeOGreal ainda não está instalada. Sem esses providers a promoção falha fechada PROMOTION_NOT_CONFIGURED. Não confundir testes com execução remota ou código AppsScript já integrado. READY é estado do registro piloto, não alteração do evento. A equivalência dos quatro módulos de autorização com fonte400 permanece bloqueada até diagnóstico hash-only revisado e autorizado; execução anterior439 não publicou esses hashes.

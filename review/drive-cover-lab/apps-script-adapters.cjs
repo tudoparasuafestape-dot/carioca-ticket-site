@@ -2,7 +2,7 @@
 // Review-only Apps Script V8 adapter. No top-level effects or exported RPC.
 // Pass real Drive (advanced v3), SpreadsheetApp, LockService, Utilities from
 // server composition. Config/auth are server-owned, never request fields.
-function createAppsScriptIntake({Drive,SpreadsheetApp,LockService,Utilities,authorize,config}) {
+function createAppsScriptIntake({Drive,SpreadsheetApp,LockService,Utilities,authorize,config,validateAndProbe,authorizePromotion}) {
   if(!config || !/^[\w-]{10,200}$/.test(config.folderId)||!/^[\w-]{10,200}$/.test(config.spreadsheetId)||config.sheetName!=='CT_COVER_INTAKE_V1')throw Error('CONFIG_REQUIRED');
   const fields='id,mimeType,size,sha256Checksum,parents,trashed,permissions(type,role),appProperties';
   const header=['key','record'];
@@ -80,8 +80,65 @@ function createAppsScriptIntake({Drive,SpreadsheetApp,LockService,Utilities,auth
       return {assetId:r.assetId,state:r.state};
     }finally{lock.releaseLock();}
   }
-  // Intentionally no READY/promote/share/save-event. Intake records cannot be
-  // used as public registry assets until independent validation/review pipeline.
-  return {upload};
+  async function lifecycleContext(token,input){
+    if(!input||Object.keys(input).some(k=>!['eventId','assetId'].includes(k))||!/^EVT-[A-Z0-9-]{1,216}$/.test(input.eventId)||!/^drive-[a-f0-9]{64}$/.test(input.assetId))throw Error('INVALID_REQUEST');
+    const c=await authorize(token,input.eventId);
+    if(!c||c.authorized!==true||c.eventId!==input.eventId||!c.userId||!c.producerId)throw Error('ACCESS_DENIED');
+    const rf=Drive.Files.get(config.spreadsheetId,{fields});privateFile(rf,false);
+    if(rf.id!==config.spreadsheetId||rf.mimeType!=='application/vnd.google-apps.spreadsheet')throw Error('REGISTRY_SCOPE');
+    return c;
+  }
+  function snapshot(input,c){
+    const s=sheet(),key=input.assetId.slice(6),found=rows(s).map((r,i)=>({raw:r[1],key:r[0],row:i+2})).filter(x=>x.key===key);
+    if(found.length!==1)throw Error('REGISTRY_NOT_UNIQUE');
+    const x=found[0],r=JSON.parse(x.raw);
+    if(r.assetId!==input.assetId||r.eventId!==c.eventId||r.producerId!==c.producerId||r.folderId!==config.folderId)throw Error('ACCESS_DENIED');
+    return {...x,record:r};
+  }
+  async function transition(token,input,c,before,next,guard){
+    const lock=LockService.getScriptLock();lock.waitLock(10000);
+    try{
+      const fresh=await authorize(token,input.eventId);
+      if(!fresh||fresh.authorized!==true||fresh.userId!==c.userId||fresh.producerId!==c.producerId||fresh.eventId!==c.eventId)throw Error('ACCESS_DENIED');
+      if(guard)await guard();
+      const current=snapshot(input,c);
+      if(current.raw!==before.raw||current.row!==before.row)throw Error('REGISTRY_CONFLICT');
+      write(sheet(),current.row,current.key,next);
+      return {assetId:next.assetId,state:next.state};
+    }finally{lock.releaseLock();}
+  }
+  async function reconcile(token,input){
+    const c=await lifecycleContext(token,input),before=snapshot(input,c),r=before.record;
+    if(r.state==='QUARANTINED')return {assetId:r.assetId,state:r.state};
+    if(r.state!=='RESERVED')throw Error('INVALID_TRANSITION');
+    // Search only. Zero matches never permits retry/create; indexing can lag.
+    const result=Drive.Files.list({q:"trashed = false and '"+config.folderId+"' in parents and appProperties has { key='ctCoverIntake' and value='"+before.key+"' }",pageSize:2,fields:'nextPageToken,incompleteSearch,files('+fields+')'});
+    if(!result||result.incompleteSearch||result.nextPageToken||!Array.isArray(result.files)||result.files.length!==1)throw Error('UPLOAD_UNCERTAIN_RECONCILE_REQUIRED');
+    const f=result.files[0];privateFile(f,false);
+    if(!f.id||f.sha256Checksum!==r.sha256||f.mimeType!==r.mime||Number(f.size)!==r.bytes||!Array.isArray(f.parents)||!f.parents.includes(config.folderId)||!f.appProperties||f.appProperties.ctCoverIntake!==before.key)throw Error('UPLOAD_READBACK');
+    return transition(token,input,c,before,{...r,fileId:f.id,state:'QUARANTINED',reconciledAt:Date.now(),reconciledBy:c.userId});
+  }
+  async function promote(token,input){
+    const c=await lifecycleContext(token,input),before=snapshot(input,c),r=before.record;
+    if(r.state!=='QUARANTINED')throw Error('INVALID_TRANSITION');
+    if(typeof authorizePromotion!=='function'||typeof validateAndProbe!=='function')throw Error('PROMOTION_NOT_CONFIGURED');
+    const approval=await authorizePromotion(token,{eventId:r.eventId,producerId:r.producerId,assetId:r.assetId,sha256:r.sha256});
+    if(!approval||approval.authorized!==true||approval.assetId!==r.assetId||approval.sha256!==r.sha256||!approval.reviewerId)throw Error('EDITORIAL_APPROVAL_REQUIRED');
+    // Trusted server adapter must fetch original bytes, decode fully and probe
+    // public delivery. No file/proof/url fields accepted from browser input.
+    const proof=await validateAndProbe({...r});
+    const now=Date.now();
+    if(!proof||proof.state!=='PUBLIC_BYTES_VERIFIED'||proof.fileId!==r.fileId||proof.sha256!==r.sha256||proof.bytes!==r.bytes||proof.mime!==r.mime||proof.validation!=='FULL_DECODE_PASSED'||proof.ogVerified!==true||!Number.isFinite(proof.checkedAt)||proof.checkedAt>now||now-proof.checkedAt>300000)throw Error('PUBLIC_VALIDATION_REQUIRED');
+    // Bound this pilot to the original documented Drive delivery, no arbitrary URLs.
+    const match=typeof proof.url==='string'&&proof.url.match(/^https:\/\/drive\.usercontent\.google\.com\/(?:download|uc)\?id=([A-Za-z0-9_-]+)&export=download$/);
+    if(!match||match[1]!==r.fileId)throw Error('DELIVERY_SCOPE');
+    // READY does not mean saved as event cover. Existing CAS/audit writer remains separate.
+    return transition(token,input,c,before,{...r,state:'READY',url:proof.url,validation:proof.validation,checkedAt:proof.checkedAt,reviewerId:approval.reviewerId,promotedBy:c.userId,promotedAt:now,deliveryGuarantee:'OBSERVED_NOT_PERMANENT'},async()=>{
+      const fresh=await authorizePromotion(token,{eventId:r.eventId,producerId:r.producerId,assetId:r.assetId,sha256:r.sha256});
+      if(!fresh||fresh.authorized!==true||fresh.assetId!==r.assetId||fresh.sha256!==r.sha256||fresh.reviewerId!==approval.reviewerId||Date.now()-proof.checkedAt>300000)throw Error('PROMOTION_CONFLICT');
+    });
+  }
+  // No sharing, no event mutation and no automatic retry/deletion.
+  return {upload,reconcile,promote};
 }
 module.exports={createAppsScriptIntake};

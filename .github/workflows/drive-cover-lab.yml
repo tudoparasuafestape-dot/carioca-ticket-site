@@ -15,4 +15,12 @@ jobs:
         with:
           persist-credentials: false
       - run: node --test review/drive-cover-lab/*.test.cjs
-# No secrets, network probes, artifacts, dispatch, deploy or writes.
+      - name: Pinned decoder dependency from official PyPI
+        run: |
+          python3 -c "import sys; assert sys.version_info[:2] == (3, 12)"
+          python3 -m venv /tmp/ct-decoder-venv
+          /tmp/ct-decoder-venv/bin/pip install --disable-pip-version-check --only-binary=:all: --require-hashes -r review/drive-cover-lab/decoder-requirements.txt
+      - name: Offline decoder regression
+        run: cd review/drive-cover-lab && /tmp/ct-decoder-venv/bin/python -m unittest decoder_test -v
+# Dependency install reads official PyPI. Tests do not access network.
+# No secrets, live probes, artifacts, dispatch, deploy or service writes.
