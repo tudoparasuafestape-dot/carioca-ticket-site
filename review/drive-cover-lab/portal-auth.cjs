@@ -1,5 +1,6 @@
 'use strict';
-// Compatibility adapter based on inspected v397 contracts, NOT live-v400 proof.
+// Inspected v397 selected contracts match ACTIVE400 hashes (PR440 run43853575373).
+// Source equality is NOT proof of transitive dependencies or live integration behavior.
 // Composition must pass the existing server functions, never client callbacks.
 function createPortalAuthorization({ctCentralOperacionalAutorizarModuloPROD:central,ctPortalProdutorVerificarAcessoFastP1PROD:fast,ctPerfisAcessoPodeAcessarModulo:moduleAllowed,obterEventoPorId:getEvent}){
  return async function authorize(token,eventId){

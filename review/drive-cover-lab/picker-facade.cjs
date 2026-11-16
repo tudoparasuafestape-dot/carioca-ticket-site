@@ -24,23 +24,24 @@ function createPickerFacade({core,readVisual,readEvent,revalidateAsset,commitSel
    // ACL and approval/revocation; saved checkedAt or client proof is insufficient.
    const proof=await revalidateAsset(selection);
    function checkProof(){
-    if(!proof||proof.valid!==true||proof.assetId!==selection.asset.assetId||proof.sha256!==selection.asset.sha256||proof.url!==selection.asset.url||proof.eventId!==selection.eventId||proof.producerId!==selection.producerId||proof.approvalCurrent!==true||proof.aclCurrent!==true||!Number.isFinite(proof.checkedAt)||proof.checkedAt>Date.now()||Date.now()-proof.checkedAt>30000)throw Error('SAVE_REVALIDATION_REQUIRED');
+    if(!proof||proof.valid!==true||!['DRIVE_READY','APPROVED_STATIC_LEGACY'].includes(proof.source)||proof.assetId!==selection.asset.assetId||proof.sha256!==selection.asset.sha256||proof.url!==selection.asset.url||proof.eventId!==selection.eventId||proof.producerId!==selection.producerId||proof.approvalCurrent!==true||proof.aclCurrent!==true||!Number.isFinite(proof.checkedAt)||proof.checkedAt>Date.now()||Date.now()-proof.checkedAt>30000)throw Error('SAVE_REVALIDATION_REQUIRED');
    }
    checkProof();
    // Real writer below reauthorizes, checks proof freshness and CAS under lock.
-   return await commitSelection(token,selection,checkProof);
+   return await commitSelection(token,selection,checkProof,proof);
   })
  };
 }
-function createVisualWriter({authorize,PropertiesService,LockService,Utilities,prefix,readVisual,invalidateCache}){
+function createVisualWriter({authorize,PropertiesService,LockService,Utilities,prefix,readVisual,invalidateCache,assertRegistryVersion}){
  if(typeof prefix!=='string'||!prefix)throw Error('PREFIX_REQUIRED');
  function hash(s){return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,s).map(x=>(x&255).toString(16).padStart(2,'0')).join('');}
- return async function commit(token,s,checkProof){
+ return async function commit(token,s,checkProof,proof){
   const lock=LockService.getScriptLock();lock.waitLock(10000);
   try{
    const c=await authorize(token,s.eventId);
    if(!c||c.authorized!==true||c.userId!==s.userId||c.producerId!==s.producerId||c.eventId!==s.eventId)throw Error('ACCESS_DENIED');
    checkProof();
+   if(proof.source==='DRIVE_READY'&&(typeof assertRegistryVersion!=='function'||await assertRegistryVersion(s,proof)!==true))throw Error('CONFLICT');
    const before=await readVisual(s.eventId);
    if(!before||before.key!==prefix+s.eventId||before.version!==s.expectedVersion||!before.visual||Array.isArray(before.visual))throw Error('CONFLICT');
    if(before.visual.capaUrl===s.asset.url&&before.visual.posterUrl===s.asset.url)return {ok:true,eventId:s.eventId,version:before.version,assetId:s.asset.assetId,unchanged:true};
@@ -52,6 +53,7 @@ function createVisualWriter({authorize,PropertiesService,LockService,Utilities,p
    if(props.getProperty(auditKey)!==intent)throw Error('AUDIT_UNCONFIRMED');
    if((await readVisual(s.eventId)).version!==before.version)throw Error('CONFLICT');
    checkProof();
+   if(proof.source==='DRIVE_READY'&&await assertRegistryVersion(s,proof)!==true)throw Error('CONFLICT');
    try{props.setProperty(before.key,raw);}catch{if(props.getProperty(before.key)!==raw)throw Error('WRITE_UNCERTAIN_READ_REQUIRED');}
    const after=await readVisual(s.eventId);
    if(after.raw!==raw)throw Error('WRITE_UNCERTAIN_READ_REQUIRED');
