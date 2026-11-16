@@ -1,16 +1,22 @@
 'use strict';
 // Server composition only; not exported as an Apps Script RPC.
 function createPickerFacade({core,readVisual,readEvent,revalidateAsset,commitSelection}){
- function current(v){if(!v||!/^[a-f0-9]{64}$/.test(v.version))throw Error('INVALID_VISUAL');return v;}
+ function current(v){if(!v||!v.visual||Array.isArray(v.visual)||!/^[a-f0-9]{64}$/.test(v.version))throw Error('INVALID_VISUAL');return v;}
+ function boundary(fn){return async function(...args){try{return await fn(...args);}catch(error){
+  const code=String(error.message||'');
+  const map={ACCESS_DENIED:'ACESSO_NEGADO',CONFLICT:'CONFLITO',INVALID_SELECTION:'ARGUMENTOS_INVALIDOS',INVALID_REQUEST:'ARGUMENTOS_INVALIDOS',SAVE_REVALIDATION_REQUIRED:'IMAGEM_DIVERGENTE',AUDIT_UNCONFIRMED:'AUDITORIA_NAO_CONFIRMADA',WRITE_UNCERTAIN_READ_REQUIRED:'GRAVACAO_INCERTA_CONSULTE',VISUAL_LIMIT:'LIMITE_VISUAL'};
+  if(code.startsWith('CT_CAPA_'))throw error;
+  throw Error('CT_CAPA_'+(map[code]||'FALHA_SEGURA'));
+ }};}
  return {
-  async list(token,eventId){
+  list:boundary(async function(token,eventId){
    const result=await core.list(token,eventId); // Authorization precedes reads.
    const v=current(await readVisual(eventId)),event=await readEvent(eventId);
    if(!event||event.id!==eventId)throw Error('INVALID_EVENT');
-   const selected=result.assets.filter(a=>a.url===v.capaUrl&&a.url===v.posterUrl);
+   const selected=result.assets.filter(a=>a.url===v.visual.capaUrl&&a.url===v.visual.posterUrl);
    return {ok:true,eventId,eventName:String(event.nome||''),version:v.version,currentAssetId:selected.length===1?selected[0].assetId:'',assets:result.assets};
-  },
-  async save(token,input){
+  }),
+  save:boundary(async function(token,input){
    const selection=await core.resolveSelection(token,input);
    if(current(await readVisual(selection.eventId)).version!==selection.expectedVersion)throw Error('CONFLICT');
    if(typeof revalidateAsset!=='function'||typeof commitSelection!=='function')throw Error('SAVE_NOT_CONFIGURED');
@@ -22,8 +28,8 @@ function createPickerFacade({core,readVisual,readEvent,revalidateAsset,commitSel
    }
    checkProof();
    // Real writer below reauthorizes, checks proof freshness and CAS under lock.
-   return commitSelection(token,selection,checkProof);
-  }
+   return await commitSelection(token,selection,checkProof);
+  })
  };
 }
 function createVisualWriter({authorize,PropertiesService,LockService,Utilities,prefix,readVisual,invalidateCache}){
@@ -41,7 +47,7 @@ function createVisualWriter({authorize,PropertiesService,LockService,Utilities,p
    const visual={...before.visual,capaUrl:s.asset.url,posterUrl:s.asset.url},raw=JSON.stringify(visual);
    if(Utilities.newBlob(raw).getBytes().length>9000)throw Error('VISUAL_LIMIT');
    const props=PropertiesService.getScriptProperties(),auditKey='CT_CAPA_AUDIT_'+Utilities.getUuid();
-   const audit={eventId:s.eventId,producerId:s.producerId,usuarioId:s.userId,motivo:s.motivo,assetId:s.asset.assetId,assetSha256:s.asset.sha256,beforeVersion:before.version,afterVersion:hash('PRESENTE\n'+raw),createdAt:new Date().toISOString(),state:'PREPARED'};
+   const audit={eventId:s.eventId,producerId:s.producerId,usuarioId:s.userId,motivo:s.motivo,assetId:s.asset.assetId,assetSha256:s.asset.sha256,beforeVersion:before.version,beforeCapaUrl:before.visual.capaUrl||'',beforePosterUrl:before.visual.posterUrl||'',afterVersion:hash('PRESENTE\n'+raw),createdAt:new Date().toISOString(),state:'PREPARED'};
    const intent=JSON.stringify(audit);props.setProperty(auditKey,intent);
    if(props.getProperty(auditKey)!==intent)throw Error('AUDIT_UNCONFIRMED');
    if((await readVisual(s.eventId)).version!==before.version)throw Error('CONFLICT');
