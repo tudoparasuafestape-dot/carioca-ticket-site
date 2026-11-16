@@ -20,7 +20,7 @@ CLI isolada, leitura local sem alteração:
 python decoder.py /caminho/arquivo.png image/png
 ```
 
-CI proposta, ainda não adicionada ao workflow pelo autor destes arquivos:
+CI foi adicionada ao workflow da PR: venv CPython3.12 no Ubuntu24.04, wheel oficial PyPI com hash fixado. Comandos locais ilustrativos:
 ```
 python3 -m pip install --disable-pip-version-check -r review/drive-cover-lab/decoder-requirements.txt
 (cd review/drive-cover-lab && python3 -m unittest decoder_test -v)

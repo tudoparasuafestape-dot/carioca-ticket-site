@@ -62,7 +62,7 @@ function createAppsScriptIntake({Drive,SpreadsheetApp,LockService,Utilities,auth
 
       row=s.getLastRow()+1;
       if(row>10001)throw Error('REGISTRY_CAPACITY');
-      r={assetId:'drive-'+key,eventId:c.eventId,producerId:c.producerId,userId:c.userId,sha256:hash,mime:input.mime,bytes:bytes.length,createdAt:now,state:'RESERVED',folderId:config.folderId};
+      r={assetId:'drive-'+key,name:'Capa enviada '+key.slice(0,8),eventId:c.eventId,producerId:c.producerId,userId:c.userId,sha256:hash,mime:input.mime,bytes:bytes.length,createdAt:now,state:'RESERVED',folderId:config.folderId};
       reserved=JSON.stringify(r);write(s,row,key,r); // If create times out, leave RESERVED; NEVER blindly retry.
     }finally{lock.releaseLock();}
       const created=Drive.Files.create({name:r.assetId+(input.mime==='image/png'?'.png':'.jpg'),mimeType:input.mime,parents:[config.folderId],appProperties:{ctCoverIntake:key}},Utilities.newBlob(bytes,input.mime),{fields});
@@ -123,7 +123,7 @@ function createAppsScriptIntake({Drive,SpreadsheetApp,LockService,Utilities,auth
     if(r.state!=='QUARANTINED')throw Error('INVALID_TRANSITION');
     if(typeof authorizePromotion!=='function'||typeof validateAndProbe!=='function')throw Error('PROMOTION_NOT_CONFIGURED');
     const approval=await authorizePromotion(token,{eventId:r.eventId,producerId:r.producerId,assetId:r.assetId,sha256:r.sha256});
-    if(!approval||approval.authorized!==true||approval.assetId!==r.assetId||approval.sha256!==r.sha256||!approval.reviewerId)throw Error('EDITORIAL_APPROVAL_REQUIRED');
+    if(!approval||approval.authorized!==true||approval.assetId!==r.assetId||approval.sha256!==r.sha256||!approval.reviewerId||approval.metadataPolicy!=='ORIGINAL_METADATA_REVIEWED')throw Error('EDITORIAL_APPROVAL_REQUIRED');
     // Trusted server adapter must fetch original bytes, decode fully and probe
     // public delivery. No file/proof/url fields accepted from browser input.
     const proof=await validateAndProbe({...r});
@@ -133,9 +133,9 @@ function createAppsScriptIntake({Drive,SpreadsheetApp,LockService,Utilities,auth
     const match=typeof proof.url==='string'&&proof.url.match(/^https:\/\/drive\.usercontent\.google\.com\/(?:download|uc)\?id=([A-Za-z0-9_-]+)&export=download$/);
     if(!match||match[1]!==r.fileId)throw Error('DELIVERY_SCOPE');
     // READY does not mean saved as event cover. Existing CAS/audit writer remains separate.
-    return transition(token,input,c,before,{...r,state:'READY',url:proof.url,validation:proof.validation,checkedAt:proof.checkedAt,reviewerId:approval.reviewerId,promotedBy:c.userId,promotedAt:now,deliveryGuarantee:'OBSERVED_NOT_PERMANENT'},async()=>{
+    return transition(token,input,c,before,{...r,state:'READY',url:proof.url,validation:proof.validation,checkedAt:proof.checkedAt,reviewerId:approval.reviewerId,metadataPolicy:approval.metadataPolicy,promotedBy:c.userId,promotedAt:now,deliveryGuarantee:'OBSERVED_NOT_PERMANENT'},async()=>{
       const fresh=await authorizePromotion(token,{eventId:r.eventId,producerId:r.producerId,assetId:r.assetId,sha256:r.sha256});
-      if(!fresh||fresh.authorized!==true||fresh.assetId!==r.assetId||fresh.sha256!==r.sha256||fresh.reviewerId!==approval.reviewerId||Date.now()-proof.checkedAt>300000)throw Error('PROMOTION_CONFLICT');
+      if(!fresh||fresh.authorized!==true||fresh.assetId!==r.assetId||fresh.sha256!==r.sha256||fresh.reviewerId!==approval.reviewerId||fresh.metadataPolicy!=='ORIGINAL_METADATA_REVIEWED'||Date.now()-proof.checkedAt>300000)throw Error('PROMOTION_CONFLICT');
     });
   }
   // No sharing, no event mutation and no automatic retry/deletion.

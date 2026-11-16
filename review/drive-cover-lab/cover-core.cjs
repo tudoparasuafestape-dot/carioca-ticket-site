@@ -12,7 +12,7 @@ function createCoverCore({authorize,registry,legacy=[]}) {
   }
   function owned(a,c){return a&&a.eventId===c.eventId&&a.producerId===c.producerId;}
   function safe(a){
-    if(!a||typeof a.assetId!=='string'||!/^[a-z0-9-]{1,160}$/.test(a.assetId)||!['image/png','image/jpeg'].includes(a.mime)||!Number.isSafeInteger(a.bytes)||a.bytes<1||a.bytes>10000000||!/^[a-f0-9]{64}$/.test(a.sha256))throw Error('INVALID_REGISTRY_RECORD');
+    if(!a||typeof a.name!=='string'||!a.name.trim()||a.name.length>200||typeof a.assetId!=='string'||!/^[a-z0-9-]{1,160}$/.test(a.assetId)||!['image/png','image/jpeg'].includes(a.mime)||!Number.isSafeInteger(a.bytes)||a.bytes<1||a.bytes>10000000||!/^[a-f0-9]{64}$/.test(a.sha256))throw Error('INVALID_REGISTRY_RECORD');
     // URL stays server-owned; adapter validates exact configured origin/key.
     if(typeof a.url!=='string'||!a.url.startsWith('https://'))throw Error('INVALID_REGISTRY_RECORD');
     return {assetId:a.assetId,name:a.name,url:a.url,sha256:a.sha256};

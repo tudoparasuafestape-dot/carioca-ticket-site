@@ -14,3 +14,4 @@ test('client cannot choose URL or producer',async()=>{for(const k of ['url','pro
 test('resolution preserves expected version without performing save',async()=>{const x=await core([asset]).api.resolveSelection('owner',selection);assert.equal(x.expectedVersion,selection.expectedVersion);assert.equal(x.producerId,'PROD-A');assert.equal(x.asset.url,asset.url);});
 
 test('actual legacy shape without state or mime remains readable',async()=>{const old={...asset,url:'https://example.invalid/old.jpg'};delete old.state;delete old.mime;assert.equal((await core([], [old]).api.list('owner','EVT-A')).assets.length,1);});
+test('picker cannot receive empty asset names',async()=>{await assert.rejects(core([{...asset,name:''}]).api.list('owner','EVT-A'),/INVALID_REGISTRY/);});
