@@ -1,4 +1,5 @@
 'use strict';
+const {directDiagnostic,safeHeaders}=require('./http-diagnostic.cjs');
 const fs=require('node:fs'),http=require('node:http'),crypto=require('node:crypto');
 const HTML_SHA='d9eca449faa9c0f4c8d3086b73fcb1befdb6d4121c9b99644f4386c23347eebd';
 const IMAGE_SHA='51641c2541154228a4f9099f4056c1b47daab1598e369c50b91bccd1d76ce570';
@@ -9,6 +10,7 @@ async function probe({chromium,htmlPath,outputPath,approved}){
  if(approved!=='READ_ONLY_EXISTING_PUBLIC_FIXTURE')throw Error('EXPLICIT_PROBE_SCOPE_REQUIRED');
  const html=fs.readFileSync(htmlPath);if(crypto.createHash('sha256').update(html).digest('hex')!==HTML_SHA)throw Error('HTML_CHANGED');
  if(fs.existsSync(outputPath))throw Error('OUTPUT_EXISTS_NO_BLIND_RERUN');
+ console.log(JSON.stringify(await directDiagnostic()));
  const server=http.createServer((req,res)=>{if(req.method!=='GET'||req.url!=='/review/drive-cover-lab/'){res.writeHead(404);res.end();return;}res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(html);});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const origin='http://127.0.0.1:'+server.address().port,results=[];
@@ -22,6 +24,10 @@ async function probe({chromium,htmlPath,outputPath,approved}){
    context.on('requestfailed',request=>{if(diagnostic.failed.length<12)diagnostic.failed.push({url:urlLabel(request.url(),origin),error:((request.failure()?.errorText||'').match(/net::ERR_[A-Z_]+/)||['REQUEST_FAILED'])[0]});});
    await context.route('**/*',async route=>{const req=route.request();if(++count>8||!permitted(req.url(),req.method(),origin)){blocked.push({url:urlLabel(req.url(),origin),method:req.method()});await route.abort();return;}await route.continue();});
    const page=await context.newPage();page.setDefaultTimeout(20000);
+   const cdp=await context.newCDPSession(page),fixtureIds=new Set();diagnostic.browserNetwork=[];
+   cdp.on('Network.requestWillBeSent',event=>{if(event.request.url===IMAGE_URL)fixtureIds.add(event.requestId);});
+   cdp.on('Network.responseReceivedExtraInfo',event=>{if(fixtureIds.has(event.requestId)&&diagnostic.browserNetwork.length<4)diagnostic.browserNetwork.push({status:event.statusCode,...safeHeaders(event.headers)});});
+   await cdp.send('Network.enable');
    page.on('console',message=>{const t=message.text();const code=t.match(/net::ERR_[A-Z_]+/);if(diagnostic.console.length<8&&(code||/Content Security Policy/i.test(t)))diagnostic.console.push(code?code[0]:'CSP_REFUSAL');});
    const imageResponse=page.waitForResponse(r=>r.url()===IMAGE_URL,{timeout:20000});
    // Catch early rejection so timeout cannot produce an unhandled promise.
