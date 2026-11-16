@@ -2,6 +2,8 @@
 // Offline domain core; NOT a deployed endpoint. Adapters must be server-owned.
 // No client-supplied URL/producerId, no credentials, no storage implementation.
 function createCoverCore({authorize,registry,legacy=[]}) {
+  // The existing approved static catalog predates state and optional PNG mime.
+  const approvedLegacy = legacy.map(a=>({...a,mime:a.mime || 'image/jpeg',state:'READY'}));
   async function context(token,eventId){
     if(typeof eventId!=='string'||!/^EVT-[A-Z0-9-]{1,216}$/.test(eventId))throw Error('INVALID_EVENT');
     const x=await authorize(token,eventId);
@@ -19,7 +21,7 @@ function createCoverCore({authorize,registry,legacy=[]}) {
     const rows=await registry.list(c.eventId,c.producerId);
     if(!Array.isArray(rows)||rows.length>100)throw Error('REGISTRY_LIMIT');
     const out=[],seen=new Set();
-    for(const a of [...legacy,...rows]){
+    for(const a of [...approvedLegacy,...rows]){
       if(!owned(a,c)||a.state!=='READY')continue;
       const value=safe(a);
       if(seen.has(a.assetId))throw Error('AMBIGUOUS_ASSET');

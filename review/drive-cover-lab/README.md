@@ -9,7 +9,7 @@ URL de download foi observada no HTML oficial, seguida de redirect oficial. Em16
 `node --test review/drive-cover-lab/*.test.cjs`
 Offline, sem rede, credenciais, uploads, permissões ou escrita de evento.
 
-Core geral usa adapters server-owned ainda não implementados. Autoriza antes do lookup, aceita biblioteca vazia, isola evento/produtor, mantém legado, exige READY e preserva expectedVersion. Não executa save; a integração deve usar CAS/auditoria/readback existentes e reautorizar sob lock. O adapter precisa validar URL exata, metadata, origem e persistência.
+O catálogo estático aprovado legado aceita formato anterior sem state e JPEG sem campo mime. Core geral usa adapters server-owned ainda não implementados. Autoriza antes do lookup, aceita biblioteca vazia, isola evento/produtor, mantém legado, exige READY e preserva expectedVersion. Não executa save; a integração deve usar CAS/auditoria/readback existentes e reautorizar sob lock. O adapter precisa validar URL exata, metadata, origem e persistência.
 
 Política Drive distingue fonte privada, bytes públicos verificados e OG real. Nunca aceitar thumbnailLink temporário como URL permanente. Sessão/token, folderId, fileId, URL, digest e resultados de probe não podem vir sem verificação do cliente.
 

@@ -12,3 +12,5 @@ test('legacy remains readable',async()=>assert.equal((await core([], [asset]).ap
 test('duplicate registry identity fails closed',async()=>await assert.rejects(core([asset],[asset]).api.list('owner','EVT-A'),/AMBIGUOUS/));
 test('client cannot choose URL or producer',async()=>{for(const k of ['url','producerId'])await assert.rejects(core([asset]).api.resolveSelection('owner',{...selection,[k]:'evil'}),/INVALID_SELECTION/);});
 test('resolution preserves expected version without performing save',async()=>{const x=await core([asset]).api.resolveSelection('owner',selection);assert.equal(x.expectedVersion,selection.expectedVersion);assert.equal(x.producerId,'PROD-A');assert.equal(x.asset.url,asset.url);});
+
+test('actual legacy shape without state or mime remains readable',async()=>{const old={...asset,url:'https://example.invalid/old.jpg'};delete old.state;delete old.mime;assert.equal((await core([], [old]).api.list('owner','EVT-A')).assets.length,1);});
