@@ -23,3 +23,12 @@ Fontes oficiais:
 - https://developers.google.com/workspace/drive/api/guides/manage-downloads
 - https://developers.google.com/apps-script/reference/content/mime-type
 - https://ogp.me/
+
+## Adaptadores reais de intake, ainda não executados
+`apps-script-adapters.cjs` compõe Drive advanced v3 Files.get/create, SpreadsheetApp e LockService reais. Não é endpoint público nem código ligado ao site. Configuração de pasta/planilha é exclusiva do servidor. Requer aba privada pré-preparada CT_COVER_INTAKE_V1 com cabeçalho key,record; não cria planilha, aba ou permissão automaticamente. Não usar planilha editável por produtores. Todos os escritores devem usar o mesmo script lock; limite explícito de 10 mil registros.
+
+O intake autentica antes de I/O, limita arquivo a 2.065.000 bytes, computa hash no servidor e exige assinatura PNG/JPEG. Assinatura não é decode: estado final é sempre QUARANTINED, nunca READY. Reserva persistida antes de upload; timeout/resultado incerto deixa RESERVED e tentativa repetida pede reconciliação, sem duplicar upload. Reconciliação por appProperties exige implementação/revisão separada; não apagar reserva nem arquivo automaticamente. Pasta deve ser My Drive com único proprietário e sem outros leitores. Pré/pós-verificação de permissões não é transação de ACL: a pasta deve ser dedicada, sem alteração concorrente de compartilhamento por outros atores.
+
+Ainda faltam integração com autorização real do portal, decoder completo, revisão/promoção pública, reconciliação e escrita final via CAS/auditoria existentes. Não expor esta fábrica diretamente como RPC. O registro de intake não é o catálogo público READY. Não há chamada setSharing/Permissions.create nem escrita de evento. Testes usam dublês locais dos serviços, não comprovam escopos OAuth nem execução no Apps Script. A ativação em homologação requer configuração e aprovação separadas.
+
+Documentação dos adaptadores: https://developers.google.com/apps-script/advanced/drive e https://developers.google.com/apps-script/reference/lock/lock .
