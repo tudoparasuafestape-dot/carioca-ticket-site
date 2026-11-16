@@ -1,0 +1,30 @@
+name: Drive public image browser read-only
+on:
+  pull_request:
+    paths:
+      - 'review/drive-browser-probe/**'
+      - '.github/workflows/ct-drive-browser-readonly.yml'
+permissions:
+  contents: read
+jobs:
+  public-fixture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Offline scope guards
+        run: node --test review/drive-browser-probe/*.test.cjs
+      - name: Existing browser tooling from official registry
+        run: |
+          npm install --prefix .drive-probe-runtime --no-save --no-audit --no-fund playwright@1.55.0
+          node .drive-probe-runtime/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Anonymous GET-only public fixture in desktop and mobile Chromium
+        env:
+          NODE_PATH: .drive-probe-runtime/node_modules
+          CT_PROBE_APPROVAL: READ_ONLY_EXISTING_PUBLIC_FIXTURE
+        run: |
+          node review/drive-browser-probe/drive-browser-probe.cjs review/drive-browser-probe/index.html "$RUNNER_TEMP/drive-image-probe.json"
+          cat "$RUNNER_TEMP/drive-image-probe.json"
+# No secrets, dispatch, Pages, uploads, event changes, sharing changes or automatic retry.
