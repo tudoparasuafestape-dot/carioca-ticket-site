@@ -36,6 +36,8 @@ function createAppsScriptIntake({Drive,SpreadsheetApp,LockService,Utilities,auth
     const key=sha(Utilities.newBlob(JSON.stringify([c.eventId,c.producerId,input.requestId])).getBytes());
     const lock=LockService.getScriptLock();lock.waitLock(10000);
     try{
+      const fresh=await authorize(token,input.eventId);
+      if(!fresh||fresh.authorized!==true||fresh.userId!==c.userId||fresh.producerId!==c.producerId||fresh.eventId!==c.eventId)throw Error('ACCESS_DENIED');
       const s=sheet(),matches=rows(s).map((r,i)=>({r,row:i+2})).filter(x=>x.r[0]===key);
       if(matches.length>1)throw Error('DUPLICATE_REGISTRY_KEY');
       if(matches.length){
