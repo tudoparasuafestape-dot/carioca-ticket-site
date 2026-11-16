@@ -1,0 +1,20 @@
+{
+  "localOnly": true,
+  "tests": 25,
+  "browserScriptPrepared": true,
+  "browserCommand": "NODE_PATH=runtime/node_modules CT_RELAY_PROBE=READ_ONLY_PUBLIC_FIXTURE node browser-relay-probe.cjs",
+  "browserExecuted": false,
+  "authenticatedDriveTested": false,
+  "ogCrawlerTested": false,
+  "credentialProviderConfigured": false,
+  "registryProviderConfigured": false,
+  "deployed": false,
+  "files": {
+    "README.md": "0cf1113bb388521307144647d57514ba7ecb126b44e9ba2c22e7013d007e963f",
+    "browser-relay-probe.cjs": "5a0de3ef8f1aecea8ac053dad68ab9b694090b50fc874dfc553a1b50a9747ece",
+    "drive-source.cjs": "1696a171b9786b8fa3635f7f018d272a66e03297f6736db7a305b488f69ab7e0",
+    "http-handler.cjs": "94ab2e5839b3f53f0761f18d59114f28b0cf529698256dc1f9a0fefbad9991b0",
+    "media-core.cjs": "c169bcc9ba425e71754cb48dded103ab040b2b58e5138c77d565b299cb85b6ba",
+    "media.test.cjs": "8618889a607da6271a35a050ea1746a8e755a19e524b136a4ffe81f40f0782fa"
+  }
+}
