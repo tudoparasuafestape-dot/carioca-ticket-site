@@ -206,6 +206,9 @@ test('timeout is recoverable and ignores late data from the removed iframe', asy
   const state = await fixture(page, { delay: true });
   await expect.poll(() => typeof state.release).toBe('function');
   await page.clock.fastForward(19000);
+  await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeHidden();
+  await expect(page.locator('.catalog-card')).toHaveCount(0);
+  await page.clock.fastForward(12000); // 31s: beyond approved 30s RPC timeout.
   await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
   await expect(page.locator('.catalog-card')).toHaveCount(2);
