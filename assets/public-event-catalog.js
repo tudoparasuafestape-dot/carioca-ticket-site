@@ -245,7 +245,7 @@
         request = inFlight = loadCatalog();
         var result = await Promise.race([
           request.promise,
-          new Promise(function (_, reject) { timer = setTimeout(function () { reject(new Error('CATALOG_TIMEOUT')); }, 20000); })
+          new Promise(function (_, reject) { timer = setTimeout(function () { reject(new Error('CATALOG_TIMEOUT')); }, 32000); })
         ]);
         if (current !== requestId) return;
         if (!result || result.sucesso !== true || !Array.isArray(result.eventos)) throw new Error('CATALOG_INVALID');
@@ -382,7 +382,7 @@
         if (payload.ok === true) resolve(payload.resultado);
         else reject(new Error('CATALOG_RPC_FAILED'));
       }
-      var timer = setTimeout(function () { cleanup(); reject(new Error('CATALOG_RPC_TIMEOUT')); }, 18000);
+      var timer = setTimeout(function () { cleanup(); reject(new Error('CATALOG_RPC_TIMEOUT')); }, 30000);
       window.addEventListener('message', receive);
       document.body.append(frame, form);
       try { form.submit(); } catch (error) { cleanup(); reject(error); }
