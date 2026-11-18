@@ -285,11 +285,12 @@ test('existing home destinations and the public transport contract remain unchan
   expect([...new Set(hrefs)].filter(href => !actual.includes(href))).toEqual([]);
   const oldCatalog = execFileSync('git', ['show', 'edcfe04d:assets/public-event-catalog.js'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   const catalog = fs.readFileSync(path.join(ROOT, 'assets/public-event-catalog.js'), 'utf8').replace(/\r\n/g, '\n');
-  // Permit only the reviewed cancellation interface around the historical
-  // transport. Endpoint, fields, origin/correlation guards, timeout and cleanup
-  // remain exact; an unrelated transport change must still fail this contract.
+  // Permit only reviewed cancellation plus the approved 18s-to-30s timeout.
+  // Endpoint, fields, origin/correlation guards and cleanup remain exact;
+  // any unrelated transport change must still fail this contract.
   const adapter = code => code.match(/  function loadPublicEvents\(\) \{[\s\S]*?\n  \}/)[0];
   const expectedAdapter = adapter(oldCatalog)
+    .replace("reject(new Error('CATALOG_RPC_TIMEOUT')); }, 18000);", "reject(new Error('CATALOG_RPC_TIMEOUT')); }, 30000);")
     .replace('    return new Promise(function (resolve, reject) {', '    var abort = function () {};\n    var promise = new Promise(function (resolve, reject) {')
     .replace('      function receive(event) {', "      abort = function () { cleanup(); reject(new Error('CATALOG_CANCELLED')); };\n      function receive(event) {")
     .replace(/    \}\);\n  \}$/, '    });\n    return { promise: promise, cancel: function () { abort(); } };\n  }');
