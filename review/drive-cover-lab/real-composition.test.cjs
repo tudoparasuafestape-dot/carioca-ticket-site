@@ -1,0 +1,30 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+const {createReadyRegistry,createRegistryVersionGuard}=require('./ready-registry.cjs');
+const {createSaveRevalidator}=require('./save-revalidator.cjs');
+const {createCoverCore}=require('./cover-core.cjs');
+const {createVisualWriter,createPickerFacade}=require('./picker-facade.cjs');
+const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
+function composed({revokeOnLock=false,revokeOnAudit=false}={}){
+ const bytes=Buffer.from([137,80,78,71,13,10,26,10,5]),key='a'.repeat(64),state={locked:false,reads:[],writes:[],fetches:0};
+ const config={folderId:'private_folder_123',spreadsheetId:'registry_sheet_123',sheetName:'CT_COVER_INTAKE_V1'};
+ const record={assetId:'drive-'+key,eventId:'EVT-NEW',producerId:'PROD-ONE',name:'Arte aprovada',fileId:'image_file_123',folderId:config.folderId,mime:'image/png',bytes:bytes.length,sha256:hash(bytes),state:'READY',validation:'FULL_DECODE_PASSED',reviewerId:'reviewer',metadataPolicy:'ORIGINAL_METADATA_REVIEWED',promotedAt:1000,url:'https://drive.usercontent.google.com/download?id=image_file_123&export=download'};
+ const rows=[['key','record'],[key,JSON.stringify(record)]];
+ const revoke=()=>{rows[1][1]=JSON.stringify({...record,state:'REVOKED'});};
+ const Drive={Files:{get:id=>{assert.equal(state.locked,false,'Drive I/O must not hold writer lock');state.reads.push('Drive');return id===config.spreadsheetId?{id,mimeType:'application/vnd.google-apps.spreadsheet',permissions:[{type:'user',role:'owner'}]}:{id:record.fileId,mimeType:record.mime,size:record.bytes,sha256Checksum:record.sha256,parents:[record.folderId],webContentLink:'https://drive.google.com/uc?id=image_file_123&export=download',permissions:[{type:'anyone',role:'reader',allowFileDiscovery:false}]};}}};
+ const SpreadsheetApp={openById:()=>({getSheetByName:()=>({getLastRow:()=>rows.length,getRange:(r,c,n)=>({getValues:()=>rows.slice(r-1,r-1+n)})})})};
+ const Utilities={DigestAlgorithm:{SHA_256:'sha256'},computeDigest:(a,value)=>[...crypto.createHash(a).update(typeof value==='string'?value:Buffer.from(value)).digest()],newBlob:value=>({getBytes:()=>[...Buffer.from(value)]}),getUuid:()=>String(state.writes.length)};
+ const UrlFetchApp={fetch:(url,opts)=>{assert.equal(state.locked,false,'Public fetch must not hold writer lock');assert.equal(opts.followRedirects,false);state.fetches++;return {getResponseCode:()=>200,getAllHeaders:()=>({'Content-Type':'image/png','Content-Length':String(bytes.length)}),getContent:()=>[...bytes]};}};
+ const store={'VIS_EVT-NEW':JSON.stringify({title:'preservar',other:{keep:true}})};
+ const readVisual=async eventId=>{const raw=store['VIS_'+eventId]??null;return {key:'VIS_'+eventId,raw,visual:raw===null?{}:JSON.parse(raw),version:hash(raw===null?'AUSENTE':'PRESENTE\n'+raw)};};
+ const authorize=async(token,eventId)=>({authorized:true,eventId,producerId:'PROD-ONE',userId:'U'});
+ const registry=createReadyRegistry({Drive,SpreadsheetApp,config});
+ const guard=createRegistryVersionGuard({SpreadsheetApp,Utilities,config});
+ const commitSelection=createVisualWriter({authorize,Utilities,prefix:'VIS_',readVisual,invalidateCache:()=>true,assertRegistryVersion:(selection,proof)=>{assert.equal(state.locked,true);return guard(selection,proof);},LockService:{getScriptLock:()=>({waitLock:()=>{state.locked=true;if(revokeOnLock)revoke();},releaseLock:()=>{state.locked=false;}})},PropertiesService:{getScriptProperties:()=>({getProperty:key=>store[key]??null,setProperty:(key,value)=>{state.writes.push(key);store[key]=value;if(revokeOnAudit&&key.startsWith('CT_CAPA_AUDIT_'))revoke();}})}});
+ const api=createPickerFacade({core:createCoverCore({authorize,registry}),readVisual,readEvent:async id=>({id,nome:'Evento novo'}),revalidateAsset:createSaveRevalidator({Drive,SpreadsheetApp,UrlFetchApp,Utilities,config}),commitSelection});
+ const input={eventId:record.eventId,assetId:record.assetId,expectedVersion:hash('PRESENTE\n'+store['VIS_EVT-NEW']),motivo:'arte aprovada'};
+ return {api,input,state,store,record};
+}
+test('real registry + revalidator + guard + writer compose successful audited save',async()=>{const x=composed();const reply=await x.api.save('session',x.input);assert.equal(reply.ok,true);assert.equal(x.state.fetches,1);assert.equal(x.state.locked,false);assert.deepEqual(JSON.parse(x.store['VIS_EVT-NEW']),{title:'preservar',other:{keep:true},capaUrl:x.record.url,posterUrl:x.record.url});assert.equal(JSON.parse(x.store[x.state.writes[0]]).state,'CONFIRMED');});
+test('real guard catches revocation after proof and before any write',async()=>{const x=composed({revokeOnLock:true}),before=x.store['VIS_EVT-NEW'];await assert.rejects(x.api.save('session',x.input),/CT_CAPA_FALHA_SEGURA/);assert.equal(x.state.fetches,1);assert.deepEqual(x.state.writes,[]);assert.equal(x.store['VIS_EVT-NEW'],before);assert.equal(x.state.locked,false);});
+test('real second guard catches revocation after audit, with no visual write',async()=>{const x=composed({revokeOnAudit:true}),before=x.store['VIS_EVT-NEW'];await assert.rejects(x.api.save('session',x.input),/CT_CAPA_FALHA_SEGURA/);assert.equal(x.state.writes.length,1);assert.ok(x.state.writes[0].startsWith('CT_CAPA_AUDIT_'));assert.equal(x.store['VIS_EVT-NEW'],before);assert.equal(x.state.locked,false);});
