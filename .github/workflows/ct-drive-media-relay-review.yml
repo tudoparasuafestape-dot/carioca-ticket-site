@@ -1,0 +1,28 @@
+name: Drive media relay loopback browser proof
+on:
+  pull_request:
+    paths:
+      - 'review/drive-media-relay/**'
+      - '.github/workflows/ct-drive-media-relay-review.yml'
+permissions:
+  contents: read
+jobs:
+  loopback-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Offline guards and local HTTP regression
+        run: node --test review/drive-media-relay/*.test.cjs
+      - name: Existing browser tooling from official registry
+        run: |
+          npm install --prefix .drive-relay-runtime --no-save --no-audit --no-fund playwright@1.55.0
+          node .drive-relay-runtime/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Browser proof against loopback relay and fixed public fixture
+        env:
+          NODE_PATH: .drive-relay-runtime/node_modules
+          CT_RELAY_PROBE: READ_ONLY_PUBLIC_FIXTURE
+        run: node review/drive-media-relay/browser-relay-probe.cjs
+# No secrets, deployments, public endpoint, database, permissions change or artifact upload.
