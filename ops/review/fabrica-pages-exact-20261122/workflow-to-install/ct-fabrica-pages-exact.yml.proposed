@@ -1,0 +1,81 @@
+name: Fábrica exact Pages overlay (protected manual)
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_commit:
+        description: Exact separately reviewed main SHA
+        required: true
+        type: string
+      expected_deployment:
+        description: Reverified baseline deployment ID
+        required: true
+        type: string
+      scope_confirmation:
+        description: Exact scope tag (does not authorize deployment)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: ct-pages-production
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'tudoparasuafestape-dot/carioca-ticket-site' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+      pages: write
+      id-token: write
+    env:
+      CT_REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+      CT_BASE_DEPLOYMENT: ${{ inputs.expected_deployment }}
+      CT_SCOPE: ${{ inputs.scope_confirmation }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Recheck production and prepare exact bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 release/fabrica-pages/guard.py prepare "$RUNNER_TEMP/fabrica-pages-exact"
+      - name: Preserve original before deployment
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fabrica-pages-rollback-evidence
+          path: |
+            ${{ runner.temp }}/fabrica-pages-exact/rollback.tar
+            ${{ runner.temp }}/fabrica-pages-exact/seal.json
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+          compression-level: 0
+      - name: Upload only verified combined TAR
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/fabrica-pages-exact/artifact.tar
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+          compression-level: 0
+      - name: Final exact live baseline check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 release/fabrica-pages/guard.py recheck "$RUNNER_TEMP/fabrica-pages-exact"
+      - name: Deploy exact sealed archive
+        id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+        with:
+          artifact_name: github-pages
+      - name: Verify public bytes and deployment identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 release/fabrica-pages/guard.py post "$RUNNER_TEMP/fabrica-pages-exact"
