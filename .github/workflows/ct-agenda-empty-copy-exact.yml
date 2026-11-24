@@ -1,0 +1,125 @@
+name: Agenda empty copy exact Pages (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      verify_only:
+        description: Check live baseline and exact candidate without uploading or deploying
+        required: true
+        type: boolean
+        default: true
+      reviewed_commit:
+        description: Exact separately reviewed main SHA
+        required: true
+        type: string
+      expected_deployment:
+        description: Reconciled and reverified Fábrica deployment record
+        required: true
+        type: string
+      scope_confirmation:
+        description: Exact copy scope string (not a substitute for owner approval)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: ct-pages-production
+  cancel-in-progress: false
+env:
+  CT_REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+  CT_BASE_DEPLOYMENT: ${{ inputs.expected_deployment }}
+  CT_SCOPE: ${{ inputs.scope_confirmation }}
+jobs:
+  inspect:
+    if: github.repository == 'tudoparasuafestape-dot/carioca-ticket-site' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+      pages: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Prove live baseline and exact candidate without deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 release/agenda-empty-copy/guard.py inspect "$RUNNER_TEMP/unused"
+  publish:
+    needs: inspect
+    if: inputs.verify_only == false && github.repository == 'tudoparasuafestape-dot/carioca-ticket-site' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+      pages: write
+      id-token: write
+    outputs:
+      artifact-id: ${{ steps.sealed.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify actual baseline and prepare only sealed copy bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 release/agenda-empty-copy/guard.py prepare "$RUNNER_TEMP/ct-agenda-empty-copy"
+      - name: Preserve the exact verified baseline (evidence only)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ct-agenda-empty-copy-rollback-evidence
+          path: |
+            ${{ runner.temp }}/ct-agenda-empty-copy/rollback.tar
+            ${{ runner.temp }}/ct-agenda-empty-copy/seal.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
+          compression-level: 0
+      - name: Upload only the reviewed TAR
+        id: sealed
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/ct-agenda-empty-copy/artifact.tar
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
+          compression-level: 0
+      - name: Verify uploaded bytes and reconfirm production baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CT_UPLOAD_ART: ${{ steps.sealed.outputs.artifact-id }}
+        run: python3 release/agenda-empty-copy/guard.py recheck "$RUNNER_TEMP/ct-agenda-empty-copy"
+      - name: Deploy exact sealed archive
+        id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+        with:
+          artifact_name: github-pages
+  verify:
+    needs: publish
+    if: github.repository == 'tudoparasuafestape-dot/carioca-ticket-site' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+      pages: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify successful environment job, Pages status, and canonical public bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CT_UPLOAD_ART: ${{ needs.publish.outputs.artifact-id }}
+        run: python3 release/agenda-empty-copy/guard.py post "$RUNNER_TEMP/unused-after-publish"
