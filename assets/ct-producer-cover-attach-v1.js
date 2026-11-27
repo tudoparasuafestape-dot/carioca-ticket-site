@@ -9,8 +9,13 @@ function ensure(){
  dialog=document.createElement('dialog');
  dialog.setAttribute('aria-labelledby','ctAttachTitle');
  dialog.className='ct-cover-picker';
- dialog.innerHTML='<h2 id="ctAttachTitle">Anexar capa</h2><p>Escolha uma imagem JPG ou PNG de até 4 MB. Isso não publica o evento.</p>'+
-  '<label for="ctAttachFile">Imagem da capa</label> <input id="ctAttachFile" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg">'+
+ dialog.innerHTML='<h2 id="ctAttachTitle">Anexar capa</h2>'+
+  '<p id="ctAttachHelp"><strong>Para preencher o card da agenda:</strong> use uma imagem horizontal de 1.800 × 800 px. JPG ou PNG, até 4 MB. Mantenha o texto e o logotipo longe das bordas.</p>'+
+  '<p>Salvar a capa como rascunho não publica o evento.</p>'+
+  '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">'+
+  '<button id="ctAttachPick" type="button" class="botao botao-secundario" aria-describedby="ctAttachHelp ctAttachName">Selecionar imagem</button>'+
+  '<span id="ctAttachName" aria-live="polite" style="min-width:0;overflow-wrap:anywhere">Nenhuma imagem selecionada</span>'+
+  '<input id="ctAttachFile" type="file" aria-label="Imagem da capa" accept="image/png,image/jpeg,.png,.jpg,.jpeg" hidden></div>'+
   '<img id="ctAttachPreview" alt="Prévia integral da capa selecionada" hidden style="width:100%;max-height:38vh;object-fit:contain">'+
   '<p id="ctAttachStatus" role="status" aria-live="polite"></p><div class="ct-cover-actions">'+
   '<button id="ctAttachSave" type="button" class="botao" disabled>Salvar capa</button>'+
@@ -18,6 +23,7 @@ function ensure(){
   ' <button id="ctAttachClose" type="button" class="botao botao-secundario">Fechar</button></div>';
  document.body.append(dialog);
  f('File').addEventListener('change',select);
+ f('Pick').addEventListener('click',()=>{if(!f('File').disabled)f('File').click();});
  f('Save').addEventListener('click',save);
  f('Verify').addEventListener('click',verify);
  f('Close').addEventListener('click',close);
@@ -31,6 +37,7 @@ function render(msg){
  const phase=view.flow?.getState().phase||'opening', pending=tickets.has(view.eventId)||view.pending, busy=['opening','sending','checking'].includes(phase)&&!view.failed;
  f('Save').disabled=busy||pending||view.preparing||phase!=='ready';
  f('File').disabled=busy||pending||!view.flow;
+ f('Pick').disabled=f('File').disabled;
  f('Verify').hidden=!tickets.has(view.eventId)||busy;
  f('Close').disabled=phase==='sending'||phase==='checking';
  f('Status').textContent=msg||{opening:'Consultando a capa deste evento…',ready:'Confira a prévia e confirme o envio.',invalid:'Não foi possível abrir a imagem. Use JPG ou PNG estático de até 4 MB.',
@@ -48,7 +55,7 @@ export async function openProducerCover(eventId, opener){
  if(!idRule.test(eventId)||ensure().open)return;
  const own=++version,bridge=portalCoverBridge(window.google?.script?.run);
  view={eventId,opener,bridge,url:'',failed:false,pending:false};
- f('File').value='';clearPreview(view);dialog.showModal();render();
+ f('File').value='';f('Name').textContent='Nenhuma imagem selecionada';clearPreview(view);dialog.showModal();render();
  try{
   const reply=await bridge.read(eventId);
   if(version!==own)return;
@@ -63,6 +70,7 @@ export async function openProducerCover(eventId, opener){
 async function select(){
  if(!view?.flow)return;
  const v=view,source=f('File').files[0],generation=(v.selection||0)+1;
+ f('Name').textContent=source?.name||'Nenhuma imagem selecionada';
  v.selection=generation;v.preparing=true;clearPreview(v);v.flow.cancel();render('Preparando a prévia…');
  let file=null;
  try{file=await prepareCoverInput(source);}catch{}
