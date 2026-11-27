@@ -1,0 +1,108 @@
+name: Carioca Ticket - release exact do anexo privado
+on:
+  workflow_dispatch:
+    inputs:
+      verify_only:
+        description: Verificar sem publicar
+        required: true
+        type: boolean
+        default: true
+      reviewed_commit:
+        description: SHA exato em main revisado
+        required: true
+        type: string
+      scope_confirmation:
+        description: PUBLICAR_SOMENTE_ANEXO_CAPA_RASCUNHO
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: ct-pages-production
+  cancel-in-progress: false
+env:
+  CT_REVIEWED_SHA: ${{ inputs.reviewed_commit }}
+  CT_RELEASE_SCOPE: ${{ inputs.scope_confirmation }}
+jobs:
+  inspect:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+      pages: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Conferir somente o recorte testado
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 release/producer-cover/guard.py inspect "$RUNNER_TEMP/ct-cover-inspect"
+  publish:
+    if: inputs.verify_only == false && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    needs: inspect
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Preparar apenas o artefato revisado
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 release/producer-cover/guard.py prepare "$RUNNER_TEMP/ct-cover-release"
+      - name: Enviar exatamente o arquivo selado
+        id: sealed
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/ct-cover-release/artifact.tar
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+      - name: Comparar o artefato recebido antes de publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CT_UPLOADED_ARTIFACT: ${{ steps.sealed.outputs.artifact-id }}
+        run: python3 release/producer-cover/guard.py recheck "$RUNNER_TEMP/ct-cover-release"
+      - name: Publicar somente o artefato selado
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+        id: deploy
+        with:
+          artifact_name: github-pages
+  verify:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+      pages: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Confirmar o botão, JavaScript, agenda e checkout no domínio oficial
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 release/producer-cover/guard.py post "$RUNNER_TEMP/ct-cover-post"
