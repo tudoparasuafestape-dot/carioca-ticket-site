@@ -1,0 +1,19 @@
+{
+  "status": "LOCAL_PROPOSAL_NO_EXECUTION",
+  "tests": 38,
+  "approvedSourcePresent": false,
+  "candidateTarSha256": "4f7e2e783ba37aea8caf57e4e6e7c8f711e752a78d4222b6d37b7672adc0f97d",
+  "sourcePngSha256": "7089258579f37d13baaf82d909a65cee5ed361459656590446a9c40bc3cdde2f",
+  "sourceGitBlobSha": "077f8b5fd8420b3da8d34c66a194223279b411d3",
+  "unchangedEntries": 642,
+  "files": {
+    "README.md": "2e40d28f33c53c1ecfa0ec28161bb1326423688972e3856144f5f8bd308591c0",
+    "artifact_guard.py": "d75c76676731a53374e9c2f77cd9c68b74961a1daa1f9dc85e1be1e39a9c2605",
+    "release_guard.py": "d2b6643d9b42493a7b7a365076b5321f526fe681f7802815ae7e68f25012b870",
+    "test_fabrica_source.py": "bbc169fca18a6283f7e7e63fcfed34212b3c3455c6a7e7f3070f95c557fc5fa6",
+    "test_release_guard.py": "c24e9ad3bd40d5092ad150b226d846326cdb2436edc78056c1bd035af1e5e70c",
+    "test_rollback_download.py": "a685ac2b61019f23a2d79e6a2815f722c021fedf004f78eca737d020ee455a42",
+    "verify_local_candidate.py": "205d1ca471aa1d00a9ec05fad19154184e041d5e8f921e00ca3ac338f8edba01",
+    "workflow.yml.proposed": "79e1470c295a7fb89dda6feae7626e999ac4d07e2db75428d3c41b9b96155873"
+  }
+}
