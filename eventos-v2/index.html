@@ -870,6 +870,11 @@
         if(args.length!==1)throw new Error('CT_ERA_VISUAL_ARGUMENTOS_INVALIDOS');
         return {method:method,args:[token,args[0]]};
 
+      case 'ctEventoCapaRascunhoObterSeguraPROD':
+      case 'ctEventoCapaRascunhoAnexarSeguraPROD':
+      case 'ctEventoCapaRascunhoConfirmarSeguraPROD':
+        if(args.length!==1)throw new Error('CT_CAPA_RASCUNHO_ARGUMENTOS_INVALIDOS');
+        return {method:method,args:[token,args[0]]};
       case 'ctEventoCapaBibliotecaListarSeguraPROD':
       case 'ctEventoCapaBibliotecaSalvarSeguraPROD':
         if(args.length!==1)throw new Error('CT_CAPA_ARGUMENTOS_INVALIDOS');
@@ -2181,6 +2186,7 @@
           '</div>' +
 
           '<div class="evento-acoes">' +
+            '<button class="botao botao-secundario" type="button" data-ct-attach-cover="' + escaparAtributo(evento.id) + '">Anexar capa</button>' +
             '<button class="botao botao-secundario" type="button" data-approved-event-cover="' + escaparAtributo(evento.id) + '">Escolher capa</button>' +
             (evento.id === 'EVT-23112026-ERA-BEAUTY-EAC4B673' ? '<button class="botao botao-secundario" type="button" data-era-approved-visual="EVT-23112026-ERA-BEAUTY-EAC4B673">Aplicar visual aprovado do ERA</button>' : '') +
             botaoAtivar +
@@ -3822,6 +3828,21 @@
   </script>
 
   <script src="/assets/ct-analytics.js?v=20260923a" defer></script>
+  <script>
+  (function(){
+    var loading=new WeakSet();
+    document.addEventListener('click',function(e){
+      var b=e.target.closest&&e.target.closest('[data-ct-attach-cover]');
+      if(!b||loading.has(b))return;
+      loading.add(b);b.setAttribute('aria-busy','true');
+      import('/assets/ct-producer-cover-attach-v1.js').then(function(m){
+        b.textContent='Anexar capa';return m.openProducerCover(b.dataset.ctAttachCover,b);
+      }).catch(function(){b.textContent='Tentar abrir anexo';}).finally(function(){
+        loading.delete(b);b.removeAttribute('aria-busy');
+      });
+    });
+  })();
+  </script>
   <script src="/assets/event-cover-picker.js?v=20261028a"></script>
   <script src="/assets/era-approved-visual.js?v=20261008-category"></script>
 </body>
